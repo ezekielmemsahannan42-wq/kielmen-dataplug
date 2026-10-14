@@ -1,0 +1,90 @@
+const express = require("express");
+const cors = require("cors");
+
+const app = express();
+app.use(cors({
+  origin: "https://ezekielmemsahannan42-wq.github.io"
+}));
+app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.send("Kielmen 636 Dataplug payment server is running.");
+});
+
+app.post("/initialize-payment", async (req, res) => {
+  try {
+    const { email, amount, phone, network, bundle } = req.body;
+
+    if (
+      !email ||
+      !/^\S+@\S+\.\S+$/.test(email) ||
+      !Number.isFinite(amount) ||
+      amount <= 0 ||
+      !phone ||
+      !network ||
+      !bundle
+    ) {
+      return res.status(400).json({
+        message: "Please provide valid order details."
+      });
+    }
+
+    const secretKey = process.env.PAYSTACK_SECRET_KEY;
+
+    if (!secretKey) {
+      return res.status(500).json({
+        message: "Payment service is not configured."
+      });
+    }
+
+    const reference = `KIELMEN_${Date.now()}_${Math.random()
+      .toString(36).slice(2, 10)}`;
+
+    const response = await fetch(
+      "https://api.paystack.co/transaction/initialize",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${secretKey}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email,
+          amount: Math.round(amount * 100),
+          currency: "GHS",
+          reference,
+          callback_url: "https://ezekielmemsahannan42-wq.github.io/kielmen-dataplug/",
+          metadata: {
+            phone,
+            network,
+            bundle
+          }
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.status) {
+      return res.status(502).json({
+        message: "Unable to initialize payment."
+      });
+    }
+
+    res.json({
+      authorization_url: result.data.authorization_url,
+      reference: result.data.reference
+    });
+  } catch (error) {
+    console.error("Payment initialization failed:", error.message);
+    res.status(500).json({
+      message: "Unable to start payment. Please try again."
+    });
+  }
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Payment server listening on port ${PORT}`);
+});
