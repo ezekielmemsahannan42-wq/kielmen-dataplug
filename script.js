@@ -86,7 +86,7 @@ function registerAgent() {
     alert("Agent registration will be added soon.");
 }
 
-        document.getElementById("order-form").addEventListener("submit", function(event) {document.getElementById("order-form").addEventListener("submit", function(event) {
+        document.getElementById("order-form").addEventListener("submit", function(event) {
     event.preventDefault();
 
     const phone = document.getElementById("phone").value.trim();
@@ -111,7 +111,7 @@ function registerAgent() {
     const popup = new PaystackPop();
 
     popup.newTransaction({
-        key: "pk_live_bab741f32bfcf25cd6f15793440cb20d6d959f98",
+        key: "pk_test_bab741f32bfcf25cd6f15793440cb20d6d959f98",
         email: "ezekielmensahannan42@gmail.com",
         amount: Math.round(price * 100),
         currency: "GHS",
