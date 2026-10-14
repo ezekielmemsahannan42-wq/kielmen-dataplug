@@ -1,3 +1,11 @@
+// ========================================
+// KIELMEN 636 DATAPLUG
+// Main JavaScript File
+// ========================================
+
+
+// 1. DATA BUNDLE PRICES
+
 const dataPrices = {
     MTN: [
         { size: "1GB", price: 4.50 },
@@ -38,11 +46,25 @@ const dataPrices = {
     ]
 };
 
+
+// 2. DISPLAY BUNDLES FOR A NETWORK
+
 function showNetwork(network) {
     const dataList = document.getElementById("data-list");
+
+    if (!dataList) {
+        console.error("The data-list element was not found.");
+        return;
+    }
+
+    if (!dataPrices[network]) {
+        dataList.textContent = "Network not found. Please try again.";
+        return;
+    }
+
     dataList.innerHTML = "";
 
-    dataPrices[network].forEach(bundle => {
+    dataPrices[network].forEach(function(bundle) {
         const card = document.createElement("div");
         card.className = "data-card";
 
@@ -50,7 +72,7 @@ function showNetwork(network) {
         heading.textContent = network;
 
         const size = document.createElement("p");
-        size.textContent = bundle.size;
+        size.textContent = "Bundle: " + bundle.size;
 
         const price = document.createElement("p");
         price.className = "price";
@@ -60,75 +82,227 @@ function showNetwork(network) {
         button.className = "buy-button";
         button.textContent = "Order";
 
-        button.onclick = function () {
+        button.addEventListener("click", function() {
             orderBundle(network, bundle.size, bundle.price);
-        };
-
-        card.append(heading, size, price, button);
-        dataList.appendChild(card);
         });
+
+        card.appendChild(heading);
+        card.appendChild(size);
+        card.appendChild(price);
+        card.appendChild(button);
+
+        dataList.appendChild(card);
+    });
 }
+
+
+// Make showNetwork available to HTML buttons.
+
+window.showNetwork = showNetwork;
+
+
+// 3. SELECT A BUNDLE AND FILL THE ORDER FORM
 
 function orderBundle(network, size, price) {
-    document.getElementById("network").value = network;
-    document.getElementById("bundle").value = size;
-    document.getElementById("price").value = price.toFixed(2);
+    const networkField = document.getElementById("network");
+    const bundleField = document.getElementById("bundle");
+    const priceField = document.getElementById("price");
 
-    const orderSection = document.getElementById("order-section");
-    orderSection.hidden = false;
-
-    orderSection.scrollIntoView({
-        behavior: "smooth"
-    });
-}
-
-function registerAgent() {
-    alert("Agent registration will be added soon.");
-}
-
-        document.getElementById("order-form").addEventListener("submit", function(event) {
-    event.preventDefault();
-
-    const phone = document.getElementById("phone").value.trim();
-    const network = document.getElementById("network").value;
-    const bundle = document.getElementById("bundle").value;
-    const price = Number(document.getElementById("price").value);
-
-    const message = document.getElementById("order-message");
-
-    if (!phone || !Number.isFinite(price) || price <= 0) {
-        message.textContent = "Please enter a valid phone number and check the price.";
+    if (!networkField || !bundleField || !priceField) {
+        alert("The order form is missing some fields. Please check index.html.");
         return;
     }
 
-    message.textContent = "Opening Paystack test checkout...";
+    networkField.value = network;
+    bundleField.value = size;
+    priceField.value = price.toFixed(2);
 
-    if (typeof Paystack === "undefined") {
-        message.textContent = "Paystack did not load. Please refresh and try again.";
-        return;
+    const orderForm = document.getElementById("order-form");
+
+    if (orderForm) {
+        orderForm.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
     }
+}
 
-    const popup = new PaystackPop();
 
-    popup.newTransaction({
-        key: "pk_test_bab741f32bfcf25cd6f15793440cb20d6d959f98",
-        email: "ezekielmensahannan42@gmail.com",
-        amount: Math.round(price * 100),
-        currency: "GHS",
-        metadata: {
-            custom_fields: [
-                { display_name: "Recipient Phone", variable_name: "recipient_phone", value: phone },
-                { display_name: "Network", variable_name: "network", value: network },
-                { display_name: "Bundle", variable_name: "bundle", value: bundle }
-            ]
-        },
-        onSuccess: function(transaction) {
-            message.textContent = "Test payment completed. Reference: " + transaction.reference + ". Data has NOT been delivered.";
-        },
-        onCancel: function() {
-            message.textContent = "Payment cancelled.";
+// Make orderBundle available to HTML.
+
+window.orderBundle = orderBundle;
+
+
+// 4. INITIALISE THE WEBSITE
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    // Connect the network buttons.
+    const networkButtons = document.querySelectorAll(
+        'button[onclick*="showNetwork"], button[data-network]'
+    );
+
+    networkButtons.forEach(function(button) {
+        button.addEventListener("click", function() {
+            const network = button.dataset.network;
+
+            if (network) {
+                showNetwork(network);
+            }
+        });
     });
+
+    // Display MTN bundles automatically when the page opens.
+    showNetwork("MTN");
+
 });
-    
 
-showNetwork("MTN");
+
+// 5. HANDLE THE ORDER FORM AND PAYSTACK TEST CHECKOUT
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    const orderForm = document.getElementById("order-form");
+
+    if (!orderForm) {
+        console.warn("Order form not found.");
+        return;
+    }
+
+    orderForm.addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        const phoneField = document.getElementById("phone");
+        const networkField = document.getElementById("network");
+        const bundleField = document.getElementById("bundle");
+        const priceField = document.getElementById("price");
+        const message = document.getElementById("order-message");
+
+        if (!phoneField || !networkField ||
+            !bundleField || !priceField) {
+            alert("Please check the order form fields.");
+            return;
+        }
+
+        const phone = phoneField.value.trim();
+        const network = networkField.value;
+        const bundle = bundleField.value;
+        const price = Number(priceField.value);
+
+        if (!phone || !network || !bundle ||
+            !Number.isFinite(price) || price <= 0) {
+
+            if (message) {
+                message.textContent =
+                    "Please select a bundle and enter the recipient's phone number.";
+            }
+
+            return;
+        }
+
+        // Basic Ghana phone number validation.
+        const cleanPhone = phone.replace(/[\s-]/g, "");
+
+        if (!/^(0\d{9}|\+233\d{9}|233\d{9})$/.test(cleanPhone)) {
+            if (message) {
+                message.textContent =
+                    "Please enter a valid Ghanaian phone number.";
+            }
+
+            return;
+        }
+
+        // This is only a test checkout.
+        if (message) {
+            message.textContent =
+                "Preparing Paystack test checkout...";
+        }
+
+        if (typeof PaystackPop === "undefined") {
+            if (message) {
+                message.textContent =
+                    "Paystack could not load. Please refresh and try again.";
+            }
+
+            return;
+        }
+
+        const publicKey = "pk_test_REPLACE_WITH_YOUR_PUBLIC_KEY";
+
+        if (publicKey === "pk_test_REPLACE_WITH_YOUR_PUBLIC_KEY") {
+            if (message) {
+                message.textContent =
+                    "Your Paystack test public key has not been added yet.";
+            }
+
+            return;
+        }
+
+        try {
+            const popup = new PaystackPop();
+
+            popup.newTransaction({
+                key: publicKey,
+
+                // Replace with your own customer-support email.
+                email: "YOUR_EMAIL@example.com",
+
+                amount: Math.round(price * 100),
+                currency: "GHS",
+
+                metadata: {
+                    custom_fields: [
+                        {
+                            display_name: "Recipient Phone",
+                            variable_name: "recipient_phone",
+                            value: cleanPhone
+                        },
+                        {
+                            display_name: "Network",
+                            variable_name: "network",
+                            value: network
+                        },
+                        {
+                            display_name: "Bundle",
+                            variable_name: "bundle",
+                            value: bundle
+                        }
+                    ]
+                },
+
+                onSuccess: function(transaction) {
+                    if (message) {
+                        message.textContent =
+                            "Test payment completed. Reference: " +
+                            transaction.reference +
+                            ". Your data has NOT been delivered automatically.";
+                    }
+                },
+
+                onCancel: function() {
+                    if (message) {
+                        message.textContent =
+                            "Payment was cancelled.";
+                    }
+                },
+
+                onError: function(error) {
+                    if (message) {
+                        message.textContent =
+                            "Payment error: " +
+                            (error.message || "Please try again.");
+                    }
+                }
+            });
+
+        } catch (error) {
+            console.error("Paystack error:", error);
+
+            if (message) {
+                message.textContent =
+                    "Unable to open checkout. Please try again.";
+            }
+        }
+    });
+
+});
