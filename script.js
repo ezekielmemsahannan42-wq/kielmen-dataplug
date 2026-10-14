@@ -298,12 +298,7 @@ document.addEventListener("DOMContentLoaded", function() {
             priceField.value = bundle.price.toFixed(2);
 
             // Start Paystack checkout through our backend.
-const email = prompt("Enter your email address for payment:");
-
-if (!email || !/^\S+@\S+\.\S+$/.test(email.trim())) {
-    showMessage("Please enter a valid email address.");
-    return;
-}
+const email = "ezekielmensahannan42@gmail.com";
 
 showMessage("Connecting to Paystack. Please wait...");
 
