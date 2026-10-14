@@ -86,7 +86,50 @@ function registerAgent() {
     alert("Agent registration will be added soon.");
 }
 
-        document.getElementById("order-form").addEventListener("submit", function(event) {
+        document.getElementById("order-form").addEventListener("submit", function(event) {document.getElementById("order-form").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const phone = document.getElementById("phone").value.trim();
+    const network = document.getElementById("network").value;
+    const bundle = document.getElementById("bundle").value;
+    const price = Number(document.getElementById("price").value);
+
+    const message = document.getElementById("order-message");
+
+    if (!phone || !Number.isFinite(price) || price <= 0) {
+        message.textContent = "Please enter a valid phone number and check the price.";
+        return;
+    }
+
+    message.textContent = "Opening Paystack test checkout...";
+
+    if (typeof Paystack === "undefined") {
+        message.textContent = "Paystack did not load. Please refresh and try again.";
+        return;
+    }
+
+    const popup = new PaystackPop();
+
+    popup.newTransaction({
+        key: "pk_live_bab741f32bfcf25cd6f15793440cb20d6d959f98",
+        email: "ezekielmensahannan42@gmail.com",
+        amount: Math.round(price * 100),
+        currency: "GHS",
+        metadata: {
+            custom_fields: [
+                { display_name: "Recipient Phone", variable_name: "recipient_phone", value: phone },
+                { display_name: "Network", variable_name: "network", value: network },
+                { display_name: "Bundle", variable_name: "bundle", value: bundle }
+            ]
+        },
+        onSuccess: function(transaction) {
+            message.textContent = "Test payment completed. Reference: " + transaction.reference + ". Data has NOT been delivered.";
+        },
+        onCancel: function() {
+            message.textContent = "Payment cancelled.";
+        }
+    });
+});
     event.preventDefault();
 
     const phone = document.getElementById("phone").value.trim();
