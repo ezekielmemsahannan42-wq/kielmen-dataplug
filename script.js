@@ -297,12 +297,42 @@ document.addEventListener("DOMContentLoaded", function() {
             // Always use the price from our data list.
             priceField.value = bundle.price.toFixed(2);
 
-            // Checkout is intentionally not enabled until configured.
-            showMessage(
-                "Your selection is " + network + " " + size +
-                " for GH₵ " + bundle.price.toFixed(2) +
-                ". Paystack checkout is not configured yet."
-            );
+            // Start Paystack checkout through our backend.
+const email = prompt("Enter your email address for payment:");
+
+if (!email || !/^\S+@\S+\.\S+$/.test(email.trim())) {
+    showMessage("Please enter a valid email address.");
+    return;
+}
+
+showMessage("Connecting to Paystack. Please wait...");
+
+fetch("https://kielmen-dataplug-payment-api.onrender.com/initialize-payment", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        email: email.trim(),
+        amount: bundle.price,
+        phone: cleanPhone,
+        network: network,
+        bundle: size
+    })
+})
+.then(async function(response) {
+    const result = await response.json();
+
+    if (!response.ok || !result.authorization_url) {
+        throw new Error(result.message || "Unable to start payment.");
+    }
+
+    window.location.href = result.authorization_url;
+})
+.catch(function(error) {
+    console.error("Checkout error:", error);
+    showMessage(error.message || "Payment could not be started. Please try again.");
+});
         });
     }
 });
