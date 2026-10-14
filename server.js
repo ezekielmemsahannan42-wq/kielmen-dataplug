@@ -1,184 +1,120 @@
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+const express = require("express");
+const cors = require("cors");
 
-body {
-    font-family: Arial, sans-serif;
-    background: #f4f7fb;
-    color: #172033;
-    line-height: 1.6;
-}
+const app = express();
 
-header {
-    background: #071b3a;
-    color: white;
-    text-align: center;
-    padding: 25px 12px;
-}
+app.use(cors({
+    origin: "https://ezekielmemsahannan42-wq.github.io"
+}));
 
-header h1 {
-    font-size: 25px;
-}
+app.use(express.json());
 
-header h1 span {
-    color: #18d7a0;
-}
+// Check whether the server is running
+app.get("/", (req, res) => {
+    res.json({
+        message: "Kielmen 636 Dataplug payment server is running."
+    });
+});
 
-nav {
-    margin-top: 18px;
-}
+// Initialize a Paystack payment
+app.post("/initialize-payment", async (req, res) => {
+    try {
+        const {
+            email,
+            amount,
+            phone,
+            network,
+            bundle
+        } = req.body;
 
-nav a {
-    color: white;
-    text-decoration: none;
-    margin: 7px;
-    font-size: 13px;
-}
+        // Validate customer information
+        if (
+            !email ||
+            !/^\S+@\S+\.\S+$/.test(email) ||
+            !Number.isFinite(amount) ||
+            amount <= 0 ||
+            amount > 100000 ||
+            !phone ||
+            !network ||
+            !bundle
+        ) {
+            return res.status(400).json({
+                message: "Please provide valid order details."
+            });
+        }
 
-.hero {
-    background: linear-gradient(135deg, #0b2c60, #087f8c);
-    color: white;
-    text-align: center;
-    padding: 55px 15px;
-}
+        // Read the secret key from Render's private environment variables
+        const secretKey = process.env.PAYSTACK_SECRET_KEY;
 
-.hero h2 {
-    font-size: 27px;
-    margin-bottom: 15px;
-}
+        if (!secretKey || !secretKey.startsWith("sk_")) {
+            return res.status(500).json({
+                message: "Payment service is not configured correctly."
+            });
+        }
 
-.hero p {
-    margin-bottom: 25px;
-}
+        // Create a unique transaction reference
+        const reference =
+            "KIELMEN_" +
+            Date.now() +
+            "_" +
+            Math.random().toString(36).slice(2, 10);
 
-.button,
-#agents button {
-    display: inline-block;
-    background: #18d7a0;
-    color: #071b3a;
-    padding: 12px 16px;
-    margin: 6px;
-    border: none;
-    border-radius: 7px;
-    font-weight: bold;
-    text-decoration: none;
-    cursor: pointer;
-}
+        // Send the transaction request to Paystack
+        const response = await fetch(
+            "https://api.paystack.co/transaction/initialize",
+            {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${secretKey}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    email: email,
+                    amount: Math.round(amount * 100),
+                    currency: "GHS",
+                    reference: reference,
+                    callback_url:
+                        "https://ezekielmemsahannan42-wq.github.io/kielmen-dataplug/",
+                    metadata: {
+                        phone: phone,
+                        network: network,
+                        bundle: bundle
+                    }
+                })
+            }
+        );
 
-#bundles,
-#agents {
-    padding: 35px 15px;
-    text-align: center;
-}
+        const result = await response.json();
 
-#bundles h2,
-#agents h2 {
-    margin-bottom: 20px;
-}
+        // Return an error if Paystack rejects the request
+        if (!response.ok || !result.status) {
+            console.error("Paystack initialization failed:", result);
 
-.network-buttons {
-    margin: 20px 0;
-}
+            return res.status(502).json({
+                message: "Paystack could not initialize this payment."
+            });
+        }
 
-.network-buttons button {
-    padding: 11px 16px;
-    margin: 4px;
-    background: #071b3a;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-}
+        // Return the checkout address to the website
+        return res.json({
+            authorization_url: result.data.authorization_url,
+            reference: result.data.reference
+        });
 
-.data-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin-top: 20px;
-}
+    } catch (error) {
+        console.error("Payment initialization error:", error.message);
 
-.data-card {
-    background: white;
-    padding: 18px 8px;
-    border-radius: 9px;
-    box-shadow: 0 3px 10px #00000010;
-}
-
-.data-card h3 {
-    color: #087f8c;
-}
-
-.price {
-    font-size: 20px;
-    font-weight: bold;
-    margin: 8px 0;
-}
-
-.buy-button {
-    background: #071b3a;
-    color: white;
-    padding: 9px 13px;
-    border: none;
-    border-radius: 5px;
-}
-
-#agents {
-    background: #e5f8f2;
-}
-
-footer {
-    background: #071b3a;
-    color: white;
-    text-align: center;
-    padding: 20px 10px;
-    font-size: 13px;
-}
-
-@media (min-width: 600px) {
-    .data-grid {
-        grid-template-columns: repeat(4, 1fr);
+        return res.status(500).json({
+            message: "Unable to start payment. Please try again."
+        });
     }
-}.order-section {
-    max-width: 500px;
-    margin: 30px auto;
-    padding: 25px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px #00000012;
-}
+});
 
-.order-section h2 {
-    margin-bottom: 20px;
-    text-align: center;
-}
+// Start the server using Render's assigned port
+const PORT = process.env.PORT || 3000;
 
-.order-section label {
-    display: block;
-    margin-top: 15px;
-    text-align: left;
-    font-weight: bold;
-}
-
-.order-section input {
-    width: 100%;
-    padding: 12px;
-    margin-top: 5px;
-    border: 1px solid #ccd3dd;
-    border-radius: 6px;
-    font-size: 16px;
-}
-
-.order-section button {
-    width: 100%;
-    margin-top: 20px;
-}
-
-.order-section[hidden] {
-    display: none;
-}
-
-#order-message {
-    margin-top: 15px;
-}
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(
+        `Kielmen 636 Dataplug server running on port ${PORT}`
+    );
+});
