@@ -1,7 +1,7 @@
-// ==========================================
+// =============================================
 // KIELMEN 636 DATAPLUG
-// Complete Website JavaScript
-// ==========================================
+// COMPLETE AND CORRECTED JAVASCRIPT
+// =============================================
 
 
 // 1. DATA BUNDLE PRICES
@@ -47,31 +47,34 @@ const dataPrices = {
 };
 
 
-// 2. GET WEBSITE ELEMENTS
+// 2. HELPER FUNCTION
 
 function getElement(id) {
     return document.getElementById(id);
 }
 
 
-// 3. POPULATE THE BUNDLE DROPDOWN
+// 3. UPDATE BUNDLE DROPDOWN
 
 function updateBundleDropdown(network, selectedSize = "") {
     const bundleField = getElement("bundle");
     const priceField = getElement("price");
 
     if (!bundleField || !priceField) {
-        console.error("Bundle dropdown or price field is missing.");
+        console.error("Bundle or price field is missing.");
         return;
     }
 
+    // Clear old options.
     bundleField.innerHTML = "";
 
+    // Add the placeholder.
     const placeholder = document.createElement("option");
     placeholder.value = "";
     placeholder.textContent = "Choose a bundle";
     bundleField.appendChild(placeholder);
 
+    // Get bundles for the selected network.
     const bundles = dataPrices[network] || [];
 
     bundles.forEach(function(bundle) {
@@ -81,28 +84,24 @@ function updateBundleDropdown(network, selectedSize = "") {
         option.textContent =
             bundle.size + " — GH₵ " + bundle.price.toFixed(2);
 
-        if (bundle.size === selectedSize) {
-            option.selected = true;
-        }
-
         bundleField.appendChild(option);
     });
 
-    if (selectedSize) {
-        const selectedBundle = bundles.find(function(bundle) {
-            return bundle.size === selectedSize;
-        });
-
-        priceField.value = selectedBundle
-            ? selectedBundle.price.toFixed(2)
-            : "";
+    // Select the requested bundle if it exists.
+    if (selectedSize && bundles.some(function(bundle) {
+        return bundle.size === selectedSize;
+    })) {
+        bundleField.value = selectedSize;
     } else {
-        priceField.value = "";
+        bundleField.value = "";
     }
+
+    // Update the price.
+    updateSelectedPrice();
 }
 
 
-// 4. UPDATE THE PRICE WHEN A BUNDLE IS SELECTED
+// 4. UPDATE PRICE BASED ON SELECTED BUNDLE
 
 function updateSelectedPrice() {
     const networkField = getElement("network");
@@ -120,20 +119,20 @@ function updateSelectedPrice() {
         return item.size === size;
     });
 
+    // Keep the price empty until a bundle is selected.
     priceField.value = bundle
         ? bundle.price.toFixed(2)
         : "";
 }
 
 
-// 5. DISPLAY NETWORK BUNDLES AS CARDS
+// 5. DISPLAY NETWORK BUNDLE CARDS
 
 function showNetwork(network) {
     const dataList = getElement("data-list");
-    const networkField = getElement("network");
 
     if (!dataList || !dataPrices[network]) {
-        console.error("Network or data-list element not found:", network);
+        console.error("Could not display bundles for:", network);
         return;
     }
 
@@ -159,7 +158,7 @@ function showNetwork(network) {
         button.textContent = "Order";
 
         button.addEventListener("click", function() {
-            orderBundle(network, bundle.size, bundle.price);
+            orderBundle(network, bundle.size);
         });
 
         card.appendChild(heading);
@@ -170,6 +169,8 @@ function showNetwork(network) {
         dataList.appendChild(card);
     });
 
+    const networkField = getElement("network");
+
     if (networkField) {
         networkField.value = network;
     }
@@ -178,20 +179,18 @@ function showNetwork(network) {
 }
 
 
-// Allow HTML buttons to call this function.
+// Make the function available to HTML buttons.
 
 window.showNetwork = showNetwork;
 
 
-// 6. SELECT A BUNDLE FROM A CARD
+// 6. ORDER A SELECTED BUNDLE
 
-function orderBundle(network, size, price) {
+function orderBundle(network, size) {
     const networkField = getElement("network");
-    const bundleField = getElement("bundle");
-    const priceField = getElement("price");
     const orderForm = getElement("order-form");
 
-    if (!networkField || !bundleField || !priceField) {
+    if (!networkField || !getElement("bundle") || !getElement("price")) {
         alert("The order form is missing required fields.");
         return;
     }
@@ -199,9 +198,6 @@ function orderBundle(network, size, price) {
     networkField.value = network;
 
     updateBundleDropdown(network, size);
-
-    bundleField.value = size;
-    priceField.value = Number(price).toFixed(2);
 
     if (orderForm) {
         orderForm.scrollIntoView({
@@ -211,19 +207,18 @@ function orderBundle(network, size, price) {
     }
 }
 
-
-// Allow HTML buttons to call this function.
-
 window.orderBundle = orderBundle;
 
 
-// 7. SHOW A MESSAGE TO THE CUSTOMER
+// 7. DISPLAY ORDER MESSAGES
 
 function showMessage(messageText) {
     const message = getElement("order-message");
 
     if (message) {
         message.textContent = messageText;
+    } else {
+        alert(messageText);
     }
 }
 
@@ -236,33 +231,31 @@ document.addEventListener("DOMContentLoaded", function() {
     const priceField = getElement("price");
     const orderForm = getElement("order-form");
 
-    // Load the bundles when the network changes.
+    // When the network changes, load its bundle options.
 
     if (networkField) {
         networkField.addEventListener("change", function() {
             updateBundleDropdown(networkField.value);
         });
+
+        // Load options for the initially selected network.
+        updateBundleDropdown(networkField.value);
     }
 
-    // Update the price when the bundle changes.
+    // When the bundle changes, update the price.
 
     if (bundleField) {
         bundleField.addEventListener("change", updateSelectedPrice);
     }
 
-    // Display MTN cards when the homepage opens.
+    // Display MTN cards on the homepage.
 
     if (getElement("data-list")) {
         showNetwork("MTN");
     }
 
-    // Clear the initial price until a bundle is selected.
 
-    if (priceField && bundleField && !bundleField.value) {
-        priceField.value = "";
-    }
-
-    // 9. HANDLE ORDER SUBMISSION
+    // 9. HANDLE ORDER FORM SUBMISSION
 
     if (orderForm) {
         orderForm.addEventListener("submit", function(event) {
@@ -278,108 +271,38 @@ document.addEventListener("DOMContentLoaded", function() {
             const phone = phoneField.value.trim();
             const network = networkField.value;
             const size = bundleField.value;
-            const price = Number(priceField.value);
 
-            if (!network || !size || !phone) {
-                showMessage(
-                    "Please select a network, choose a bundle and enter the recipient's phone number."
-                );
+            // Find the official price from our price list.
+            const bundle = (dataPrices[network] || []).find(function(item) {
+                return item.size === size;
+            });
+
+            if (!network || !size || !bundle) {
+                showMessage("Please select a network and bundle first.");
+                return;
+            }
+
+            if (!phone) {
+                showMessage("Please enter the recipient's phone number.");
                 return;
             }
 
             const cleanPhone = phone.replace(/[\s-]/g, "");
 
             if (!/^(0\d{9}|\+233\d{9}|233\d{9})$/.test(cleanPhone)) {
-                showMessage(
-                    "Please enter a valid Ghanaian phone number."
-                );
+                showMessage("Please enter a valid Ghanaian phone number.");
                 return;
             }
 
-            const bundle = (dataPrices[network] || []).find(function(item) {
-                return item.size === size;
-            });
+            // Always use the price from our data list.
+            priceField.value = bundle.price.toFixed(2);
 
-            if (!bundle || !Number.isFinite(price) ||
-                price !== bundle.price) {
-                showMessage(
-                    "Please select your bundle again to confirm the correct price."
-                );
-                return;
-            }
-
-            // This prototype uses Paystack test checkout only.
-            // Replace this placeholder with your own test public key.
-
-            const publicKey = "pk_test_REPLACE_WITH_YOUR_PUBLIC_KEY";
-            const email = "YOUR_EMAIL@example.com";
-
-            if (publicKey.includes("REPLACE_WITH")) {
-                showMessage(
-                    "Bundle selected successfully. Paystack is not configured yet."
-                );
-                return;
-            }
-
-            if (typeof PaystackPop === "undefined") {
-                showMessage(
-                    "Paystack did not load. Please refresh and try again."
-                );
-                return;
-            }
-
-            try {
-                const popup = new PaystackPop();
-
-                popup.newTransaction({
-                    key: publicKey,
-                    email: email,
-                    amount: Math.round(bundle.price * 100),
-                    currency: "GHS",
-
-                    metadata: {
-                        custom_fields: [
-                            {
-                                display_name: "Recipient Phone",
-                                variable_name: "recipient_phone",
-                                value: cleanPhone
-                            },
-                            {
-                                display_name: "Network",
-                                variable_name: "network",
-                                value: network
-                            },
-                            {
-                                display_name: "Bundle",
-                                variable_name: "bundle",
-                                value: size
-                            }
-                        ]
-                    },
-
-                    onSuccess: function(transaction) {
-                        showMessage(
-                            "Test payment completed. Reference: " +
-                            transaction.reference +
-                            ". Data has NOT been delivered automatically."
-                        );
-                    },
-
-                    onCancel: function() {
-                        showMessage("Payment was cancelled.");
-                    },
-
-                    onError: function(error) {
-                        showMessage(
-                            "Payment error: " +
-                            (error.message || "Please try again.")
-                        );
-                    }
-                });
-            } catch (error) {
-                console.error("Paystack error:", error);
-                showMessage("Unable to open checkout. Please try again.");
-            }
+            // Checkout is intentionally not enabled until configured.
+            showMessage(
+                "Your selection is " + network + " " + size +
+                " for GH₵ " + bundle.price.toFixed(2) +
+                ". Paystack checkout is not configured yet."
+            );
         });
     }
 });
