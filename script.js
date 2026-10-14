@@ -127,7 +127,6 @@ function registerAgent() {
         },
         onCancel: function() {
             message.textContent = "Payment cancelled.";
-        }
     });
 });
     
