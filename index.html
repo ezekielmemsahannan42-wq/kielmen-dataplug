@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kielmen 636 Dataplug</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>KIELMEN <span>636</span> DATAPLUG</h1>
+        <p>Your Trusted Data Plug</p>
+
+        <nav>
+            <a href="#home">Home</a>
+            <a href="#bundles">Data Bundles</a>
+            <a href="#agents">Become an Agent</a>
+        </nav>
+    </header>
+
+    <section id="home" class="hero">
+        <h2>Welcome to Kielmen 636 Dataplug</h2>
+        <p>Buy affordable MTN, AirtelTigo and Telecel data bundles.</p>
+        <a href="#bundles" class="button">Buy Data</a>
+        <a href="#agents" class="button">Become an Agent</a>
+    </section>
+
+    <section id="bundles">
+        <h2>Our Data Bundles</h2>
+
+        <div class="network-buttons">
+            <button onclick="showNetwork('MTN')">MTN</button>
+            <button onclick="showNetwork('AirtelTigo')">AirtelTigo</button>
+            <button onclick="showNetwork('Telecel')">Telecel</button>
+        </div>
+
+        <div id="data-list" class="data-grid"></div>
+    </section>
+
+    <section id="agents">
+        <h2>Become a Kielmen 636 Agent!</h2>
+        <p>Create your own data-selling website under our platform.</p>
+        <p>You can choose your business name and set your own selling prices.</p>
+        <button onclick="registerAgent()">Register as an Agent</button>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 Kielmen 636 Dataplug</p>
+        <p>Affordable Data. Reliable Service.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

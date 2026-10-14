@@ -1,0 +1,184 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f7fb;
+    color: #172033;
+    line-height: 1.6;
+}
+
+header {
+    background: #071b3a;
+    color: white;
+    text-align: center;
+    padding: 25px 12px;
+}
+
+header h1 {
+    font-size: 25px;
+}
+
+header h1 span {
+    color: #18d7a0;
+}
+
+nav {
+    margin-top: 18px;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin: 7px;
+    font-size: 13px;
+}
+
+.hero {
+    background: linear-gradient(135deg, #0b2c60, #087f8c);
+    color: white;
+    text-align: center;
+    padding: 55px 15px;
+}
+
+.hero h2 {
+    font-size: 27px;
+    margin-bottom: 15px;
+}
+
+.hero p {
+    margin-bottom: 25px;
+}
+
+.button,
+#agents button {
+    display: inline-block;
+    background: #18d7a0;
+    color: #071b3a;
+    padding: 12px 16px;
+    margin: 6px;
+    border: none;
+    border-radius: 7px;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#bundles,
+#agents {
+    padding: 35px 15px;
+    text-align: center;
+}
+
+#bundles h2,
+#agents h2 {
+    margin-bottom: 20px;
+}
+
+.network-buttons {
+    margin: 20px 0;
+}
+
+.network-buttons button {
+    padding: 11px 16px;
+    margin: 4px;
+    background: #071b3a;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.data-card {
+    background: white;
+    padding: 18px 8px;
+    border-radius: 9px;
+    box-shadow: 0 3px 10px #00000010;
+}
+
+.data-card h3 {
+    color: #087f8c;
+}
+
+.price {
+    font-size: 20px;
+    font-weight: bold;
+    margin: 8px 0;
+}
+
+.buy-button {
+    background: #071b3a;
+    color: white;
+    padding: 9px 13px;
+    border: none;
+    border-radius: 5px;
+}
+
+#agents {
+    background: #e5f8f2;
+}
+
+footer {
+    background: #071b3a;
+    color: white;
+    text-align: center;
+    padding: 20px 10px;
+    font-size: 13px;
+}
+
+@media (min-width: 600px) {
+    .data-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}.order-section {
+    max-width: 500px;
+    margin: 30px auto;
+    padding: 25px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px #00000012;
+}
+
+.order-section h2 {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.order-section label {
+    display: block;
+    margin-top: 15px;
+    text-align: left;
+    font-weight: bold;
+}
+
+.order-section input {
+    width: 100%;
+    padding: 12px;
+    margin-top: 5px;
+    border: 1px solid #ccd3dd;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+.order-section button {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.order-section[hidden] {
+    display: none;
+}
+
+#order-message {
+    margin-top: 15px;
+}
