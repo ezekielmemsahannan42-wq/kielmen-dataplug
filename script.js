@@ -86,4 +86,17 @@ function registerAgent() {
     alert("Agent registration will be added soon.");
 }
 
+        document.getElementById("order-form").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    const phone = document.getElementById("phone").value.trim();
+    const network = document.getElementById("network").value;
+    const bundle = document.getElementById("bundle").value;
+    const price = document.getElementById("price").value;
+
+    const message = document.getElementById("order-message");
+    message.textContent = "Your order details are ready. Payment is not connected yet. Please do not send money until payment is enabled.";
+    message.style.color = "#ffcc00";
+});
+
 showNetwork("MTN");
