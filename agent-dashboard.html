@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Dashboard | Kielmen 636</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            background: #071b35;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 12px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 25px auto;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px #00000010;
+        }
+
+        .card h3 {
+            font-size: 15px;
+            color: #475569;
+        }
+
+        .card p {
+            font-size: 24px;
+            font-weight: bold;
+            color: #0b8f55;
+        }
+
+        .panel {
+            background: white;
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        .button {
+            display: inline-block;
+            background: #087f5b;
+            color: white;
+            padding: 12px 18px;
+            text-decoration: none;
+            border: none;
+            border-radius: 7px;
+            margin: 5px 5px 5px 0;
+        }
+
+        .notice {
+            color: #92400e;
+            background: #fef3c7;
+            padding: 12px;
+            border-radius: 8px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>KIELMEN 636 DATAPLUG</h1>
+    <p>Agent Dashboard</p>
+</header>
+
+<div class="container">
+
+    <div class="notice">
+        <strong>Prototype dashboard:</strong>
+        These figures are examples only. Real orders, earnings and
+        agent accounts will require a secure backend and database.
+    </div>
+
+    <div class="cards">
+
+        <div class="card">
+            <h3>Total Orders</h3>
+            <p>0</p>
+        </div>
+
+        <div class="card">
+            <h3>Total Sales</h3>
+            <p>GH₵0.00</p>
+        </div>
+
+        <div class="card">
+            <h3>Profit</h3>
+            <p>GH₵0.00</p>
+        </div>
+
+        <div class="card">
+            <h3>Customers</h3>
+            <p>0</p>
+        </div>
+
+    </div>
+
+    <div class="panel">
+        <h2>Manage Your Business</h2>
+
+        <a class="button" href="index.html">View Main Website</a>
+
+        <a class="button" href="agent-register.html">
+            Agent Registration
+        </a>
+    </div>
+
+    <div class="panel">
+        <h2>Data Prices</h2>
+        <p>MTN, Telecel and AirtelTigo price management will be added here.</p>
+    </div>
+
+    <div class="panel">
+        <h2>Recent Orders</h2>
+        <p>No real orders are connected yet.</p>
+    </div>
+
+</div>
+
+</body>
+</html>
