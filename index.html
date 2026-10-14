@@ -36,6 +36,31 @@
         </div>
 
         <div id="data-list" class="data-grid"></div>
+        <div id="order-section" class="order-section" hidden>
+    <h2>Complete Your Order</h2>
+
+    <form id="order-form">
+        <label for="network">Network</label>
+        <input type="text" id="network" readonly>
+
+        <label for="bundle">Data Bundle</label>
+        <input type="text" id="bundle" readonly>
+
+        <label for="price">Price (GH₵)</label>
+        <input type="text" id="price" readonly>
+
+        <label for="phone">Recipient's Phone Number</label>
+        <input type="tel" id="phone"
+               placeholder="Enter recipient's number"
+               inputmode="numeric" required>
+
+        <button type="submit" class="button">
+            Continue to Payment
+        </button>
+    </form>
+
+    <p id="order-message"></p>
+        </div>
     </section>
 
     <section id="agents">
