@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Registration | Kielmen 636</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 450px;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px #00000015;
+        }
+
+        h1 {
+            text-align: center;
+            color: #064e3b;
+        }
+
+        p {
+            text-align: center;
+            color: #555;
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            margin-top: 6px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 16px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 22px;
+            background: #047857;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #047857;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>KIELMEN 636</h1>
+        <p>Become a Data Plug Agent</p>
+
+        <form id="agent-form">
+
+            <label for="fullname">Full Name</label>
+            <input type="text" id="fullname"
+                   placeholder="Enter your full name" required>
+
+            <label for="business">Business Name</label>
+            <input type="text" id="business"
+                   placeholder="Enter your business name" required>
+
+            <label for="phone">Phone Number</label>
+            <input type="tel" id="phone"
+                   placeholder="Enter your phone number" required>
+
+            <label for="email">Email Address</label>
+            <input type="email" id="email"
+                   placeholder="Enter your email" required>
+
+            <label for="password">Create Password</label>
+            <input type="password" id="password"
+                   placeholder="At least 8 characters"
+                   minlength="8" required>
+
+            <button type="submit">Create Agent Account</button>
+
+        </form>
+
+        <p id="message"></p>
+
+        <a class="back" href="index.html">Back to Homepage</a>
+    </div>
+
+    <script>
+        document.getElementById("agent-form")
+            .addEventListener("submit", function(event) {
+                event.preventDefault();
+
+                document.getElementById("message").textContent =
+                    "Registration form is ready. Account creation will be enabled when the secure backend is connected.";
+            });
+    </script>
+
+</body>
+</html>
