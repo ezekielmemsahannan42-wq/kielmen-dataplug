@@ -3,98 +3,428 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kielmen 636 Dataplug</title>
+
+    <title>Kielmen 636 Dataplug | Affordable Data Bundles</title>
+
+    <meta name="description"
+          content="Buy affordable MTN, AirtelTigo and Telecel data bundles from Kielmen 636 Dataplug.">
+
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f7fb;
+            color: #172033;
+        }
+
+        header {
+            background: #071a38;
+            color: white;
+            padding: 22px 15px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+            font-size: 27px;
+        }
+
+        header p {
+            margin: 0;
+            color: #cbd5e1;
+        }
+
+        nav {
+            background: #102b52;
+            padding: 13px 8px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 18px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .hero {
+            padding: 35px 15px;
+            text-align: center;
+            background: white;
+        }
+
+        .hero h2 {
+            color: #071a38;
+            font-size: 28px;
+        }
+
+        .hero p {
+            line-height: 1.7;
+        }
+
+        .section {
+            padding: 25px 15px;
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .section h2 {
+            text-align: center;
+        }
+
+        .network-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .network-buttons button {
+            border: none;
+            border-radius: 8px;
+            padding: 13px 20px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .mtn {
+            background: #f2c400;
+            color: #111 !important;
+        }
+
+        .airteltigo {
+            background: #ed1c24;
+        }
+
+        .telecel {
+            background: #e40046;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(140px, 1fr)
+            );
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .data-card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px 10px;
+            text-align: center;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .data-card h3 {
+            margin-top: 0;
+        }
+
+        .price {
+            color: #087443;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .buy-button {
+            width: 100%;
+            padding: 11px;
+            background: #087443;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .order-section {
+            background: white;
+            padding: 25px 18px;
+            border-radius: 12px;
+            max-width: 500px;
+            margin: 20px auto;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .order-section label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+
+        .order-section input,
+        .order-section select {
+            box-sizing: border-box;
+            width: 100%;
+            padding: 12px;
+            margin-top: 7px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 16px;
+        }
+
+        .submit-button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 20px;
+            background: #087443;
+            color: white;
+            border: none;
+            border-radius: 7px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .agents {
+            background: #e6eef9;
+            text-align: center;
+            padding: 30px 15px;
+        }
+
+        .agent-link {
+            display: inline-block;
+            background: #071a38;
+            color: white;
+            text-decoration: none;
+            padding: 13px 18px;
+            margin: 7px;
+            border-radius: 7px;
+        }
+
+        footer {
+            background: #071a38;
+            color: white;
+            text-align: center;
+            padding: 22px 12px;
+            line-height: 1.8;
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 22px;
+            }
+
+            .hero h2 {
+                font-size: 23px;
+            }
+
+            .section {
+                padding: 20px 10px;
+            }
+        }
+    </style>
 </head>
+
 <body>
 
-    <header>
-        <h1>KIELMEN <span>636</span> DATAPLUG</h1>
-        <p>Your Trusted Data Plug</p>
+    <!-- HEADER -->
 
-        <nav>
-            <a href="#home">Home</a>
-            <a href="#bundles">Data Bundles</a>
-            <a href="#agents">Become an Agent</a>
-        </nav>
+    <header id="home">
+        <h1>KIELMEN 636 DATAPLUG</h1>
+        <p>Your Trusted Data Plug</p>
     </header>
 
-    <section id="home" class="hero">
-        <h2>Welcome to Kielmen 636 Dataplug</h2>
-        <p>Buy affordable MTN, AirtelTigo and Telecel data bundles.</p>
-        <a href="#bundles" class="button">Buy Data</a>
-        <a href="#agents" class="button">Become an Agent</a>
+
+    <!-- NAVIGATION -->
+
+    <nav>
+        <a href="#home">Home</a>
+        <a href="#bundles">Data Bundles</a>
+        <a href="#order">Order</a>
+        <a href="#agents">Become an Agent</a>
+    </nav>
+
+
+    <!-- WELCOME SECTION -->
+
+    <section class="hero">
+        <h2>Welcome to Kielmen 636 Dataplug!</h2>
+
+        <p>
+            Get affordable data bundles for your internet needs.
+            Choose your network, select a bundle and enter the
+            recipient's phone number.
+        </p>
+
+        <p>
+            MTN | AirtelTigo | Telecel
+        </p>
     </section>
 
-    <section id="bundles">
+
+    <!-- DATA BUNDLES -->
+
+    <section class="section" id="bundles">
+
         <h2>Our Data Bundles</h2>
 
+        <p style="text-align:center;">
+            Select a network to view available bundles.
+        </p>
+
         <div class="network-buttons">
-            <button onclick="showNetwork('MTN')">MTN</button>
-            <button onclick="showNetwork('AirtelTigo')">AirtelTigo</button>
-            <button onclick="showNetwork('Telecel')">Telecel</button>
+
+            <button
+                type="button"
+                class="mtn"
+                onclick="showNetwork('MTN')">
+                MTN
+            </button>
+
+            <button
+                type="button"
+                class="airteltigo"
+                onclick="showNetwork('AirtelTigo')">
+                AirtelTigo
+            </button>
+
+            <button
+                type="button"
+                class="telecel"
+                onclick="showNetwork('Telecel')">
+                Telecel
+            </button>
+
         </div>
 
         <div id="data-list" class="data-grid"></div>
-        <div id="order-section" class="order-section" hidden>
-    <h2>Complete Your Order</h2>
 
-    <form id="order-form">
-        <label for="network">Network</label>
-        <input type="text" id="network" readonly>
-
-        <label for="bundle">Data Bundle</label>
-        <input type="text" id="bundle" readonly>
-
-        <label for="price">Price (GH₵)</label>
-        <input type="text" id="price" readonly>
-
-        <label for="phone">Recipient's Phone Number</label>
-        <input type="tel" id="phone"
-               placeholder="Enter recipient's number"
-               inputmode="numeric" required>
-
-        <button type="submit" class="button">
-            Continue to Payment
-        </button>
-    </form>
-
-    <p id="order-message"></p>
-        </div>
     </section>
 
-    <section id="agents">
-    <h2>Become a Kielmen 636 Agent!</h2>
-    <p>Create your own data-selling business under our platform.</p>
-    <p>Choose your business name, set your prices, and manage your sales.</p>
 
-    <div class="agent-features">
-        <div>
-            <h3>📊 Sales Dashboard</h3>
-            <p>View your orders and sales.</p>
+    <!-- ORDER FORM -->
+
+    <section class="section" id="order">
+
+        <h2>Complete Your Order</h2>
+
+        <div class="order-section">
+
+            <form id="order-form">
+
+                <label for="network">Select Network</label>
+
+                <select id="network" name="network" required>
+                    <option value="">Choose a network</option>
+                    <option value="MTN">MTN</option>
+                    <option value="AirtelTigo">AirtelTigo</option>
+                    <option value="Telecel">Telecel</option>
+                </select>
+
+
+                <label for="bundle">Select Bundle</label>
+
+                <select id="bundle" name="bundle" required>
+                    <option value="">Choose a bundle</option>
+                </select>
+
+
+                <label for="price">Price (GH₵)</label>
+
+                <input
+                    type="number"
+                    id="price"
+                    name="price"
+                    min="0.01"
+                    step="0.01"
+                    placeholder="Bundle price"
+                    required
+                    readonly>
+
+
+                <label for="phone">
+                    Recipient's Phone Number
+                </label>
+
+                <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    placeholder="e.g. 0241234567"
+                    autocomplete="tel"
+                    required>
+
+
+                <button
+                    type="submit"
+                    class="submit-button">
+                    Proceed to Payment
+                </button>
+
+                <p
+                    id="order-message"
+                    role="status"
+                    aria-live="polite">
+                </p>
+
+            </form>
+
         </div>
 
-        <div>
-            <h3>💰 Set Your Prices</h3>
-            <p>Choose your own selling prices.</p>
-        </div>
-
-        <div>
-            <h3>🌐 Your Own Website</h3>
-            <p>Build your branded data-selling website.</p>
-        </div>
-    </div>
-
-    <a href="agent-register.html" class="button">Register as an Agent</a>
-        <a href="agent-dashboard.html" class="button">Agent Dashboard</a>
     </section>
+
+
+    <!-- AGENT SECTION -->
+
+    <section class="agents" id="agents">
+
+        <h2>Become a Kielmen Data Agent</h2>
+
+        <p>
+            Interested in selling data bundles?
+            Join our agent platform.
+        </p>
+
+        <a
+            class="agent-link"
+            href="agent-register.html">
+            Register as an Agent
+        </a>
+
+        <a
+            class="agent-link"
+            href="agent-dashboard.html">
+            Agent Dashboard
+        </a>
+
+    </section>
+
+
+    <!-- FOOTER -->
 
     <footer>
-        <p>&copy; 2026 Kielmen 636 Dataplug</p>
-        <p>Affordable Data. Reliable Service.</p>
+        <h3>KIELMEN 636 DATAPLUG</h3>
+
+        <p>Your Trusted Data Plug</p>
+
+        <p>
+            Affordable data bundles for your daily needs.
+        </p>
+
+        <p>
+            &copy; 2026 Kielmen 636 Dataplug.
+            All rights reserved.
+        </p>
     </footer>
 
-         <script src="https://js.paystack.co/v2/inline.js"></script>
-<script src="script.js"></script>
+
+    <!-- PAYSTACK CHECKOUT LIBRARY -->
+
+    <script src="https://js.paystack.co/v2/inline.js"></script>
+
+    <!-- YOUR JAVASCRIPT FILE -->
+
+    <script src="script.js"></script>
+
 </body>
 </html>
