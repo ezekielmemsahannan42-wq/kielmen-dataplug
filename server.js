@@ -126,6 +126,20 @@ app.post("/initialize-payment", async (req, res) => {
                 message: "Paystack could not initialize this payment."
             });
         }
+                await pool.query(
+            `INSERT INTO orders
+            (reference, email, phone, network, bundle, amount, status)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [
+                reference,
+                email,
+                phone,
+                network,
+                bundle,
+                amount,
+                "pending"
+            ]
+        );
 
         // Return the checkout address to the website
         return res.json({
