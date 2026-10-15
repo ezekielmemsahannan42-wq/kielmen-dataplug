@@ -2,17 +2,15 @@
 
 /* ==========================================
    KIELMEN 636 DATAPLUG
-   CUSTOMER SHOPPING AND CHECKOUT
+   CUSTOMER WEBSITE SCRIPT
    ========================================== */
 
-/*
- * Customer-facing prices.
- * Confirm these prices before accepting orders.
- *
- * IMPORTANT:
- * The backend must independently validate the
- * official price before initializing payment.
- */
+const PAYMENT_API =
+  "https://kielmen-dataplug-payment-api.onrender.com";
+
+/* ==========================================
+   APPROVED CUSTOMER-FACING PRICES
+   ========================================== */
 
 const PRODUCTS = {
   MTN: [
@@ -32,7 +30,7 @@ const PRODUCTS = {
     { size: "50GB", price: 240.00 }
   ],
 
-  Telecel: [
+  TELECEL: [
     { size: "10GB", price: 45.00 },
     { size: "15GB", price: 62.00 },
     { size: "20GB", price: 82.00 },
@@ -43,7 +41,7 @@ const PRODUCTS = {
     { size: "100GB", price: 420.00 }
   ],
 
-  AirtelTigo: [
+  AIRTELTIGO: [
     { size: "1GB", price: 5.00 },
     { size: "2GB", price: 9.20 },
     { size: "5GB", price: 22.00 },
@@ -54,240 +52,199 @@ const PRODUCTS = {
   ]
 };
 
-const PAYMENT_API =
-  "https://kielmen-dataplug-payment-api.onrender.com";
-
-const WHATSAPP_CHANNEL =
-  "https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S";
-
-const WHATSAPP_CONTACT =
-  "https://wa.me/233533878548";
+/* ==========================================
+   WEBSITE STATE
+   ========================================== */
 
 let selectedNetwork = "MTN";
 let selectedBundle = null;
-let checkoutInProgress = false;
+let searchText = "";
 
 /* ==========================================
-   HELPERS
+   HELPER FUNCTIONS
    ========================================== */
+
+function formatMoney(amount) {
+  return "GH₵" + Number(amount).toFixed(2);
+}
 
 function getElement(id) {
   return document.getElementById(id);
 }
 
-function money(amount) {
-  return "GH₵" +
-    Number(amount).toFixed(2).replace(/\.00$/, "");
-}
-
-function showMessage(message, type = "error") {
+function showMessage(message, type = "info") {
   const element = getElement("checkoutMessage");
 
-  if (!element) return;
-
-  element.textContent = message;
-  element.className = "status show " + type;
-}
-
-function clearMessage() {
-  const element = getElement("checkoutMessage");
-
-  if (!element) return;
-
-  element.textContent = "";
-  element.className = "status";
-}
-
-function updateSelectedBundle() {
-  const name = getElement("selectedName");
-  const price = getElement("selectedPrice");
-
-  if (!name || !price) return;
-
-  if (!selectedBundle) {
-    name.textContent = "No bundle selected";
-    price.textContent = "Choose a bundle above.";
+  if (!element) {
+    alert(message);
     return;
   }
 
-  name.textContent =
-    selectedBundle.network + " " + selectedBundle.size;
+  element.textContent = message;
+  element.style.display = "block";
 
-  price.textContent =
-    "Total: " + money(selectedBundle.price);
+  element.style.color =
+    type === "error"
+      ? "#ff6b6b"
+      : type === "success"
+      ? "#4ade80"
+      : "#ffffff";
 }
 
 /* ==========================================
    NETWORK SELECTION
    ========================================== */
 
-function setNetwork(network) {
-  if (!Object.prototype.hasOwnProperty.call(PRODUCTS, network)) {
+function selectNetwork(network) {
+  const normalized = String(network)
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "");
+
+  if (!PRODUCTS[normalized]) {
     return;
   }
 
-  selectedNetwork = network;
+  selectedNetwork = normalized;
   selectedBundle = null;
 
-  document.querySelectorAll(".network-tab").forEach(button => {
-    const active = button.dataset.network === network;
+  document.querySelectorAll(".network-tab").forEach((tab) => {
+    const tabNetwork = String(
+      tab.dataset.network || tab.textContent
+    )
+      .toUpperCase()
+      .replace(/[^A-Z]/g, "");
 
-    button.classList.toggle("active", active);
-    button.setAttribute("aria-pressed", String(active));
+    const active =
+      tabNetwork === selectedNetwork ||
+      (selectedNetwork === "AIRTELTIGO" &&
+        tabNetwork.includes("AIRTEL"));
+
+    tab.classList.toggle("active", active);
+    tab.setAttribute("aria-selected", active ? "true" : "false");
   });
 
-  updateSelectedBundle();
-  clearMessage();
   renderBundles();
+  updateSelectedBundle();
 }
 
 /* ==========================================
-   BUNDLE DISPLAY
+   DISPLAY DATA BUNDLES
    ========================================== */
 
 function renderBundles() {
   const grid = getElement("bundleGrid");
-  const search = getElement("bundleSearch");
-  const resultCount = getElement("resultCount");
 
-  if (!grid) return;
-
-  const query = search
-    ? search.value.trim().toLowerCase()
-    : "";
-
-  const bundles = (PRODUCTS[selectedNetwork] || []).filter(bundle => {
-    const searchable = (
-      selectedNetwork + " " +
-      bundle.size + " " +
-      bundle.price
-    ).toLowerCase();
-
-    return searchable.includes(query);
-  });
-
-  if (resultCount) {
-    resultCount.textContent =
-      bundles.length +
-      " bundles available for " +
-      selectedNetwork;
-  }
-
-  grid.replaceChildren();
-
-  if (bundles.length === 0) {
-    const empty = document.createElement("div");
-
-    empty.className = "empty-state";
-    empty.textContent = "No matching bundles found.";
-
-    grid.appendChild(empty);
+  if (!grid) {
+    console.error("Missing HTML element: bundleGrid");
     return;
   }
 
-  bundles.forEach(bundle => {
-    const card = document.createElement("article");
+  const bundles = PRODUCTS[selectedNetwork] || [];
 
+  const filteredBundles = bundles.filter((bundle) => {
+    const text = (
+      bundle.size + " " + formatMoney(bundle.price)
+    ).toLowerCase();
+
+    return text.includes(searchText.toLowerCase());
+  });
+
+  grid.innerHTML = "";
+
+  if (filteredBundles.length === 0) {
+    grid.innerHTML =
+      '<p class="empty-state">No matching bundles found.</p>';
+  }
+
+  filteredBundles.forEach((bundle) => {
+    const card = document.createElement("button");
+
+    card.type = "button";
     card.className = "bundle-card";
-    card.dataset.network = selectedNetwork;
 
-    const main = document.createElement("div");
-    main.className = "bundle-main";
+    if (
+      selectedBundle &&
+      selectedBundle.network === selectedNetwork &&
+      selectedBundle.size === bundle.size
+    ) {
+      card.classList.add("selected");
+    }
 
-    const network = document.createElement("div");
-    network.className = "bundle-network";
+    card.innerHTML = `
+      <span class="bundle-size"></span>
+      <span class="bundle-price"></span>
+      <span class="bundle-label">Select bundle</span>
+    `;
 
-    const networkLabels = {
-      MTN: "🟡 MTN",
-      Telecel: "🔴 TELECEL",
-      AirtelTigo: "🔵 AIRTELTIGO"
-    };
+    card.querySelector(".bundle-size").textContent = bundle.size;
+    card.querySelector(".bundle-price").textContent =
+      formatMoney(bundle.price);
 
-    network.textContent = networkLabels[selectedNetwork];
-
-    const size = document.createElement("div");
-    size.className = "bundle-size";
-    size.textContent = bundle.size;
-
-    const description = document.createElement("div");
-    description.className = "bundle-description";
-    description.textContent = "Data Bundle";
-
-    main.append(network, size, description);
-
-    const footer = document.createElement("div");
-    footer.className = "bundle-footer";
-
-    const price = document.createElement("div");
-    price.className = "bundle-price";
-    price.textContent = money(bundle.price);
-
-    const buyButton = document.createElement("button");
-
-    buyButton.type = "button";
-    buyButton.className = "buy-button";
-    buyButton.textContent = "Buy Now";
-
-    buyButton.addEventListener("click", () => {
+    card.addEventListener("click", () => {
       selectedBundle = {
         network: selectedNetwork,
         size: bundle.size,
         price: bundle.price
       };
 
+      renderBundles();
       updateSelectedBundle();
-      clearMessage();
-
-      const checkout = getElement("checkout");
-
-      if (checkout) {
-        checkout.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
-      }
     });
-
-    footer.append(price, buyButton);
-    card.append(main, footer);
 
     grid.appendChild(card);
   });
+
+  const resultCount = getElement("resultCount");
+
+  if (resultCount) {
+    resultCount.textContent =
+      filteredBundles.length +
+      (filteredBundles.length === 1 ? " bundle" : " bundles");
+  }
 }
 
 /* ==========================================
-   NETWORK BUTTON EVENTS
+   UPDATE SELECTED BUNDLE
    ========================================== */
 
-function initialiseNetworkButtons() {
-  document.querySelectorAll(".network-tab").forEach(button => {
-    button.addEventListener("click", () => {
-      setNetwork(button.dataset.network);
-    });
-  });
+function updateSelectedBundle() {
+  const name = getElement("selectedName");
+  const price = getElement("selectedPrice");
+  const checkout = getElement("checkout");
+
+  if (selectedBundle) {
+    if (name) {
+      name.textContent =
+        selectedBundle.network + " " + selectedBundle.size;
+    }
+
+    if (price) {
+      price.textContent = formatMoney(selectedBundle.price);
+    }
+
+    if (checkout) {
+      checkout.style.display = "";
+    }
+  } else {
+    if (name) {
+      name.textContent = "No bundle selected";
+    }
+
+    if (price) {
+      price.textContent = "GH₵0.00";
+    }
+  }
 }
 
 /* ==========================================
-   CUSTOMER CHECKOUT
+   CHECKOUT AND PAYSTACK
    ========================================== */
 
-function normalizePhone(phone) {
-  return phone.replace(/[\s()-]/g, "");
-}
-
-function isValidGhanaPhone(phone) {
-  return /^(?:\+233|233|0)\d{9}$/.test(phone);
-}
-
-async function submitCheckout(event) {
+async function handleCheckout(event) {
   event.preventDefault();
 
-  if (checkoutInProgress) return;
-
-  clearMessage();
-
   if (!selectedBundle) {
-    showMessage("Please select a data bundle first.");
+    showMessage("Please select a data bundle first.", "error");
     return;
   }
 
@@ -295,56 +252,52 @@ async function submitCheckout(event) {
   const phoneInput = getElement("recipientPhone");
   const paymentButton = getElement("paymentButton");
 
-  if (!emailInput || !phoneInput || !paymentButton) {
-    showMessage("The checkout form is incomplete.");
+  if (!emailInput || !phoneInput) {
+    showMessage("Checkout form is missing required fields.", "error");
     return;
   }
 
   const email = emailInput.value.trim();
-  const phone = normalizePhone(phoneInput.value.trim());
+  const phone = phoneInput.value.trim();
 
-  const emailValid =
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-  if (!emailValid) {
-    showMessage("Please enter a valid email address.");
+  if (!email || !emailInput.checkValidity()) {
+    showMessage("Please enter a valid email address.", "error");
     emailInput.focus();
     return;
   }
 
-  if (!isValidGhanaPhone(phone)) {
+  if (!/^(?:\+?233|0)\d{9}$/.test(phone)) {
     showMessage(
-      "Enter a valid Ghanaian phone number, e.g. 0241234567."
+      "Enter a valid Ghana phone number, for example 0241234567.",
+      "error"
     );
-
     phoneInput.focus();
     return;
   }
 
-  checkoutInProgress = true;
-  paymentButton.disabled = true;
-  paymentButton.textContent = "Connecting to Payment...";
+  if (paymentButton) {
+    paymentButton.disabled = true;
+    paymentButton.textContent = "Connecting to Paystack...";
+  }
+
+  showMessage("Preparing your secure payment...");
 
   try {
     const response = await fetch(
       PAYMENT_API + "/initialize-payment",
       {
         method: "POST",
-
         headers: {
           "Content-Type": "application/json"
         },
-
         body: JSON.stringify({
           email: email,
           phone: phone,
           network: selectedBundle.network,
           bundle: selectedBundle.size,
 
-          /*
-           * The server must verify this amount against
-           * its own price list. Do not trust browser prices.
-           */
+          // Displayed price only.
+          // The backend must independently validate the price.
           amount: selectedBundle.price
         })
       }
@@ -355,79 +308,84 @@ async function submitCheckout(event) {
     try {
       data = await response.json();
     } catch {
-      throw new Error(
-        "The payment server returned an invalid response."
-      );
+      throw new Error("The payment server returned an invalid response.");
     }
 
     if (!response.ok) {
       throw new Error(
         data.message ||
         data.error ||
-        "Unable to start payment. Please try again."
+        "Unable to initialize payment."
       );
     }
 
-    if (
-      !data.authorization_url ||
-      !data.authorization_url.startsWith(
-        "https://checkout.paystack.com/"
-      )
-    ) {
-      throw new Error(
-        "A valid Paystack checkout link was not returned."
-      );
+    if (!data.authorization_url) {
+      throw new Error("Paystack did not return a payment link.");
     }
 
-    window.location.assign(data.authorization_url);
+    showMessage("Opening Paystack payment page...", "success");
+
+    window.location.href = data.authorization_url;
 
   } catch (error) {
+    console.error("Checkout error:", error);
+
     showMessage(
       error.message ||
-      "Connection failed. Please try again."
+      "Payment could not be started. Please try again.",
+      "error"
     );
 
-    checkoutInProgress = false;
-    paymentButton.disabled = false;
-    paymentButton.textContent = "Proceed to Payment";
+    if (paymentButton) {
+      paymentButton.disabled = false;
+      paymentButton.textContent = "Pay Now";
+    }
   }
 }
 
-function initialiseCheckout() {
-  const form = getElement("checkoutForm");
+/* ==========================================
+   BUNDLE SEARCH
+   ========================================== */
 
-  if (!form) return;
+function initializeSearch() {
+  const search = getElement("bundleSearch");
 
-  form.addEventListener("submit", submitCheckout);
+  if (!search) {
+    return;
+  }
+
+  search.addEventListener("input", (event) => {
+    searchText = event.target.value.trim();
+    renderBundles();
+  });
 }
 
 /* ==========================================
    MOBILE MENU
    ========================================== */
 
-function initialiseMenu() {
+function initializeMobileMenu() {
   const menuButton = getElement("menuButton");
   const mobileMenu = getElement("mobileMenu");
 
-  if (!menuButton || !mobileMenu) return;
+  if (!menuButton || !mobileMenu) {
+    return;
+  }
 
   menuButton.addEventListener("click", () => {
-    const opened = mobileMenu.classList.toggle("open");
+    const isOpen =
+      mobileMenu.classList.toggle("open");
 
     menuButton.setAttribute(
       "aria-expanded",
-      String(opened)
+      isOpen ? "true" : "false"
     );
-
-    menuButton.textContent = opened ? "✕" : "☰";
   });
 
-  mobileMenu.querySelectorAll("a").forEach(link => {
+  mobileMenu.querySelectorAll("a").forEach((link) => {
     link.addEventListener("click", () => {
       mobileMenu.classList.remove("open");
-
       menuButton.setAttribute("aria-expanded", "false");
-      menuButton.textContent = "☰";
     });
   });
 }
@@ -436,61 +394,70 @@ function initialiseMenu() {
    WHATSAPP ANNOUNCEMENT POPUP
    ========================================== */
 
-function closeAnnouncement() {
-  const dialog = getElement("announcement");
-
-  if (dialog && dialog.open) {
-    dialog.close();
-  }
-
-  try {
-    sessionStorage.setItem(
-      "kielmenAnnouncementSeen",
-      "yes"
-    );
-  } catch (_) {
-    // Popup can still close if storage is unavailable.
-  }
-}
-
-function initialiseAnnouncement() {
-  const dialog = getElement("announcement");
+function initializeAnnouncement() {
+  const announcement = getElement("announcement");
   const closeButton = getElement("closeAnnouncement");
   const continueButton = getElement("continueShopping");
 
-  if (!dialog) return;
+  if (!announcement) {
+    return;
+  }
+
+  function closeAnnouncement() {
+    try {
+      sessionStorage.setItem(
+        "kielmenAnnouncementSeen",
+        "true"
+      );
+    } catch (error) {
+      console.warn("Could not save popup preference.");
+    }
+
+    if (typeof announcement.close === "function") {
+      if (announcement.open) {
+        announcement.close();
+      }
+    } else {
+      announcement.style.display = "none";
+    }
+  }
 
   if (closeButton) {
-    closeButton.addEventListener("click", closeAnnouncement);
+    closeButton.addEventListener(
+      "click",
+      closeAnnouncement
+    );
   }
 
   if (continueButton) {
-    continueButton.addEventListener("click", () => {
-      closeAnnouncement();
-
-      const shop = getElement("shop");
-
-      if (shop) {
-        shop.scrollIntoView({
-          behavior: "smooth"
-        });
-      }
-    });
+    continueButton.addEventListener(
+      "click",
+      closeAnnouncement
+    );
   }
 
   let alreadySeen = false;
 
   try {
     alreadySeen =
-      sessionStorage.getItem("kielmenAnnouncementSeen") === "yes";
-  } catch (_) {
-    alreadySeen = false;
+      sessionStorage.getItem(
+        "kielmenAnnouncementSeen"
+      ) === "true";
+  } catch (error) {
+    console.warn("Could not read popup preference.");
   }
 
-  if (!alreadySeen && typeof dialog.showModal === "function") {
+  if (!alreadySeen) {
     window.setTimeout(() => {
-      if (!dialog.open) {
-        dialog.showModal();
+      if (
+        typeof announcement.showModal === "function" &&
+        !announcement.open
+      ) {
+        announcement.showModal();
+      } else if (
+        typeof announcement.showModal !== "function"
+      ) {
+        announcement.style.display = "block";
       }
     }, 500);
   }
@@ -500,7 +467,7 @@ function initialiseAnnouncement() {
    FOOTER YEAR
    ========================================== */
 
-function updateFooterYear() {
+function initializeFooter() {
   const year = getElement("currentYear");
 
   if (year) {
@@ -509,25 +476,39 @@ function updateFooterYear() {
 }
 
 /* ==========================================
-   INITIALISE THE WEBSITE
+   INITIALIZE WEBSITE
    ========================================== */
 
-function initialiseKielmenWebsite() {
-  initialiseNetworkButtons();
-  initialiseCheckout();
-  initialiseMenu();
-  initialiseAnnouncement();
-  updateFooterYear();
+function initializeWebsite() {
+  document.querySelectorAll(".network-tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const network = tab.dataset.network || tab.textContent;
+      selectNetwork(network);
+    });
+  });
 
-  renderBundles();
-  updateSelectedBundle();
+  const checkoutForm = getElement("checkoutForm");
+
+  if (checkoutForm) {
+    checkoutForm.addEventListener(
+      "submit",
+      handleCheckout
+    );
+  }
+
+  initializeSearch();
+  initializeMobileMenu();
+  initializeAnnouncement();
+  initializeFooter();
+
+  selectNetwork("MTN");
 }
 
 if (document.readyState === "loading") {
   document.addEventListener(
     "DOMContentLoaded",
-    initialiseKielmenWebsite
+    initializeWebsite
   );
 } else {
-  initialiseKielmenWebsite();
-}
+  initializeWebsite();
+   }
