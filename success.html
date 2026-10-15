@@ -3,82 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Payment Status | Kielmen 636 Dataplug</title>
+
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-family: Arial, sans-serif;
-            text-align: center;
-            background: #f4f7f6;
-            padding: 40px 15px;
+            background: #0b0f19;
+            color: #ffffff;
         }
+
         .box {
-            background: white;
-            max-width: 450px;
-            margin: 40px auto;
-            padding: 30px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px #0001;
+            width: 100%;
+            max-width: 480px;
+            padding: 35px 25px;
+            background: #1c2230;
+            border-radius: 18px;
+            text-align: center;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.3);
         }
-        h1 { color: #087f5b; }
-        p { line-height: 1.6; }
-        a {
+
+        .brand {
+            color: #42e6b5;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 18px;
+            overflow-wrap: anywhere;
+        }
+
+        p {
+            color: #d0d5df;
+            font-size: 16px;
+            line-height: 1.7;
+            overflow-wrap: anywhere;
+        }
+
+        .status {
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        .reference {
+            font-size: 12px;
+            color: #aeb8ca;
+            margin-top: 20px;
+            overflow-wrap: anywhere;
+        }
+
+        .button {
             display: inline-block;
-            background: #087f5b;
+            margin-top: 22px;
+            padding: 14px 22px;
+            border-radius: 8px;
+            background: #00a86b;
             color: white;
-            padding: 12px 20px;
-            border-radius: 6px;
             text-decoration: none;
+            font-weight: bold;
+        }
+
+        .button:hover {
+            background: #008f5b;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .note {
+            margin-top: 22px;
+            font-size: 12px;
+            color: #aeb8ca;
         }
     </style>
 </head>
+
 <body>
-    <div class="box">
-        <h1 id="heading">Checking payment...</h1>
-        <p id="message">Please wait while we confirm your payment with Paystack.</p>
-        <a href="./">Return to website</a>
-    </div>
+
+    <main class="box">
+        <div class="brand">KIELMEN 636 DATAPLUG</div>
+
+        <div class="status" id="icon">⏳</div>
+
+        <h1 id="heading">Checking your payment...</h1>
+
+        <p id="message">
+            Please wait while we securely verify your transaction.
+            Do not refresh this page.
+        </p>
+
+        <p class="reference" id="reference"></p>
+
+        <a
+            class="button"
+            href="https://ezekielmemsahannan42-wq.github.io/kielmen-dataplug/"
+        >
+            Return to website
+        </a>
+
+        <p class="note">
+            Never share your payment PIN or banking details with anyone.
+        </p>
+    </main>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const reference = params.get("reference");
+        const API_URL =
+            "https://kielmen-dataplug-payment-api.onrender.com";
+
+        const heading = document.getElementById("heading");
+        const message = document.getElementById("message");
+        const icon = document.getElementById("icon");
+        const referenceText = document.getElementById("reference");
+
+        function showError(title, description) {
+            icon.textContent = "⚠️";
+            heading.textContent = title;
+            message.textContent = description;
+        }
 
         async function verifyPayment() {
+            const params = new URLSearchParams(
+                window.location.search
+            );
+
+            const reference =
+                params.get("reference") ||
+                params.get("trxref");
+
             if (!reference) {
-                document.getElementById("heading").textContent = "Payment not confirmed";
-                document.getElementById("message").textContent =
-                    "No payment reference was found. Please contact support before trying again.";
+                showError(
+                    "Payment not confirmed",
+                    "No payment reference was found. If you have just paid, return to the website and check your order. Opening this page directly does not verify a payment."
+                );
+
                 return;
             }
 
+            referenceText.textContent =
+                "Payment reference: " + reference;
+
+            heading.textContent = "Verifying payment...";
+            message.textContent =
+                "Please wait while Paystack confirms your transaction.";
+
             try {
                 const response = await fetch(
-                    "https://kielmen-dataplug-payment-api.onrender.com/verify-payment",
+                    API_URL + "/verify-payment",
                     {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ reference: reference })
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            reference: reference
+                        })
                     }
                 );
 
                 const result = await response.json();
 
-                if (response.ok && result.success === true) {
-                    document.getElementById("heading").textContent = "Payment verified";
-                    document.getElementById("message").textContent =
-                        "Paystack has confirmed your payment. Data delivery has not yet been confirmed.";
-                } else {
-                    document.getElementById("heading").textContent = "Payment not confirmed";
-                    document.getElementById("message").textContent =
-                        result.message || "We could not confirm your payment. Please contact support.";
+                if (!response.ok || result.success !== true) {
+                    showError(
+                        "Payment not confirmed",
+                        result.message ||
+                        "We could not confirm your payment. Please contact support before paying again."
+                    );
+
+                    return;
                 }
+
+                icon.textContent = "✅";
+                heading.textContent = "Payment verified!";
+
+                message.textContent =
+                    result.message ||
+                    "Your payment has been verified successfully. Please check your order status.";
+
             } catch (error) {
-                document.getElementById("heading").textContent = "Verification delayed";
-                document.getElementById("message").textContent =
-                    "We could not check your payment right now. Please try again later.";
+                console.error(
+                    "Payment verification error:",
+                    error
+                );
+
+                showError(
+                    "Verification temporarily unavailable",
+                    "We could not contact the payment server. Your payment status is not confirmed on this page. Please wait and contact support before trying to pay again."
+                );
             }
         }
 
         verifyPayment();
     </script>
+
 </body>
 </html>
