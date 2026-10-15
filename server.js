@@ -34,6 +34,13 @@ async function createOrdersTable() {
         `);
 
         console.log("Orders table is ready.");
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS
+    delivery_status
+    VARCHAR(30) NOT NULL DEFAULT
+    'not_started'
+`); 
     } catch (error) {
         console.error("Database table creation failed:", error.message);
     }
