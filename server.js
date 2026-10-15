@@ -106,7 +106,7 @@ app.post("/initialize-payment", async (req, res) => {
                     currency: "GHS",
                     reference: reference,
                     callback_url:
-                        "https://ezekielmemsahannan42-wq.github.io/kielmen-dataplug/",
+             "https://ezekielmemsahannan42-wq.github.io/kielmen-dataplug/success.html",
                     metadata: {
                         phone: phone,
                         network: network,
