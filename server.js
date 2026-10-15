@@ -16,6 +16,31 @@ app.use(cors({
 
 app.use(express.json());
 
+// Create the orders table when the server starts
+async function createOrdersTable() {
+    try {
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS orders (
+                id SERIAL PRIMARY KEY,
+                reference VARCHAR(100) UNIQUE NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                phone VARCHAR(20) NOT NULL,
+                network VARCHAR(50) NOT NULL,
+                bundle VARCHAR(50) NOT NULL,
+                amount NUMERIC(10, 2) NOT NULL,
+                status VARCHAR(30) NOT NULL DEFAULT 'pending',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        console.log("Orders table is ready.");
+    } catch (error) {
+        console.error("Database table creation failed:", error.message);
+    }
+}
+
+createOrdersTable();
+
 // Check whether the server is running
 app.get("/", (req, res) => {
     res.json({
