@@ -1,333 +1,533 @@
-// =============================================
-// KIELMEN 636 DATAPLUG
-// COMPLETE AND CORRECTED JAVASCRIPT
-// =============================================
+"use strict";
 
+/* ==========================================
+   KIELMEN 636 DATAPLUG
+   CUSTOMER SHOPPING AND CHECKOUT
+   ========================================== */
 
-// 1. DATA BUNDLE PRICES
+/*
+ * Customer-facing prices.
+ * Confirm these prices before accepting orders.
+ *
+ * IMPORTANT:
+ * The backend must independently validate the
+ * official price before initializing payment.
+ */
 
-const dataPrices = {
-    MTN: [
-        { size: "1GB", price: 4.50 },
-        { size: "2GB", price: 9.00 },
-        { size: "3GB", price: 13.00 },
-        { size: "4GB", price: 17.50 },
-        { size: "5GB", price: 21.00 },
-        { size: "6GB", price: 25.00 },
-        { size: "8GB", price: 34.00 },
-        { size: "10GB", price: 42.00 },
-        { size: "15GB", price: 59.00 },
-        { size: "20GB", price: 79.00 },
-        { size: "25GB", price: 98.00 },
-        { size: "30GB", price: 119.00 },
-        { size: "40GB", price: 157.00 },
-        { size: "50GB", price: 197.00 }
-    ],
+const PRODUCTS = {
+  MTN: [
+    { size: "1GB", price: 4.70 },
+    { size: "2GB", price: 9.70 },
+    { size: "3GB", price: 14.50 },
+    { size: "4GB", price: 20.00 },
+    { size: "5GB", price: 26.00 },
+    { size: "6GB", price: 32.00 },
+    { size: "8GB", price: 43.00 },
+    { size: "10GB", price: 49.00 },
+    { size: "15GB", price: 69.00 },
+    { size: "20GB", price: 99.00 },
+    { size: "25GB", price: 140.00 },
+    { size: "30GB", price: 155.00 },
+    { size: "40GB", price: 199.00 },
+    { size: "50GB", price: 240.00 }
+  ],
 
-    AirtelTigo: [
-        { size: "1GB", price: 5.00 },
-        { size: "2GB", price: 9.20 },
-        { size: "5GB", price: 22.00 },
-        { size: "10GB", price: 41.00 },
-        { size: "20GB", price: 78.00 },
-        { size: "30GB", price: 115.00 },
-        { size: "50GB", price: 188.00 }
-    ],
+  Telecel: [
+    { size: "10GB", price: 45.00 },
+    { size: "15GB", price: 62.00 },
+    { size: "20GB", price: 82.00 },
+    { size: "25GB", price: 101.00 },
+    { size: "30GB", price: 124.00 },
+    { size: "40GB", price: 170.00 },
+    { size: "50GB", price: 210.00 },
+    { size: "100GB", price: 420.00 }
+  ],
 
-    Telecel: [
-        { size: "10GB", price: 42.00 },
-        { size: "15GB", price: 57.00 },
-        { size: "20GB", price: 72.00 },
-        { size: "25GB", price: 93.00 },
-        { size: "30GB", price: 111.00 },
-        { size: "40GB", price: 145.00 },
-        { size: "50GB", price: 179.00 },
-        { size: "100GB", price: 402.00 }
-    ]
+  AirtelTigo: [
+    { size: "1GB", price: 5.00 },
+    { size: "2GB", price: 9.20 },
+    { size: "5GB", price: 22.00 },
+    { size: "10GB", price: 41.00 },
+    { size: "20GB", price: 78.00 },
+    { size: "30GB", price: 115.00 },
+    { size: "50GB", price: 188.00 }
+  ]
 };
 
+const PAYMENT_API =
+  "https://kielmen-dataplug-payment-api.onrender.com";
 
-// 2. HELPER FUNCTION
+const WHATSAPP_CHANNEL =
+  "https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S";
+
+const WHATSAPP_CONTACT =
+  "https://wa.me/233533878548";
+
+let selectedNetwork = "MTN";
+let selectedBundle = null;
+let checkoutInProgress = false;
+
+/* ==========================================
+   HELPERS
+   ========================================== */
 
 function getElement(id) {
-    return document.getElementById(id);
+  return document.getElementById(id);
 }
 
+function money(amount) {
+  return "GH₵" +
+    Number(amount).toFixed(2).replace(/\.00$/, "");
+}
 
-// 3. UPDATE BUNDLE DROPDOWN
+function showMessage(message, type = "error") {
+  const element = getElement("checkoutMessage");
 
-function updateBundleDropdown(network, selectedSize = "") {
-    const bundleField = getElement("bundle");
-    const priceField = getElement("price");
+  if (!element) return;
 
-    if (!bundleField || !priceField) {
-        console.error("Bundle or price field is missing.");
-        return;
-    }
+  element.textContent = message;
+  element.className = "status show " + type;
+}
 
-    // Clear old options.
-    bundleField.innerHTML = "";
+function clearMessage() {
+  const element = getElement("checkoutMessage");
 
-    // Add the placeholder.
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Choose a bundle";
-    bundleField.appendChild(placeholder);
+  if (!element) return;
 
-    // Get bundles for the selected network.
-    const bundles = dataPrices[network] || [];
+  element.textContent = "";
+  element.className = "status";
+}
 
-    bundles.forEach(function(bundle) {
-        const option = document.createElement("option");
+function updateSelectedBundle() {
+  const name = getElement("selectedName");
+  const price = getElement("selectedPrice");
 
-        option.value = bundle.size;
-        option.textContent =
-            bundle.size + " — GH₵ " + bundle.price.toFixed(2);
+  if (!name || !price) return;
 
-        bundleField.appendChild(option);
+  if (!selectedBundle) {
+    name.textContent = "No bundle selected";
+    price.textContent = "Choose a bundle above.";
+    return;
+  }
+
+  name.textContent =
+    selectedBundle.network + " " + selectedBundle.size;
+
+  price.textContent =
+    "Total: " + money(selectedBundle.price);
+}
+
+/* ==========================================
+   NETWORK SELECTION
+   ========================================== */
+
+function setNetwork(network) {
+  if (!Object.prototype.hasOwnProperty.call(PRODUCTS, network)) {
+    return;
+  }
+
+  selectedNetwork = network;
+  selectedBundle = null;
+
+  document.querySelectorAll(".network-tab").forEach(button => {
+    const active = button.dataset.network === network;
+
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+
+  updateSelectedBundle();
+  clearMessage();
+  renderBundles();
+}
+
+/* ==========================================
+   BUNDLE DISPLAY
+   ========================================== */
+
+function renderBundles() {
+  const grid = getElement("bundleGrid");
+  const search = getElement("bundleSearch");
+  const resultCount = getElement("resultCount");
+
+  if (!grid) return;
+
+  const query = search
+    ? search.value.trim().toLowerCase()
+    : "";
+
+  const bundles = (PRODUCTS[selectedNetwork] || []).filter(bundle => {
+    const searchable = (
+      selectedNetwork + " " +
+      bundle.size + " " +
+      bundle.price
+    ).toLowerCase();
+
+    return searchable.includes(query);
+  });
+
+  if (resultCount) {
+    resultCount.textContent =
+      bundles.length +
+      " bundles available for " +
+      selectedNetwork;
+  }
+
+  grid.replaceChildren();
+
+  if (bundles.length === 0) {
+    const empty = document.createElement("div");
+
+    empty.className = "empty-state";
+    empty.textContent = "No matching bundles found.";
+
+    grid.appendChild(empty);
+    return;
+  }
+
+  bundles.forEach(bundle => {
+    const card = document.createElement("article");
+
+    card.className = "bundle-card";
+    card.dataset.network = selectedNetwork;
+
+    const main = document.createElement("div");
+    main.className = "bundle-main";
+
+    const network = document.createElement("div");
+    network.className = "bundle-network";
+
+    const networkLabels = {
+      MTN: "🟡 MTN",
+      Telecel: "🔴 TELECEL",
+      AirtelTigo: "🔵 AIRTELTIGO"
+    };
+
+    network.textContent = networkLabels[selectedNetwork];
+
+    const size = document.createElement("div");
+    size.className = "bundle-size";
+    size.textContent = bundle.size;
+
+    const description = document.createElement("div");
+    description.className = "bundle-description";
+    description.textContent = "Data Bundle";
+
+    main.append(network, size, description);
+
+    const footer = document.createElement("div");
+    footer.className = "bundle-footer";
+
+    const price = document.createElement("div");
+    price.className = "bundle-price";
+    price.textContent = money(bundle.price);
+
+    const buyButton = document.createElement("button");
+
+    buyButton.type = "button";
+    buyButton.className = "buy-button";
+    buyButton.textContent = "Buy Now";
+
+    buyButton.addEventListener("click", () => {
+      selectedBundle = {
+        network: selectedNetwork,
+        size: bundle.size,
+        price: bundle.price
+      };
+
+      updateSelectedBundle();
+      clearMessage();
+
+      const checkout = getElement("checkout");
+
+      if (checkout) {
+        checkout.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }
     });
 
-    // Select the requested bundle if it exists.
-    if (selectedSize && bundles.some(function(bundle) {
-        return bundle.size === selectedSize;
-    })) {
-        bundleField.value = selectedSize;
-    } else {
-        bundleField.value = "";
-    }
+    footer.append(price, buyButton);
+    card.append(main, footer);
 
-    // Update the price.
-    updateSelectedPrice();
+    grid.appendChild(card);
+  });
 }
 
+/* ==========================================
+   NETWORK BUTTON EVENTS
+   ========================================== */
 
-// 4. UPDATE PRICE BASED ON SELECTED BUNDLE
-
-function updateSelectedPrice() {
-    const networkField = getElement("network");
-    const bundleField = getElement("bundle");
-    const priceField = getElement("price");
-
-    if (!networkField || !bundleField || !priceField) {
-        return;
-    }
-
-    const network = networkField.value;
-    const size = bundleField.value;
-
-    const bundle = (dataPrices[network] || []).find(function(item) {
-        return item.size === size;
+function initialiseNetworkButtons() {
+  document.querySelectorAll(".network-tab").forEach(button => {
+    button.addEventListener("click", () => {
+      setNetwork(button.dataset.network);
     });
-
-    // Keep the price empty until a bundle is selected.
-    priceField.value = bundle
-        ? bundle.price.toFixed(2)
-        : "";
+  });
 }
 
+/* ==========================================
+   CUSTOMER CHECKOUT
+   ========================================== */
 
-// 5. DISPLAY NETWORK BUNDLE CARDS
+function normalizePhone(phone) {
+  return phone.replace(/[\s()-]/g, "");
+}
 
-function showNetwork(network) {
-    const dataList = getElement("data-list");
+function isValidGhanaPhone(phone) {
+  return /^(?:\+233|233|0)\d{9}$/.test(phone);
+}
 
-    if (!dataList || !dataPrices[network]) {
-        console.error("Could not display bundles for:", network);
-        return;
+async function submitCheckout(event) {
+  event.preventDefault();
+
+  if (checkoutInProgress) return;
+
+  clearMessage();
+
+  if (!selectedBundle) {
+    showMessage("Please select a data bundle first.");
+    return;
+  }
+
+  const emailInput = getElement("customerEmail");
+  const phoneInput = getElement("recipientPhone");
+  const paymentButton = getElement("paymentButton");
+
+  if (!emailInput || !phoneInput || !paymentButton) {
+    showMessage("The checkout form is incomplete.");
+    return;
+  }
+
+  const email = emailInput.value.trim();
+  const phone = normalizePhone(phoneInput.value.trim());
+
+  const emailValid =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  if (!emailValid) {
+    showMessage("Please enter a valid email address.");
+    emailInput.focus();
+    return;
+  }
+
+  if (!isValidGhanaPhone(phone)) {
+    showMessage(
+      "Enter a valid Ghanaian phone number, e.g. 0241234567."
+    );
+
+    phoneInput.focus();
+    return;
+  }
+
+  checkoutInProgress = true;
+  paymentButton.disabled = true;
+  paymentButton.textContent = "Connecting to Payment...";
+
+  try {
+    const response = await fetch(
+      PAYMENT_API + "/initialize-payment",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          email: email,
+          phone: phone,
+          network: selectedBundle.network,
+          bundle: selectedBundle.size,
+
+          /*
+           * The server must verify this amount against
+           * its own price list. Do not trust browser prices.
+           */
+          amount: selectedBundle.price
+        })
+      }
+    );
+
+    let data;
+
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error(
+        "The payment server returned an invalid response."
+      );
     }
 
-    dataList.innerHTML = "";
+    if (!response.ok) {
+      throw new Error(
+        data.message ||
+        data.error ||
+        "Unable to start payment. Please try again."
+      );
+    }
 
-    dataPrices[network].forEach(function(bundle) {
-        const card = document.createElement("div");
-        card.className = "data-card";
+    if (
+      !data.authorization_url ||
+      !data.authorization_url.startsWith(
+        "https://checkout.paystack.com/"
+      )
+    ) {
+      throw new Error(
+        "A valid Paystack checkout link was not returned."
+      );
+    }
 
-        const heading = document.createElement("h3");
-        heading.textContent = network;
+    window.location.assign(data.authorization_url);
 
-        const size = document.createElement("p");
-        size.textContent = bundle.size;
+  } catch (error) {
+    showMessage(
+      error.message ||
+      "Connection failed. Please try again."
+    );
 
-        const price = document.createElement("p");
-        price.className = "price";
-        price.textContent = "GH₵ " + bundle.price.toFixed(2);
+    checkoutInProgress = false;
+    paymentButton.disabled = false;
+    paymentButton.textContent = "Proceed to Payment";
+  }
+}
 
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "buy-button";
-        button.textContent = "Order";
+function initialiseCheckout() {
+  const form = getElement("checkoutForm");
 
-        button.addEventListener("click", function() {
-            orderBundle(network, bundle.size);
-        });
+  if (!form) return;
 
-        card.appendChild(heading);
-        card.appendChild(size);
-        card.appendChild(price);
-        card.appendChild(button);
+  form.addEventListener("submit", submitCheckout);
+}
 
-        dataList.appendChild(card);
+/* ==========================================
+   MOBILE MENU
+   ========================================== */
+
+function initialiseMenu() {
+  const menuButton = getElement("menuButton");
+  const mobileMenu = getElement("mobileMenu");
+
+  if (!menuButton || !mobileMenu) return;
+
+  menuButton.addEventListener("click", () => {
+    const opened = mobileMenu.classList.toggle("open");
+
+    menuButton.setAttribute(
+      "aria-expanded",
+      String(opened)
+    );
+
+    menuButton.textContent = opened ? "✕" : "☰";
+  });
+
+  mobileMenu.querySelectorAll("a").forEach(link => {
+    link.addEventListener("click", () => {
+      mobileMenu.classList.remove("open");
+
+      menuButton.setAttribute("aria-expanded", "false");
+      menuButton.textContent = "☰";
     });
-
-    const networkField = getElement("network");
-
-    if (networkField) {
-        networkField.value = network;
-    }
-
-    updateBundleDropdown(network);
+  });
 }
 
+/* ==========================================
+   WHATSAPP ANNOUNCEMENT POPUP
+   ========================================== */
 
-// Make the function available to HTML buttons.
+function closeAnnouncement() {
+  const dialog = getElement("announcement");
 
-window.showNetwork = showNetwork;
+  if (dialog && dialog.open) {
+    dialog.close();
+  }
 
-
-// 6. ORDER A SELECTED BUNDLE
-
-function orderBundle(network, size) {
-    const networkField = getElement("network");
-    const orderForm = getElement("order-form");
-
-    if (!networkField || !getElement("bundle") || !getElement("price")) {
-        alert("The order form is missing required fields.");
-        return;
-    }
-
-    networkField.value = network;
-
-    updateBundleDropdown(network, size);
-
-    if (orderForm) {
-        orderForm.scrollIntoView({
-            behavior: "smooth",
-            block: "start"
-        });
-    }
+  try {
+    sessionStorage.setItem(
+      "kielmenAnnouncementSeen",
+      "yes"
+    );
+  } catch (_) {
+    // Popup can still close if storage is unavailable.
+  }
 }
 
-window.orderBundle = orderBundle;
+function initialiseAnnouncement() {
+  const dialog = getElement("announcement");
+  const closeButton = getElement("closeAnnouncement");
+  const continueButton = getElement("continueShopping");
 
+  if (!dialog) return;
 
-// 7. DISPLAY ORDER MESSAGES
+  if (closeButton) {
+    closeButton.addEventListener("click", closeAnnouncement);
+  }
 
-function showMessage(messageText) {
-    const message = getElement("order-message");
+  if (continueButton) {
+    continueButton.addEventListener("click", () => {
+      closeAnnouncement();
 
-    if (message) {
-        message.textContent = messageText;
-    } else {
-        alert(messageText);
-    }
+      const shop = getElement("shop");
+
+      if (shop) {
+        shop.scrollIntoView({
+          behavior: "smooth"
+        });
+      }
+    });
+  }
+
+  let alreadySeen = false;
+
+  try {
+    alreadySeen =
+      sessionStorage.getItem("kielmenAnnouncementSeen") === "yes";
+  } catch (_) {
+    alreadySeen = false;
+  }
+
+  if (!alreadySeen && typeof dialog.showModal === "function") {
+    window.setTimeout(() => {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+    }, 500);
+  }
 }
 
+/* ==========================================
+   FOOTER YEAR
+   ========================================== */
 
-// 8. INITIALISE THE WEBSITE
+function updateFooterYear() {
+  const year = getElement("currentYear");
 
-document.addEventListener("DOMContentLoaded", function() {
-    const networkField = getElement("network");
-    const bundleField = getElement("bundle");
-    const priceField = getElement("price");
-    const orderForm = getElement("order-form");
+  if (year) {
+    year.textContent = new Date().getFullYear();
+  }
+}
 
-    // When the network changes, load its bundle options.
+/* ==========================================
+   INITIALISE THE WEBSITE
+   ========================================== */
 
-    if (networkField) {
-        networkField.addEventListener("change", function() {
-            updateBundleDropdown(networkField.value);
-        });
+function initialiseKielmenWebsite() {
+  initialiseNetworkButtons();
+  initialiseCheckout();
+  initialiseMenu();
+  initialiseAnnouncement();
+  updateFooterYear();
 
-        // Load options for the initially selected network.
-        updateBundleDropdown(networkField.value);
-    }
+  renderBundles();
+  updateSelectedBundle();
+}
 
-    // When the bundle changes, update the price.
-
-    if (bundleField) {
-        bundleField.addEventListener("change", updateSelectedPrice);
-    }
-
-    // Display MTN cards on the homepage.
-
-    if (getElement("data-list")) {
-        showNetwork("MTN");
-    }
-
-
-    // 9. HANDLE ORDER FORM SUBMISSION
-
-    if (orderForm) {
-        orderForm.addEventListener("submit", function(event) {
-            event.preventDefault();
-
-            const phoneField = getElement("phone");
-
-            if (!phoneField || !networkField || !bundleField || !priceField) {
-                showMessage("The order form is incomplete.");
-                return;
-            }
-
-            const phone = phoneField.value.trim();
-            const network = networkField.value;
-            const size = bundleField.value;
-
-            // Find the official price from our price list.
-            const bundle = (dataPrices[network] || []).find(function(item) {
-                return item.size === size;
-            });
-
-            if (!network || !size || !bundle) {
-                showMessage("Please select a network and bundle first.");
-                return;
-            }
-
-            if (!phone) {
-                showMessage("Please enter the recipient's phone number.");
-                return;
-            }
-
-            const cleanPhone = phone.replace(/[\s-]/g, "");
-
-            if (!/^(0\d{9}|\+233\d{9}|233\d{9})$/.test(cleanPhone)) {
-                showMessage("Please enter a valid Ghanaian phone number.");
-                return;
-            }
-
-            // Always use the price from our data list.
-            priceField.value = bundle.price.toFixed(2);
-
-            // Start Paystack checkout through our backend.
-const email = "ezekielmensahannan42@gmail.com";
-
-showMessage("Connecting to Paystack. Please wait...");
-
-fetch("https://kielmen-dataplug-payment-api.onrender.com/initialize-payment", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-        email: email.trim(),
-        amount: bundle.price,
-        phone: cleanPhone,
-        network: network,
-        bundle: size
-    })
-})
-.then(async function(response) {
-    const result = await response.json();
-
-    if (!response.ok || !result.authorization_url) {
-        throw new Error(result.message || "Unable to start payment.");
-    }
-
-    window.location.href = result.authorization_url;
-})
-.catch(function(error) {
-    console.error("Checkout error:", error);
-    showMessage(error.message || "Payment could not be started. Please try again.");
-});
-        });
-    }
-});
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    initialiseKielmenWebsite
+  );
+} else {
+  initialiseKielmenWebsite();
+}
