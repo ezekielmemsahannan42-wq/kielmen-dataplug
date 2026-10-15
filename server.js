@@ -155,7 +155,97 @@ app.post("/initialize-payment", async (req, res) => {
         });
     }
 });
+// Verify a Paystack payment
+app.post("/verify-payment", async (req, res) => {
+    try {
+        const { reference } = req.body;
 
+        if (!reference) {
+            return res.status(400).json({
+                message: "Payment reference is required."
+            });
+        }
+
+        const secretKey = process.env.PAYSTACK_SECRET_KEY;
+
+        if (!secretKey || !secretKey.startsWith("sk_")) {
+            return res.status(500).json({
+                message: "Payment service is not configured."
+            });
+        }
+
+        // Find the saved order
+        const orderResult = await pool.query(
+            "SELECT * FROM orders WHERE reference = $1",
+            [reference]
+        );
+
+        if (orderResult.rows.length === 0) {
+            return res.status(404).json({
+                message: "Order not found."
+            });
+        }
+
+        const order = orderResult.rows[0];
+
+        // Verify directly with Paystack
+        const response = await fetch(
+            "https://api.paystack.co/transaction/verify/" +
+                encodeURIComponent(reference),
+            {
+                headers: {
+                    Authorization: `Bearer ${secretKey}`
+                }
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.status || !result.data) {
+            return res.status(502).json({
+                message: "Unable to verify payment. Please try again."
+            });
+        }
+
+        const payment = result.data;
+        const expectedAmount = Math.round(
+            Number(order.amount) * 100
+        );
+
+        if (
+            payment.status !== "success" ||
+            payment.reference !== reference ||
+            payment.currency !== "GHS" ||
+            payment.amount !== expectedAmount ||
+            payment.customer.email.toLowerCase() !==
+                order.email.toLowerCase()
+        ) {
+            return res.status(400).json({
+                message: "Payment has not been confirmed."
+            });
+        }
+
+        // Update the order only after successful verification
+        await pool.query(
+            `UPDATE orders
+             SET status = 'paid'
+             WHERE reference = $1 AND status = 'pending'`,
+            [reference]
+        );
+
+        return res.json({
+            success: true,
+            message: "Payment verified successfully."
+        });
+
+    } catch (error) {
+        console.error("Payment verification error:", error);
+
+        return res.status(500).json({
+            message: "An error occurred while verifying payment."
+        });
+    }
+});
 // Start the server using Render's assigned port
 const PORT = process.env.PORT || 3000;
 
