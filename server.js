@@ -7,8 +7,128 @@ const pool = new Pool({
         rejectUnauthorized: false
     }
 });
+// DataMart automatic data delivery
+async function deliverData(order) {
+    if (process.env.DATAMART_PURCHASES_ENABLED !== "true") {
+        console.log("DataMart purchases are disabled.");
+        return;
+    }
+
+    const apiKey = process.env.DATAMART_API_KEY;
+
+    if (!apiKey) {
+        throw new Error("DataMart API key is missing.");
+    }
+
+    // Prevent duplicate delivery attempts for the same order.
+    const claim = await pool.query(
+        `UPDATE orders
+         SET delivery_status = 'processing'
+         WHERE reference = $1
+           AND status = 'paid'
+           AND delivery_status IN ('not_started', 'failed')
+         RETURNING *`,
+        [order.reference]
+    );
+
+    if (claim.rows.length === 0) {
+        console.log("Order already processing or delivered.");
+        return;
+    }
+
+    const savedOrder = claim.rows[0];
+
+    try {
+        const networkMap = {
+            MTN: "YELLO",
+            AIRTELTIGO: "AT_PREMIUM",
+            TELECEL: "TELECEL"
+        };
+
+        const networkKey = String(savedOrder.network)
+            .replace(/[\s_-]/g, "")
+            .toUpperCase();
+
+        const network = networkMap[networkKey];
+
+        // Convert values such as "5GB" into 5.
+        const capacity = Number(
+            String(savedOrder.bundle).replace(/[^0-9.]/g, "")
+        );
+
+        if (!network || !Number.isFinite(capacity) || capacity <= 0) {
+            throw new Error("Unsupported network or bundle size.");
+        }
+
+        const response = await fetch(
+            "https://api.datamartgh.shop/api/purchase",
+            {
+                method: "POST",
+                headers: {
+                    "X-API-Key": apiKey,
+                    "X-Idempotency-Key": savedOrder.reference,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    phoneNumber: savedOrder.phone,
+                    network: network,
+                    capacity: String(capacity),
+                    gateway: "wallet"
+                })
+            }
+        );
+
+        const result = await response.json();
+
+        console.log("DataMart response status:", response.status);
+        console.log("DataMart order status:", result.status);
+
+        if (
+            !response.ok ||
+            result.status !== "success" ||
+            !result.data
+        ) {
+            throw new Error(
+                result.message || "DataMart purchase failed."
+            );
+        }
+
+        await pool.query(
+            `UPDATE orders
+             SET delivery_status = $1
+             WHERE reference = $2`,
+            [
+                result.data.orderStatus === "completed"
+                    ? "delivered"
+                    : "processing",
+                savedOrder.reference
+            ]
+        );
+
+        console.log(
+            "DataMart delivery accepted for order:",
+            savedOrder.reference
+        );
+
+    } catch (error) {
+        await pool.query(
+            `UPDATE orders
+             SET delivery_status = 'failed'
+             WHERE reference = $1`,
+            [savedOrder.reference]
+        );
+
+        console.error(
+            "DataMart delivery failed:",
+            error.message
+        );
+
+        throw error;
+    }
+                }
 
 const app = express();
+ 
 
 app.use(cors({
     origin: "https://ezekielmemsahannan42-wq.github.io"
@@ -232,18 +352,46 @@ app.post("/verify-payment", async (req, res) => {
             });
         }
 
-        // Update the order only after successful verification
-        await pool.query(
-            `UPDATE orders
-             SET status = 'paid'
-             WHERE reference = $1 AND status = 'pending'`,
-            [reference]
-        );
+       // Mark the order as paid only once
+const paidResult = await pool.query(
+    `UPDATE orders
+     SET status = 'paid'
+     WHERE reference = $1
+       AND status = 'pending'
+     RETURNING *`,
+    [reference]
+);
 
-        return res.json({
-            success: true,
-            message: "Payment verified successfully."
-        });
+if (paidResult.rows.length === 0) {
+    return res.json({
+        success: true,
+        message: "Payment was already verified."
+    });
+}
+
+const paidOrder = paidResult.rows[0];
+
+let deliveryMessage = "Payment verified. Data delivery is pending.";
+
+try {
+    await deliverData(paidOrder);
+
+    const deliveryResult = await pool.query(
+        `SELECT delivery_status FROM orders WHERE reference = $1`,
+        [reference]
+    );
+
+    if (deliveryResult.rows[0]?.delivery_status === "delivered") {
+        deliveryMessage = "Payment verified and data delivered successfully.";
+    }
+} catch (deliveryError) {
+    console.error("Data delivery error:", deliveryError.message);
+}
+
+return res.json({
+    success: true,
+    message: deliveryMessage
+}); 
 
     } catch (error) {
         console.error("Payment verification error:", error);
