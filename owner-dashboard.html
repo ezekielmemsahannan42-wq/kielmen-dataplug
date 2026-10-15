@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Kielmen 636 | Owner Dashboard</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #0b1120;
+      color: #f8fafc;
+      font-family: Arial, sans-serif;
+    }
+
+    .topbar {
+      padding: 20px;
+      background: #111827;
+      border-bottom: 1px solid #263244;
+    }
+
+    .brand {
+      color: #facc15;
+      font-size: 22px;
+      font-weight: 800;
+    }
+
+    .subtitle {
+      color: #94a3b8;
+      margin-top: 7px;
+      font-size: 13px;
+    }
+
+    .container {
+      width: min(1200px, 100%);
+      margin: auto;
+      padding: 18px;
+    }
+
+    .notice {
+      background: #422006;
+      color: #fde68a;
+      padding: 14px;
+      border: 1px solid #854d0e;
+      border-radius: 12px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: #111827;
+      padding: 18px;
+      border: 1px solid #263244;
+      border-radius: 14px;
+      min-width: 0;
+    }
+
+    .card-label {
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    .card-value {
+      font-size: 25px;
+      font-weight: 800;
+      margin-top: 12px;
+      overflow-wrap: anywhere;
+    }
+
+    .yellow {
+      color: #facc15;
+    }
+
+    .section {
+      margin-top: 28px;
+    }
+
+    .section h2 {
+      font-size: 19px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      background: #111827;
+      border: 1px solid #263244;
+      border-radius: 12px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 650px;
+    }
+
+    th, td {
+      padding: 13px;
+      text-align: left;
+      border-bottom: 1px solid #263244;
+      font-size: 13px;
+    }
+
+    th {
+      color: #facc15;
+      background: #172033;
+    }
+
+    .empty {
+      color: #94a3b8;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .footer {
+      padding: 25px 15px;
+      color: #64748b;
+      text-align: center;
+      font-size: 12px;
+    }
+
+    @media (min-width: 700px) {
+      .grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">KIELMEN 636 DATAPLUG</div>
+    <div class="subtitle">Owner Dashboard</div>
+  </header>
+
+  <main class="container">
+
+    <div class="notice">
+      <strong>Owner access setup</strong><br>
+      This is the initial dashboard layout. It is not yet protected by
+      owner login and does not yet retrieve live orders. Do not enter
+      confidential business information here until authentication is connected.
+    </div>
+
+    <h1>Business Overview</h1>
+    <p class="subtitle">Your sales and operations summary.</p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-label">Total Sales</div>
+        <div class="card-value yellow" id="totalSales">GH₵0.00</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Total Profit</div>
+        <div class="card-value" id="totalProfit">GH₵0.00</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Total Orders</div>
+        <div class="card-value" id="totalOrders">0</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Successful Deliveries</div>
+        <div class="card-value" id="successfulDeliveries">0</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Pending Orders</div>
+        <div class="card-value" id="pendingOrders">0</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Failed Orders</div>
+        <div class="card-value" id="failedOrders">0</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Registered Agents</div>
+        <div class="card-value" id="registeredAgents">0</div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Pending Withdrawals</div>
+        <div class="card-value" id="pendingWithdrawals">0</div>
+      </div>
+    </div>
+
+    <section class="section">
+      <h2>Recent Orders</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Phone Number</th>
+              <th>Network</th>
+              <th>Bundle</th>
+              <th>Amount</th>
+              <th>Payment</th>
+              <th>Delivery</th>
+            </tr>
+          </thead>
+
+          <tbody id="ordersTable">
+            <tr>
+              <td colspan="7" class="empty">
+                Live orders will appear here after the secure backend is connected.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Agent Management</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Contact</th>
+              <th>Total Sales</th>
+              <th>Available Earnings</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody id="agentsTable">
+            <tr>
+              <td colspan="5" class="empty">
+                Agent records will appear here after the backend is connected.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Withdrawal Requests</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Amount</th>
+              <th>Mobile Money Number</th>
+              <th>Requested</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody id="withdrawalsTable">
+            <tr>
+              <td colspan="5" class="empty">
+                Withdrawal requests will appear here after the backend is connected.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    Kielmen 636 Dataplug · Owner Dashboard ·
+    <span id="year"></span>
+  </footer>
+
+  <script>
+    document.getElementById("year").textContent =
+      new Date().getFullYear();
+  </script>
+</body>
+</html>
