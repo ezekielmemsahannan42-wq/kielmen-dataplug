@@ -1,672 +1,992 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#111211">
+<title>Kielmen 636 | Agent Dashboard</title>
 
-    <title>Agent Dashboard | Kielmen 636 Dataplug</title>
+<style>
+:root {
+  --bg: #111211;
+  --card: #202120;
+  --card2: #292a29;
+  --border: #454744;
+  --text: #e8ecee;
+  --muted: #a6afb5;
+  --green: #48c6a3;
+  --green-dark: #075f43;
+  --gold: #d8a72c;
+  --red: #ff7777;
+}
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+* {
+  box-sizing: border-box;
+}
 
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f1f5f9;
-            color: #172033;
-        }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-        header {
-            background: #071a38;
-            color: white;
-            padding: 22px 15px;
-            text-align: center;
-        }
+button, input, select {
+  font: inherit;
+}
 
-        header h1 {
-            margin: 0 0 8px;
-            font-size: 25px;
-        }
+button {
+  cursor: pointer;
+}
 
-        nav {
-            background: #102b52;
-            padding: 14px 10px;
-            text-align: center;
-        }
+.topbar {
+  background: #1d1e1d;
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin: 7px;
-            display: inline-block;
-            font-weight: bold;
-        }
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
-        .container {
-            width: 94%;
-            max-width: 1000px;
-            margin: 25px auto;
-        }
+.brand-logo {
+  width: 46px;
+  height: 46px;
+  background: #050b1e;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  color: var(--green);
+  font-weight: bold;
+  font-size: 19px;
+}
 
-        .welcome {
-            background: white;
-            padding: 22px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 3px 10px #0000000d;
-        }
+.brand small {
+  display: block;
+  color: var(--muted);
+  margin-top: 5px;
+}
 
-        .notice {
-            background: #fff4d6;
-            color: #795400;
-            border-left: 4px solid #e6a700;
-            padding: 12px;
-            line-height: 1.6;
-            border-radius: 5px;
-        }
+.online {
+  color: var(--green);
+  background: #123b2e;
+  border-radius: 20px;
+  padding: 9px 12px;
+  font-size: 12px;
+}
 
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(
-                auto-fit,
-                minmax(140px, 1fr)
-            );
-            gap: 15px;
-            margin: 20px 0;
-        }
+.container {
+  padding: 18px 14px 105px;
+  max-width: 1000px;
+  margin: auto;
+}
 
-        .stat-card {
-            background: white;
-            padding: 20px 12px;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 3px 10px #0000000d;
-        }
+.welcome {
+  padding: 22px 18px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #173a30, #202120 70%);
+  border: 1px solid var(--border);
+  margin-bottom: 18px;
+}
 
-        .stat-card h3 {
-            font-size: 14px;
-            color: #64748b;
-        }
+.welcome h1 {
+  font-size: 25px;
+  margin: 0 0 9px;
+}
 
-        .stat-card p {
-            font-size: 23px;
-            font-weight: bold;
-            color: #087443;
-            overflow-wrap: anywhere;
-        }
+.welcome p {
+  color: #c0c9c9;
+  line-height: 1.5;
+  margin-bottom: 0;
+}
 
-        .panel {
-            background: white;
-            padding: 22px;
-            border-radius: 12px;
-            margin: 20px 0;
-            box-shadow: 0 3px 10px #0000000d;
-        }
+.section-title {
+  font-size: 17px;
+  margin: 25px 0 14px;
+}
 
-        .panel h2 {
-            margin-top: 0;
-            color: #071a38;
-        }
+.filters {
+  display: flex;
+  background: #191a1b;
+  border-radius: 40px;
+  padding: 5px;
+  gap: 4px;
+  margin-bottom: 16px;
+}
 
-        label {
-            display: block;
-            font-weight: bold;
-            margin-top: 15px;
-        }
+.filters button {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 12px 5px;
+  border-radius: 30px;
+}
 
-        input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 7px;
-            margin-top: 7px;
-            font-size: 16px;
-        }
+.filters button.active {
+  background: #494a49;
+  color: white;
+}
 
-        button,
-        .link-button {
-            display: inline-block;
-            border: none;
-            border-radius: 7px;
-            padding: 12px 16px;
-            margin-top: 15px;
-            background: #087443;
-            color: white;
-            font-weight: bold;
-            text-decoration: none;
-            cursor: pointer;
-        }
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
 
-        .secondary {
-            background: #102b52;
-        }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 19px;
+  padding: 17px;
+  margin-bottom: 15px;
+}
 
-        .danger {
-            background: #b42318;
-        }
+.stat-label {
+  color: #c3cbd0;
+  font-size: 13px;
+}
 
-        .table-wrap {
-            width: 100%;
-            overflow-x: auto;
-        }
+.stat-value {
+  font-size: 25px;
+  font-weight: bold;
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 450px;
-        }
+.stat-note {
+  color: var(--muted);
+  font-size: 12px;
+}
 
-        th,
-        td {
-            border-bottom: 1px solid #e2e8f0;
-            padding: 12px 8px;
-            text-align: left;
-        }
+.green {
+  color: var(--green);
+}
 
-        th {
-            background: #f1f5f9;
-        }
+.gold {
+  color: #f1c36a;
+}
 
-        .empty {
-            color: #64748b;
-            line-height: 1.6;
-        }
+.network-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
 
-        footer {
-            text-align: center;
-            padding: 22px 12px;
-            background: #071a38;
-            color: white;
-            margin-top: 35px;
-        }
+.network {
+  min-height: 120px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  background: #282920;
+  color: white;
+  font-weight: bold;
+}
 
-        @media (max-width: 480px) {
-            header h1 {
-                font-size: 21px;
-            }
+.network span {
+  font-size: 28px;
+}
 
-            .panel,
-            .welcome {
-                padding: 16px;
-            }
-        }
-    </style>
+.network.mtn { background: #332b17; }
+.network.telecel { background: #392a2c; }
+.network.at { background: #23342e; }
+
+.network.selected {
+  outline: 2px solid var(--green);
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 8px;
+  color: #d1d7da;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.field input,
+.field select {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #505351;
+  background: #292a29;
+  color: white;
+  outline: none;
+}
+
+.field input:focus,
+.field select:focus {
+  border-color: var(--green);
+}
+
+.btn {
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  color: white;
+  background: #343634;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background: #08754e;
+  border-color: #08754e;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-row {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.notice {
+  background: #302509;
+  border-left: 4px solid var(--gold);
+  color: #e6d29b;
+  padding: 13px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 14px 0;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 390px;
+}
+
+th, td {
+  padding: 12px 9px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  font-size: 13px;
+}
+
+th {
+  color: var(--muted);
+}
+
+.badge {
+  display: inline-block;
+  border-radius: 20px;
+  padding: 6px 9px;
+  font-size: 11px;
+  background: #343634;
+  color: var(--muted);
+}
+
+.badge.pending {
+  background: #443516;
+  color: #f0cb75;
+}
+
+.badge.delivered {
+  background: #123d2c;
+  color: #78e6b6;
+}
+
+.price-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.share-link {
+  overflow-wrap: anywhere;
+  background: #141514;
+  border: 1px solid var(--border);
+  padding: 13px;
+  border-radius: 10px;
+  color: var(--green);
+  font-size: 13px;
+  margin: 12px 0;
+}
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
+
+.bottom-nav {
+  position: fixed;
+  z-index: 10;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #090a0c;
+  border-top: 1px solid #343638;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  padding: 9px 3px calc(9px + env(safe-area-inset-bottom));
+}
+
+.nav-btn {
+  background: transparent;
+  color: #9ca6ad;
+  border: 0;
+  font-size: 11px;
+  padding: 7px 1px;
+}
+
+.nav-btn .icon {
+  display: block;
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.nav-btn.active {
+  color: var(--green);
+}
+
+.empty {
+  color: var(--muted);
+  padding: 16px 0;
+  line-height: 1.5;
+}
+
+.hidden {
+  display: none !important;
+}
+
+footer {
+  text-align: center;
+  color: #808b8e;
+  font-size: 11px;
+  margin-top: 25px;
+}
+
+@media (min-width: 700px) {
+  .stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .network-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+</style>
 </head>
 
 <body>
 
-<header>
-    <h1>KIELMEN 636 DATAPLUG</h1>
-    <p>Agent Dashboard</p>
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-logo">K636</div>
+    <div>
+      <strong>Kielmen 636</strong>
+      <small>AGENT STORE</small>
+    </div>
+  </div>
+  <span class="online">● Dashboard</span>
 </header>
-
-<nav>
-    <a href="index.html">Main Website</a>
-    <a href="agent-register.html">Register</a>
-    <a href="#prices">My Prices</a>
-    <a href="#orders">Recent Orders</a>
-</nav>
 
 <main class="container">
 
-    <!-- WELCOME -->
+  <!-- DASHBOARD -->
+  <section class="page active" id="home">
+    <div class="welcome">
+      <h1>Welcome, Agent!</h1>
+      <p>Manage your data business, selling prices, storefront link and customer orders in one place.</p>
+    </div>
 
-    <section class="welcome">
-        <h2>Welcome, Agent!</h2>
+    <h2 class="section-title">Performance overview</h2>
 
-        <p>
-            Manage your business details, set your selling prices
-            and calculate your estimated profit.
-        </p>
+    <div class="filters">
+      <button class="active" data-period="today">Today</button>
+      <button data-period="week">This Week</button>
+      <button data-period="month">This Month</button>
+    </div>
 
-        <div class="notice">
-            <strong>Prototype notice:</strong>
-            This dashboard stores settings in this browser only.
-            It does not yet have secure agent accounts, shared
-            customer orders or real payment records.
-        </div>
-    </section>
+    <div class="stats">
+      <div class="card">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value" id="ordersStat">0</div>
+        <div class="stat-note">Recorded orders</div>
+      </div>
 
+      <div class="card">
+        <div class="stat-label">Total Profit</div>
+        <div class="stat-value green" id="profitStat">GH₵0.00</div>
+        <div class="stat-note">Estimated profit</div>
+      </div>
 
-    <!-- BUSINESS DETAILS -->
+      <div class="card">
+        <div class="stat-label">Total Sales</div>
+        <div class="stat-value" id="salesStat">GH₵0.00</div>
+        <div class="stat-note">Recorded sales</div>
+      </div>
 
-    <section class="panel">
-        <h2>My Business Details</h2>
+      <div class="card">
+        <div class="stat-label">Customers</div>
+        <div class="stat-value" id="customersStat">0</div>
+        <div class="stat-note">Unique phone numbers</div>
+      </div>
+    </div>
 
-        <label for="business-name">Business Name</label>
-        <input
-            type="text"
-            id="business-name"
-            placeholder="Enter your business name">
-
-        <label for="agent-name">Agent Name</label>
-        <input
-            type="text"
-            id="agent-name"
-            placeholder="Enter your name">
-
-        <label for="agent-phone">Phone Number</label>
-        <input
-            type="tel"
-            id="agent-phone"
-            placeholder="e.g. 0241234567">
-
-        <button type="button" id="save-details">
-            Save Business Details
+    <h2 class="section-title">Your data store</h2>
+    <div class="card">
+      <div class="network-grid">
+        <button class="network mtn" onclick="selectNetwork('MTN')">
+          <span>🟡</span> MTN
         </button>
-
-        <p id="details-message" role="status"></p>
-    </section>
-
-
-    <!-- STATISTICS -->
-
-    <section class="stats">
-
-        <div class="stat-card">
-            <h3>Recorded Orders</h3>
-            <p id="total-orders">0</p>
-        </div>
-
-        <div class="stat-card">
-            <h3>Recorded Sales</h3>
-            <p id="total-sales">GH₵ 0.00</p>
-        </div>
-
-        <div class="stat-card">
-            <h3>Estimated Profit</h3>
-            <p id="total-profit">GH₵ 0.00</p>
-        </div>
-
-    </section>
-
-
-    <!-- PRICES -->
-
-    <section class="panel" id="prices">
-
-        <h2>My Selling Prices</h2>
-
-        <p>
-            Enter the price you want to charge your customers.
-            The calculator uses the example costs shown below.
-        </p>
-
-        <label for="mtn-1gb">MTN 1GB Selling Price (GH₵)</label>
-        <input
-            type="number"
-            id="mtn-1gb"
-            min="0"
-            step="0.01"
-            value="5.50">
-
-        <label for="airteltigo-1gb">
-            AirtelTigo 1GB Selling Price (GH₵)
-        </label>
-        <input
-            type="number"
-            id="airteltigo-1gb"
-            min="0"
-            step="0.01"
-            value="5.50">
-
-        <label for="telecel-10gb">
-            Telecel 10GB Selling Price (GH₵)
-        </label>
-        <input
-            type="number"
-            id="telecel-10gb"
-            min="0"
-            step="0.01"
-            value="45.00">
-
-        <button type="button" id="save-prices">
-            Save My Prices
+        <button class="network telecel" onclick="selectNetwork('Telecel')">
+          <span>🔴</span> Telecel
         </button>
-
-        <button type="button" class="secondary" id="calculate-profit">
-            Calculate Estimated Profit
+        <button class="network at" onclick="selectNetwork('AirtelTigo')">
+          <span>🟢</span> AirtelTigo
         </button>
+      </div>
+      <p class="stat-note">Select a network to manage your selling prices.</p>
+      <button class="btn btn-primary btn-block" onclick="showPage('prices')">
+        Manage My Prices
+      </button>
+    </div>
 
-        <p id="price-message" role="status"></p>
+    <h2 class="section-title">Recent orders</h2>
+    <div class="card">
+      <div id="recentOrders" class="empty">
+        No orders have been recorded in this browser yet.
+      </div>
+      <button class="btn btn-block" onclick="showPage('orders')">View Orders</button>
+    </div>
+  </section>
 
-        <p class="empty">
-            Important: The example costs below are editable.
-            Replace them with your actual supplier costs before
-            relying on the profit estimates.
-        </p>
+  <!-- STORE -->
+  <section class="page" id="store">
+    <h1>My Store</h1>
+    <p class="stat-note">Set up your business details and share your store.</p>
 
-        <label for="mtn-cost">MTN 1GB Supplier Cost (GH₵)</label>
-        <input
-            type="number"
-            id="mtn-cost"
-            min="0"
-            step="0.01"
-            value="4.50">
+    <div class="card">
+      <div class="field">
+        <label for="businessName">Business name</label>
+        <input id="businessName" maxlength="60" placeholder="e.g. Kielmen Data Store">
+      </div>
 
-        <label for="airteltigo-cost">
-            AirtelTigo 1GB Supplier Cost (GH₵)
-        </label>
-        <input
-            type="number"
-            id="airteltigo-cost"
-            min="0"
-            step="0.01"
-            value="5.00">
+      <div class="field">
+        <label for="agentName">Agent name</label>
+        <input id="agentName" maxlength="60" placeholder="Your name">
+      </div>
 
-        <label for="telecel-cost">
-            Telecel 10GB Supplier Cost (GH₵)
-        </label>
-        <input
-            type="number"
-            id="telecel-cost"
-            min="0"
-            step="0.01"
-            value="42.00">
+      <div class="field">
+        <label for="agentPhone">Business phone number</label>
+        <input id="agentPhone" inputmode="tel" maxlength="15" placeholder="0XXXXXXXXX">
+      </div>
 
-    </section>
+      <div class="field">
+        <label for="storeDescription">Store description</label>
+        <input id="storeDescription" maxlength="120" placeholder="Affordable data bundles">
+      </div>
 
+      <button class="btn btn-primary btn-block" onclick="saveStore()">
+        Save Store Details
+      </button>
 
-    <!-- RECENT ORDERS -->
+      <div class="notice">
+        These details are currently saved only in this browser. They are not yet securely saved to your account on the server.
+      </div>
+    </div>
 
-    <section class="panel" id="orders">
+    <div class="card">
+      <h3>Share your storefront</h3>
+      <p class="stat-note">Share your personal store link with customers.</p>
+      <div class="share-link" id="storeLink">Save your store details first.</div>
 
-        <h2>Recent Orders</h2>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="copyStoreLink()">Copy Link</button>
+        <button class="btn" onclick="shareStore()">Share</button>
+      </div>
+    </div>
+  </section>
 
-        <p class="empty">
-            No real customer orders are connected to this dashboard yet.
-        </p>
+  <!-- PRICES -->
+  <section class="page" id="prices">
+    <h1>My Selling Prices</h1>
+    <p class="stat-note">Your prices should be higher than or equal to the official base prices.</p>
 
-        <div class="table-wrap">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Order</th>
-                        <th>Network</th>
-                        <th>Bundle</th>
-                        <th>Amount</th>
-                    </tr>
-                </thead>
+    <div class="card">
+      <div class="field">
+        <label for="priceNetwork">Select network</label>
+        <select id="priceNetwork" onchange="renderPrices()">
+          <option value="MTN">MTN</option>
+          <option value="Telecel">Telecel</option>
+          <option value="AirtelTigo">AirtelTigo</option>
+        </select>
+      </div>
 
-                <tbody id="orders-table">
-                    <tr>
-                        <td colspan="4">
-                            No orders recorded.
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+      <div class="notice">
+        Base prices are sample values from your current project. Confirm the actual supplier prices before accepting customer payments.
+      </div>
 
-    </section>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Bundle</th>
+              <th>Base price</th>
+              <th>Your price (GH₵)</th>
+            </tr>
+          </thead>
+          <tbody id="priceRows"></tbody>
+        </table>
+      </div>
 
+      <div style="height:14px"></div>
+      <button class="btn btn-primary btn-block" onclick="savePrices()">
+        Save My Prices
+      </button>
 
-    <!-- QUICK LINKS -->
+      <div id="priceMessage" class="empty"></div>
+    </div>
+  </section>
 
-    <section class="panel">
-        <h2>Quick Links</h2>
+  <!-- ORDERS -->
+  <section class="page" id="orders">
+    <h1>Orders & Payments</h1>
+    <p class="stat-note">Orders saved in this browser only.</p>
 
-        <a class="link-button" href="index.html">
-            Visit Main Website
-        </a>
+    <div class="card">
+      <div class="field">
+        <label for="orderFilter">Filter orders</label>
+        <select id="orderFilter" onchange="renderOrders()">
+          <option value="all">All orders</option>
+          <option value="pending">Pending</option>
+          <option value="delivered">Delivered</option>
+          <option value="failed">Failed</option>
+        </select>
+      </div>
 
-        <a class="link-button secondary" href="agent-register.html">
-            Agent Registration
-        </a>
+      <div id="ordersList" class="empty">
+        No orders found.
+      </div>
+    </div>
+  </section>
 
-        <button type="button" class="danger" id="reset-dashboard">
-            Reset Local Dashboard
-        </button>
+  <!-- PROFILE -->
+  <section class="page" id="profile">
+    <h1>My Profile</h1>
 
-        <p id="reset-message" role="status"></p>
-    </section>
+    <div class="card">
+      <h3>Business profile</h3>
+      <p id="profileBusiness">Business name not set</p>
+      <p class="stat-note" id="profileAgent">Agent name not set</p>
+      <p class="stat-note" id="profilePhone">Phone number not set</p>
+    </div>
+
+    <div class="card">
+      <h3>Account security</h3>
+      <div class="notice">
+        Secure agent registration, login, password reset and server-side access controls have not been connected yet. Do not treat this prototype as a secure account system.
+      </div>
+      <button class="btn btn-block" onclick="showPage('store')">
+        Edit Business Details
+      </button>
+    </div>
+
+    <div class="card">
+      <h3>Agent Store</h3>
+      <p class="stat-note">Kielmen 636 Dataplug</p>
+      <button class="btn btn-block" onclick="showPage('home')">Back to Dashboard</button>
+    </div>
+  </section>
+
+  <footer>
+    Kielmen 636 Dataplug · Agent Dashboard
+  </footer>
 
 </main>
 
-
-<footer>
-    <h3>KIELMEN 636 DATAPLUG</h3>
-    <p>Your Trusted Data Plug</p>
-    <p>&copy; 2026 Kielmen 636 Dataplug.</p>
-</footer>
-
+<nav class="bottom-nav">
+  <button class="nav-btn active" data-page="home" onclick="showPage('home')">
+    <span class="icon">⌂</span>Home
+  </button>
+  <button class="nav-btn" data-page="store" onclick="showPage('store')">
+    <span class="icon">▣</span>Store
+  </button>
+  <button class="nav-btn" data-page="prices" onclick="showPage('prices')">
+    <span class="icon">₵</span>My Prices
+  </button>
+  <button class="nav-btn" data-page="orders" onclick="showPage('orders')">
+    <span class="icon">▤</span>Orders
+  </button>
+  <button class="nav-btn" data-page="profile" onclick="showPage('profile')">
+    <span class="icon">◎</span>Profile
+  </button>
+</nav>
 
 <script>
-(function () {
-    "use strict";
+"use strict";
 
-    const STORAGE_KEY = "kielmenAgentDashboardV1";
+/*
+ * FRONTEND PROTOTYPE ONLY.
+ * Browser storage is not secure authentication or a shared database.
+ * Real orders, accounts, prices and payments must be validated by Render.
+ */
 
-    const defaultData = {
-        businessName: "",
-        agentName: "",
-        phone: "",
-        prices: {
-            mtn: 5.50,
-            airteltigo: 5.50,
-            telecel: 45.00
-        },
-        costs: {
-            mtn: 4.50,
-            airteltigo: 5.00,
-            telecel: 42.00
-        }
-    };
+const BASE_PRICES = {
+  MTN: {
+    "1GB": 4.50, "2GB": 9.00, "3GB": 13.00,
+    "4GB": 17.50, "5GB": 21.00, "6GB": 25.00,
+    "8GB": 34.00, "10GB": 42.00, "15GB": 59.00,
+    "20GB": 79.00, "25GB": 98.00, "30GB": 119.00,
+    "40GB": 157.00, "50GB": 197.00
+  },
+  Telecel: {
+    "10GB": 42.00, "15GB": 57.00, "20GB": 72.00,
+    "25GB": 93.00, "30GB": 111.00, "40GB": 145.00,
+    "50GB": 179.00, "100GB": 402.00
+  },
+  AirtelTigo: {
+    "1GB": 5.00, "2GB": 9.20, "5GB": 22.00,
+    "10GB": 41.00, "20GB": 78.00, "30GB": 115.00,
+    "50GB": 188.00
+  }
+};
 
-    function loadData() {
-        try {
-            const saved = localStorage.getItem(STORAGE_KEY);
+const STORAGE = {
+  profile: "k636_agent_profile_v1",
+  prices: "k636_agent_prices_v1",
+  orders: "k636_agent_demo_orders_v1"
+};
 
-            if (!saved) {
-                return JSON.parse(JSON.stringify(defaultData));
-            }
+function readStorage(key, fallback) {
+  try {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : fallback;
+  } catch (error) {
+    return fallback;
+  }
+}
 
-            const parsed = JSON.parse(saved);
+function writeStorage(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
 
-            return {
-                ...defaultData,
-                ...parsed,
-                prices: {
-                    ...defaultData.prices,
-                    ...(parsed.prices || {})
-                },
-                costs: {
-                    ...defaultData.costs,
-                    ...(parsed.costs || {})
-                }
-            };
-        } catch (error) {
-            console.error("Could not load dashboard data:", error);
+let profile = readStorage(STORAGE.profile, {
+  businessName: "",
+  agentName: "",
+  agentPhone: "",
+  storeDescription: ""
+});
 
-            return JSON.parse(JSON.stringify(defaultData));
-        }
+let agentPrices = readStorage(STORAGE.prices, {});
+let orders = readStorage(STORAGE.orders, []);
+
+function money(value) {
+  return "GH₵" + Number(value || 0).toFixed(2);
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character]);
+}
+
+function showPage(pageId) {
+  document.querySelectorAll(".page").forEach(page => {
+    page.classList.toggle("active", page.id === pageId);
+  });
+
+  document.querySelectorAll(".nav-btn").forEach(button => {
+    button.classList.toggle("active", button.dataset.page === pageId);
+  });
+
+  if (pageId === "prices") renderPrices();
+  if (pageId === "orders") renderOrders();
+  if (pageId === "profile") renderProfile();
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function selectNetwork(network) {
+  document.getElementById("priceNetwork").value = network;
+  renderPrices();
+  showPage("prices");
+}
+
+function saveStore() {
+  profile = {
+    businessName: document.getElementById("businessName").value.trim(),
+    agentName: document.getElementById("agentName").value.trim(),
+    agentPhone: document.getElementById("agentPhone").value.trim(),
+    storeDescription: document.getElementById("storeDescription").value.trim()
+  };
+
+  if (!profile.businessName || !profile.agentName) {
+    alert("Please enter your business name and agent name.");
+    return;
+  }
+
+  writeStorage(STORAGE.profile, profile);
+  renderProfile();
+  renderStoreLink();
+
+  alert("Store details saved in this browser. Server-side saving is not connected yet.");
+}
+
+function getCurrentPrices(network) {
+  const saved = agentPrices[network] || {};
+  const result = {};
+
+  Object.entries(BASE_PRICES[network]).forEach(([bundle, base]) => {
+    const savedValue = Number(saved[bundle]);
+    result[bundle] = Number.isFinite(savedValue) && savedValue >= base
+      ? savedValue
+      : base;
+  });
+
+  return result;
+}
+
+function renderPrices() {
+  const network = document.getElementById("priceNetwork").value;
+  const rows = document.getElementById("priceRows");
+  const prices = getCurrentPrices(network);
+
+  rows.innerHTML = Object.entries(BASE_PRICES[network]).map(([bundle, base]) => {
+    return `
+      <tr>
+        <td>${escapeHTML(bundle)}</td>
+        <td>${money(base)}</td>
+        <td>
+          <input
+            aria-label="${escapeHTML(network)} ${escapeHTML(bundle)} selling price"
+            type="number"
+            min="${base.toFixed(2)}"
+            step="0.01"
+            value="${prices[bundle].toFixed(2)}"
+            data-bundle="${escapeHTML(bundle)}"
+            style="width:105px;padding:9px;background:#151615;color:white;border:1px solid #505351;border-radius:8px">
+        </td>
+      </tr>`;
+  }).join("");
+
+  document.getElementById("priceMessage").textContent =
+    "Your estimated profit is calculated as your selling price minus the base price.";
+}
+
+function savePrices() {
+  const network = document.getElementById("priceNetwork").value;
+  const inputs = document.querySelectorAll("#priceRows input");
+  const newPrices = {};
+
+  for (const input of inputs) {
+    const bundle = input.dataset.bundle;
+    const price = Number(input.value);
+    const base = BASE_PRICES[network][bundle];
+
+    if (!Number.isFinite(price) || price < base) {
+      alert(bundle + " must be priced at least " + money(base) + ".");
+      input.focus();
+      return;
     }
 
-    let dashboard = loadData();
+    newPrices[bundle] = Math.round(price * 100) / 100;
+  }
 
-    function saveData() {
-        try {
-            localStorage.setItem(
-                STORAGE_KEY,
-                JSON.stringify(dashboard)
-            );
+  agentPrices[network] = newPrices;
+  writeStorage(STORAGE.prices, agentPrices);
 
-            return true;
-        } catch (error) {
-            console.error("Could not save dashboard data:", error);
-            return false;
-        }
+  document.getElementById("priceMessage").textContent =
+    "Prices saved in this browser. They are not yet shared with customers or saved on the server.";
+
+  alert("Selling prices saved locally.");
+}
+
+function renderStoreLink() {
+  const linkBox = document.getElementById("storeLink");
+
+  if (!profile.businessName) {
+    linkBox.textContent = "Enter your business details to create a preview link.";
+    return;
+  }
+
+  const url = new URL("index.html", window.location.href);
+  url.searchParams.set("agent", makeSlug(profile.businessName));
+  linkBox.textContent = url.href;
+}
+
+function makeSlug(value) {
+  return String(value)
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+async function copyStoreLink() {
+  const link = document.getElementById("storeLink").textContent;
+
+  if (!link.startsWith("http")) {
+    alert("Please save your store details first.");
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(link);
+    alert("Link copied.");
+  } catch (error) {
+    window.prompt("Copy your store link:", link);
+  }
+}
+
+async function shareStore() {
+  const link = document.getElementById("storeLink").textContent;
+
+  if (!link.startsWith("http")) {
+    alert("Please save your store details first.");
+    return;
+  }
+
+  const text = "Visit " + profile.businessName + " for data bundles: " + link;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: profile.businessName, text, url: link });
+    } catch (error) {
+      // The user may cancel the share sheet.
     }
+  } else {
+    window.open(
+      "https://wa.me/?text=" + encodeURIComponent(text),
+      "_blank",
+      "noopener"
+    );
+  }
+}
 
-    function money(amount) {
-        return "GH₵ " + Number(amount).toFixed(2);
-    }
+function renderOrders() {
+  const list = document.getElementById("ordersList");
+  const filter = document.getElementById("orderFilter").value;
 
-    function getNumber(id) {
-        return Number(document.getElementById(id).value);
-    }
+  const filtered = orders.filter(order =>
+    filter === "all" || order.status === filter
+  );
 
-    function loadFields() {
-        document.getElementById("business-name").value =
-            dashboard.businessName;
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty">No orders found. Real customer orders will appear here after backend integration.</div>';
+    renderRecentOrders();
+    return;
+  }
 
-        document.getElementById("agent-name").value =
-            dashboard.agentName;
+  list.innerHTML = filtered.slice().reverse().map(order => `
+    <div class="card">
+      <div class="btn-row" style="justify-content:space-between">
+        <strong>${escapeHTML(order.network)} · ${escapeHTML(order.bundle)}</strong>
+        <span class="badge ${escapeHTML(order.status)}">${escapeHTML(order.status)}</span>
+      </div>
+      <p class="stat-note">Phone: ${escapeHTML(order.phone)}</p>
+      <p class="stat-note">Reference: ${escapeHTML(order.reference)}</p>
+      <strong>${money(order.amount)}</strong>
+    </div>
+  `).join("");
 
-        document.getElementById("agent-phone").value =
-            dashboard.phone;
+  renderRecentOrders();
+}
 
-        document.getElementById("mtn-1gb").value =
-            dashboard.prices.mtn;
+function renderRecentOrders() {
+  const target = document.getElementById("recentOrders");
 
-        document.getElementById("airteltigo-1gb").value =
-            dashboard.prices.airteltigo;
+  if (!orders.length) {
+    target.textContent = "No orders have been recorded in this browser yet.";
+    return;
+  }
 
-        document.getElementById("telecel-10gb").value =
-            dashboard.prices.telecel;
+  target.innerHTML = orders.slice(-3).reverse().map(order => `
+    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
+      <strong>${escapeHTML(order.network)} · ${escapeHTML(order.bundle)}</strong>
+      <p class="stat-note">${escapeHTML(order.phone)}</p>
+      <div class="btn-row" style="justify-content:space-between">
+        <span class="badge ${escapeHTML(order.status)}">${escapeHTML(order.status)}</span>
+        <strong>${money(order.amount)}</strong>
+      </div>
+    </div>
+  `).join("");
+}
 
-        document.getElementById("mtn-cost").value =
-            dashboard.costs.mtn;
+function renderStats() {
+  const sales = orders.reduce((sum, order) => sum + Number(order.amount || 0), 0);
+  const profit = orders.reduce((sum, order) => sum + Number(order.profit || 0), 0);
+  const customers = new Set(orders.map(order => order.phone)).size;
 
-        document.getElementById("airteltigo-cost").value =
-            dashboard.costs.airteltigo;
+  document.getElementById("ordersStat").textContent = orders.length;
+  document.getElementById("salesStat").textContent = money(sales);
+  document.getElementById("profitStat").textContent = money(profit);
+  document.getElementById("customersStat").textContent = customers;
+}
 
-        document.getElementById("telecel-cost").value =
-            dashboard.costs.telecel;
+function renderProfile() {
+  document.getElementById("profileBusiness").textContent =
+    profile.businessName || "Business name not set";
 
-        calculateProfit();
-    }
+  document.getElementById("profileAgent").textContent =
+    profile.agentName || "Agent name not set";
 
-    function saveBusinessDetails() {
-        dashboard.businessName =
-            document.getElementById("business-name").value.trim();
+  document.getElementById("profilePhone").textContent =
+    profile.agentPhone || "Phone number not set";
+}
 
-        dashboard.agentName =
-            document.getElementById("agent-name").value.trim();
+function loadProfileForm() {
+  document.getElementById("businessName").value = profile.businessName || "";
+  document.getElementById("agentName").value = profile.agentName || "";
+  document.getElementById("agentPhone").value = profile.agentPhone || "";
+  document.getElementById("storeDescription").value = profile.storeDescription || "";
+}
 
-        dashboard.phone =
-            document.getElementById("agent-phone").value.trim();
+document.querySelectorAll(".filters button").forEach(button => {
+  button.addEventListener("click", () => {
+    document.querySelectorAll(".filters button").forEach(item =>
+      item.classList.remove("active")
+    );
 
-        const saved = saveData();
+    button.classList.add("active");
 
-        document.getElementById("details-message").textContent =
-            saved
-                ? "Business details saved on this device."
-                : "Could not save. Your browser may block local storage.";
-    }
+    /*
+     * The current demo uses browser-local orders.
+     * Date-based reporting will be added with the real backend.
+     */
+    alert("Date-based performance reports will work after server-side orders are connected.");
+  });
+});
 
-    function savePrices() {
-        const values = {
-            mtn: getNumber("mtn-1gb"),
-            airteltigo: getNumber("airteltigo-1gb"),
-            telecel: getNumber("telecel-10gb")
-        };
-
-        const costs = {
-            mtn: getNumber("mtn-cost"),
-            airteltigo: getNumber("airteltigo-cost"),
-            telecel: getNumber("telecel-cost")
-        };
-
-        const allValues = [
-            ...Object.values(values),
-            ...Object.values(costs)
-        ];
-
-        if (
-            allValues.some(function (value) {
-                return !Number.isFinite(value) || value < 0;
-            })
-        ) {
-            document.getElementById("price-message").textContent =
-                "Please enter valid, non-negative prices and costs.";
-
-            return;
-        }
-
-        dashboard.prices = values;
-        dashboard.costs = costs;
-
-        const saved = saveData();
-
-        document.getElementById("price-message").textContent =
-            saved
-                ? "Prices and supplier costs saved on this device."
-                : "Could not save. Please check your browser settings.";
-
-        calculateProfit();
-    }
-
-    function calculateProfit() {
-        const prices = {
-            mtn: getNumber("mtn-1gb"),
-            airteltigo: getNumber("airteltigo-1gb"),
-            telecel: getNumber("telecel-10gb")
-        };
-
-        const costs = {
-            mtn: getNumber("mtn-cost"),
-            airteltigo: getNumber("airteltigo-cost"),
-            telecel: getNumber("telecel-cost")
-        };
-
-        const profit =
-            (prices.mtn - costs.mtn) +
-            (prices.airteltigo - costs.airteltigo) +
-            (prices.telecel - costs.telecel);
-
-        document.getElementById("total-orders").textContent = "0";
-        document.getElementById("total-sales").textContent = money(0);
-
-        document.getElementById("total-profit").textContent =
-            money(profit);
-
-        document.getElementById("total-profit").title =
-            "Illustrative profit if one of each listed bundle is sold. Not actual earnings.";
-    }
-
-    function resetDashboard() {
-        const confirmed = window.confirm(
-            "Reset the saved business details and prices on this device?"
-        );
-
-        if (!confirmed) {
-            return;
-        }
-
-        try {
-            localStorage.removeItem(STORAGE_KEY);
-            dashboard = JSON.parse(JSON.stringify(defaultData));
-            loadFields();
-
-            document.getElementById("details-message").textContent = "";
-            document.getElementById("price-message").textContent = "";
-
-            document.getElementById("reset-message").textContent =
-                "Local dashboard data has been reset.";
-        } catch (error) {
-            document.getElementById("reset-message").textContent =
-                "Unable to reset local dashboard data.";
-        }
-    }
-
-    document.getElementById("save-details")
-        .addEventListener("click", saveBusinessDetails);
-
-    document.getElementById("save-prices")
-        .addEventListener("click", savePrices);
-
-    document.getElementById("calculate-profit")
-        .addEventListener("click", calculateProfit);
-
-    document.getElementById("reset-dashboard")
-        .addEventListener("click", resetDashboard);
-
-    loadFields();
-
-})();
+loadProfileForm();
+renderPrices();
+renderProfile();
+renderStoreLink();
+renderStats();
+renderOrders();
 </script>
 
 </body>
