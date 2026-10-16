@@ -1,594 +1,535 @@
+"use strict";
+
 const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
 const crypto = require("crypto");
 
 const app = express();
-
-app.use(cors({
-    origin: "https://ezekielmemsahannan42-wq.github.io"
-}));
-
-app.use(express.json());
-
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
-        rejectUnauthorized: false
-    }
-});
-
-/*
- IMPORTANT:
- Prices must match the prices displayed on your website.
- The server, not the customer's browser, determines the price.
-*/
-
-const PRICES = {
-    MTN: {
-        "1GB": 4.50,
-        "2GB": 9.00,
-        "3GB": 13.00,
-        "4GB": 17.50,
-        "5GB": 21.00,
-        "6GB": 25.00,
-        "8GB": 34.00,
-        "10GB": 42.00,
-        "15GB": 59.00,
-        "20GB": 79.00,
-        "25GB": 98.00,
-        "30GB": 119.00,
-        "40GB": 157.00,
-        "50GB": 197.00
-    },
-
-    AirtelTigo: {
-        "1GB": 5.00,
-        "2GB": 9.20,
-        "5GB": 22.00,
-        "10GB": 41.00,
-        "20GB": 78.00,
-        "30GB": 115.00,
-        "50GB": 188.00
-    },
-
-    Telecel: {
-        "10GB": 42.00,
-        "15GB": 57.00,
-        "20GB": 72.00,
-        "25GB": 93.00,
-        "30GB": 111.00,
-        "40GB": 145.00,
-        "50GB": 179.00,
-        "100GB": 402.00
-    }
-};
-
-const NETWORK_MAP = {
-    MTN: "YELLO",
-    AIRTELTIGO: "AT_PREMIUM",
-    TELECEL: "TELECEL"
-};
-
-async function createOrdersTable() {
-    await pool.query(`
-        CREATE TABLE IF NOT EXISTS orders (
-            id SERIAL PRIMARY KEY,
-            reference VARCHAR(100) UNIQUE NOT NULL,
-            email VARCHAR(255) NOT NULL,
-            phone VARCHAR(20) NOT NULL,
-            network VARCHAR(50) NOT NULL,
-            bundle VARCHAR(50) NOT NULL,
-            amount NUMERIC(10,2) NOT NULL,
-            status VARCHAR(30) NOT NULL DEFAULT 'pending',
-            delivery_status VARCHAR(30) NOT NULL DEFAULT 'not_started',
-            supplier_reference VARCHAR(150),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    `);
-
-    await pool.query(`
-        ALTER TABLE orders
-        ADD COLUMN IF NOT EXISTS delivery_status
-        VARCHAR(30) NOT NULL DEFAULT 'not_started'
-    `);
-
-    await pool.query(`
-        ALTER TABLE orders
-        ADD COLUMN IF NOT EXISTS supplier_reference VARCHAR(150)
-    `);
-
-    console.log("Orders table is ready.");
-}
-
-/*
- INITIALIZE PAYMENT
-*/
-
-app.post("/initialize-payment", async (req, res) => {
-    try {
-        const {
-            email,
-            phone,
-            network,
-            bundle
-        } = req.body;
-
-        if (
-            typeof email !== "string" ||
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-        ) {
-            return res.status(400).json({
-                message: "Enter a valid email address."
-            });
-        }
-
-        const cleanPhone = String(phone || "").replace(/\s+/g, "");
-
-        if (!/^0\d{9}$/.test(cleanPhone)) {
-            return res.status(400).json({
-                message: "Enter a valid 10-digit Ghana phone number."
-            });
-        }
-
-        const networkKey = String(network || "")
-            .replace(/[\s_-]/g, "")
-            .toUpperCase();
-
-        const networkNames = {
-            MTN: "MTN",
-            AIRTELTIGO: "AirtelTigo",
-            TELECEL: "Telecel"
-        };
-
-        const selectedNetwork = networkNames[networkKey];
-
-        if (!selectedNetwork) {
-            return res.status(400).json({
-                message: "Select a valid network."
-            });
-        }
-
-        const selectedBundle = String(bundle || "")
-            .replace(/\s+/g, "")
-            .toUpperCase();
-
-        const price =
-            PRICES[selectedNetwork][selectedBundle];
-
-        if (typeof price !== "number") {
-            return res.status(400).json({
-                message: "This bundle is not available."
-            });
-        }
-
-        const secretKey = process.env.PAYSTACK_SECRET_KEY;
-
-        if (
-            !secretKey ||
-            !secretKey.startsWith("sk_live_")
-        ) {
-            return res.status(503).json({
-                message: "Live payment service is not configured."
-            });
-        }
-
-        const reference =
-            "KIELMEN_" +
-            Date.now() +
-            "_" +
-            crypto.randomBytes(6).toString("hex");
-
-        const callbackUrl =
-            "https://ezekielmemsahannan42-wq.github.io/kielmen-dataplug/success.html";
-
-        const paystackResponse = await fetch(
-            "https://api.paystack.co/transaction/initialize",
-            {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${secretKey}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    email: email.trim().toLowerCase(),
-                    amount: Math.round(price * 100),
-                    currency: "GHS",
-                    reference,
-                    callback_url: callbackUrl,
-                    metadata: {
-                        phone: cleanPhone,
-                        network: selectedNetwork,
-                        bundle: selectedBundle
-                    }
-                })
-            }
-        );
-
-        const paystackResult = await paystackResponse.json();
-
-        if (
-            !paystackResponse.ok ||
-            !paystackResult.status ||
-            !paystackResult.data?.authorization_url
-        ) {
-            console.error(
-                "Paystack initialization failed:",
-                paystackResult.message
-            );
-
-            return res.status(502).json({
-                message: "Unable to start payment. Please try again."
-            });
-        }
-
-        await pool.query(
-            `INSERT INTO orders
-             (reference, email, phone, network, bundle, amount)
-             VALUES ($1, $2, $3, $4, $5, $6)`,
-            [
-                reference,
-                email.trim().toLowerCase(),
-                cleanPhone,
-                selectedNetwork,
-                selectedBundle,
-                price
-            ]
-        );
-
-        return res.json({
-            success: true,
-            authorization_url:
-                paystackResult.data.authorization_url,
-            reference
-        });
-
-    } catch (error) {
-        console.error("Initialize payment error:", error);
-
-        return res.status(500).json({
-            message: "Unable to start payment. Please try again."
-        });
-    }
-});
-
-/*
- DATAMART AUTOMATIC DELIVERY
-
- This function is called only after Paystack confirms payment.
-*/
-
-async function deliverData(order) {
-    if (process.env.DATAMART_PURCHASES_ENABLED !== "true") {
-        console.log("DataMart purchases are disabled.");
-        return;
-    }
-
-    const apiKey = process.env.DATAMART_API_KEY;
-
-    if (!apiKey) {
-        throw new Error("DataMart API key is missing.");
-    }
-
-    const claim = await pool.query(
-        `UPDATE orders
-         SET delivery_status = 'processing'
-         WHERE reference = $1
-           AND status = 'paid'
-           AND delivery_status = 'not_started'
-         RETURNING *`,
-        [order.reference]
-    );
-
-    if (claim.rows.length === 0) {
-        console.log("Order already claimed for delivery.");
-        return;
-    }
-
-    const savedOrder = claim.rows[0];
-
-    try {
-        const networkKey = String(savedOrder.network)
-            .replace(/[\s_-]/g, "")
-            .toUpperCase();
-
-        const supplierNetwork = NETWORK_MAP[networkKey];
-
-        const capacity = Number(
-            String(savedOrder.bundle).replace(/[^0-9.]/g, "")
-        );
-
-        if (
-            !supplierNetwork ||
-            !Number.isFinite(capacity) ||
-            capacity <= 0
-        ) {
-            throw new Error("Invalid network or bundle.");
-        }
-
-        const response = await fetch(
-            "https://api.datamartgh.shop/api/purchase",
-            {
-                method: "POST",
-                headers: {
-                    "X-API-Key": apiKey,
-                    "X-Idempotency-Key": savedOrder.reference,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    phoneNumber: savedOrder.phone,
-                    network: supplierNetwork,
-                    capacity: String(capacity),
-                    gateway: "wallet"
-                })
-            }
-        );
-
-        const result = await response.json();
-
-        if (
-            !response.ok ||
-            result.status !== "success" ||
-            !result.data
-        ) {
-            throw new Error(
-                result.message || "DataMart purchase failed."
-            );
-        }
-
-        const supplierStatus =
-            String(result.data.orderStatus || "").toLowerCase();
-
-        const deliveryStatus =
-            supplierStatus === "completed"
-                ? "delivered"
-                : "processing";
-
-        await pool.query(
-            `UPDATE orders
-             SET delivery_status = $1,
-                 supplier_reference = $2
-             WHERE reference = $3`,
-            [
-                deliveryStatus,
-                result.data.purchaseId ||
-                    result.data.orderReference ||
-                    result.data.transactionReference ||
-                    null,
-                savedOrder.reference
-            ]
-        );
-
-        console.log(
-            "DataMart response recorded:",
-            savedOrder.reference,
-            deliveryStatus
-        );
-
-    } catch (error) {
-        /*
-         Do not automatically retry a failed network request:
-         DataMart might have processed the purchase even if
-         our server did not receive the response.
-        */
-
-        console.error(
-            "DataMart delivery needs review:",
-            savedOrder.reference,
-            error.message
-        );
-
-        await pool.query(
-            `UPDATE orders
-             SET delivery_status = 'review_required'
-             WHERE reference = $1`,
-            [savedOrder.reference]
-        );
-
-        throw error;
-    }
-}
-
-/*
- VERIFY PAYMENT
-
- Never trust a redirect alone. Verify directly with Paystack.
-*/
-
-app.post("/verify-payment", async (req, res) => {
-    try {
-        const { reference } = req.body;
-
-        if (
-            typeof reference !== "string" ||
-            reference.length < 5 ||
-            reference.length > 100
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "A valid payment reference is required."
-            });
-        }
-
-        const secretKey = process.env.PAYSTACK_SECRET_KEY;
-
-        if (
-            !secretKey ||
-            !secretKey.startsWith("sk_live_")
-        ) {
-            return res.status(503).json({
-                success: false,
-                message: "Live payment verification is not configured."
-            });
-        }
-
-        const orderResult = await pool.query(
-            "SELECT * FROM orders WHERE reference = $1",
-            [reference]
-        );
-
-        if (orderResult.rows.length === 0) {
-            return res.status(404).json({
-                success: false,
-                message: "Order not found."
-            });
-        }
-
-        const order = orderResult.rows[0];
-
-        const paymentResponse = await fetch(
-            "https://api.paystack.co/transaction/verify/" +
-                encodeURIComponent(reference),
-            {
-                headers: {
-                    Authorization: `Bearer ${secretKey}`
-                }
-            }
-        );
-
-        const paymentResult = await paymentResponse.json();
-
-        if (
-            !paymentResponse.ok ||
-            paymentResult.status !== true ||
-            !paymentResult.data
-        ) {
-            return res.status(502).json({
-                success: false,
-                message: "Unable to verify payment. Please try again."
-            });
-        }
-
-        const payment = paymentResult.data;
-
-        const expectedAmount = Math.round(
-            Number(order.amount) * 100
-        );
-
-        if (
-            payment.status !== "success" ||
-            payment.reference !== order.reference ||
-            payment.currency !== "GHS" ||
-            payment.amount !== expectedAmount ||
-            String(payment.customer?.email || "").toLowerCase() !==
-                order.email.toLowerCase()
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "Payment has not been confirmed."
-            });
-        }
-
-        /*
-         Mark paid only once.
-        */
-
-        const paidResult = await pool.query(
-            `UPDATE orders
-             SET status = 'paid'
-             WHERE reference = $1
-               AND status = 'pending'
-             RETURNING *`,
-            [reference]
-        );
-
-        if (paidResult.rows.length === 0) {
-            const latest = await pool.query(
-                `SELECT status, delivery_status
-                 FROM orders WHERE reference = $1`,
-                [reference]
-            );
-
-            const saved = latest.rows[0];
-
-            if (saved?.status === "paid") {
-                return res.json({
-                    success: true,
-                    message: "Payment is verified.",
-                    delivery_status: saved.delivery_status
-                });
-            }
-
-            return res.status(409).json({
-                success: false,
-                message: "Order status needs review."
-            });
-        }
-
-        const paidOrder = paidResult.rows[0];
-
-        let message = "Payment verified. Delivery is being processed.";
-
-        try {
-            await deliverData(paidOrder);
-
-            const delivery = await pool.query(
-                `SELECT delivery_status
-                 FROM orders WHERE reference = $1`,
-                [reference]
-            );
-
-            const status = delivery.rows[0]?.delivery_status;
-
-            if (status === "delivered") {
-                message = "Payment verified and data delivered successfully.";
-            } else if (status === "review_required") {
-                message = "Payment verified. Please contact support to confirm delivery.";
-            } else {
-                message = "Payment verified. Data delivery is still processing.";
-            }
-
-        } catch (deliveryError) {
-            console.error(
-                "Delivery requires attention:",
-                deliveryError.message
-            );
-
-            message =
-                "Payment verified, but delivery needs attention. Please contact support.";
-        }
-
-        return res.json({
-            success: true,
-            message
-        });
-
-    } catch (error) {
-        console.error("Payment verification error:", error);
-
-        return res.status(500).json({
-            success: false,
-            message: "An error occurred while verifying payment."
-        });
-    }
-});
-
-/*
- HEALTH CHECK
-*/
-
-app.get("/", (req, res) => {
-    res.json({
-        service: "Kielmen 636 Dataplug",
-        status: "online"
-    });
-});
-
-/*
- START SERVER
-*/
-
 const PORT = process.env.PORT || 3000;
 
-createOrdersTable()
-    .then(() => {
-        app.listen(PORT, "0.0.0.0", () => {
-            console.log(
-                `Kielmen 636 Dataplug server running on port ${PORT}`
-            );
-        });
-    })
-    .catch((error) => {
-        console.error("Database startup failed:", error);
-        process.exit(1);
+app.use(
+  cors({
+    origin: "https://ezekielmemsahannan42-wq.github.io",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"]
+  })
+);
+
+app.use(express.json({ limit: "20kb" }));
+
+// ==================================================
+// ENVIRONMENT VARIABLES
+// ==================================================
+
+const DATABASE_URL = process.env.DATABASE_URL;
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+
+// Paystack requires an email even when your checkout
+// form does not collect one.
+//
+// Set this to an email address you control in Render.
+const PAYSTACK_CUSTOMER_EMAIL =
+  process.env.PAYSTACK_CUSTOMER_EMAIL;
+
+// Supplier delivery remains disabled until explicitly
+// enabled in Render.
+const DATAMART_PURCHASES_ENABLED =
+  process.env.DATAMART_PURCHASES_ENABLED === "true";
+
+const DATAMART_API_KEY = process.env.DATAMART_API_KEY;
+
+// ==================================================
+// DATABASE
+// ==================================================
+
+if (!DATABASE_URL) {
+  console.error("DATABASE_URL is missing.");
+}
+
+const pool = new Pool({
+  connectionString: DATABASE_URL,
+  ssl: DATABASE_URL
+    ? { rejectUnauthorized: false }
+    : undefined
+});
+
+// ==================================================
+// OFFICIAL CUSTOMER PRICES — GH₵
+// These are the latest prices you supplied.
+// The server, not the browser, determines the price.
+// ==================================================
+
+const PRICES = {
+  MTN: {
+    "1GB": 4.70,
+    "2GB": 9.70,
+    "3GB": 14.50,
+    "4GB": 20.00,
+    "5GB": 26.00,
+    "6GB": 32.00,
+    "8GB": 43.00,
+    "10GB": 49.00,
+    "15GB": 69.00,
+    "20GB": 99.00,
+    "25GB": 140.00,
+    "30GB": 155.00,
+    "40GB": 199.00,
+    "50GB": 240.00
+  },
+
+  Telecel: {
+    "10GB": 45.00,
+    "15GB": 62.00,
+    "20GB": 82.00,
+    "25GB": 101.00,
+    "30GB": 124.00,
+    "40GB": 170.00,
+    "50GB": 210.00,
+    "100GB": 420.00
+  },
+
+  AirtelTigo: {
+    "1GB": 5.00,
+    "2GB": 9.20,
+    "5GB": 22.00,
+    "10GB": 41.00,
+    "20GB": 78.00,
+    "30GB": 115.00,
+    "50GB": 188.00
+  }
+};
+
+// ==================================================
+// SUPPLIER NETWORK NAMES
+// ==================================================
+
+const NETWORK_MAP = {
+  MTN: "YELLO",
+  AirtelTigo: "AT_PREMIUM",
+  Telecel: "TELECEL"
+};
+
+// ==================================================
+// DATABASE INITIALIZATION
+// ==================================================
+
+async function createOrdersTable() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS orders (
+      id SERIAL PRIMARY KEY,
+      reference VARCHAR(100) UNIQUE NOT NULL,
+      email VARCHAR(255) NOT NULL,
+      phone VARCHAR(20) NOT NULL,
+      network VARCHAR(50) NOT NULL,
+      bundle VARCHAR(50) NOT NULL,
+      amount NUMERIC(10,2) NOT NULL,
+      status VARCHAR(30) NOT NULL DEFAULT 'pending',
+      delivery_status VARCHAR(30) NOT NULL DEFAULT 'not_started',
+      supplier_reference VARCHAR(150),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  // Add these columns to older tables if they are missing.
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS delivery_status
+    VARCHAR(30) NOT NULL DEFAULT 'not_started'
+  `);
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS supplier_reference VARCHAR(150)
+  `);
+
+  console.log("Orders table is ready.");
+}
+
+// ==================================================
+// HELPERS
+// ==================================================
+
+function validGhanaPhone(phone) {
+  const cleaned = String(phone || "").replace(/[\s-]/g, "");
+
+  return /^(?:0\d{9}|\+233\d{9}|233\d{9})$/.test(cleaned);
+}
+
+function normalizePhone(phone) {
+  let cleaned = String(phone || "").replace(/[\s-]/g, "");
+
+  if (cleaned.startsWith("+233")) {
+    cleaned = "0" + cleaned.slice(4);
+  } else if (cleaned.startsWith("233")) {
+    cleaned = "0" + cleaned.slice(3);
+  }
+
+  return cleaned;
+}
+
+function getApprovedPrice(network, bundle) {
+  if (
+    !Object.prototype.hasOwnProperty.call(PRICES, network) ||
+    !Object.prototype.hasOwnProperty.call(PRICES[network], bundle)
+  ) {
+    return null;
+  }
+
+  return PRICES[network][bundle];
+}
+
+async function paystackRequest(path, body) {
+  if (!PAYSTACK_SECRET_KEY) {
+    throw new Error("Paystack is not configured on the server.");
+  }
+
+  const response = await fetch(
+    `https://api.paystack.co${path}`,
+    {
+      method: body ? "POST" : "GET",
+      headers: {
+        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        "Content-Type": "application/json"
+      },
+      ...(body ? { body: JSON.stringify(body) } : {})
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok || !data.status) {
+    throw new Error(
+      data.message || "Paystack request failed."
+    );
+  }
+
+  return data.data;
+}
+
+// ==================================================
+// HEALTH CHECK
+// ==================================================
+
+app.get("/", (req, res) => {
+  res.json({
+    service: "Kielmen 636 Dataplug Payment API",
+    status: "online"
+  });
+});
+
+// ==================================================
+// GET APPROVED PRICES
+// ==================================================
+
+app.get("/prices", (req, res) => {
+  res.json({
+    success: true,
+    currency: "GHS",
+    prices: PRICES
+  });
+});
+
+// ==================================================
+// INITIALIZE PAYMENT
+// ==================================================
+
+app.post("/initialize-payment", async (req, res) => {
+  try {
+    const { phone, network, bundle } = req.body || {};
+
+    // Validate the recipient's phone number.
+    if (!validGhanaPhone(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter a valid Ghana phone number."
+      });
+    }
+
+    // Calculate the approved price on the server.
+    const approvedPrice = getApprovedPrice(network, bundle);
+
+    if (approvedPrice === null) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid network or data bundle."
+      });
+    }
+
+    if (!Number.isFinite(approvedPrice) || approvedPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "The bundle price is invalid."
+      });
+    }
+
+    // Paystack requires an email address. The customer
+    // does not need to enter one in the checkout form.
+    if (!PAYSTACK_CUSTOMER_EMAIL) {
+      return res.status(503).json({
+        success: false,
+        message:
+          "Checkout is not fully configured. Please contact the website owner."
+      });
+    }
+
+    const email = PAYSTACK_CUSTOMER_EMAIL;
+    const normalizedPhone = normalizePhone(phone);
+
+    const reference =
+      "KIELMEN_" +
+      Date.now() +
+      "_" +
+      crypto.randomBytes(6).toString("hex");
+
+    // Create the pending order before payment initialization.
+    await pool.query(
+      `INSERT INTO orders
+        (reference, email, phone, network, bundle, amount, status, delivery_status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'pending', 'not_started')`,
+      [
+        reference,
+        email,
+        normalizedPhone,
+        network,
+        bundle,
+        approvedPrice
+      ]
+    );
+
+    // Amount must be sent to Paystack in pesewas.
+    const amountInPesewas = Math.round(approvedPrice * 100);
+
+    const payment = await paystackRequest(
+      "/transaction/initialize",
+      {
+        email,
+        amount: amountInPesewas,
+        currency: "GHS",
+        reference,
+        callback_url:
+          "https://ezekielmemsahannan42-wq.github.io/kielmen-dataplug/success.html",
+        metadata: {
+          order_reference: reference,
+          phone: normalizedPhone,
+          network,
+          bundle
+        }
+      }
+    );
+
+    return res.json({
+      success: true,
+      reference,
+      amount: approvedPrice,
+      currency: "GHS",
+      authorization_url: payment.authorization_url
     });
+  } catch (error) {
+    console.error("Payment initialization error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Unable to start payment. Please try again later."
+    });
+  }
+});
+
+// ==================================================
+// VERIFY PAYMENT
+// ==================================================
+
+app.post("/verify-payment", async (req, res) => {
+  try {
+    const reference = String(
+      (req.body && req.body.reference) || ""
+    ).trim();
+
+    if (!reference || reference.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "A valid payment reference is required."
+      });
+    }
+
+    const orderResult = await pool.query(
+      `SELECT reference, phone, network, bundle, amount,
+              status, delivery_status
+       FROM orders
+       WHERE reference = $1`,
+      [reference]
+    );
+
+    if (orderResult.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found."
+      });
+    }
+
+    const order = orderResult.rows[0];
+
+    // Never deliver an order twice merely because the
+    // customer refreshes the payment-success page.
+    if (order.status === "paid") {
+      return res.json({
+        success: true,
+        paid: true,
+        reference,
+        network: order.network,
+        bundle: order.bundle,
+        amount: Number(order.amount),
+        delivery_status: order.delivery_status
+      });
+    }
+
+    const payment = await paystackRequest(
+      `/transaction/verify/${encodeURIComponent(reference)}`
+    );
+
+    const verifiedAmount = Number(payment.amount);
+    const expectedAmount = Math.round(
+      Number(order.amount) * 100
+    );
+
+    if (
+      payment.status !== "success" ||
+      payment.currency !== "GHS" ||
+      verifiedAmount !== expectedAmount ||
+      payment.reference !== reference
+    ) {
+      return res.status(400).json({
+        success: false,
+        paid: false,
+        message: "Payment could not be verified."
+      });
+    }
+
+    // Only mark the order paid after checking Paystack.
+    const updateResult = await pool.query(
+      `UPDATE orders
+       SET status = 'paid'
+       WHERE reference = $1
+         AND status = 'pending'
+       RETURNING reference`,
+      [reference]
+    );
+
+    if (updateResult.rowCount === 0) {
+      const latest = await pool.query(
+        `SELECT status, delivery_status
+         FROM orders
+         WHERE reference = $1`,
+        [reference]
+      );
+
+      return res.json({
+        success: true,
+        paid: latest.rows[0]?.status === "paid",
+        reference,
+        delivery_status:
+          latest.rows[0]?.delivery_status || "not_started"
+      });
+    }
+
+    // Supplier delivery is deliberately not triggered
+    // automatically in this starter version.
+    // It must be safely integrated and tested first.
+
+    return res.json({
+      success: true,
+      paid: true,
+      reference,
+      network: order.network,
+      bundle: order.bundle,
+      amount: Number(order.amount),
+      delivery_status: "not_started",
+      message:
+        "Payment verified. Data delivery still requires supplier integration."
+    });
+  } catch (error) {
+    console.error("Payment verification error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to verify payment right now."
+    });
+  }
+});
+
+// ==================================================
+// ORDER STATUS
+// ==================================================
+
+app.get("/order-status/:reference", async (req, res) => {
+  try {
+    const reference = String(req.params.reference || "");
+
+    if (!reference || reference.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order reference."
+      });
+    }
+
+    const result = await pool.query(
+      `SELECT reference, phone, network, bundle, amount,
+              status, delivery_status, created_at
+       FROM orders
+       WHERE reference = $1`,
+      [reference]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found."
+      });
+    }
+
+    const order = result.rows[0];
+
+    return res.json({
+      success: true,
+      order: {
+        reference: order.reference,
+        phone: order.phone,
+        network: order.network,
+        bundle: order.bundle,
+        amount: Number(order.amount),
+        payment_status: order.status,
+        delivery_status: order.delivery_status,
+        created_at: order.created_at
+      }
+    });
+  } catch (error) {
+    console.error("Order status error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to retrieve order status."
+    });
+  }
+});
+
+// ==================================================
+// START SERVER
+// ==================================================
+
+async function startServer() {
+  try {
+    await createOrdersTable();
+
+    app.listen(PORT, () => {
+      console.log(
+        `Kielmen Dataplug API listening on port ${PORT}`
+      );
+    });
+  } catch (error) {
+    console.error("Server startup failed:", error.message);
+    process.exit(1);
+  }
+}
+
+startServer();
