@@ -512,3 +512,75 @@ if (document.readyState === "loading") {
 } else {
   initializeWebsite();
    }
+// CUSTOMER ORDER TRACKING
+const trackOrderForm = document.getElementById("trackOrderForm");
+
+if (trackOrderForm) {
+  trackOrderForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const phoneInput = document.getElementById("trackPhone");
+    const message = document.getElementById("trackOrderMessage");
+    const results = document.getElementById("trackOrderResults");
+    const button = document.getElementById("trackOrderButton");
+    const phone = phoneInput.value.trim().replace(/\D/g, "");
+
+    message.textContent = "";
+    results.innerHTML = "";
+
+    if (!/^0\d{9}$/.test(phone)) {
+      message.textContent = "Enter a valid 10-digit Ghana phone number.";
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Checking...";
+
+    try {
+      const response = await fetch(
+        `${PAYMENT_API}/orders-by-phone/${encodeURIComponent(phone)}`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        message.textContent =
+          data.message || "No orders found. Please check the number.";
+        return;
+      }
+
+      if (!Array.isArray(data.orders) || data.orders.length === 0) {
+        message.textContent = "No orders found for this phone number.";
+        return;
+      }
+
+      results.innerHTML = data.orders.map(order => `
+        <div class="order-result">
+          <p><strong>Reference:</strong> ${escapeHTML(order.reference || "")}</p>
+          <p><strong>Network:</strong> ${escapeHTML(order.network || "")}</p>
+          <p><strong>Bundle:</strong> ${escapeHTML(order.bundle || "")}</p>
+          <p><strong>Amount:</strong> GH₵${Number(order.amount || 0).toFixed(2)}</p>
+          <p><strong>Payment:</strong> ${escapeHTML(order.payment_status || "")}</p>
+          <p><strong>Delivery:</strong> ${escapeHTML(order.delivery_status || "")}</p>
+        </div>
+      `).join("");
+    } catch (error) {
+      message.textContent = "Unable to check orders. Please try again.";
+    } finally {
+      button.disabled = false;
+      button.textContent = "Find My Orders";
+    }
+  });
+}
+function escapeHTML(value) {
+  return String(value).replace(/[&<>"']/g, function (char) {
+    const entities = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    };
+    return entities[char];
+  });
+}
