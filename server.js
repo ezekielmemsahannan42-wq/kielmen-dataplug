@@ -198,7 +198,7 @@ async function purchaseDataFromSupplier(order) {
   const phone = normalizePhone(order.phone);
 
   const response = await fetch(
-    "https://api.datamartgh.shop/api/developer/purchase",
+  "https://api.datamartgh.shop/api/purchase",
     {
       method: "POST",
       headers: {
