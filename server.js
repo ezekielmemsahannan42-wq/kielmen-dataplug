@@ -149,7 +149,40 @@ async function createOrdersTable() {
 // ==================================================
 // HELPERS
 // ==================================================
+// DATAMART SUPPLIER CONNECTION
+async function purchaseDataFromSupplier(order) {
+  if (process.env.DATAMART_PURCHASES_ENABLED !== "true") {
+    throw new Error("Automatic data delivery is disabled.");
+  }
 
+  const apiKey = process.env.DATAMART_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("DataMart API key is missing.");
+  }
+
+  const networkMap = {
+    MTN: "YELLO",
+    Telecel: "TELECEL",
+    AirtelTigo: "AT_PREMIUM"
+  };
+
+  const supplierNetwork = networkMap[order.network];
+
+  if (!supplierNetwork) {
+    throw new Error("Unsupported supplier network.");
+  }
+
+  if (!order.phone || !order.bundle || !order.reference) {
+    throw new Error("Required order details are missing.");
+  }
+
+  // Do not send a purchase until the supplier's
+  // official API request format is confirmed.
+  throw new Error(
+    "DataMart purchase endpoint and request format need verification."
+  );
+}
 function validGhanaPhone(phone) {
   const cleaned = String(phone || "").replace(/[\s-]/g, "");
 
