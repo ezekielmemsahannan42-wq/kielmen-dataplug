@@ -181,15 +181,24 @@ function renderBundles() {
       formatMoney(bundle.price);
 
     card.addEventListener("click", () => {
-      selectedBundle = {
-        network: selectedNetwork,
-        size: bundle.size,
-        price: bundle.price
-      };
+  selectedBundle = {
+    network: selectedNetwork,
+    size: bundle.size,
+    price: bundle.price
+  };
 
-      renderBundles();
-      updateSelectedBundle();
+  renderBundles();
+  updateSelectedBundle();
+
+  const checkout = document.getElementById("checkout");
+
+  if (checkout) {
+    checkout.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
     });
+  }
+});
 
     grid.appendChild(card);
   });
