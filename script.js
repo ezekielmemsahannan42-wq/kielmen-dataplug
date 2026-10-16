@@ -257,32 +257,25 @@ async function handleCheckout(event) {
     return;
   }
 
-  const emailInput = getElement("customerEmail");
+  
   const phoneInput = getElement("recipientPhone");
-  const paymentButton = getElement("paymentButton");
+const paymentButton = getElement("paymentButton");
 
-  if (!emailInput || !phoneInput) {
-    showMessage("Checkout form is missing required fields.", "error");
-    return;
-  }
+if (!phoneInput) {
+  showMessage("Phone number field is missing.", "error");
+  return;
+}
 
-  const email = emailInput.value.trim();
-  const phone = phoneInput.value.trim();
+const phone = phoneInput.value.trim();
 
-  if (!email || !emailInput.checkValidity()) {
-    showMessage("Please enter a valid email address.", "error");
-    emailInput.focus();
-    return;
-  }
-
-  if (!/^(?:\+?233|0)\d{9}$/.test(phone)) {
-    showMessage(
-      "Enter a valid Ghana phone number, for example 0241234567.",
-      "error"
-    );
-    phoneInput.focus();
-    return;
-  }
+if (!/^0\d{9}$/.test(phone)) {
+  showMessage(
+    "Enter a valid 10-digit Ghana phone number, e.g. 0241234567.",
+    "error"
+  );
+  phoneInput.focus();
+  return;
+}
 
   if (paymentButton) {
     paymentButton.disabled = true;
@@ -300,15 +293,11 @@ async function handleCheckout(event) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          email: email,
-          phone: phone,
-          network: selectedBundle.network,
-          bundle: selectedBundle.size,
-
-          // Displayed price only.
-          // The backend must independently validate the price.
-          amount: selectedBundle.price
-        })
+  phone: phone,
+  network: selectedBundle.network,
+  bundle: selectedBundle.size,
+  amount: selectedBundle.price
+})
       }
     );
 
