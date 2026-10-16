@@ -1,1094 +1,569 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#101114">
-
-<title>Kielmen 636 Dataplug | Buy Data</title>
-
-<meta name="description" content="Buy affordable MTN, Telecel and AirtelTigo data bundles from Kielmen 636 Dataplug. Buy as a guest and contact us on WhatsApp.">
-  
-<link rel="stylesheet" href="style.css?v=2">
-  
-<style>
-:root {
-  --bg: #101114;
-  --panel: #1d1e22;
-  --panel2: #28292e;
-  --text: #f7f7f9;
-  --muted: #b2b4bd;
-  --green: #00c878;
-  --mtn: #ffcc00;
-  --telecel: #ed1c24;
-  --airtel: #1687ef;
-  --white: #ffffff;
-  --border: #383a42;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 80px;
-}
-
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
-  line-height: 1.5;
-  padding-bottom: 72px;
-}
-
-button, input {
-  font: inherit;
-}
-
-button, a {
-  -webkit-tap-highlight-color: transparent;
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-.container {
-  width: min(100% - 24px, 1100px);
-  margin: auto;
-}
-
-/* HEADER */
-
-header {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  background: #17181c;
-  border-bottom: 1px solid #35363c;
-}
-
-.header-inner {
-  min-height: 68px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  font-weight: 900;
-  font-size: 14px;
-  line-height: 1.25;
-}
-
-.brand-icon {
-  width: 41px;
-  height: 41px;
-  border-radius: 12px;
-  background: #123b25;
-  border: 2px solid #087b43;
-  display: grid;
-  place-items: center;
-  font-size: 22px;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.header-whatsapp,
-.menu-button {
-  border: 1px solid #41434a;
-  background: #24252a;
-  color: white;
-  border-radius: 11px;
-  padding: 10px;
-  font-weight: 800;
-  font-size: 12px;
-}
-
-.menu-button {
-  font-size: 20px;
-  padding: 6px 11px;
-}
-
-.menu {
-  display: none;
-  padding-bottom: 13px;
-}
-
-.menu.open {
-  display: grid;
-  gap: 8px;
-}
-
-.menu a {
-  padding: 12px;
-  border-radius: 10px;
-  background: #26272c;
-}
-
-/* HERO */
-
-.hero {
-  padding: 20px 0 13px;
-}
-
-.hero-card {
-  padding: 23px 18px;
-  border: 1px solid #245b3b;
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at 95% 5%, #093b1c 0, transparent 45%),
-    linear-gradient(145deg, #04170c, #08090c 75%);
-}
-
-.eyebrow {
-  display: inline-block;
-  padding: 6px 10px;
-  border-radius: 25px;
-  border: 1px solid #286442;
-  color: #69e7a0;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-h1 {
-  margin: 15px 0 10px;
-  font-size: clamp(30px, 7vw, 44px);
-  line-height: 1.12;
-  letter-spacing: -1px;
-}
-
-.hero p {
-  margin: 0;
-  color: #c9cbd2;
-  font-size: 15px;
-}
-
-.hero-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 19px;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 14px;
-  border-radius: 11px;
-  border: 1px solid transparent;
-  font-weight: 900;
-  font-size: 13px;
-  text-align: center;
-}
-
-.btn-green {
-  background: #087b35;
-  color: white;
-}
-
-.btn-dark {
-  background: #191a1f;
-  border-color: #464850;
-  color: white;
-}
-
-/* BUY AS GUEST */
-
-.shop-section {
-  padding: 17px 0 28px;
-}
-
-.shop-heading {
-  margin-bottom: 14px;
-}
-
-.shop-heading h2 {
-  font-size: 25px;
-  margin: 0 0 4px;
-}
-
-.shop-heading p {
-  margin: 0;
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.guest-badge {
-  display: inline-block;
-  margin-top: 8px;
-  background: #123a27;
-  color: #8ff0b8;
-  border: 1px solid #286443;
-  padding: 5px 9px;
-  border-radius: 25px;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-/* NETWORK BUTTONS */
-
-.network-tabs {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 13px;
-}
-
-.network-tab {
-  border-radius: 12px;
-  min-height: 76px;
-  padding: 10px 4px;
-  font-weight: 900;
-  font-size: 13px;
-  border: 2px solid transparent;
-  background: #25262b;
-  color: white;
-}
-
-.network-tab .symbol {
-  display: block;
-  font-size: 23px;
-  line-height: 1.2;
-  margin-bottom: 4px;
-}
-
-.network-tab[data-network="MTN"] {
-  background: #27230c;
-  color: var(--mtn);
-  border-color: #665400;
-}
-
-.network-tab[data-network="MTN"].active {
-  background: var(--mtn);
-  color: #111111;
-  border-color: #ffe986;
-}
-
-.network-tab[data-network="Telecel"] {
-  background: #391316;
-  color: #ff777b;
-  border-color: #71262a;
-}
-
-.network-tab[data-network="Telecel"].active {
-  background: var(--telecel);
-  color: white;
-  border-color: #ff8589;
-}
-
-.network-tab[data-network="AirtelTigo"] {
-  background: #101f3b;
-  color: #8fcaff;
-  border-color: #244c80;
-}
-
-.network-tab[data-network="AirtelTigo"].active {
-  background: #1478d0;
-  color: white;
-  border-color: #a3d6ff;
-}
-
-.search-input {
-  display: block;
-  width: 100%;
-  padding: 13px;
-  background: #25262b;
-  color: white;
-  border: 1px solid #464850;
-  border-radius: 12px;
-  outline: none;
-  margin-bottom: 11px;
-}
-
-.search-input:focus,
-.field input:focus {
-  border-color: var(--green);
-}
-
-.result-count {
-  color: var(--muted);
-  font-size: 12px;
-  margin: 0 0 10px;
-}
-
-/* BUNDLE CARDS */
-
-.bundle-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 9px;
-}
-
-.bundle-card {
-  min-width: 0;
-  overflow: hidden;
-  border-radius: 17px;
-  border: 1px solid #34353b;
-  background: #050505;
-}
-
-.bundle-main {
-  padding: 12px 10px;
-  min-height: 105px;
-  background: linear-gradient(
-    110deg,
-    #050505 0%,
-    #050505 54%,
-    var(--network-color) 54%,
-    var(--network-color) 100%
-  );
-}
-
-.bundle-network {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 9px;
-  letter-spacing: .6px;
-  font-weight: 900;
-  color: white;
-  margin-bottom: 5px;
-  text-transform: uppercase;
-}
-
-.bundle-size {
-  font-size: clamp(23px, 6vw, 30px);
-  font-weight: 900;
-  line-height: 1.15;
-  overflow-wrap: anywhere;
-}
-
-.bundle-description {
-  color: #e3e3e3;
-  font-size: 11px;
-  margin-top: 5px;
-}
-
-.bundle-footer {
-  background: #242529;
-  padding: 10px;
-  border-top: 1px solid #414248;
-}
-
-.bundle-price {
-  font-size: clamp(16px, 4vw, 21px);
-  font-weight: 900;
-  margin-bottom: 8px;
-  overflow-wrap: anywhere;
-}
-
-.buy-button {
-  display: block;
-  width: 100%;
-  border: 0;
-  border-radius: 8px;
-  background: #00652f;
-  color: white;
-  font-size: 13px;
-  font-weight: 900;
-  padding: 10px 4px;
-}
-
-.bundle-card[data-network="MTN"] {
-  --network-color: #493700;
-}
-
-.bundle-card[data-network="Telecel"] {
-  --network-color: #a8000b;
-}
-
-.bundle-card[data-network="AirtelTigo"] {
-  --network-color: #145aab;
-}
-
-.empty-state {
-  grid-column: 1 / -1;
-  padding: 25px 12px;
-  background: var(--panel);
-  border-radius: 12px;
-  color: var(--muted);
-  text-align: center;
-}
-
-/* CHECKOUT */
-
-.checkout-section {
-  padding: 0 0 30px;
-}
-
-.checkout-card {
-  background: var(--panel);
-  border: 1px solid #383a42;
-  border-radius: 18px;
-  padding: 19px 15px;
-}
-
-.checkout-card h2 {
-  margin: 0 0 5px;
-  font-size: 24px;
-}
-
-.checkout-intro {
-  color: var(--muted);
-  margin: 0 0 17px;
-  font-size: 13px;
-}
-
-.selected-product {
-  border-radius: 11px;
-  background: #123b28;
-  border: 1px solid #286443;
-  padding: 12px;
-  margin-bottom: 18px;
-}
-
-.selected-product small {
-  display: block;
-  color: #a2eec3;
-}
-
-.selected-product strong {
-  font-size: 19px;
-}
-
-.field {
-  margin-bottom: 16px;
-}
-
-.field label {
-  display: block;
-  font-weight: 800;
-  margin-bottom: 7px;
-}
-
-.field input {
-  width: 100%;
-  background: #292a2f;
-  border: 1px solid #484a53;
-  color: white;
-  border-radius: 10px;
-  padding: 14px;
-  outline: none;
-}
-
-.field-help {
-  color: var(--muted);
-  font-size: 11px;
-  margin-top: 5px;
-}
-
-.payment-button {
-  width: 100%;
-  border: 0;
-  border-radius: 11px;
-  padding: 15px;
-  background: #00652f;
-  color: white;
-  font-weight: 900;
-  font-size: 16px;
-}
-
-.payment-button:disabled {
-  opacity: .6;
-}
-
-.status {
-  display: none;
-  padding: 12px;
-  margin-top: 12px;
-  border-radius: 9px;
-  overflow-wrap: anywhere;
-  font-size: 13px;
-}
-
-.status.show {
-  display: block;
-}
-
-.status.error {
-  background: #4b1d24;
-  color: #ffd0d2;
-}
-
-.status.success {
-  background: #123b28;
-  color: #a2eec3;
-}
-
-.trust-note {
-  color: var(--muted);
-  font-size: 11px;
-  text-align: center;
-  margin: 13px 0 0;
-}
-
-/* WHATSAPP AND SUPPORT */
-
-.support-section {
-  background: #151d2a;
-  padding: 26px 0;
-  text-align: center;
-}
-
-.support-section h2 {
-  margin: 0 0 8px;
-  font-size: 23px;
-}
-
-.support-section p {
-  margin: 0 0 16px;
-  color: #c9cfdb;
-  font-size: 14px;
-}
-
-.support-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 9px;
-}
-
-/* AGENT PORTAL AT BOTTOM */
-
-.agent-section {
-  padding: 22px 0;
-}
-
-.agent-card {
-  padding: 20px 14px;
-  background: #151d2a;
-  border: 1px solid #2b3547;
-  border-radius: 16px;
-  text-align: center;
-}
-
-.agent-card h2 {
-  margin: 0 0 7px;
-  font-size: 22px;
-}
-
-.agent-card p {
-  margin: 0 0 15px;
-  color: #c9cfdb;
-  font-size: 14px;
-}
-
-.agent-button {
-  display: inline-flex;
-  justify-content: center;
-  padding: 12px 18px;
-  border-radius: 10px;
-  background: #07102d;
-  color: white;
-  border: 1px solid #34405f;
-  font-weight: 900;
-}
-
-/* FOOTER */
-
-footer {
-  background: #030923;
-  text-align: center;
-  padding: 28px 14px;
-}
-
-.footer-brand {
-  font-size: 21px;
-  font-weight: 900;
-}
-
-footer p {
-  color: #d8dceb;
-  margin: 9px 0;
-}
-
-.footer-links {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 15px;
-  margin-top: 18px;
-  font-size: 12px;
-  color: #c1c9dd;
-}
-
-/* FLOATING WHATSAPP */
-
-.floating-whatsapp {
-  position: fixed;
-  z-index: 35;
-  right: 13px;
-  bottom: 88px;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  background: #12a85b;
-  border: 2px solid #6ee7a5;
-  color: white;
-  box-shadow: 0 4px 20px #0009;
-  font-size: 26px;
-}
-
-/* BOTTOM NAV */
-
-.bottom-nav {
-  position: fixed;
-  z-index: 32;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  padding: 7px 4px max(7px, env(safe-area-inset-bottom));
-  background: #202125;
-  border-top: 1px solid #3a3b41;
-}
-
-.bottom-nav a {
-  text-align: center;
-  color: #b8bac4;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.bottom-nav span {
-  display: block;
-  font-size: 21px;
-}
-
-.bottom-nav a.active {
-  color: #25d8b1;
-}
-
-/* ANNOUNCEMENT POPUP */
-
-.announcement {
-  width: min(92%, 420px);
-  max-width: 420px;
-  max-height: 85vh;
-  overflow-y: auto;
-  border: 1px solid #286443;
-  border-radius: 20px;
-  background: #15171b;
-  color: white;
-  padding: 24px 18px 20px;
-  text-align: center;
-  box-shadow: 0 20px 80px #000b;
-}
-
-.announcement::backdrop {
-  background: rgb(0 0 0 / 82%);
-  backdrop-filter: blur(5px);
-}
-
-.announcement h2 {
-  font-size: 24px;
-  margin: 9px 0;
-  line-height: 1.2;
-}
-
-.announcement p {
-  color: #d0d2da;
-  font-size: 14px;
-}
-
-.popup-icon {
-  font-size: 42px;
-}
-
-.popup-networks {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 7px;
-  margin: 16px 0;
-}
-
-.popup-network {
-  border-radius: 10px;
-  padding: 10px 3px;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.popup-mtn {
-  background: #ffcc00;
-  color: #111;
-}
-
-.popup-telecel {
-  background: #ed1c24;
-  color: white;
-}
-
-.popup-airtel {
-  background: #1478d0;
-  color: white;
-}
-
-.popup-join,
-.popup-continue {
-  display: block;
-  width: 100%;
-  border: 0;
-  border-radius: 11px;
-  padding: 13px 10px;
-  font-weight: 900;
-  margin-top: 10px;
-}
-
-.popup-join {
-  background: #087b35;
-  color: white;
-}
-
-.popup-continue {
-  background: #292a30;
-  border: 1px solid #44464e;
-  color: white;
-}
-
-.popup-close {
-  position: absolute;
-  right: 12px;
-  top: 8px;
-  border: 0;
-  background: transparent;
-  color: white;
-  font-size: 27px;
-}
-
-@media (min-width: 700px) {
-  body {
-    padding-bottom: 0;
-  }
-
-  .bottom-nav {
-    display: none;
-  }
-
-  .floating-whatsapp {
-    bottom: 24px;
-  }
-
-  .hero-card {
-    padding: 35px;
-  }
-
-  .bundle-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  .bundle-card {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .bundle-main {
-    min-height: 145px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 15px;
-  }
-
-  .bundle-footer {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    border-top: 0;
-    border-left: 1px solid #414248;
-  }
-
-  .checkout-card {
-    max-width: 680px;
-    margin: auto;
-    padding: 27px;
-  }
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080a0f">
+
+  <title>Kielmen 636 Dataplug | Buy Data Bundles</title>
+
+  <meta name="description"
+    content="Buy MTN, Telecel and AirtelTigo data bundles from Kielmen 636 Dataplug. Select your bundle, enter your details and pay securely.">
+
+  <link rel="stylesheet" href="style.css?v=3">
+
+  <style>
+    /* Homepage-specific layout */
+    .home-container {
+      width: min(1100px, 100%);
+      margin: auto;
+      padding: 20px;
+    }
+
+    .welcome-banner {
+      padding: 30px 20px;
+      margin: 20px 0;
+      border: 1px solid #333842;
+      border-radius: 22px;
+      background: linear-gradient(135deg, #171a22, #0c0e13);
+    }
+
+    .welcome-banner h1 {
+      margin: 0 0 12px;
+      font-size: clamp(28px, 6vw, 44px);
+      line-height: 1.15;
+    }
+
+    .welcome-banner h1 span {
+      color: #facc15;
+    }
+
+    .welcome-banner p {
+      color: #b8beca;
+      margin-bottom: 20px;
+    }
+
+    .trust-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .trust-item {
+      padding: 8px 12px;
+      border: 1px solid #343944;
+      border-radius: 30px;
+      background: #171a20;
+      color: #e5e7eb;
+      font-size: 13px;
+    }
+
+    .section-heading {
+      margin: 30px 0 8px;
+      font-size: 25px;
+    }
+
+    .section-description {
+      margin-top: 0;
+      color: #9ca3af;
+    }
+
+    .network-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin: 22px 0;
+    }
+
+    .network-tab {
+      min-height: 54px;
+      padding: 10px 5px;
+      border: 2px solid #383b44;
+      border-radius: 13px;
+      background: #191b21;
+      color: #f9fafb;
+      font-weight: 800;
+    }
+
+    .network-tab[data-network="MTN"] {
+      border-color: #8a6b00;
+    }
+
+    .network-tab[data-network="TELECEL"] {
+      border-color: #8a2930;
+    }
+
+    .network-tab[data-network="AIRTELTIGO"] {
+      border-color: #2459a0;
+    }
+
+    .network-tab[data-network="MTN"].active {
+      background: #ffcc00;
+      color: #111;
+    }
+
+    .network-tab[data-network="TELECEL"].active {
+      background: #ed1c24;
+      color: white;
+    }
+
+    .network-tab[data-network="AIRTELTIGO"].active {
+      background: #1688ff;
+      color: white;
+    }
+
+    .bundle-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .bundle-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 7px;
+      min-height: 120px;
+      padding: 15px 8px;
+      border: 1px solid #3a3d45;
+      border-radius: 18px;
+      background: #22242a;
+      color: #fff;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .bundle-card:hover,
+    .bundle-card.selected {
+      border: 2px solid #facc15;
+      background: #302b19;
+    }
+
+    .bundle-size {
+      font-size: 28px;
+      font-weight: 900;
+      line-height: 1.2;
+    }
+
+    .bundle-price {
+      color: #facc15;
+      font-size: 19px;
+      font-weight: 850;
+    }
+
+    .bundle-label {
+      color: #d1d5db;
+      font-size: 13px;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 54px;
+      padding: 14px;
+      margin: 10px 0;
+      border: 1px solid #414550;
+      border-radius: 14px;
+      background: #15171c;
+      color: white;
+      font-size: 16px;
+    }
+
+    .checkout-card {
+      margin-top: 30px;
+      padding: 22px;
+      border: 1px solid #343944;
+      border-radius: 20px;
+      background: #101217;
+      scroll-margin-top: 100px;
+    }
+
+    .checkout-card h2 {
+      margin-top: 0;
+      font-size: 27px;
+    }
+
+    .selected-summary {
+      padding: 15px;
+      margin-bottom: 20px;
+      border: 1px solid #383b44;
+      border-radius: 13px;
+      background: #191b21;
+    }
+
+    .selected-summary strong {
+      color: #facc15;
+    }
+
+    .field {
+      margin-bottom: 17px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 7px;
+      font-weight: 700;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      min-height: 51px;
+      padding: 12px;
+      border: 1px solid #414550;
+      border-radius: 12px;
+      background: #181a20;
+      color: white;
+      font-size: 16px;
+    }
+
+    .pay-button {
+      width: 100%;
+      min-height: 54px;
+      padding: 14px;
+      border: none;
+      border-radius: 13px;
+      background: #facc15;
+      color: #111;
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .pay-button:disabled {
+      opacity: 0.65;
+    }
+
+    .form-message {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      overflow-wrap: anywhere;
+    }
+
+    .payment-note {
+      color: #aeb4c0;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .agent-box {
+      margin-top: 30px;
+      padding: 22px;
+      border: 1px solid #383b44;
+      border-radius: 18px;
+      background: #15171c;
+    }
+
+    .agent-box a {
+      display: inline-flex;
+      justify-content: center;
+      margin: 8px 8px 0 0;
+      padding: 12px 16px;
+      border-radius: 11px;
+      background: #252832;
+      color: white;
+      font-weight: 800;
+    }
+
+    .whatsapp-float {
+      position: fixed;
+      right: 17px;
+      bottom: 95px;
+      z-index: 900;
+      display: grid;
+      place-items: center;
+      width: 60px;
+      height: 60px;
+      border: 2px solid #07883f;
+      border-radius: 50%;
+      background: #087a31;
+      color: white;
+      font-size: 25px;
+      box-shadow: 0 5px 20px #0008;
+    }
+
+    .announcement {
+      width: min(430px, calc(100% - 28px));
+      padding: 25px;
+      border: 1px solid #424650;
+      border-radius: 22px;
+      background: #15171d;
+      color: white;
+    }
+
+    .announcement::backdrop {
+      background: #000b;
+    }
+
+    .announcement h2 {
+      margin-top: 0;
+    }
+
+    .announcement p {
+      color: #c5cad4;
+      line-height: 1.6;
+    }
+
+    .announcement a,
+    .announcement button {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      padding: 13px;
+      margin-top: 12px;
+      border: 0;
+      border-radius: 11px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .announcement a {
+      background: #128c4a;
+      color: white;
+    }
+
+    .announcement button {
+      background: #292c34;
+      color: white;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 950;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      padding: 9px 8px calc(9px + env(safe-area-inset-bottom));
+      border-top: 1px solid #333640;
+      background: #08090df5;
+    }
+
+    .bottom-nav a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 4px;
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .bottom-nav span {
+      font-size: 21px;
+    }
+
+    .bottom-nav .active {
+      color: #10b981;
+    }
+
+    .site-footer {
+      margin-top: 35px;
+      padding: 30px 20px 100px;
+      border-top: 1px solid #333640;
+      color: #9ca3af;
+      text-align: center;
+    }
+
+    @media (min-width: 650px) {
+      .bundle-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 950px) {
+      .bundle-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      .home-container {
+        padding: 30px;
+      }
+
+      .bottom-nav {
+        display: none;
+      }
+
+      .whatsapp-float {
+        bottom: 25px;
+      }
+    }
+  </style>
 </head>
 
 <body>
 
-<header>
-  <div class="container header-inner">
-    <a class="brand" href="#home">
-      <span class="brand-icon">📶</span>
+<header class="site-header">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 20px;">
+    <a href="index.html" style="display:flex;align-items:center;gap:10px;font-weight:900;font-size:19px;">
+      <span style="display:grid;place-items:center;width:48px;height:48px;border:2px solid #07883f;border-radius:14px;">📶</span>
       <span>KIELMEN 636<br>DATAPLUG</span>
     </a>
 
-    <div class="header-right">
-      <a class="header-whatsapp"
-         href="https://wa.me/233533878548"
-         target="_blank" rel="noopener">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <a href="https://wa.me/233533878548"
+         style="padding:11px;border:1px solid #383b44;border-radius:12px;">
         WhatsApp
       </a>
 
-      <button class="menu-button" id="menuButton"
-              type="button" aria-expanded="false"
-              aria-label="Open menu">☰</button>
+      <button id="menuButton"
+        type="button"
+        aria-label="Open menu"
+        style="width:48px;height:48px;border:1px solid #383b44;border-radius:13px;background:#20232a;color:white;font-size:25px;">
+        ☰
+      </button>
     </div>
   </div>
 
-  <nav class="container menu" id="mobileMenu">
-    <a href="#home">Home</a>
-    <a href="#shop">Buy Data</a>
-    <a href="#checkout">Checkout</a>
-    <a href="#support">Customer Support</a>
-    <a href="agent-register.html">Agent Portal</a>
+  <nav id="mobileMenu" class="mobile-menu" style="display:none;padding:12px 20px 18px;background:#111318;">
+    <a href="#bundles" style="display:block;padding:12px;">Buy Data Bundles</a>
+    <a href="#checkout" style="display:block;padding:12px;">Checkout</a>
+    <a href="agent-register.html" style="display:block;padding:12px;">Become an Agent</a>
+    <a href="https://wa.me/233533878548" style="display:block;padding:12px;">Contact Support</a>
   </nav>
 </header>
 
-<main>
+<main class="home-container">
 
-  <section class="hero" id="home">
-    <div class="container">
-      <div class="hero-card">
-        <span class="eyebrow">YOUR TRUSTED DATA PLUG</span>
+  <section class="welcome-banner">
+    <p style="margin:0 0 8px;">WELCOME TO KIELMEN 636 DATAPLUG</p>
+    <h1>Buy Your Data.<br><span>Fast and Convenient.</span></h1>
+    <p>Select your network and bundle, enter the recipient's phone number, and proceed to payment.</p>
 
-        <h1>Affordable Data.<br>Easy Ordering.</h1>
+    <a href="#bundles"
+       style="display:inline-flex;padding:13px 19px;border-radius:12px;background:#facc15;color:#111;font-weight:900;">
+      🛒 Shop Data Bundles
+    </a>
 
-        <p>
-          Get your favourite data bundles from Kielmen 636 Dataplug.
-          Choose your network and package, then proceed to payment.
-          No customer account required.
-        </p>
-
-        <div class="hero-buttons">
-          <a class="btn btn-green" href="#shop">🛒 Buy as a Guest</a>
-
-          <a class="btn btn-dark"
-             href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
-             target="_blank" rel="noopener">
-            📢 WhatsApp Channel
-          </a>
-        </div>
-      </div>
+    <div class="trust-row">
+      <span class="trust-item">📱 MTN</span>
+      <span class="trust-item">🔴 Telecel</span>
+      <span class="trust-item">🔵 AirtelTigo</span>
+      <span class="trust-item">💳 Paystack Checkout</span>
     </div>
   </section>
 
-  <!-- PRICES ARE NEAR THE TOP -->
-  <section class="shop-section" id="shop">
-    <div class="container">
+  <section id="bundles">
+    <h2 class="section-heading">Choose Your Data Bundle</h2>
+    <p class="section-description">Select a network, then choose the bundle you need.</p>
 
-      <div class="shop-heading">
-        <h2>🛒 Buy as a Guest</h2>
-        <p>Choose a network to see available data bundles and prices.</p>
-        <span class="guest-badge">NO REGISTRATION REQUIRED</span>
-      </div>
-
-      <div class="network-tabs" aria-label="Choose a network">
-        <button class="network-tab active" data-network="MTN"
-                type="button" aria-pressed="true">
-          <span class="symbol">🟡</span>MTN
-        </button>
-
-        <button class="network-tab" data-network="Telecel"
-                type="button" aria-pressed="false">
-          <span class="symbol">🔴</span>TELECEL
-        </button>
-
-        <button class="network-tab" data-network="AirtelTigo"
-                type="button" aria-pressed="false">
-          <span class="symbol">🔵</span>AIRTELTIGO
-        </button>
-      </div>
-
-      <input class="search-input" id="bundleSearch"
-             type="search"
-             placeholder="🔍 Search size or price..."
-             aria-label="Search bundles">
-
-      <p class="result-count" id="resultCount" aria-live="polite"></p>
-
-      <div class="bundle-grid" id="bundleGrid"></div>
-
+    <div class="network-tabs" role="group" aria-label="Select network">
+      <button class="network-tab active" data-network="MTN" type="button">🟡 MTN</button>
+      <button class="network-tab" data-network="TELECEL" type="button">🔴 TELECEL</button>
+      <button class="network-tab" data-network="AIRTELTIGO" type="button">🔵 AIRTELTIGO</button>
     </div>
+
+    <input id="bundleSearch" class="search-input"
+      type="search" placeholder="🔎 Search bundle size or price..."
+      aria-label="Search data bundles">
+
+    <p id="resultCount" style="color:#9ca3af;">Loading bundles...</p>
+
+    <div id="bundleGrid" class="bundle-grid" aria-live="polite"></div>
   </section>
 
-  <section class="checkout-section" id="checkout">
-    <div class="container">
-      <div class="checkout-card">
+  <section id="checkout" class="checkout-card">
+    <h2>Complete Your Order</h2>
 
-        <h2>Complete Your Order</h2>
-        <p class="checkout-intro">
-          Enter your email and the recipient's phone number.
-        </p>
-
-        <div class="selected-product">
-          <small>Selected bundle</small>
-          <strong id="selectedName">No bundle selected</strong>
-          <div id="selectedPrice">Choose a bundle above.</div>
-        </div>
-
-        <form id="checkoutForm">
-          <div class="field">
-            <label for="customerEmail">Email Address</label>
-            <input id="customerEmail" type="email"
-                   autocomplete="email"
-                   placeholder="you@example.com" required>
-          </div>
-
-          <div class="field">
-            <label for="recipientPhone">Recipient's Phone Number</label>
-            <input id="recipientPhone" type="tel"
-                   autocomplete="tel"
-                   inputmode="tel"
-                   maxlength="15"
-                   placeholder="e.g. 0241234567" required>
-            <div class="field-help">
-              Please confirm the recipient's number before payment.
-            </div>
-          </div>
-
-          <button class="payment-button" id="paymentButton" type="submit">
-            Proceed to Payment
-          </button>
-
-          <div id="checkoutMessage" class="status"
-               role="status" aria-live="polite"></div>
-
-          <p class="trust-note">
-            Confirm the network, bundle size and phone number before paying.
-          </p>
-        </form>
-
-      </div>
+    <div class="selected-summary">
+      <div>Selected bundle: <strong id="selectedBundle">Choose a bundle above</strong></div>
+      <div style="margin-top:8px;">Amount: <strong id="selectedPrice">GH₵0.00</strong></div>
     </div>
-  </section>
 
-  <section class="support-section" id="support">
-    <div class="container">
-      <h2>Need Help?</h2>
-      <p>
-        Contact us on WhatsApp or join our channel for announcements
-        and business updates.
+    <form id="checkoutForm">
+      <div class="field">
+        <label for="customerPhone">Recipient phone number</label>
+        <input id="customerPhone" name="phone" type="tel"
+          inputmode="tel" autocomplete="tel"
+          placeholder="e.g. 0241234567" required>
+      </div>
+
+      <div class="field">
+        <label for="customerEmail">Email address for payment receipt</label>
+        <input id="customerEmail" name="email" type="email"
+          autocomplete="email" placeholder="you@example.com" required>
+      </div>
+
+      <input type="hidden" id="selectedNetwork" name="network" value="MTN">
+      <input type="hidden" id="selectedSize" name="bundle" value="">
+
+      <button id="paymentButton" class="pay-button" type="submit">
+        Continue to Paystack
+      </button>
+
+      <div id="checkoutMessage" class="form-message" role="status" aria-live="polite"></div>
+
+      <p class="payment-note">
+        You will be redirected to Paystack to complete payment.
+        Check the network, bundle size and recipient number before paying.
+        A successful payment does not by itself guarantee data delivery;
+        delivery must be confirmed by the supplier.
       </p>
-
-      <div class="support-buttons">
-        <a class="btn btn-green"
-           href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
-           target="_blank" rel="noopener">
-          📢 Join WhatsApp Channel
-        </a>
-
-        <a class="btn btn-dark"
-           href="https://wa.me/233533878548"
-           target="_blank" rel="noopener">
-          💬 Chat: 053 387 8548
-        </a>
-      </div>
-    </div>
+    </form>
   </section>
 
-  <!-- AGENT ACCESS IS BELOW CUSTOMER SHOPPING -->
-  <section class="agent-section" id="agents">
-    <div class="container">
-      <div class="agent-card">
-        <h2>Become a Kielmen Data Agent</h2>
-        <p>
-          Interested in selling data bundles? Visit the separate
-          Agent Portal. You do not need to become an agent to buy data.
-        </p>
-        <a class="agent-button" href="agent-register.html">
-          Open Agent Portal →
-        </a>
-      </div>
-    </div>
+  <section class="agent-box">
+    <h2>Become a Kielmen Data Agent</h2>
+    <p>Interested in selling data bundles? Explore agent registration and your agent portal.</p>
+    <a href="agent-register.html">Register as an Agent</a>
+    <a href="agent-dashboard.html">Agent Portal</a>
+  </section>
+
+  <section class="agent-box">
+    <h2>Need Help?</h2>
+    <p>Contact our support team on WhatsApp if you have questions about your order.</p>
+    <a href="https://wa.me/233533878548">Chat with Support</a>
+    <a href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
+       target="_blank" rel="noopener noreferrer">Join WhatsApp Channel</a>
   </section>
 
 </main>
 
-<footer>
-  <div class="footer-brand">KIELMEN 636 DATAPLUG</div>
-  <p>Your Trusted Data Plug</p>
-  <p>Affordable data bundles for your daily needs.</p>
-  <p>WhatsApp: 053 387 8548</p>
-
-  <div class="footer-links">
-    <a href="#home">Home</a>
-    <a href="#shop">Buy Data</a>
-    <a href="#support">Support</a>
-    <a href="agent-register.html">Agent Portal</a>
-  </div>
-
-  <p style="font-size:12px;margin-top:20px">
-    © <span id="currentYear"></span> Kielmen 636 Dataplug.
-    All rights reserved.
-  </p>
+<footer class="site-footer">
+  <strong>KIELMEN 636 DATAPLUG</strong>
+  <p>MTN • Telecel • AirtelTigo Data Bundles</p>
+  <p>© <span id="currentYear"></span> Kielmen 636 Dataplug</p>
+  <p>Payments are processed through Paystack.</p>
 </footer>
 
-<a class="floating-whatsapp"
+<a class="whatsapp-float"
    href="https://wa.me/233533878548"
-   target="_blank" rel="noopener"
-   aria-label="Chat with Kielmen on WhatsApp"
-   title="Chat with us">☏</a>
+   target="_blank"
+   rel="noopener noreferrer"
+   aria-label="Contact Kielmen on WhatsApp">☎</a>
 
 <nav class="bottom-nav" aria-label="Quick navigation">
-  <a class="active" href="#shop"><span>🛒</span>Buy</a>
+  <a href="#bundles" class="active"><span>🛒</span>Buy</a>
   <a href="#checkout"><span>💳</span>Checkout</a>
-  <a href="#support"><span>💬</span>Help</a>
+  <a href="https://wa.me/233533878548"><span>💬</span>Help</a>
 </nav>
 
-<!-- WHATSAPP ANNOUNCEMENT POPUP -->
-<dialog class="announcement" id="announcement"
-        aria-labelledby="announcementTitle">
-  <button class="popup-close" id="closeAnnouncement"
-          type="button" aria-label="Close announcement">×</button>
-
-  <div class="popup-icon">📢</div>
-
-  <span class="eyebrow">KIELMEN 636 DATAPLUG</span>
-
-  <h2 id="announcementTitle">Welcome to Your Trusted Data Plug!</h2>
-
-  <p>
-    Buy your favourite data bundles as a guest.
-    No registration is required to shop.
-  </p>
-
-  <div class="popup-networks">
-    <div class="popup-network popup-mtn">🟡 MTN</div>
-    <div class="popup-network popup-telecel">🔴 TELECEL</div>
-    <div class="popup-network popup-airtel">🔵 AIRTELTIGO</div>
-  </div>
-
-  <p>
-    Join our WhatsApp Channel for updates, promotions and announcements.
-  </p>
-
-  <a class="popup-join"
-     href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
-     target="_blank" rel="noopener">
-    📢 JOIN WHATSAPP CHANNEL
-  </a>
-
-  <button class="popup-continue" id="continueShopping" type="button">
-    Continue to Buy Data
-  </button>
+<dialog id="announcement" class="announcement">
+  <h2>📢 Kielmen 636 Dataplug</h2>
+  <p>Welcome! Join our WhatsApp Channel for data bundle updates, promotions and announcements.</p>
+  <a href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
+     target="_blank" rel="noopener noreferrer">📣 Join WhatsApp Channel</a>
+  <button id="continueShopping" type="button">Continue to Buy Data</button>
 </dialog>
 
-<script src="script.js?v=4"></script>
-</body>
-</html>
+<script src="script.js?v=5"></script>
+
+<script>
+  document.getElementById("currentYear").textContent = new Date().getFullYear();
+
+  const menuButton = document.getElementById("menuButton");
+  const mobileMenu = document.getElementById("mobileMenu");
+
+  menuButton.addEventListener("click", function () {
+    const isOpen = mobileMenu.style.display === "block";
+    mobileMenu.style.display = isOpen ? "none" : "block";
+    menuButton.setAttribute("aria-expanded", String(!isOpen));
+  });
+
+  mobileMenu.querySelectorAll("a").forEach(function (link) {
+    link.addEventListener("click", function () {
+      mobileMenu.style.display = "none";
+      menu
