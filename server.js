@@ -161,27 +161,78 @@ async function purchaseDataFromSupplier(order) {
     throw new Error("DataMart API key is missing.");
   }
 
-  const networkMap = {
-    MTN: "YELLO",
-    Telecel: "TELECEL",
-    AirtelTigo: "AT_PREMIUM"
-  };
-
-  const supplierNetwork = networkMap[order.network];
-
-  if (!supplierNetwork) {
-    throw new Error("Unsupported supplier network.");
-  }
-
   if (!order.phone || !order.bundle || !order.reference) {
     throw new Error("Required order details are missing.");
   }
 
-  // Do not send a purchase until the supplier's
-  // official API request format is confirmed.
-  throw new Error(
-    "DataMart purchase endpoint and request format need verification."
+  // Convert website network names to DataMart network codes.
+  const networkMap = {
+    MTN: "YELLO",
+    TELECEL: "TELECEL",
+    AIRTELTIGO: "AT_PREMIUM"
+  };
+
+  const network = networkMap[
+    String(order.network).toUpperCase()
+  ];
+
+  if (!network) {
+    throw new Error("Unsupported network.");
+  }
+
+  // Extract the number of GB from a bundle such as "5GB".
+  const match = String(order.bundle)
+    .trim()
+    .match(/^(\d+(?:\.\d+)?)\s*GB$/i);
+
+  if (!match) {
+    throw new Error("Invalid data bundle capacity.");
+  }
+
+  const capacity = Number(match[1]);
+
+  if (!Number.isFinite(capacity) || capacity <= 0) {
+    throw new Error("Invalid data capacity.");
+  }
+
+  const phone = normalizePhone(order.phone);
+
+  const response = await fetch(
+    "https://api.datamartgh.shop/api/developer/purchase",
+    {
+      method: "POST",
+      headers: {
+        "X-API-Key": apiKey,
+        "Content-Type": "application/json",
+        "X-Idempotency-Key": String(order.reference)
+      },
+      body: JSON.stringify({
+        phoneNumber: phone,
+        network: network,
+        capacity: String(capacity),
+        gateway: "wallet"
+      })
+    }
   );
+
+  const result = await response.json();
+
+  if (!response.ok || result.status !== "success") {
+    throw new Error(
+      result.message || "DataMart purchase failed."
+    );
+  }
+
+  return {
+    success: true,
+    purchaseId: result.data?.purchaseId || null,
+    orderReference: result.data?.orderReference || null,
+    transactionReference:
+      result.data?.transactionReference || null,
+    network: result.data?.network || network,
+    capacity: result.data?.capacity || capacity,
+    orderStatus: result.data?.orderStatus || "unknown"
+  };
 }
 function validGhanaPhone(phone) {
   const cleaned = String(phone || "").replace(/[\s-]/g, "");
