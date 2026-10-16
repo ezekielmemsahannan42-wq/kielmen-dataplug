@@ -258,7 +258,9 @@ async function handleCheckout(event) {
   }
 
   
-  const phoneInput = getElement("customerPhone");
+  const phoneInput =
+  document.getElementById("customerPhone") ||
+  document.getElementById("recipientPhone");
 const paymentButton = getElement("paymentButton");
 
 if (!phoneInput) {
