@@ -268,12 +268,14 @@ async function purchaseDataFromSupplier(order) {
   );
 
   const supplierReference =
-    result.reference ||
-    result.orderReference ||
-    result.order_reference ||
-    result.data?.reference ||
-    result.data?.orderReference ||
-    result.data?.order_reference;
+  result.data?.purchaseId ||
+  result.data?.orderReference ||
+  result.data?.transactionReference ||
+  result.reference ||
+  result.orderReference ||
+  result.order_reference ||
+  result.data?.reference ||
+  result.data?.order_reference;
 
   if (!supplierReference) {
     throw new Error(
@@ -634,11 +636,13 @@ app.get("/order-status/:reference", async (req, res) => {
         );
 
         const status = String(
-          supplier.status ||
-          supplier.data?.status ||
-          supplier.delivery_status ||
-          ""
-        ).toLowerCase();
+  supplier.data?.orderStatus ||
+  supplier.orderStatus ||
+  supplier.status ||
+  supplier.data?.status ||
+  supplier.delivery_status ||
+  ""
+).toLowerCase();
 
         if (["delivered", "completed", "success", "successful"].includes(status)) {
           order.delivery_status = "delivered";
