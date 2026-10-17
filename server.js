@@ -366,6 +366,54 @@ app.post("/owner/logout", requireOwner, (req, res) => {
     message: "Logged out successfully."
   });
 });
+// OWNER DASHBOARD STATISTICS
+app.get("/owner/stats", requireOwner, async (_req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        COUNT(*)::int AS total_orders,
+        COUNT(*) FILTER (
+          WHERE status = 'paid'
+        )::int AS paid_orders,
+        COUNT(*) FILTER (
+          WHERE delivery_status = 'delivered'
+        )::int AS successful_deliveries,
+        COUNT(*) FILTER (
+          WHERE delivery_status = 'processing'
+        )::int AS processing_orders,
+        COUNT(*) FILTER (
+          WHERE delivery_status = 'failed'
+        )::int AS failed_deliveries,
+        COALESCE(
+          SUM(amount) FILTER (
+            WHERE status = 'paid'
+          ), 0
+        )::numeric(12,2) AS total_revenue
+      FROM orders
+    `);
+
+    const stats = result.rows[0];
+
+    return res.json({
+      success: true,
+      stats: {
+        totalOrders: stats.total_orders,
+        paidOrders: stats.paid_orders,
+        successfulDeliveries: stats.successful_deliveries,
+        processingOrders: stats.processing_orders,
+        failedDeliveries: stats.failed_deliveries,
+        totalRevenue: Number(stats.total_revenue)
+      }
+    });
+  } catch (error) {
+    console.error("Owner statistics error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to load dashboard statistics."
+    });
+  }
+});
 // HEALTH CHECK
 
 app.get("/", (_req, res) => {
