@@ -121,7 +121,22 @@ document.getElementById("agent-form").addEventListener("submit", async function(
     message.textContent = "Please wait while your account is being created.";
 
     try {
-        const data = new FormData(form);
+        const fullName =
+    document.getElementById("fullname").value.trim();
+
+const businessName =
+    document.getElementById("business").value.trim();
+
+const phone =
+    document.getElementById("phone").value.trim();
+
+const email =
+    document.getElementById("email").value.trim();
+
+const password =
+    document.getElementById("password").value;
+
+const storeDescription = "";
 
         const fullName = form.querySelector(
     'input[placeholder="Full Name"], input[name="fullName"], input[name="full_name"], input[name="name"]'
