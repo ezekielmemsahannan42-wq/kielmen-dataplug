@@ -123,26 +123,30 @@ document.getElementById("agent-form").addEventListener("submit", async function(
     try {
         const data = new FormData(form);
 
-        const fullName =
-            data.get("fullName") ||
-            data.get("full_name") ||
-            data.get("name");
+        const fullName = form.querySelector(
+    'input[placeholder="Full Name"], input[name="fullName"], input[name="full_name"], input[name="name"]'
+)?.value?.trim();
 
-        const businessName =
-            data.get("businessName") ||
-            data.get("business_name");
+const businessName = form.querySelector(
+    'input[placeholder="Business Name"], input[name="businessName"], input[name="business_name"]'
+)?.value?.trim();
 
-        const email = data.get("email");
-        const phone = data.get("phone");
+const phone = form.querySelector(
+    'input[type="tel"], input[name="phone"]'
+)?.value?.trim();
 
-        const password =
-            data.get("password") ||
-            data.get("createPassword");
+const email = form.querySelector(
+    'input[type="email"], input[name="email"]'
+)?.value?.trim();
 
-        const storeDescription =
-            data.get("storeDescription") ||
-            data.get("store_description") ||
-            "";
+const password = form.querySelector(
+    'input[type="password"]'
+)?.value;
+
+const storeDescription =
+    form.querySelector(
+        'textarea[name="storeDescription"]'
+    )?.value?.trim() || "";
 
         if (!fullName || !businessName || !email || !phone || !password) {
             throw new Error(
