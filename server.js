@@ -289,7 +289,385 @@ async function purchaseDataFromSupplier(order) {
   };
 }
 // OWNER DASHBOARD AUTHENTICATION
+// ========================================
+// KIELMEN 636 AGENT SYSTEM - DATABASE
+// ========================================
 
+const AGENT_TOKEN_SECRET = process.env.AGENT_TOKEN_SECRET;
+
+async function createAgentTables() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS agents (
+      id BIGSERIAL PRIMARY KEY,
+      agent_code VARCHAR(30) UNIQUE NOT NULL,
+      full_name VARCHAR(100) NOT NULL,
+      business_name VARCHAR(100) NOT NULL,
+      email VARCHAR(255) UNIQUE NOT NULL,
+      phone VARCHAR(20) UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'approved', 'rejected', 'suspended')),
+      store_description VARCHAR(200) DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS agent_prices (
+      id BIGSERIAL PRIMARY KEY,
+      agent_id BIGINT NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+      network VARCHAR(30) NOT NULL,
+      bundle VARCHAR(30) NOT NULL,
+      selling_price NUMERIC(10,2) NOT NULL CHECK (selling_price >= 0),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      UNIQUE (agent_id, network, bundle)
+    )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS agents_status_idx
+    ON agents(status)
+  `);
+}
+  // Associate customer orders with agents.
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS agent_id BIGINT
+    REFERENCES agents(id) ON DELETE SET NULL
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS orders_agent_id_idx
+    ON orders(agent_id)
+  `);
+
+  // Record withdrawal requests.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS agent_withdrawals (
+      id BIGSERIAL PRIMARY KEY,
+      agent_id BIGINT NOT NULL REFERENCES agents(id),
+      amount NUMERIC(10,2) NOT NULL CHECK (amount > 0),
+      phone VARCHAR(20) NOT NULL,
+      provider VARCHAR(30) NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'approved', 'rejected', 'paid')),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  // Track the supplier cost used to calculate agent margins.
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS supplier_cost NUMERIC(10,2)
+  `);
+// ========================================
+// AGENT AUTHENTICATION HELPERS
+// ========================================
+
+const agentSessions = new Map();
+
+function hashAgentPassword(password) {
+  return new Promise((resolve, reject) => {
+    crypto.scrypt(password, AGENT_TOKEN_SECRET, 64, (error, key) => {
+      if (error) return reject(error);
+      resolve(key.toString("hex"));
+    });
+  });
+}
+
+async function verifyAgentPassword(password, storedHash) {
+  const suppliedHash = await hashAgentPassword(password);
+
+  const supplied = Buffer.from(suppliedHash, "hex");
+  const stored = Buffer.from(storedHash, "hex");
+
+  return stored.length === supplied.length &&
+    crypto.timingSafeEqual(stored, supplied);
+}
+
+function requireAgent(req, res, next) {
+  const authorization = req.headers.authorization || "";
+
+  if (!authorization.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      message: "Please log in."
+    });
+  }
+
+  const token = authorization.slice(7);
+  const session = agentSessions.get(token);
+
+  if (!session || session.expiresAt <= Date.now()) {
+    agentSessions.delete(token);
+
+    return res.status(401).json({
+      success: false,
+      message: "Your session has expired. Please log in again."
+    });
+  }
+
+  req.agentId = session.agentId;
+  next();
+}
+
+async function requireApprovedAgent(req, res, next) {
+  try {
+    const result = await pool.query(
+      `SELECT id, status
+       FROM agents
+       WHERE id = $1`,
+      [req.agentId]
+    );
+
+    if (
+      result.rowCount === 0 ||
+      result.rows[0].status !== "approved"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Your agent account is not approved."
+      });
+    }
+
+    next();
+  } catch (error) {
+    console.error("Agent authentication error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not verify your agent account."
+    });
+  }
+}
+// ========================================
+// AGENT REGISTRATION
+// ========================================
+
+app.post("/agents/register", async (req, res) => {
+  try {
+    if (!AGENT_TOKEN_SECRET || AGENT_TOKEN_SECRET.length < 32) {
+      return res.status(503).json({
+        success: false,
+        message: "Agent registration is not configured securely."
+      });
+    }
+
+    const fullName = String(req.body?.fullName || "").trim();
+    const businessName = String(req.body?.businessName || "").trim();
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const phone = normalizePhone(req.body?.phone);
+    const password = String(req.body?.password || "");
+    const storeDescription =
+      String(req.body?.storeDescription || "").trim();
+
+    if (
+      fullName.length < 2 || fullName.length > 100 ||
+      businessName.length < 2 || businessName.length > 100 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+      email.length > 255 ||
+      !validPhone(phone) ||
+      password.length < 12 || password.length > 128 ||
+      storeDescription.length > 200
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter valid details. Passwords must be at least 12 characters."
+      });
+    }
+
+    const passwordHash = await hashAgentPassword(password);
+
+    const agentCode =
+      "K636-" + crypto.randomBytes(6).toString("hex").toUpperCase();
+
+    const result = await pool.query(
+      `INSERT INTO agents
+       (agent_code, full_name, business_name, email, phone,
+        password_hash, store_description, status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'pending')
+       RETURNING id, agent_code, full_name, business_name,
+                 email, phone, status, created_at`,
+      [
+        agentCode,
+        fullName,
+        businessName,
+        email,
+        phone,
+        passwordHash,
+        storeDescription
+      ]
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Registration successful. Your account is awaiting owner approval.",
+      agent: result.rows[0]
+    });
+  } catch (error) {
+    if (error.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        message: "That email address or phone number is already registered."
+      });
+    }
+
+    console.error("Agent registration error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Registration failed. Please try again."
+    });
+  }
+});
+// ========================================
+// AGENT LOGIN
+// ========================================
+
+app.post("/agents/login", async (req, res) => {
+  try {
+    if (!AGENT_TOKEN_SECRET || AGENT_TOKEN_SECRET.length < 32) {
+      return res.status(503).json({
+        success: false,
+        message: "Agent login is not configured."
+      });
+    }
+
+    const email = String(req.body?.email || "").trim().toLowerCase();
+    const password = String(req.body?.password || "");
+
+    if (!email || !password || email.length > 255 || password.length > 128) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter your email address and password."
+      });
+    }
+
+    const result = await pool.query(
+      `SELECT id, agent_code, full_name, business_name,
+              email, phone, password_hash, status
+       FROM agents
+       WHERE email = $1`,
+      [email]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password."
+      });
+    }
+
+    const agent = result.rows[0];
+
+    const passwordMatches = await verifyAgentPassword(
+      password,
+      agent.password_hash
+    );
+
+    if (!passwordMatches) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password."
+      });
+    }
+
+    if (agent.status !== "approved") {
+      return res.status(403).json({
+        success: false,
+        status: agent.status,
+        message: agent.status === "pending"
+          ? "Your account is awaiting owner approval."
+          : "Your account cannot log in. Contact the owner."
+      });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+
+    agentSessions.set(token, {
+      agentId: agent.id,
+      expiresAt: Date.now() + 4 * 60 * 60 * 1000
+    });
+
+    return res.json({
+      success: true,
+      token,
+      expiresIn: 14400,
+      agent: {
+        id: agent.id,
+        agentCode: agent.agent_code,
+        fullName: agent.full_name,
+        businessName: agent.business_name,
+        email: agent.email,
+        phone: agent.phone,
+        status: agent.status
+      }
+    });
+  } catch (error) {
+    console.error("Agent login error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not log in. Please try again."
+    });
+  }
+});
+// ========================================
+// AGENT PROFILE
+// ========================================
+
+app.get(
+  "/agents/me",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT id, agent_code, full_name, business_name,
+                email, phone, status, store_description, created_at
+         FROM agents
+         WHERE id = $1`,
+        [req.agentId]
+      );
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Agent account not found."
+        });
+      }
+
+      return res.json({
+        success: true,
+        agent: result.rows[0]
+      });
+    } catch (error) {
+      console.error("Agent profile error:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not load your profile."
+      });
+    }
+  }
+);
+
+// ========================================
+// AGENT LOGOUT
+// ========================================
+
+app.post("/agents/logout", requireAgent, (req, res) => {
+  const token = req.headers.authorization.slice(7);
+
+  agentSessions.delete(token);
+
+  return res.json({
+    success: true,
+    message: "Logged out successfully."
+  });
+});
 const OWNER_SECRET = process.env.OWNER_SECRET;
 
 const ownerSessions = new Map();
@@ -414,6 +792,321 @@ app.get("/owner/stats", requireOwner, async (_req, res) => {
     });
   }
 });
+// ========================================
+// OWNER: AGENT MANAGEMENT
+// ========================================
+
+// List agents.
+app.get("/owner/agents", requireOwner, async (_req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        a.id,
+        a.agent_code,
+        a.full_name,
+        a.business_name,
+        a.email,
+        a.phone,
+        a.status,
+        a.created_at,
+        COUNT(o.id)::int AS total_orders,
+        COALESCE(
+          SUM(o.amount) FILTER (WHERE o.status = 'paid'),
+          0
+        )::numeric(12,2) AS paid_sales
+      FROM agents a
+      LEFT JOIN orders o ON o.agent_id = a.id
+      GROUP BY a.id
+      ORDER BY a.created_at DESC
+    `);
+
+    res.json({ success: true, agents: result.rows });
+  } catch (error) {
+    console.error("List agents:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "Could not load agents."
+    });
+  }
+});
+
+// Approve or reject an agent.
+app.patch(
+  "/owner/agents/:id/status",
+  requireOwner,
+  async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      const status = String(req.body?.status || "");
+
+      if (!Number.isSafeInteger(id) || id <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid agent ID."
+        });
+      }
+
+      if (!["approved", "rejected", "suspended"].includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid agent status."
+        });
+      }
+
+      const result = await pool.query(
+        `UPDATE agents
+         SET status = $1, updated_at = NOW()
+         WHERE id = $2
+         RETURNING id, agent_code, full_name, status`,
+        [status, id]
+      );
+
+      if (result.rowCount === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Agent not found."
+        });
+      }
+
+      // Invalidate existing sessions for this agent.
+      for (const [token, session] of agentSessions.entries()) {
+        if (String(session.agentId) === String(id)) {
+          agentSessions.delete(token);
+        }
+      }
+
+      res.json({
+        success: true,
+        agent: result.rows[0]
+      });
+    } catch (error) {
+      console.error("Update agent status:", error.message);
+      res.status(500).json({
+        success: false,
+        message: "Could not update agent status."
+      });
+    }
+  }
+);
+// ========================================
+// AGENT: SELLING PRICES
+// ========================================
+
+app.get(
+  "/agents/prices",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT network, bundle, selling_price
+         FROM agent_prices
+         WHERE agent_id = $1
+         ORDER BY network, bundle`,
+        [req.agentId]
+      );
+
+      res.json({
+        success: true,
+        prices: result.rows
+      });
+    } catch (error) {
+      console.error("Get agent prices:", error.message);
+      res.status(500).json({
+        success: false,
+        message: "Could not load selling prices."
+      });
+    }
+  }
+);
+
+app.put(
+  "/agents/prices",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    const prices = req.body?.prices;
+
+    if (!Array.isArray(prices) || prices.length < 1 || prices.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Provide between 1 and 100 prices."
+      });
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      for (const item of prices) {
+        const network = normalizeNetwork(item.network);
+        const bundle = normalizeBundle(item.bundle);
+        const sellingPrice = Number(item.sellingPrice);
+        const basePrice = PRICES[network]?.[bundle];
+
+        if (
+          !network ||
+          basePrice === undefined ||
+          !Number.isFinite(sellingPrice) ||
+          sellingPrice < basePrice ||
+          Math.round(sellingPrice * 100) !== sellingPrice * 100
+        ) {
+          throw new Error(
+            `Invalid price for ${item.network || "network"} ${item.bundle || "bundle"}.`
+          );
+        }
+
+        await client.query(
+          `INSERT INTO agent_prices
+           (agent_id, network, bundle, selling_price)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (agent_id, network, bundle)
+           DO UPDATE SET
+             selling_price = EXCLUDED.selling_price,
+             updated_at = NOW()`,
+          [req.agentId, network, bundle, sellingPrice]
+        );
+      }
+
+      await client.query("COMMIT");
+
+      res.json({
+        success: true,
+        message: "Selling prices saved."
+      });
+    } catch (error) {
+      await client.query("ROLLBACK");
+
+      res.status(400).json({
+        success: false,
+        message: error.message || "Could not save prices."
+      });
+    } finally {
+      client.release();
+    }
+  }
+);
+// ========================================
+// AGENT: SALES STATISTICS
+// ========================================
+
+app.get(
+  "/agents/stats",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT
+           COUNT(*)::int AS total_orders,
+           COUNT(*) FILTER (
+             WHERE status = 'paid'
+           )::int AS paid_orders,
+           COUNT(*) FILTER (
+             WHERE delivery_status = 'delivered'
+           )::int AS delivered_orders,
+           COUNT(*) FILTER (
+             WHERE delivery_status = 'processing'
+           )::int AS processing_orders,
+           COUNT(*) FILTER (
+             WHERE delivery_status = 'failed'
+           )::int AS failed_orders,
+           COALESCE(
+             SUM(amount) FILTER (WHERE status = 'paid'),
+             0
+           )::numeric(12,2) AS total_sales,
+           COALESCE(
+             SUM(amount - supplier_cost)
+             FILTER (
+               WHERE status = 'paid'
+               AND delivery_status = 'delivered'
+               AND supplier_cost IS NOT NULL
+             ),
+             0
+           )::numeric(12,2) AS recorded_margin,
+           COUNT(DISTINCT phone)::int AS customers
+         FROM orders
+         WHERE agent_id = $1`,
+        [req.agentId]
+      );
+
+      const row = result.rows[0];
+
+      res.json({
+        success: true,
+        stats: {
+          totalOrders: row.total_orders,
+          paidOrders: row.paid_orders,
+          deliveredOrders: row.delivered_orders,
+          processingOrders: row.processing_orders,
+          failedOrders: row.failed_orders,
+          totalSales: Number(row.total_sales),
+          recordedMargin: Number(row.recorded_margin),
+          customers: row.customers,
+          marginComplete: false
+        }
+      });
+    } catch (error) {
+      console.error("Agent statistics:", error.message);
+      res.status(500).json({
+        success: false,
+        message: "Could not load sales statistics."
+      });
+    }
+  }
+);
+// ========================================
+// AGENT: REQUEST WITHDRAWAL
+// ========================================
+
+app.post(
+  "/agents/withdrawals",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const amount = Number(req.body?.amount);
+      const phone = normalizePhone(req.body?.phone);
+      const provider = String(req.body?.provider || "")
+        .trim()
+        .toUpperCase();
+
+      if (
+        !Number.isFinite(amount) ||
+        amount <= 0 ||
+        Math.round(amount * 100) !== amount * 100 ||
+        !validPhone(phone) ||
+        !["MTN", "TELECEL", "AIRTELTIGO"].includes(provider)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Enter a valid amount, Ghana phone number and Mobile Money provider."
+        });
+      }
+
+      const result = await pool.query(
+        `INSERT INTO agent_withdrawals
+         (agent_id, amount, phone, provider)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id, amount, phone, provider, status, created_at`,
+        [req.agentId, amount, phone, provider]
+      );
+
+      res.status(201).json({
+        success: true,
+        message: "Withdrawal request submitted for owner review.",
+        withdrawal: result.rows[0]
+      });
+    } catch (error) {
+      console.error("Withdrawal request:", error.message);
+      res.status(500).json({
+        success: false,
+        message: "Could not submit withdrawal request."
+      });
+    }
+  }
+);
 // HEALTH CHECK
 
 app.get("/", (_req, res) => {
@@ -879,6 +1572,7 @@ app.get("/orders-by-phone/:phone", async (req, res) => {
 async function startServer() {
   try {
     await createOrdersTable();
+    await createAgentTables();
 
     app.listen(PORT, () => {
       console.log("Kielmen 636 Dataplug API running on port " + PORT);
