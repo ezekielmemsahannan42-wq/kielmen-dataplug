@@ -2,285 +2,358 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex, nofollow">
-  <title>Kielmen 636 | Owner Dashboard</title>
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="description"
+    content="Kielmen 636 Dataplug Owner Dashboard"
+  >
+
+  <title>Kielmen 636 Dataplug | Owner Dashboard</title>
 
   <style>
+    :root {
+      --background: #030712;
+      --card: #111827;
+      --border: #374151;
+      --gold: #eab308;
+      --green: #22c55e;
+      --white: #f9fafb;
+      --muted: #9ca3af;
+      --red: #ef4444;
+    }
+
     * {
       box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      background: #0b1120;
-      color: #f8fafc;
-      font-family: Arial, sans-serif;
+      background: var(--background);
+      color: var(--white);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    button,
+    input {
+      font: inherit;
     }
 
     .topbar {
-      padding: 20px;
-      background: #111827;
-      border-bottom: 1px solid #263244;
+      padding: 22px 18px;
+      border-bottom: 1px solid var(--border);
+      background: #030712;
     }
 
     .brand {
-      color: #facc15;
-      font-size: 22px;
+      margin: 0;
+      color: var(--gold);
+      font-size: 25px;
       font-weight: 800;
     }
 
     .subtitle {
-      color: #94a3b8;
-      margin-top: 7px;
-      font-size: 13px;
+      margin-top: 8px;
+      color: var(--muted);
     }
 
     .container {
-      width: min(1200px, 100%);
+      width: 100%;
+      max-width: 1200px;
       margin: auto;
-      padding: 18px;
+      padding: 22px 16px 50px;
     }
 
-    .notice {
-      background: #422006;
-      color: #fde68a;
-      padding: 14px;
-      border: 1px solid #854d0e;
-      border-radius: 12px;
-      line-height: 1.6;
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .toolbar h2 {
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .logout {
+      background: #b91c1c;
+    }
+
+    .refresh {
+      background: #166534;
+    }
+
+    .status {
+      padding: 13px;
       margin-bottom: 20px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--muted);
+      overflow-wrap: anywhere;
     }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      grid-template-columns:
+        repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
     }
 
     .card {
-      background: #111827;
-      padding: 18px;
-      border: 1px solid #263244;
-      border-radius: 14px;
       min-width: 0;
+      padding: 22px 18px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--card);
     }
 
     .card-label {
-      color: #94a3b8;
-      font-size: 13px;
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 16px;
     }
 
     .card-value {
-      font-size: 25px;
+      margin: 0;
+      font-size: 30px;
       font-weight: 800;
-      margin-top: 12px;
       overflow-wrap: anywhere;
     }
 
-    .yellow {
-      color: #facc15;
+    .sales {
+      color: var(--gold);
+    }
+
+    .profit {
+      color: var(--green);
+    }
+
+    .success {
+      color: var(--green);
+    }
+
+    .pending {
+      color: var(--gold);
+    }
+
+    .failed {
+      color: var(--red);
     }
 
     .section {
-      margin-top: 28px;
+      margin-top: 34px;
     }
 
     .section h2 {
-      font-size: 19px;
+      font-size: 23px;
     }
 
-    .table-wrap {
-      overflow-x: auto;
-      background: #111827;
-      border: 1px solid #263244;
-      border-radius: 12px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 650px;
-    }
-
-    th, td {
-      padding: 13px;
-      text-align: left;
-      border-bottom: 1px solid #263244;
-      font-size: 13px;
-    }
-
-    th {
-      color: #facc15;
-      background: #172033;
-    }
-
-    .empty {
-      color: #94a3b8;
+    .info-panel {
       padding: 20px;
-      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--card);
+      color: var(--muted);
+      line-height: 1.7;
+      overflow-wrap: anywhere;
     }
 
     .footer {
-      padding: 25px 15px;
-      color: #64748b;
+      padding: 24px 16px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
       text-align: center;
-      font-size: 12px;
+      font-size: 13px;
     }
 
-    @media (min-width: 700px) {
+    @media (max-width: 480px) {
+      .brand {
+        font-size: 21px;
+      }
+
+      .toolbar h2 {
+        font-size: 24px;
+      }
+
       .grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .card {
+        padding: 16px 12px;
+      }
+
+      .card-label {
+        font-size: 14px;
+      }
+
+      .card-value {
+        font-size: 23px;
       }
     }
   </style>
 </head>
 
 <body>
+
   <header class="topbar">
-    <div class="brand">KIELMEN 636 DATAPLUG</div>
+    <h1 class="brand">KIELMEN 636 DATAPLUG</h1>
     <div class="subtitle">Owner Dashboard</div>
   </header>
 
   <main class="container">
 
-    <div class="notice">
-      <strong>Owner access setup</strong><br>
-      This is the initial dashboard layout. It is not yet protected by
-      owner login and does not yet retrieve live orders. Do not enter
-      confidential business information here until authentication is connected.
-    </div>
+    <div class="toolbar">
+      <h2>Business Overview</h2>
 
-    <h1>Business Overview</h1>
-    <p class="subtitle">Your sales and operations summary.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button
+          id="refreshDashboard"
+          class="button refresh"
+          type="button"
+        >
+          Refresh
+        </button>
 
-    <div class="grid">
-      <div class="card">
-        <div class="card-label">Total Sales</div>
-        <div class="card-value yellow" id="totalSales">GH₵0.00</div>
-      </div>
-
-      <div class="card">
-        <div class="card-label">Total Profit</div>
-        <div class="card-value" id="totalProfit">GH₵0.00</div>
-      </div>
-
-      <div class="card">
-        <div class="card-label">Total Orders</div>
-        <div class="card-value" id="totalOrders">0</div>
-      </div>
-
-      <div class="card">
-        <div class="card-label">Successful Deliveries</div>
-        <div class="card-value" id="successfulDeliveries">0</div>
-      </div>
-
-      <div class="card">
-        <div class="card-label">Pending Orders</div>
-        <div class="card-value" id="pendingOrders">0</div>
-      </div>
-
-      <div class="card">
-        <div class="card-label">Failed Orders</div>
-        <div class="card-value" id="failedOrders">0</div>
-      </div>
-
-      <div class="card">
-        <div class="card-label">Registered Agents</div>
-        <div class="card-value" id="registeredAgents">0</div>
-      </div>
-
-      <div class="card">
-        <div class="card-label">Pending Withdrawals</div>
-        <div class="card-value" id="pendingWithdrawals">0</div>
+        <button
+          id="ownerLogoutButton"
+          class="button logout"
+          type="button"
+        >
+          Log Out
+        </button>
       </div>
     </div>
+
+    <div
+      id="ownerMessage"
+      class="status"
+      role="status"
+      aria-live="polite"
+    >
+      Connect your owner account to load business statistics.
+    </div>
+
+    <section class="grid" aria-label="Business statistics">
+
+      <article class="card">
+        <p class="card-label">Total Sales</p>
+        <p id="totalSales" class="card-value sales">
+          GH₵0.00
+        </p>
+      </article>
+
+      <article class="card">
+        <p class="card-label">Total Profit</p>
+        <p id="totalProfit" class="card-value profit">
+          Not available
+        </p>
+      </article>
+
+      <article class="card">
+        <p class="card-label">Total Orders</p>
+        <p id="totalOrders" class="card-value">0</p>
+      </article>
+
+      <article class="card">
+        <p class="card-label">Successful Deliveries</p>
+        <p
+          id="successfulDeliveries"
+          class="card-value success"
+        >0</p>
+      </article>
+
+      <article class="card">
+        <p class="card-label">Pending Orders</p>
+        <p id="pendingOrders" class="card-value pending">0</p>
+      </article>
+
+      <article class="card">
+        <p class="card-label">Failed Orders</p>
+        <p id="failedOrders" class="card-value failed">0</p>
+      </article>
+
+      <article class="card">
+        <p class="card-label">Registered Agents</p>
+        <p id="registeredAgents" class="card-value">
+          Not connected
+        </p>
+      </article>
+
+      <article class="card">
+        <p class="card-label">Pending Withdrawals</p>
+        <p id="pendingWithdrawals" class="card-value">
+          Not connected
+        </p>
+      </article>
+
+    </section>
 
     <section class="section">
-      <h2>Recent Orders</h2>
+      <h2>Order Management</h2>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Order ID</th>
-              <th>Phone Number</th>
-              <th>Network</th>
-              <th>Bundle</th>
-              <th>Amount</th>
-              <th>Payment</th>
-              <th>Delivery</th>
-            </tr>
-          </thead>
-
-          <tbody id="ordersTable">
-            <tr>
-              <td colspan="7" class="empty">
-                Live orders will appear here after the secure backend is connected.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="info-panel">
+        Your payment and delivery records are stored by the
+        backend. A protected order-list endpoint is required
+        before private customer orders can be displayed here.
       </div>
     </section>
 
     <section class="section">
       <h2>Agent Management</h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Agent</th>
-              <th>Contact</th>
-              <th>Total Sales</th>
-              <th>Available Earnings</th>
-              <th>Status</th>
-            </tr>
-          </thead>
 
-          <tbody id="agentsTable">
-            <tr>
-              <td colspan="5" class="empty">
-                Agent records will appear here after the backend is connected.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="info-panel">
+        Agent registration, agent records, and agent activity
+        will appear here after their backend endpoints are
+        connected.
       </div>
     </section>
 
     <section class="section">
-      <h2>Withdrawal Requests</h2>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Agent</th>
-              <th>Amount</th>
-              <th>Mobile Money Number</th>
-              <th>Requested</th>
-              <th>Status</th>
-            </tr>
-          </thead>
+      <h2>Withdrawal Management</h2>
 
-          <tbody id="withdrawalsTable">
-            <tr>
-              <td colspan="5" class="empty">
-                Withdrawal requests will appear here after the backend is connected.
-              </td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="info-panel">
+        Withdrawal requests and approval actions require
+        protected backend endpoints and verified withdrawal
+        records. No withdrawal will be processed from this
+        placeholder.
       </div>
     </section>
 
   </main>
 
   <footer class="footer">
-    Kielmen 636 Dataplug · Owner Dashboard ·
-    <span id="year"></span>
+    Kielmen 636 Dataplug &copy; 2026
   </footer>
 
-  <script src="owner.js?v=1"></script>
+  <script src="./owner.js" defer></script>
+
+  <script>
+    document
+      .getElementById("refreshDashboard")
+      .addEventListener("click", function () {
+        if (typeof loadStatistics === "function") {
+          loadStatistics();
+        }
+      });
+  </script>
+
 </body>
 </html>
