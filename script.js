@@ -556,6 +556,7 @@ if (trackOrderForm) {
 
       results.innerHTML = data.orders.map(order => `
         <div class="order-result">
+        <p><strong>Order Date:</strong> ${order.created_at ? new Date(order.created_at).toLocaleString("en-GB", { timeZone: "Africa/Accra" }) : "Date unavailable"}</p>
           <p><strong>Reference:</strong> ${escapeHTML(order.reference || "")}</p>
           <p><strong>Network:</strong> ${escapeHTML(order.network || "")}</p>
           <p><strong>Bundle:</strong> ${escapeHTML(order.bundle || "")}</p>
