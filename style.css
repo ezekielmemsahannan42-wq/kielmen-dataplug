@@ -979,3 +979,32 @@ footer,
     bottom: 24px;
   }
 }
+
+/* KIELMEN 636 DATAPLUG - ORDER BOXES */
+.order-result {
+    background: #111827;
+    border: 1px solid #16a34a;
+    border-radius: 14px;
+    padding: 18px;
+    margin: 18px 0;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    overflow-wrap: anywhere;
+}
+
+.order-result p {
+    margin: 12px 0;
+    padding: 10px;
+    background: #1f2937;
+    border-radius: 8px;
+    line-height: 1.6;
+}
+
+.order-result strong {
+    color: #4ade80;
+}
+
+.order-result p:first-child {
+    border-bottom: 1px solid #374151;
+    padding-bottom: 14px;
+}
