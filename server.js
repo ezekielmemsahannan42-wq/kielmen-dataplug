@@ -696,7 +696,59 @@ app.get("/order-status/:reference", async (req, res) => {
     });
   }
 });
+// CUSTOMER ORDER TRACKING
+app.get("/orders-by-phone/:phone", async (req, res) => {
+  try {
+    const phone = normalizePhone(req.params.phone);
 
+    if (!phone || !/^\d{9}$/.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a valid phone number."
+      });
+    }
+
+    const result = await pool.query(
+      `SELECT
+        reference,
+        phone,
+        network,
+        bundle,
+        amount,
+        status AS payment_status,
+        delivery_status,
+        created_at,
+        updated_at
+       FROM orders
+       WHERE RIGHT(REGEXP_REPLACE(phone, '[^0-9]', '', 'g'), 9) = $1
+       ORDER BY created_at DESC
+       LIMIT 20`,
+      [phone]
+    );
+
+    return res.json({
+      success: true,
+      orders: result.rows.map(order => ({
+        reference: order.reference,
+        phone: order.phone,
+        network: order.network,
+        bundle: order.bundle,
+        amount: Number(order.amount),
+        payment_status: order.payment_status,
+        delivery_status: order.delivery_status,
+        created_at: order.created_at,
+        updated_at: order.updated_at
+      }))
+    });
+  } catch (error) {
+    console.error("Customer order tracking error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to check orders. Please try again."
+    });
+  }
+});
 // START SERVER
 
 async function startServer() {
