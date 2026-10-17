@@ -701,7 +701,7 @@ app.get("/orders-by-phone/:phone", async (req, res) => {
   try {
     const phone = normalizePhone(req.params.phone);
 
-    if (!phone || !/^\d{9}$/.test(phone)) {
+    if (!validPhone(phone)) {
       return res.status(400).json({
         success: false,
         message: "Please enter a valid phone number."
@@ -723,7 +723,7 @@ app.get("/orders-by-phone/:phone", async (req, res) => {
        WHERE RIGHT(REGEXP_REPLACE(phone, '[^0-9]', '', 'g'), 9) = $1
        ORDER BY created_at DESC
        LIMIT 20`,
-      [phone]
+      [phone.slice(-9)]
     );
 
     return res.json({
