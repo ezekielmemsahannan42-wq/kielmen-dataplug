@@ -1,3 +1,18 @@
+/**
+ * Kielmen 636 Dataplug — Payment, DataMart Delivery and Agent API
+ *
+ * Required Render environment variables:
+ * DATABASE_URL
+ * PAYSTACK_SECRET_KEY
+ * PAYSTACK_CUSTOMER_EMAIL
+ * DATAMART_API_KEY
+ * DATAMART_PURCHASES_ENABLED=true
+ * OWNER_SECRET
+ * AGENT_TOKEN_SECRET
+ *
+ * Never expose secret keys in frontend code.
+ */
+
 "use strict";
 
 const express = require("express");
@@ -6,101 +21,188 @@ const { Pool } = require("pg");
 const crypto = require("crypto");
 
 const app = express();
-app.disable("x-powered-by");
 
-const PORT = process.env.PORT || 3000;
+app.disable("x-powered-by");
+app.set("trust proxy", 1);
+
+const PORT = Number(process.env.PORT || 3000);
 const DATABASE_URL = process.env.DATABASE_URL;
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_CUSTOMER_EMAIL = process.env.PAYSTACK_CUSTOMER_EMAIL;
 const DATAMART_API_KEY = process.env.DATAMART_API_KEY;
-const PURCHASES_ENABLED =
-  String(process.env.DATAMART_PURCHASES_ENABLED).toLowerCase() === "true";
 
-const FRONTEND =
+const DATAMART_PURCHASES_ENABLED =
+  String(process.env.DATAMART_PURCHASES_ENABLED || "").toLowerCase() === "true";
+
+const FRONTEND_ORIGIN =
+  process.env.FRONTEND_ORIGIN ||
+  "https://ezekielmemsahannan42-wq.github.io";
+
+const FRONTEND_BASE_URL =
   "https://ezekielmemsahannan42-wq.github.io/kielmen-dataplug";
 
+const AGENT_TOKEN_SECRET = process.env.AGENT_TOKEN_SECRET || "";
+const OWNER_SECRET = process.env.OWNER_SECRET || "";
+
 if (!DATABASE_URL) {
-  console.error("DATABASE_URL is missing.");
-  process.exit(1);
+  console.error("Missing DATABASE_URL");
+}
+
+if (!PAYSTACK_SECRET_KEY) {
+  console.error("Missing PAYSTACK_SECRET_KEY");
+}
+
+if (!PAYSTACK_CUSTOMER_EMAIL) {
+  console.error("Missing PAYSTACK_CUSTOMER_EMAIL");
+}
+
+if (AGENT_TOKEN_SECRET.length < 32) {
+  console.error("AGENT_TOKEN_SECRET must be at least 32 characters.");
 }
 
 const pool = new Pool({
   connectionString: DATABASE_URL,
-  ssl: /localhost|127\.0\.0\.1/i.test(DATABASE_URL)
-    ? false
-    : { rejectUnauthorized: false }
+
+  ssl:
+    DATABASE_URL &&
+    !/localhost|127\.0\.0\.1/i.test(DATABASE_URL)
+      ? { rejectUnauthorized: false }
+      : false,
+
+  max: 10,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000
 });
 
-app.use(cors({
-  origin: [
-    "https://ezekielmemsahannan42-wq.github.io",
-    "http://localhost:3000"
-  ]
-}));
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (
+        !origin ||
+        origin === FRONTEND_ORIGIN ||
+        origin === "https://ezekielmemsahannan42-wq.github.io"
+      ) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Origin not allowed by CORS"));
+    },
+
+    methods: ["GET", "POST", "PUT", "PATCH", "OPTIONS"],
+
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "X-Requested-With"
+    ]
+  })
+);
 
 app.use(express.json({ limit: "30kb" }));
 
-// APPROVED PRICES IN GHANA CEDIS
+// ============================================================
+// 1. PUBLIC CUSTOMER PRICES — GHS
+// ============================================================
 
 const PRICES = {
   MTN: {
     "1GB": 4.70,
     "2GB": 9.70,
     "3GB": 14.50,
-    "4GB": 20,
-    "5GB": 26,
-    "6GB": 32,
-    "8GB": 43,
-    "10GB": 49,
-    "15GB": 69,
-    "20GB": 99,
-    "25GB": 140,
-    "30GB": 155,
-    "40GB": 199,
-    "50GB": 240
+    "4GB": 20.00,
+    "5GB": 26.00,
+    "6GB": 32.00,
+    "8GB": 43.00,
+    "10GB": 49.00,
+    "15GB": 69.00,
+    "20GB": 99.00,
+    "25GB": 140.00,
+    "30GB": 155.00,
+    "40GB": 199.00,
+    "50GB": 240.00
   },
 
   TELECEL: {
-    "10GB": 45,
-    "15GB": 62,
-    "20GB": 82,
-    "25GB": 101,
-    "30GB": 124,
-    "40GB": 170,
-    "50GB": 210,
-    "100GB": 420
+    "10GB": 45.00,
+    "15GB": 62.00,
+    "20GB": 82.00,
+    "25GB": 101.00,
+    "30GB": 124.00,
+    "40GB": 170.00,
+    "50GB": 210.00,
+    "100GB": 420.00
   },
 
   AIRTELTIGO: {
-    "1GB": 5,
+    "1GB": 5.00,
     "2GB": 9.20,
-    "5GB": 22,
-    "10GB": 41,
-    "20GB": 78,
-    "30GB": 115,
-    "50GB": 188
+    "5GB": 22.00,
+    "10GB": 41.00,
+    "20GB": 78.00,
+    "30GB": 115.00,
+    "50GB": 188.00
   }
 };
 
-const NETWORK_CODES = {
+// ============================================================
+// 2. FIXED AGENT BASE PRICES — GHS
+// Agents may choose their own selling prices.
+// ============================================================
+
+const AGENT_BASE_PRICES = {
+  MTN: {
+    "1GB": 4.50,
+    "2GB": 9.00,
+    "3GB": 13.00,
+    "4GB": 17.50,
+    "5GB": 21.00,
+    "6GB": 25.00,
+    "8GB": 34.00,
+    "10GB": 42.00,
+    "15GB": 59.00,
+    "20GB": 79.00,
+    "25GB": 98.00,
+    "30GB": 119.00,
+    "40GB": 157.00,
+    "50GB": 197.00
+  },
+
+  // Provisional prices: confirm these before enabling these networks
+  // for agents.
+  TELECEL: { ...PRICES.TELECEL },
+
+  AIRTELTIGO: { ...PRICES.AIRTELTIGO }
+};
+
+const SUPPLIER_NETWORKS = {
   MTN: "YELLO",
   TELECEL: "TELECEL",
   AIRTELTIGO: "AT_PREMIUM"
 };
 
+// ============================================================
+// 3. GENERAL HELPERS
+// ============================================================
+
 function normalizeNetwork(value) {
-  const network = String(value || "")
+  const raw = String(value || "")
     .trim()
     .toUpperCase()
     .replace(/[\s_-]/g, "");
 
-  if (["MTN", "YELLO"].includes(network)) return "MTN";
+  if (raw === "MTN" || raw === "YELLO") {
+    return "MTN";
+  }
 
-  if (["TELECEL", "VODAFONE"].includes(network)) {
+  if (raw === "TELECEL" || raw === "VODAFONE") {
     return "TELECEL";
   }
 
-  if (["AIRTELTIGO", "ATPREMIUM", "AIRTEL"].includes(network)) {
+  if (
+    raw === "AIRTELTIGO" ||
+    raw === "ATPREMIUM" ||
+    raw === "AIRTEL"
+  ) {
     return "AIRTELTIGO";
   }
 
@@ -108,17 +210,23 @@ function normalizeNetwork(value) {
 }
 
 function normalizeBundle(value) {
-  const match = String(value || "")
+  const raw = String(value || "")
     .trim()
     .toUpperCase()
-    .replace(/\s+/g, "")
-    .match(/^(\d+(?:\.\d+)?)GB?$/);
+    .replace(/\s+/g, "");
 
-  return match ? `${Number(match[1])}GB` : "";
+  const match = raw.match(/^(\d+(?:\.\d+)?)GB?$/);
+
+  if (!match) {
+    return "";
+  }
+
+  return `${Number(match[1])}GB`;
 }
 
 function normalizePhone(value) {
-  let phone = String(value || "").replace(/[^\d+]/g, "");
+  let phone = String(value || "")
+    .replace(/[^\d+]/g, "");
 
   if (phone.startsWith("+233")) {
     phone = "0" + phone.slice(4);
@@ -129,9 +237,27 @@ function normalizePhone(value) {
   return phone;
 }
 
-function validPhone(phone) {
-  return /^0\d{9}$/.test(normalizePhone(phone));
+function validGhanaPhone(value) {
+  return /^0\d{9}$/.test(normalizePhone(value));
 }
+
+function amountToPesewas(cedis) {
+  return Math.round(Number(cedis) * 100);
+}
+
+function safeEqualText(a, b) {
+  const left = Buffer.from(String(a || ""));
+  const right = Buffer.from(String(b || ""));
+
+  return (
+    left.length === right.length &&
+    crypto.timingSafeEqual(left, right)
+  );
+}
+
+// ============================================================
+// 4. DATABASE TABLES AND MIGRATIONS
+// ============================================================
 
 async function createOrdersTable() {
   await pool.query(`
@@ -144,7 +270,8 @@ async function createOrdersTable() {
       bundle VARCHAR(30) NOT NULL,
       amount NUMERIC(10,2) NOT NULL,
       status VARCHAR(30) NOT NULL DEFAULT 'pending',
-      delivery_status VARCHAR(30) NOT NULL DEFAULT 'not_started',
+      delivery_status VARCHAR(30)
+        NOT NULL DEFAULT 'not_started',
       supplier_reference VARCHAR(150),
       supplier_response JSONB,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -173,127 +300,27 @@ async function createOrdersTable() {
     ADD COLUMN IF NOT EXISTS updated_at
     TIMESTAMPTZ NOT NULL DEFAULT NOW()
   `);
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS agent_base_price NUMERIC(10,2)
+  `);
+
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS supplier_cost NUMERIC(10,2)
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS orders_created_at_idx
+    ON orders (created_at DESC)
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS orders_status_idx
+    ON orders (status, delivery_status)
+  `);
 }
-
-async function paystackRequest(path, method = "GET", body) {
-  if (!PAYSTACK_SECRET_KEY) {
-    throw new Error("Paystack secret key is not configured.");
-  }
-
-  const response = await fetch(
-    "https://api.paystack.co" + path,
-    {
-      method,
-      headers: {
-        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-        "Content-Type": "application/json"
-      },
-      ...(body ? { body: JSON.stringify(body) } : {})
-    }
-  );
-
-  const result = await response.json().catch(() => ({}));
-
-  if (!response.ok || result.status !== true) {
-    throw new Error(result.message || "Paystack request failed.");
-  }
-
-  return result.data;
-}
-
-// DATAMART API REQUEST
-
-async function dataMartRequest(path, method = "GET", body, key) {
-  if (!DATAMART_API_KEY) {
-    throw new Error("DataMart API key is missing.");
-  }
-
-  const headers = {
-    "X-API-Key": DATAMART_API_KEY,
-    "Content-Type": "application/json",
-    "Accept": "application/json"
-  };
-
-  if (key) {
-    headers["X-Idempotency-Key"] = key;
-  }
-
-  const response = await fetch(
-    "https://api.datamartgh.shop" + path,
-    {
-      method,
-      headers,
-      ...(body ? { body: JSON.stringify(body) } : {})
-    }
-  );
-
-  const result = await response.json().catch(() => ({}));
-
-  if (!response.ok || result.success === false ||
-      result.status === false || result.error) {
-    throw new Error(
-      result.message || result.error || "DataMart request failed."
-    );
-  }
-
-  return result;
-}
-
-// PURCHASE DATA AFTER PAYMENT VERIFICATION
-
-async function purchaseDataFromSupplier(order) {
-  if (!PURCHASES_ENABLED) {
-    throw new Error("Automatic purchases are disabled.");
-  }
-
-  const network = normalizeNetwork(order.network);
-  const supplierNetwork = NETWORK_CODES[network];
-  const bundle = normalizeBundle(order.bundle);
-  const phone = normalizePhone(order.phone);
-
-  if (!supplierNetwork || !bundle || !validPhone(phone)) {
-    throw new Error("Invalid phone, network or bundle.");
-  }
-
-  const result = await dataMartRequest(
-    "/api/developer/purchase",
-    "POST",
-    {
-      phoneNumber: phone,
-      network: supplierNetwork,
-      capacity: bundle.replace(/GB$/i, ""),
-      gateway: "wallet"
-    },
-    "kielmen-" + order.reference
-  );
-
-  const supplierReference =
-  result.data?.purchaseId ||
-  result.data?.orderReference ||
-  result.data?.transactionReference ||
-  result.reference ||
-  result.orderReference ||
-  result.order_reference ||
-  result.data?.reference ||
-  result.data?.order_reference;
-
-  if (!supplierReference) {
-    throw new Error(
-      "DataMart did not return an order reference. Check the DataMart dashboard before retrying."
-    );
-  }
-
-  return {
-    supplierReference: String(supplierReference),
-    result
-  };
-}
-// OWNER DASHBOARD AUTHENTICATION
-// ========================================
-// KIELMEN 636 AGENT SYSTEM - DATABASE
-// ========================================
-
-const AGENT_TOKEN_SECRET = process.env.AGENT_TOKEN_SECRET;
 
 async function createAgentTables() {
   await pool.query(`
@@ -306,8 +333,15 @@ async function createAgentTables() {
       phone VARCHAR(20) UNIQUE NOT NULL,
       password_hash TEXT NOT NULL,
       status VARCHAR(20) NOT NULL DEFAULT 'pending'
-        CHECK (status IN ('pending', 'approved', 'rejected', 'suspended')),
-      store_description VARCHAR(200) DEFAULT '',
+        CHECK (
+          status IN (
+            'pending',
+            'approved',
+            'rejected',
+            'suspended'
+          )
+        ),
+      store_description VARCHAR(200) NOT NULL DEFAULT '',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
@@ -316,21 +350,38 @@ async function createAgentTables() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS agent_prices (
       id BIGSERIAL PRIMARY KEY,
-      agent_id BIGINT NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+      agent_id BIGINT NOT NULL
+        REFERENCES agents(id) ON DELETE CASCADE,
       network VARCHAR(30) NOT NULL,
       bundle VARCHAR(30) NOT NULL,
-      selling_price NUMERIC(10,2) NOT NULL CHECK (selling_price >= 0),
+      selling_price NUMERIC(10,2) NOT NULL
+        CHECK (selling_price >= 0),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      UNIQUE (agent_id, network, bundle)
+      UNIQUE(agent_id, network, bundle)
     )
   `);
 
   await pool.query(`
-    CREATE INDEX IF NOT EXISTS agents_status_idx
-    ON agents(status)
+    CREATE TABLE IF NOT EXISTS agent_withdrawals (
+      id BIGSERIAL PRIMARY KEY,
+      agent_id BIGINT NOT NULL REFERENCES agents(id),
+      amount NUMERIC(10,2) NOT NULL CHECK (amount > 0),
+      phone VARCHAR(20) NOT NULL,
+      provider VARCHAR(30) NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (
+          status IN (
+            'pending',
+            'approved',
+            'rejected',
+            'paid'
+          )
+        ),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
   `);
-}
-  // Associate customer orders with agents.
+
   await pool.query(`
     ALTER TABLE orders
     ADD COLUMN IF NOT EXISTS agent_id BIGINT
@@ -342,351 +393,320 @@ async function createAgentTables() {
     ON orders(agent_id)
   `);
 
-  // Record withdrawal requests.
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS agent_withdrawals (
-      id BIGSERIAL PRIMARY KEY,
-      agent_id BIGINT NOT NULL REFERENCES agents(id),
-      amount NUMERIC(10,2) NOT NULL CHECK (amount > 0),
-      phone VARCHAR(20) NOT NULL,
-      provider VARCHAR(30) NOT NULL,
-      status VARCHAR(20) NOT NULL DEFAULT 'pending'
-        CHECK (status IN ('pending', 'approved', 'rejected', 'paid')),
-      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )
+    CREATE INDEX IF NOT EXISTS agents_status_idx
+    ON agents(status)
   `);
+}
 
-  // Track the supplier cost used to calculate agent margins.
-  await pool.query(`
-    ALTER TABLE orders
-    ADD COLUMN IF NOT EXISTS supplier_cost NUMERIC(10,2)
-  `);
-// ========================================
-// AGENT AUTHENTICATION HELPERS
-// ========================================
+// ============================================================
+// 5. PAYSTACK API
+// ============================================================
+
+async function paystackRequest(
+  path,
+  method = "GET",
+  body = undefined
+) {
+  if (!PAYSTACK_SECRET_KEY) {
+    throw new Error("Paystack is not configured on the server.");
+  }
+
+  const response = await fetch(
+    `https://api.paystack.co${path}`,
+    {
+      method,
+
+      headers: {
+        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+        "Content-Type": "application/json"
+      },
+
+      ...(body ? { body: JSON.stringify(body) } : {})
+    }
+  );
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok || result.status !== true) {
+    throw new Error(
+      result.message ||
+      `Paystack request failed (${response.status}).`
+    );
+  }
+
+  return result.data;
+}
+
+// ============================================================
+// 6. DATAMART API
+// ============================================================
+
+async function dataMartRequest(
+  path,
+  method = "GET",
+  body = undefined,
+  idempotencyKey = undefined
+) {
+  if (!DATAMART_API_KEY) {
+    throw new Error("DataMart API key is missing on the server.");
+  }
+
+  const headers = {
+    "X-API-Key": DATAMART_API_KEY,
+    Accept: "application/json",
+    "Content-Type": "application/json"
+  };
+
+  if (idempotencyKey) {
+    headers["X-Idempotency-Key"] = idempotencyKey;
+  }
+
+  const response = await fetch(
+    `https://api.datamartgh.shop${path}`,
+    {
+      method,
+      headers,
+      ...(body ? { body: JSON.stringify(body) } : {})
+    }
+  );
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(
+      result.message ||
+      result.error ||
+      `DataMart request failed (${response.status}).`
+    );
+  }
+
+  if (
+    result.success === false ||
+    result.status === false ||
+    result.error
+  ) {
+    throw new Error(
+      result.message ||
+      result.error ||
+      "DataMart rejected the purchase."
+    );
+  }
+
+  return result;
+}
+
+function supplierReferenceFrom(result) {
+  const candidates = [
+    result && result.reference,
+    result && result.orderReference,
+    result && result.order_reference,
+    result && result.data && result.data.reference,
+    result && result.data && result.data.orderReference,
+    result && result.data && result.data.order_reference
+  ];
+
+  return (
+    candidates.find(
+      value =>
+        typeof value === "string" &&
+        value.trim()
+    ) || null
+  );
+}
+
+async function purchaseDataFromSupplier(order) {
+  if (!DATAMART_PURCHASES_ENABLED) {
+    throw new Error(
+      "Automatic DataMart purchases are disabled."
+    );
+  }
+
+  if (!DATAMART_API_KEY) {
+    throw new Error("DataMart API key is missing.");
+  }
+
+  const network = normalizeNetwork(order.network);
+  const supplierNetwork = SUPPLIER_NETWORKS[network];
+  const bundle = normalizeBundle(order.bundle);
+  const phone = normalizePhone(order.phone);
+
+  if (
+    !supplierNetwork ||
+    !bundle ||
+    !validGhanaPhone(phone) ||
+    !order.reference
+  ) {
+    throw new Error("Invalid order details for DataMart.");
+  }
+
+  const result = await dataMartRequest(
+    "/api/developer/purchase",
+    "POST",
+    {
+      phoneNumber: phone,
+      network: supplierNetwork,
+      capacity: bundle.replace(/GB$/i, ""),
+      gateway: "wallet"
+    },
+    `kielmen-${order.reference}`
+  );
+
+  const supplierReference = supplierReferenceFrom(result);
+
+  if (!supplierReference) {
+    throw new Error(
+      "DataMart response did not include an order reference. Check DataMart before retrying."
+    );
+  }
+
+  return {
+    supplierReference,
+    raw: result
+  };
+}
+
+async function getOrderByReference(reference) {
+  const result = await pool.query(
+    `
+      SELECT
+        reference,
+        email,
+        phone,
+        network,
+        bundle,
+        amount,
+        status,
+        delivery_status,
+        supplier_reference,
+        created_at,
+        updated_at
+      FROM orders
+      WHERE reference = $1
+    `,
+    [reference]
+  );
+
+  return result.rows[0] || null;
+}
+
+// ============================================================
+// 7. AGENT AUTHENTICATION
+// ============================================================
 
 const agentSessions = new Map();
+const ownerSessions = new Map();
 
 function hashAgentPassword(password) {
   return new Promise((resolve, reject) => {
-    crypto.scrypt(password, AGENT_TOKEN_SECRET, 64, (error, key) => {
-      if (error) return reject(error);
-      resolve(key.toString("hex"));
+    const salt = crypto.randomBytes(16);
+
+    crypto.scrypt(password, salt, 64, (error, key) => {
+      if (error) {
+        return reject(error);
+      }
+
+      resolve(
+        `${salt.toString("hex")}:${key.toString("hex")}`
+      );
     });
   });
 }
 
-async function verifyAgentPassword(password, storedHash) {
-  const suppliedHash = await hashAgentPassword(password);
+function verifyAgentPassword(password, stored) {
+  return new Promise((resolve, reject) => {
+    const parts = String(stored || "").split(":");
 
-  const supplied = Buffer.from(suppliedHash, "hex");
-  const stored = Buffer.from(storedHash, "hex");
+    if (parts.length !== 2) {
+      return resolve(false);
+    }
 
-  return stored.length === supplied.length &&
-    crypto.timingSafeEqual(stored, supplied);
+    const salt = Buffer.from(parts[0], "hex");
+    const expected = Buffer.from(parts[1], "hex");
+
+    crypto.scrypt(
+      password,
+      salt,
+      expected.length,
+      (error, key) => {
+        if (error) {
+          return reject(error);
+        }
+
+        resolve(
+          key.length === expected.length &&
+          crypto.timingSafeEqual(key, expected)
+        );
+      }
+    );
+  });
 }
 
 function requireAgent(req, res, next) {
-  const authorization = req.headers.authorization || "";
+  const auth = String(req.headers.authorization || "");
 
-  if (!authorization.startsWith("Bearer ")) {
-    return res.status(401).json({
-      success: false,
-      message: "Please log in."
-    });
-  }
+  const token = auth.startsWith("Bearer ")
+    ? auth.slice(7)
+    : "";
 
-  const token = authorization.slice(7);
   const session = agentSessions.get(token);
 
   if (!session || session.expiresAt <= Date.now()) {
-    agentSessions.delete(token);
+    if (token) {
+      agentSessions.delete(token);
+    }
 
     return res.status(401).json({
       success: false,
-      message: "Your session has expired. Please log in again."
+      message: "Please log in again."
     });
   }
 
   req.agentId = session.agentId;
+
   next();
 }
 
 async function requireApprovedAgent(req, res, next) {
   try {
     const result = await pool.query(
-      `SELECT id, status
-       FROM agents
-       WHERE id = $1`,
+      "SELECT status FROM agents WHERE id = $1",
       [req.agentId]
     );
 
     if (
-      result.rowCount === 0 ||
+      !result.rowCount ||
       result.rows[0].status !== "approved"
     ) {
       return res.status(403).json({
         success: false,
-        message: "Your agent account is not approved."
+        message: "Agent account is not approved."
       });
     }
 
     next();
   } catch (error) {
-    console.error("Agent authentication error:", error.message);
+    console.error("Agent check:", error.message);
 
     res.status(500).json({
       success: false,
-      message: "Could not verify your agent account."
+      message: "Could not verify agent account."
     });
   }
 }
-// ========================================
-// AGENT REGISTRATION
-// ========================================
-
-app.post("/agents/register", async (req, res) => {
-  try {
-    if (!AGENT_TOKEN_SECRET || AGENT_TOKEN_SECRET.length < 32) {
-      return res.status(503).json({
-        success: false,
-        message: "Agent registration is not configured securely."
-      });
-    }
-
-    const fullName = String(req.body?.fullName || "").trim();
-    const businessName = String(req.body?.businessName || "").trim();
-    const email = String(req.body?.email || "").trim().toLowerCase();
-    const phone = normalizePhone(req.body?.phone);
-    const password = String(req.body?.password || "");
-    const storeDescription =
-      String(req.body?.storeDescription || "").trim();
-
-    if (
-      fullName.length < 2 || fullName.length > 100 ||
-      businessName.length < 2 || businessName.length > 100 ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
-      email.length > 255 ||
-      !validPhone(phone) ||
-      password.length < 12 || password.length > 128 ||
-      storeDescription.length > 200
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "Enter valid details. Passwords must be at least 12 characters."
-      });
-    }
-
-    const passwordHash = await hashAgentPassword(password);
-
-    const agentCode =
-      "K636-" + crypto.randomBytes(6).toString("hex").toUpperCase();
-
-    const result = await pool.query(
-      `INSERT INTO agents
-       (agent_code, full_name, business_name, email, phone,
-        password_hash, store_description, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,'pending')
-       RETURNING id, agent_code, full_name, business_name,
-                 email, phone, status, created_at`,
-      [
-        agentCode,
-        fullName,
-        businessName,
-        email,
-        phone,
-        passwordHash,
-        storeDescription
-      ]
-    );
-
-    return res.status(201).json({
-      success: true,
-      message: "Registration successful. Your account is awaiting owner approval.",
-      agent: result.rows[0]
-    });
-  } catch (error) {
-    if (error.code === "23505") {
-      return res.status(409).json({
-        success: false,
-        message: "That email address or phone number is already registered."
-      });
-    }
-
-    console.error("Agent registration error:", error.message);
-
-    return res.status(500).json({
-      success: false,
-      message: "Registration failed. Please try again."
-    });
-  }
-});
-// ========================================
-// AGENT LOGIN
-// ========================================
-
-app.post("/agents/login", async (req, res) => {
-  try {
-    if (!AGENT_TOKEN_SECRET || AGENT_TOKEN_SECRET.length < 32) {
-      return res.status(503).json({
-        success: false,
-        message: "Agent login is not configured."
-      });
-    }
-
-    const email = String(req.body?.email || "").trim().toLowerCase();
-    const password = String(req.body?.password || "");
-
-    if (!email || !password || email.length > 255 || password.length > 128) {
-      return res.status(400).json({
-        success: false,
-        message: "Enter your email address and password."
-      });
-    }
-
-    const result = await pool.query(
-      `SELECT id, agent_code, full_name, business_name,
-              email, phone, password_hash, status
-       FROM agents
-       WHERE email = $1`,
-      [email]
-    );
-
-    if (result.rowCount === 0) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password."
-      });
-    }
-
-    const agent = result.rows[0];
-
-    const passwordMatches = await verifyAgentPassword(
-      password,
-      agent.password_hash
-    );
-
-    if (!passwordMatches) {
-      return res.status(401).json({
-        success: false,
-        message: "Invalid email or password."
-      });
-    }
-
-    if (agent.status !== "approved") {
-      return res.status(403).json({
-        success: false,
-        status: agent.status,
-        message: agent.status === "pending"
-          ? "Your account is awaiting owner approval."
-          : "Your account cannot log in. Contact the owner."
-      });
-    }
-
-    const token = crypto.randomBytes(32).toString("hex");
-
-    agentSessions.set(token, {
-      agentId: agent.id,
-      expiresAt: Date.now() + 4 * 60 * 60 * 1000
-    });
-
-    return res.json({
-      success: true,
-      token,
-      expiresIn: 14400,
-      agent: {
-        id: agent.id,
-        agentCode: agent.agent_code,
-        fullName: agent.full_name,
-        businessName: agent.business_name,
-        email: agent.email,
-        phone: agent.phone,
-        status: agent.status
-      }
-    });
-  } catch (error) {
-    console.error("Agent login error:", error.message);
-
-    return res.status(500).json({
-      success: false,
-      message: "Could not log in. Please try again."
-    });
-  }
-});
-// ========================================
-// AGENT PROFILE
-// ========================================
-
-app.get(
-  "/agents/me",
-  requireAgent,
-  requireApprovedAgent,
-  async (req, res) => {
-    try {
-      const result = await pool.query(
-        `SELECT id, agent_code, full_name, business_name,
-                email, phone, status, store_description, created_at
-         FROM agents
-         WHERE id = $1`,
-        [req.agentId]
-      );
-
-      if (result.rowCount === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Agent account not found."
-        });
-      }
-
-      return res.json({
-        success: true,
-        agent: result.rows[0]
-      });
-    } catch (error) {
-      console.error("Agent profile error:", error.message);
-
-      return res.status(500).json({
-        success: false,
-        message: "Could not load your profile."
-      });
-    }
-  }
-);
-
-// ========================================
-// AGENT LOGOUT
-// ========================================
-
-app.post("/agents/logout", requireAgent, (req, res) => {
-  const token = req.headers.authorization.slice(7);
-
-  agentSessions.delete(token);
-
-  return res.json({
-    success: true,
-    message: "Logged out successfully."
-  });
-});
-const OWNER_SECRET = process.env.OWNER_SECRET;
-
-const ownerSessions = new Map();
 
 function requireOwner(req, res, next) {
-  const token = req.headers.authorization || "";
-  const sessionToken = token.startsWith("Bearer ")
-    ? token.slice(7)
+  const auth = String(req.headers.authorization || "");
+
+  const token = auth.startsWith("Bearer ")
+    ? auth.slice(7)
     : "";
 
-  const session = ownerSessions.get(sessionToken);
+  const session = ownerSessions.get(token);
 
-  if (
-    !sessionToken ||
-    !session ||
-    session.expiresAt < Date.now()
-  ) {
-    if (sessionToken) {
-      ownerSessions.delete(sessionToken);
+  if (!session || session.expiresAt <= Date.now()) {
+    if (token) {
+      ownerSessions.delete(token);
     }
 
     return res.status(401).json({
@@ -698,7 +718,594 @@ function requireOwner(req, res, next) {
   next();
 }
 
-// OWNER LOGIN
+// ============================================================
+// 8. AGENT REGISTRATION
+// ============================================================
+
+app.post("/agents/register", async (req, res) => {
+  try {
+    if (AGENT_TOKEN_SECRET.length < 32) {
+      return res.status(503).json({
+        success: false,
+        message:
+          "Set AGENT_TOKEN_SECRET to a random secret of at least 32 characters in Render."
+      });
+    }
+
+    const fullName = String(
+      req.body?.fullName || ""
+    ).trim();
+
+    const businessName = String(
+      req.body?.businessName || ""
+    ).trim();
+
+    const email = String(
+      req.body?.email || ""
+    ).trim().toLowerCase();
+
+    const phone = normalizePhone(req.body?.phone);
+
+    const password = String(
+      req.body?.password || ""
+    );
+
+    const storeDescription = String(
+      req.body?.storeDescription || ""
+    ).trim();
+
+    if (
+      fullName.length < 2 ||
+      fullName.length > 100 ||
+      businessName.length < 2 ||
+      businessName.length > 100 ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+      email.length > 255 ||
+      !validGhanaPhone(phone) ||
+      password.length < 12 ||
+      password.length > 128 ||
+      storeDescription.length > 200
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Enter valid details. Password must be at least 12 characters."
+      });
+    }
+
+    const hash = await hashAgentPassword(password);
+
+    const code =
+      "K636-" +
+      crypto.randomBytes(6).toString("hex").toUpperCase();
+
+    const result = await pool.query(
+      `
+        INSERT INTO agents (
+          agent_code,
+          full_name,
+          business_name,
+          email,
+          phone,
+          password_hash,
+          store_description
+        )
+        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        RETURNING
+          id,
+          agent_code,
+          full_name,
+          business_name,
+          email,
+          phone,
+          status,
+          created_at
+      `,
+      [
+        code,
+        fullName,
+        businessName,
+        email,
+        phone,
+        hash,
+        storeDescription
+      ]
+    );
+
+    res.status(201).json({
+      success: true,
+      message:
+        "Registration submitted. Wait for owner approval.",
+      agent: result.rows[0]
+    });
+  } catch (error) {
+    if (error.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        message: "Email or phone already registered."
+      });
+    }
+
+    console.error("Agent registration:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Registration failed."
+    });
+  }
+});
+
+// ============================================================
+// 9. AGENT LOGIN
+// ============================================================
+
+app.post("/agents/login", async (req, res) => {
+  try {
+    if (AGENT_TOKEN_SECRET.length < 32) {
+      return res.status(503).json({
+        success: false,
+        message: "Agent authentication is not configured."
+      });
+    }
+
+    const email = String(
+      req.body?.email || ""
+    ).trim().toLowerCase();
+
+    const password = String(
+      req.body?.password || ""
+    );
+
+    const result = await pool.query(
+      "SELECT * FROM agents WHERE email = $1",
+      [email]
+    );
+
+    if (
+      !result.rowCount ||
+      !(await verifyAgentPassword(
+        password,
+        result.rows[0].password_hash
+      ))
+    ) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password."
+      });
+    }
+
+    const agent = result.rows[0];
+
+    if (agent.status !== "approved") {
+      return res.status(403).json({
+        success: false,
+        status: agent.status,
+        message:
+          agent.status === "pending"
+            ? "Waiting for owner approval."
+            : "Account cannot log in. Contact the owner."
+      });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+
+    agentSessions.set(token, {
+      agentId: String(agent.id),
+      expiresAt: Date.now() + 4 * 60 * 60 * 1000
+    });
+
+    res.json({
+      success: true,
+      token,
+      expiresIn: 14400,
+
+      agent: {
+        id: agent.id,
+        agentCode: agent.agent_code,
+        fullName: agent.full_name,
+        businessName: agent.business_name,
+        email: agent.email,
+        phone: agent.phone,
+        status: agent.status
+      }
+    });
+  } catch (error) {
+    console.error("Agent login:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Login failed."
+    });
+  }
+});
+
+app.post("/agents/logout", requireAgent, (req, res) => {
+  const token = req.headers.authorization.slice(7);
+
+  agentSessions.delete(token);
+
+  res.json({ success: true });
+});
+
+app.get(
+  "/agents/me",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `
+          SELECT
+            id,
+            agent_code,
+            full_name,
+            business_name,
+            email,
+            phone,
+            status,
+            store_description,
+            created_at
+          FROM agents
+          WHERE id = $1
+        `,
+        [req.agentId]
+      );
+
+      res.json({
+        success: true,
+        agent: result.rows[0]
+      });
+    } catch (error) {
+      console.error("Agent profile:", error.message);
+
+      res.status(500).json({
+        success: false,
+        message: "Could not load agent profile."
+      });
+    }
+  }
+);
+
+// ============================================================
+// 10. PUBLIC AGENT STOREFRONT
+// ============================================================
+
+app.get("/agents/store/:code", async (req, res) => {
+  try {
+    const code = String(
+      req.params.code || ""
+    ).toUpperCase();
+
+    const result = await pool.query(
+      `
+        SELECT
+          id,
+          agent_code,
+          business_name,
+          store_description,
+          status
+        FROM agents
+        WHERE agent_code = $1
+      `,
+      [code]
+    );
+
+    if (
+      !result.rowCount ||
+      result.rows[0].status !== "approved"
+    ) {
+      return res.status(404).json({
+        success: false,
+        message: "Store not found or not active."
+      });
+    }
+
+    const agent = result.rows[0];
+
+    const prices = await pool.query(
+      `
+        SELECT network, bundle, selling_price
+        FROM agent_prices
+        WHERE agent_id = $1
+        ORDER BY network, bundle
+      `,
+      [agent.id]
+    );
+
+    res.json({
+      success: true,
+
+      store: {
+        agentCode: agent.agent_code,
+        businessName: agent.business_name,
+        description: agent.store_description
+      },
+
+      prices: prices.rows.map(item => ({
+        network: item.network,
+        bundle: item.bundle,
+        sellingPrice: Number(item.selling_price)
+      }))
+    });
+  } catch (error) {
+    console.error("Agent store:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load agent store."
+    });
+  }
+});
+
+// ============================================================
+// 11. AGENT PRICES
+// ============================================================
+
+app.get(
+  "/agents/prices",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `
+          SELECT network, bundle, selling_price
+          FROM agent_prices
+          WHERE agent_id = $1
+          ORDER BY network, bundle
+        `,
+        [req.agentId]
+      );
+
+      res.json({
+        success: true,
+        basePrices: AGENT_BASE_PRICES,
+
+        prices: result.rows.map(item => ({
+          network: item.network,
+          bundle: item.bundle,
+          sellingPrice: Number(item.selling_price)
+        }))
+      });
+    } catch (error) {
+      console.error("Agent prices:", error.message);
+
+      res.status(500).json({
+        success: false,
+        message: "Could not load prices."
+      });
+    }
+  }
+);
+
+app.put(
+  "/agents/prices",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    const items = req.body?.prices;
+
+    if (
+      !Array.isArray(items) ||
+      items.length < 1 ||
+      items.length > 100
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Provide 1 to 100 prices."
+      });
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      for (const item of items) {
+        const network = normalizeNetwork(item.network);
+        const bundle = normalizeBundle(item.bundle);
+        const sellingPrice = Number(item.sellingPrice);
+
+        if (
+          !network ||
+          AGENT_BASE_PRICES[network]?.[bundle] === undefined ||
+          !Number.isFinite(sellingPrice) ||
+          sellingPrice < 0 ||
+          Math.round(sellingPrice * 100) !== sellingPrice * 100
+        ) {
+          throw new Error(
+            `Invalid price for ${item.network} ${item.bundle}.`
+          );
+        }
+
+        await client.query(
+          `
+            INSERT INTO agent_prices (
+              agent_id,
+              network,
+              bundle,
+              selling_price
+            )
+            VALUES ($1,$2,$3,$4)
+            ON CONFLICT (agent_id,network,bundle)
+            DO UPDATE SET
+              selling_price = EXCLUDED.selling_price,
+              updated_at = NOW()
+          `,
+          [
+            req.agentId,
+            network,
+            bundle,
+            sellingPrice
+          ]
+        );
+      }
+
+      await client.query("COMMIT");
+
+      res.json({
+        success: true,
+        message:
+          "Selling prices saved. Prices below your base cost can cause a loss."
+      });
+    } catch (error) {
+      await client.query("ROLLBACK");
+
+      res.status(400).json({
+        success: false,
+        message: error.message
+      });
+    } finally {
+      client.release();
+    }
+  }
+);
+
+// ============================================================
+// 12. AGENT STATISTICS AND ORDERS
+// ============================================================
+
+app.get(
+  "/agents/stats",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `
+          SELECT
+            COUNT(*)::int AS total_orders,
+
+            COUNT(*) FILTER (
+              WHERE status = 'paid'
+            )::int AS paid_orders,
+
+            COUNT(*) FILTER (
+              WHERE delivery_status = 'delivered'
+            )::int AS delivered_orders,
+
+            COUNT(*) FILTER (
+              WHERE delivery_status = 'processing'
+            )::int AS processing_orders,
+
+            COUNT(*) FILTER (
+              WHERE delivery_status = 'failed'
+            )::int AS failed_orders,
+
+            COALESCE(
+              SUM(amount) FILTER (WHERE status = 'paid'),
+              0
+            )::numeric(12,2) AS total_sales,
+
+            COALESCE(
+              SUM(amount - agent_base_price) FILTER (
+                WHERE status = 'paid'
+                  AND delivery_status = 'delivered'
+                  AND agent_base_price IS NOT NULL
+              ),
+              0
+            )::numeric(12,2) AS estimated_margin,
+
+            COUNT(DISTINCT phone)::int AS customers
+
+          FROM orders
+          WHERE agent_id = $1
+        `,
+        [req.agentId]
+      );
+
+      const stats = result.rows[0];
+
+      res.json({
+        success: true,
+
+        stats: {
+          totalOrders: stats.total_orders,
+          paidOrders: stats.paid_orders,
+          deliveredOrders: stats.delivered_orders,
+          processingOrders: stats.processing_orders,
+          failedOrders: stats.failed_orders,
+          totalSales: Number(stats.total_sales),
+          estimatedMargin: Number(stats.estimated_margin),
+          customers: stats.customers,
+
+          marginNote:
+            "Estimated sales margin before supplier costs, fees and refunds."
+        }
+      });
+    } catch (error) {
+      console.error("Agent stats:", error.message);
+
+      res.status(500).json({
+        success: false,
+        message: "Could not load statistics."
+      });
+    }
+  }
+);
+
+app.get(
+  "/agents/orders",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `
+          SELECT
+            reference,
+            phone,
+            network,
+            bundle,
+            amount,
+            status,
+            delivery_status,
+            created_at
+          FROM orders
+          WHERE agent_id = $1
+          ORDER BY created_at DESC
+          LIMIT 100
+        `,
+        [req.agentId]
+      );
+
+      res.json({
+        success: true,
+
+        orders: result.rows.map(order => ({
+          ...order,
+          amount: Number(order.amount)
+        }))
+      });
+    } catch (error) {
+      console.error("Agent orders:", error.message);
+
+      res.status(500).json({
+        success: false,
+        message: "Could not load orders."
+      });
+    }
+  }
+);
+
+// Withdrawals remain disabled until an auditable balance ledger exists.
+app.post(
+  "/agents/withdrawals",
+  requireAgent,
+  requireApprovedAgent,
+  async (_req, res) => {
+    res.status(503).json({
+      success: false,
+      message:
+        "Withdrawals are temporarily disabled until an auditable earnings and balance ledger is implemented. Contact the owner for manual review."
+    });
+  }
+);
+
+// ============================================================
+// 13. OWNER LOGIN AND MANAGEMENT
+// ============================================================
+
 app.post("/owner/login", (req, res) => {
   if (!OWNER_SECRET) {
     return res.status(503).json({
@@ -707,13 +1314,7 @@ app.post("/owner/login", (req, res) => {
     });
   }
 
-  const password = String(req.body?.password || "");
-
-  if (
-    !password ||
-    password.length > 500 ||
-    password !== OWNER_SECRET
-  ) {
+  if (!safeEqualText(req.body?.password, OWNER_SECRET)) {
     return res.status(401).json({
       success: false,
       message: "Invalid owner password."
@@ -726,103 +1327,59 @@ app.post("/owner/login", (req, res) => {
     expiresAt: Date.now() + 8 * 60 * 60 * 1000
   });
 
-  return res.json({
+  res.json({
     success: true,
     token,
     expiresIn: 28800
   });
 });
 
-// OWNER LOGOUT
 app.post("/owner/logout", requireOwner, (req, res) => {
   const token = req.headers.authorization.slice(7);
 
   ownerSessions.delete(token);
 
-  return res.json({
-    success: true,
-    message: "Logged out successfully."
-  });
+  res.json({ success: true });
 });
-// OWNER DASHBOARD STATISTICS
-app.get("/owner/stats", requireOwner, async (_req, res) => {
-  try {
-    const result = await pool.query(`
-      SELECT
-        COUNT(*)::int AS total_orders,
-        COUNT(*) FILTER (
-          WHERE status = 'paid'
-        )::int AS paid_orders,
-        COUNT(*) FILTER (
-          WHERE delivery_status = 'delivered'
-        )::int AS successful_deliveries,
-        COUNT(*) FILTER (
-          WHERE delivery_status = 'processing'
-        )::int AS processing_orders,
-        COUNT(*) FILTER (
-          WHERE delivery_status = 'failed'
-        )::int AS failed_deliveries,
-        COALESCE(
-          SUM(amount) FILTER (
-            WHERE status = 'paid'
-          ), 0
-        )::numeric(12,2) AS total_revenue
-      FROM orders
-    `);
 
-    const stats = result.rows[0];
-
-    return res.json({
-      success: true,
-      stats: {
-        totalOrders: stats.total_orders,
-        paidOrders: stats.paid_orders,
-        successfulDeliveries: stats.successful_deliveries,
-        processingOrders: stats.processing_orders,
-        failedDeliveries: stats.failed_deliveries,
-        totalRevenue: Number(stats.total_revenue)
-      }
-    });
-  } catch (error) {
-    console.error("Owner statistics error:", error.message);
-
-    return res.status(500).json({
-      success: false,
-      message: "Unable to load dashboard statistics."
-    });
-  }
-});
-// ========================================
-// OWNER: AGENT MANAGEMENT
-// ========================================
-
-// List agents.
 app.get("/owner/agents", requireOwner, async (_req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT
-        a.id,
-        a.agent_code,
-        a.full_name,
-        a.business_name,
-        a.email,
-        a.phone,
-        a.status,
-        a.created_at,
-        COUNT(o.id)::int AS total_orders,
-        COALESCE(
-          SUM(o.amount) FILTER (WHERE o.status = 'paid'),
-          0
-        )::numeric(12,2) AS paid_sales
-      FROM agents a
-      LEFT JOIN orders o ON o.agent_id = a.id
-      GROUP BY a.id
-      ORDER BY a.created_at DESC
-    `);
+    const result = await pool.query(
+      `
+        SELECT
+          a.id,
+          a.agent_code,
+          a.full_name,
+          a.business_name,
+          a.email,
+          a.phone,
+          a.status,
+          a.created_at,
+          COUNT(o.id)::int AS total_orders,
 
-    res.json({ success: true, agents: result.rows });
+          COALESCE(
+            SUM(o.amount) FILTER (WHERE o.status = 'paid'),
+            0
+          )::numeric(12,2) AS paid_sales
+
+        FROM agents a
+
+        LEFT JOIN orders o
+          ON o.agent_id = a.id
+
+        GROUP BY a.id
+
+        ORDER BY a.created_at DESC
+      `
+    );
+
+    res.json({
+      success: true,
+      agents: result.rows
+    });
   } catch (error) {
-    console.error("List agents:", error.message);
+    console.error("Owner agents:", error.message);
+
     res.status(500).json({
       success: false,
       message: "Could not load agents."
@@ -830,46 +1387,43 @@ app.get("/owner/agents", requireOwner, async (_req, res) => {
   }
 });
 
-// Approve or reject an agent.
 app.patch(
   "/owner/agents/:id/status",
   requireOwner,
   async (req, res) => {
+    const id = Number(req.params.id);
+    const status = String(req.body?.status || "");
+
+    if (
+      !Number.isSafeInteger(id) ||
+      id < 1 ||
+      !["approved", "rejected", "suspended"].includes(status)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid agent ID or status."
+      });
+    }
+
     try {
-      const id = Number(req.params.id);
-      const status = String(req.body?.status || "");
-
-      if (!Number.isSafeInteger(id) || id <= 0) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid agent ID."
-        });
-      }
-
-      if (!["approved", "rejected", "suspended"].includes(status)) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid agent status."
-        });
-      }
-
       const result = await pool.query(
-        `UPDATE agents
-         SET status = $1, updated_at = NOW()
-         WHERE id = $2
-         RETURNING id, agent_code, full_name, status`,
+        `
+          UPDATE agents
+          SET status = $1, updated_at = NOW()
+          WHERE id = $2
+          RETURNING id, agent_code, full_name, status
+        `,
         [status, id]
       );
 
-      if (result.rowCount === 0) {
+      if (!result.rowCount) {
         return res.status(404).json({
           success: false,
           message: "Agent not found."
         });
       }
 
-      // Invalidate existing sessions for this agent.
-      for (const [token, session] of agentSessions.entries()) {
+      for (const [token, session] of agentSessions) {
         if (String(session.agentId) === String(id)) {
           agentSessions.delete(token);
         }
@@ -880,247 +1434,78 @@ app.patch(
         agent: result.rows[0]
       });
     } catch (error) {
-      console.error("Update agent status:", error.message);
+      console.error("Agent status:", error.message);
+
       res.status(500).json({
         success: false,
-        message: "Could not update agent status."
+        message: "Could not update agent."
       });
     }
   }
 );
-// ========================================
-// AGENT: SELLING PRICES
-// ========================================
 
 app.get(
-  "/agents/prices",
-  requireAgent,
-  requireApprovedAgent,
-  async (req, res) => {
+  "/owner/withdrawals",
+  requireOwner,
+  async (_req, res) => {
     try {
       const result = await pool.query(
-        `SELECT network, bundle, selling_price
-         FROM agent_prices
-         WHERE agent_id = $1
-         ORDER BY network, bundle`,
-        [req.agentId]
+        `
+          SELECT
+            w.*,
+            a.agent_code,
+            a.business_name
+          FROM agent_withdrawals w
+          JOIN agents a ON a.id = w.agent_id
+          ORDER BY w.created_at DESC
+          LIMIT 200
+        `
       );
 
       res.json({
         success: true,
-        prices: result.rows
+        withdrawals: result.rows
       });
     } catch (error) {
-      console.error("Get agent prices:", error.message);
+      console.error("Owner withdrawals:", error.message);
+
       res.status(500).json({
         success: false,
-        message: "Could not load selling prices."
+        message: "Could not load withdrawals."
       });
     }
   }
 );
 
-app.put(
-  "/agents/prices",
-  requireAgent,
-  requireApprovedAgent,
-  async (req, res) => {
-    const prices = req.body?.prices;
-
-    if (!Array.isArray(prices) || prices.length < 1 || prices.length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: "Provide between 1 and 100 prices."
-      });
-    }
-
-    const client = await pool.connect();
-
-    try {
-      await client.query("BEGIN");
-
-      for (const item of prices) {
-        const network = normalizeNetwork(item.network);
-        const bundle = normalizeBundle(item.bundle);
-        const sellingPrice = Number(item.sellingPrice);
-        const basePrice = PRICES[network]?.[bundle];
-
-        if (
-          !network ||
-          basePrice === undefined ||
-          !Number.isFinite(sellingPrice) ||
-          sellingPrice < basePrice ||
-          Math.round(sellingPrice * 100) !== sellingPrice * 100
-        ) {
-          throw new Error(
-            `Invalid price for ${item.network || "network"} ${item.bundle || "bundle"}.`
-          );
-        }
-
-        await client.query(
-          `INSERT INTO agent_prices
-           (agent_id, network, bundle, selling_price)
-           VALUES ($1, $2, $3, $4)
-           ON CONFLICT (agent_id, network, bundle)
-           DO UPDATE SET
-             selling_price = EXCLUDED.selling_price,
-             updated_at = NOW()`,
-          [req.agentId, network, bundle, sellingPrice]
-        );
-      }
-
-      await client.query("COMMIT");
-
-      res.json({
-        success: true,
-        message: "Selling prices saved."
-      });
-    } catch (error) {
-      await client.query("ROLLBACK");
-
-      res.status(400).json({
-        success: false,
-        message: error.message || "Could not save prices."
-      });
-    } finally {
-      client.release();
-    }
-  }
-);
-// ========================================
-// AGENT: SALES STATISTICS
-// ========================================
-
-app.get(
-  "/agents/stats",
-  requireAgent,
-  requireApprovedAgent,
-  async (req, res) => {
-    try {
-      const result = await pool.query(
-        `SELECT
-           COUNT(*)::int AS total_orders,
-           COUNT(*) FILTER (
-             WHERE status = 'paid'
-           )::int AS paid_orders,
-           COUNT(*) FILTER (
-             WHERE delivery_status = 'delivered'
-           )::int AS delivered_orders,
-           COUNT(*) FILTER (
-             WHERE delivery_status = 'processing'
-           )::int AS processing_orders,
-           COUNT(*) FILTER (
-             WHERE delivery_status = 'failed'
-           )::int AS failed_orders,
-           COALESCE(
-             SUM(amount) FILTER (WHERE status = 'paid'),
-             0
-           )::numeric(12,2) AS total_sales,
-           COALESCE(
-             SUM(amount - supplier_cost)
-             FILTER (
-               WHERE status = 'paid'
-               AND delivery_status = 'delivered'
-               AND supplier_cost IS NOT NULL
-             ),
-             0
-           )::numeric(12,2) AS recorded_margin,
-           COUNT(DISTINCT phone)::int AS customers
-         FROM orders
-         WHERE agent_id = $1`,
-        [req.agentId]
-      );
-
-      const row = result.rows[0];
-
-      res.json({
-        success: true,
-        stats: {
-          totalOrders: row.total_orders,
-          paidOrders: row.paid_orders,
-          deliveredOrders: row.delivered_orders,
-          processingOrders: row.processing_orders,
-          failedOrders: row.failed_orders,
-          totalSales: Number(row.total_sales),
-          recordedMargin: Number(row.recorded_margin),
-          customers: row.customers,
-          marginComplete: false
-        }
-      });
-    } catch (error) {
-      console.error("Agent statistics:", error.message);
-      res.status(500).json({
-        success: false,
-        message: "Could not load sales statistics."
-      });
-    }
-  }
-);
-// ========================================
-// AGENT: REQUEST WITHDRAWAL
-// ========================================
-
-app.post(
-  "/agents/withdrawals",
-  requireAgent,
-  requireApprovedAgent,
-  async (req, res) => {
-    try {
-      const amount = Number(req.body?.amount);
-      const phone = normalizePhone(req.body?.phone);
-      const provider = String(req.body?.provider || "")
-        .trim()
-        .toUpperCase();
-
-      if (
-        !Number.isFinite(amount) ||
-        amount <= 0 ||
-        Math.round(amount * 100) !== amount * 100 ||
-        !validPhone(phone) ||
-        !["MTN", "TELECEL", "AIRTELTIGO"].includes(provider)
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Enter a valid amount, Ghana phone number and Mobile Money provider."
-        });
-      }
-
-      const result = await pool.query(
-        `INSERT INTO agent_withdrawals
-         (agent_id, amount, phone, provider)
-         VALUES ($1, $2, $3, $4)
-         RETURNING id, amount, phone, provider, status, created_at`,
-        [req.agentId, amount, phone, provider]
-      );
-
-      res.status(201).json({
-        success: true,
-        message: "Withdrawal request submitted for owner review.",
-        withdrawal: result.rows[0]
-      });
-    } catch (error) {
-      console.error("Withdrawal request:", error.message);
-      res.status(500).json({
-        success: false,
-        message: "Could not submit withdrawal request."
-      });
-    }
-  }
-);
-// HEALTH CHECK
+// ============================================================
+// 14. BASIC API ROUTES
+// ============================================================
 
 app.get("/", (_req, res) => {
   res.json({
     service: "Kielmen 636 Dataplug API",
     status: "online",
-    automaticPurchasesEnabled: PURCHASES_ENABLED
+
+    paymentsConfigured: Boolean(
+      PAYSTACK_SECRET_KEY &&
+      PAYSTACK_CUSTOMER_EMAIL
+    ),
+
+    supplierPurchasesEnabled: DATAMART_PURCHASES_ENABLED,
+
+    note:
+      "A successful payment is verified server-side. Supplier acceptance is not the same as SIM delivery."
   });
 });
 
 app.get("/health", async (_req, res) => {
   try {
     await pool.query("SELECT 1");
-    res.json({ success: true, database: "connected" });
+
+    res.json({
+      success: true,
+      database: "connected"
+    });
   } catch (_error) {
     res.status(503).json({
       success: false,
@@ -1128,8 +1513,6 @@ app.get("/health", async (_req, res) => {
     });
   }
 });
-
-// PUBLIC PRICE LIST
 
 app.get("/prices", (_req, res) => {
   res.json({
@@ -1139,14 +1522,17 @@ app.get("/prices", (_req, res) => {
   });
 });
 
-// INITIALIZE PAYSTACK PAYMENT
+// ============================================================
+// 15. INITIALIZE PAYMENT
+// ============================================================
 
 app.post("/initialize-payment", async (req, res) => {
   try {
-    if (!PAYSTACK_CUSTOMER_EMAIL || !PAYSTACK_SECRET_KEY) {
+    if (!PAYSTACK_CUSTOMER_EMAIL) {
       return res.status(503).json({
         success: false,
-        message: "Payment service is not configured."
+        message:
+          "Payments are not fully configured. Please contact support."
       });
     }
 
@@ -1154,38 +1540,122 @@ app.post("/initialize-payment", async (req, res) => {
     const network = normalizeNetwork(req.body?.network);
     const bundle = normalizeBundle(req.body?.bundle);
 
-    if (!validPhone(phone)) {
+    if (!validGhanaPhone(phone)) {
       return res.status(400).json({
         success: false,
-        message: "Enter a valid Ghana phone number."
+        message:
+          "Enter a valid Ghana phone number, for example 0241234567."
       });
     }
 
-    if (!network || !PRICES[network]?.[bundle]) {
+    if (
+      !network ||
+      !bundle ||
+      !Object.prototype.hasOwnProperty.call(
+        PRICES[network] || {},
+        bundle
+      )
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Invalid network or data bundle."
+        message:
+          "Select a valid network and available data bundle."
       });
     }
 
-    const amount = PRICES[network][bundle];
+    const agentCode = String(
+      req.body?.agentCode ||
+      req.body?.agent_code ||
+      ""
+    ).trim().toUpperCase();
+
+    let agentId = null;
+    let agentBasePrice = null;
+    let amount = PRICES[network][bundle];
+
+    // If checkout originates from an approved agent store,
+    // use that agent's saved selling price.
+    if (agentCode) {
+      const agentResult = await pool.query(
+        "SELECT id,status FROM agents WHERE agent_code = $1",
+        [agentCode]
+      );
+
+      if (
+        !agentResult.rowCount ||
+        agentResult.rows[0].status !== "approved"
+      ) {
+        return res.status(404).json({
+          success: false,
+          message: "Agent store is not available."
+        });
+      }
+
+      const priceResult = await pool.query(
+        `
+          SELECT selling_price
+          FROM agent_prices
+          WHERE agent_id = $1
+            AND network = $2
+            AND bundle = $3
+        `,
+        [
+          agentResult.rows[0].id,
+          network,
+          bundle
+        ]
+      );
+
+      if (!priceResult.rowCount) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "This bundle is not available in this agent store."
+        });
+      }
+
+      agentId = agentResult.rows[0].id;
+
+      agentBasePrice =
+        AGENT_BASE_PRICES[network]?.[bundle] ?? null;
+
+      amount = Number(priceResult.rows[0].selling_price);
+    }
 
     const reference =
-      "K636-" + Date.now() + "-" +
+      `K636-${Date.now()}-` +
       crypto.randomBytes(5).toString("hex");
 
     await pool.query(
-      `INSERT INTO orders
-       (reference, email, phone, network, bundle, amount,
-        status, delivery_status)
-       VALUES ($1,$2,$3,$4,$5,$6,'pending','not_started')`,
+      `
+        INSERT INTO orders (
+          reference,
+          email,
+          phone,
+          network,
+          bundle,
+          amount,
+          status,
+          delivery_status,
+          agent_id,
+          agent_base_price
+        )
+        VALUES (
+          $1,$2,$3,$4,$5,$6,
+          'pending',
+          'not_started',
+          $7,$8
+        )
+      `,
       [
         reference,
         PAYSTACK_CUSTOMER_EMAIL,
         phone,
         network,
         bundle,
-        amount
+        amount,
+        agentId,
+        agentBasePrice
       ]
     );
 
@@ -1195,15 +1665,19 @@ app.post("/initialize-payment", async (req, res) => {
         "POST",
         {
           email: PAYSTACK_CUSTOMER_EMAIL,
-          amount: Math.round(amount * 100),
+          amount: amountToPesewas(amount),
           currency: "GHS",
           reference,
-          callback_url: FRONTEND + "/success.html",
+
+          callback_url:
+            `${FRONTEND_BASE_URL}/success.html`,
+
           metadata: {
             order_reference: reference,
             phone,
             network,
-            bundle
+            bundle,
+            agent_code: agentCode || null
           }
         }
       );
@@ -1218,28 +1692,36 @@ app.post("/initialize-payment", async (req, res) => {
       });
     } catch (error) {
       await pool.query(
-        `UPDATE orders
-         SET status = 'initialization_failed', updated_at = NOW()
-         WHERE reference = $1`,
+        `
+          UPDATE orders
+          SET status = 'initialization_failed',
+              updated_at = NOW()
+          WHERE reference = $1
+        `,
         [reference]
       );
 
       throw error;
     }
   } catch (error) {
-    console.error("Payment initialization:", error.message);
+    console.error("Initialize payment error:", error.message);
 
     res.status(500).json({
       success: false,
-      message: "Could not start payment. Please try again."
+      message:
+        "Could not start payment. Please try again or contact support."
     });
   }
 });
 
-// VERIFY PAYMENT AND TRIGGER DATA PURCHASE
+// ============================================================
+// 16. VERIFY PAYMENT AND START DATA DELIVERY
+// ============================================================
 
 app.post("/verify-payment", async (req, res) => {
-  const reference = String(req.body?.reference || "").trim();
+  const reference = String(
+    req.body?.reference || ""
+  ).trim();
 
   if (!reference || reference.length > 100) {
     return res.status(400).json({
@@ -1252,20 +1734,15 @@ app.post("/verify-payment", async (req, res) => {
   let client;
 
   try {
-    const found = await pool.query(
-      `SELECT * FROM orders WHERE reference = $1`,
-      [reference]
-    );
+    const order = await getOrderByReference(reference);
 
-    if (found.rowCount === 0) {
+    if (!order) {
       return res.status(404).json({
         success: false,
         paid: false,
         message: "Order not found."
       });
     }
-
-    const order = found.rows[0];
 
     if (order.status === "paid") {
       return res.json({
@@ -1276,67 +1753,91 @@ app.post("/verify-payment", async (req, res) => {
         bundle: order.bundle,
         amount: Number(order.amount),
         delivery_status: order.delivery_status,
-        message: "Payment was already verified. No duplicate purchase started."
+
+        message:
+          order.delivery_status === "delivered"
+            ? "Payment verified and data delivery confirmed."
+            : "Payment is verified. Check the delivery status for the latest update."
       });
     }
 
     const payment = await paystackRequest(
-      "/transaction/verify/" + encodeURIComponent(reference)
+      `/transaction/verify/${encodeURIComponent(reference)}`
     );
+
+    const paidAmount = Number(payment.amount);
+    const expectedAmount = amountToPesewas(order.amount);
 
     if (
       payment.status !== "success" ||
-      String(payment.currency).toUpperCase() !== "GHS" ||
-      Number(payment.amount) !== Math.round(Number(order.amount) * 100) ||
-      String(payment.reference) !== reference
+      String(payment.currency || "").toUpperCase() !== "GHS" ||
+      paidAmount !== expectedAmount ||
+      String(payment.reference || "") !== reference
     ) {
       return res.status(400).json({
         success: false,
         paid: false,
-        message: "Payment verification failed."
+        message:
+          "Payment could not be verified against this order."
       });
     }
 
-    // Claim the order as paid only once.
     client = await pool.connect();
+
     await client.query("BEGIN");
 
     const claimed = await client.query(
-      `UPDATE orders
-       SET status = 'paid', updated_at = NOW()
-       WHERE reference = $1 AND status = 'pending'
-       RETURNING reference, phone, network, bundle, amount`,
+      `
+        UPDATE orders
+        SET status = 'paid',
+            updated_at = NOW()
+        WHERE reference = $1
+          AND status = 'pending'
+        RETURNING
+          reference,
+          phone,
+          network,
+          bundle,
+          amount,
+          delivery_status
+      `,
       [reference]
     );
 
     await client.query("COMMIT");
 
     if (claimed.rowCount === 0) {
-      const latest = await pool.query(
-        `SELECT status, delivery_status
-         FROM orders WHERE reference = $1`,
-        [reference]
-      );
+      const latest = await getOrderByReference(reference);
 
       return res.json({
         success: true,
-        paid: latest.rows[0]?.status === "paid",
+        paid: Boolean(
+          latest && latest.status === "paid"
+        ),
         reference,
-        delivery_status: latest.rows[0]?.delivery_status,
-        message: "Order was already processed."
+        delivery_status: latest
+          ? latest.delivery_status
+          : "unknown",
+
+        message:
+          "This payment was already processed. No new purchase was started."
       });
     }
 
     const paidOrder = claimed.rows[0];
 
-    // Reserve the one-time purchase attempt before calling DataMart.
+    // Claim delivery before contacting DataMart to reduce
+    // the chance of issuing duplicate purchases.
     const deliveryClaim = await pool.query(
-      `UPDATE orders
-       SET delivery_status = 'processing', updated_at = NOW()
-       WHERE reference = $1
-       AND status = 'paid'
-       AND delivery_status = 'not_started'
-       RETURNING reference`,
+      `
+        UPDATE orders
+        SET delivery_status = 'processing',
+            updated_at = NOW()
+        WHERE reference = $1
+          AND status = 'paid'
+          AND delivery_status = 'not_started'
+        RETURNING reference
+      `,
       [reference]
     );
 
@@ -1346,23 +1847,27 @@ app.post("/verify-payment", async (req, res) => {
         paid: true,
         reference,
         delivery_status: "processing",
-        message: "Delivery is already being processed."
+        message:
+          "Payment verified. Delivery is already being processed."
       });
     }
 
     try {
-      const purchase = await purchaseDataFromSupplier(paidOrder);
+      const purchase =
+        await purchaseDataFromSupplier(paidOrder);
 
       await pool.query(
-        `UPDATE orders
-         SET delivery_status = 'processing',
-             supplier_reference = $1,
-             supplier_response = $2::jsonb,
-             updated_at = NOW()
-         WHERE reference = $3`,
+        `
+          UPDATE orders
+          SET delivery_status = 'processing',
+              supplier_reference = $1,
+              supplier_response = $2::jsonb,
+              updated_at = NOW()
+          WHERE reference = $3
+        `,
         [
           purchase.supplierReference,
-          JSON.stringify(purchase.result),
+          JSON.stringify(purchase.raw),
           reference
         ]
       );
@@ -1376,23 +1881,30 @@ app.post("/verify-payment", async (req, res) => {
         amount: Number(paidOrder.amount),
         delivery_status: "processing",
         supplier_reference: purchase.supplierReference,
-        message: "Payment verified. DataMart accepted the order for processing."
+
+        message:
+          "Payment verified and DataMart accepted the order. Data delivery may take time."
       });
     } catch (deliveryError) {
       console.error(
-        "DataMart delivery error:",
+        "DataMart delivery error for order",
         reference,
+        ":",
         deliveryError.message
       );
 
       await pool.query(
-        `UPDATE orders
-         SET delivery_status = 'failed',
-             supplier_response = $1::jsonb,
-             updated_at = NOW()
-         WHERE reference = $2`,
+        `
+          UPDATE orders
+          SET delivery_status = 'failed',
+              supplier_response = $1::jsonb,
+              updated_at = NOW()
+          WHERE reference = $2
+        `,
         [
-          JSON.stringify({ message: deliveryError.message }),
+          JSON.stringify({
+            message: deliveryError.message
+          }),
           reference
         ]
       );
@@ -1401,27 +1913,43 @@ app.post("/verify-payment", async (req, res) => {
         success: true,
         paid: true,
         reference,
+        network: paidOrder.network,
+        bundle: paidOrder.bundle,
+        amount: Number(paidOrder.amount),
         delivery_status: "failed",
-        message: "Payment received, but delivery needs support. Do not pay again."
+
+        message:
+          "Payment received, but automatic data delivery needs attention. Please contact support. Do not pay again."
       });
     }
   } catch (error) {
-    console.error("Verification error:", error.message);
+    console.error(
+      "Payment verification error:",
+      error.message
+    );
 
     return res.status(500).json({
       success: false,
-      message: "Unable to verify right now. Do not pay again."
+
+      message:
+        "Unable to verify payment right now. Do not pay again; check your order status or contact support."
     });
   } finally {
-    if (client) client.release();
+    if (client) {
+      client.release();
+    }
   }
 });
 
-// CHECK ORDER AND DATAMART DELIVERY STATUS
+// ============================================================
+// 17. ORDER STATUS
+// ============================================================
 
 app.get("/order-status/:reference", async (req, res) => {
   try {
-    const reference = String(req.params.reference || "").trim();
+    const reference = String(
+      req.params.reference || ""
+    ).trim();
 
     if (!reference || reference.length > 100) {
       return res.status(400).json({
@@ -1430,68 +1958,104 @@ app.get("/order-status/:reference", async (req, res) => {
       });
     }
 
-    const result = await pool.query(
-      `SELECT reference, phone, network, bundle, amount, status,
-              delivery_status, supplier_reference, created_at, updated_at
-       FROM orders WHERE reference = $1`,
-      [reference]
-    );
+    const order = await getOrderByReference(reference);
 
-    if (result.rowCount === 0) {
+    if (!order) {
       return res.status(404).json({
         success: false,
         message: "Order not found."
       });
     }
 
-    const order = result.rows[0];
+    let supplier_status = null;
+    let supplier_status_message = null;
 
     if (order.supplier_reference && DATAMART_API_KEY) {
       try {
-        const supplier = await dataMartRequest(
-          "/api/developer/order-status/" +
-          encodeURIComponent(order.supplier_reference)
+        const path =
+          `/api/developer/order-status/` +
+          encodeURIComponent(order.supplier_reference);
+
+        const supplierResult = await dataMartRequest(
+          path,
+          "GET"
         );
 
-        const status = String(
-  supplier.data?.orderStatus ||
-  supplier.orderStatus ||
-  supplier.status ||
-  supplier.data?.status ||
-  supplier.delivery_status ||
-  ""
-).toLowerCase();
+        supplier_status = supplierResult;
 
-        if (["delivered", "completed", "success", "successful"].includes(status)) {
+        const normalizedStatus = String(
+          supplierResult.status ||
+          (
+            supplierResult.data &&
+            supplierResult.data.status
+          ) ||
+          supplierResult.delivery_status ||
+          ""
+        ).toLowerCase();
+
+        if (
+          [
+            "delivered",
+            "completed",
+            "success",
+            "successful"
+          ].includes(normalizedStatus)
+        ) {
+          await pool.query(
+            `
+              UPDATE orders
+              SET delivery_status = 'delivered',
+                  supplier_response = $1::jsonb,
+                  updated_at = NOW()
+              WHERE reference = $2
+                AND status = 'paid'
+            `,
+            [
+              JSON.stringify(supplierResult),
+              reference
+            ]
+          );
+
           order.delivery_status = "delivered";
-
+        } else if (
+          [
+            "failed",
+            "rejected",
+            "cancelled",
+            "canceled"
+          ].includes(normalizedStatus)
+        ) {
           await pool.query(
-            `UPDATE orders
-             SET delivery_status = 'delivered',
-                 supplier_response = $1::jsonb,
-                 updated_at = NOW()
-             WHERE reference = $2`,
-            [JSON.stringify(supplier), reference]
+            `
+              UPDATE orders
+              SET delivery_status = 'failed',
+                  supplier_response = $1::jsonb,
+                  updated_at = NOW()
+              WHERE reference = $2
+                AND status = 'paid'
+            `,
+            [
+              JSON.stringify(supplierResult),
+              reference
+            ]
           );
-        } else if (["failed", "rejected", "cancelled", "canceled"].includes(status)) {
+
           order.delivery_status = "failed";
-
-          await pool.query(
-            `UPDATE orders
-             SET delivery_status = 'failed',
-                 supplier_response = $1::jsonb,
-                 updated_at = NOW()
-             WHERE reference = $2`,
-            [JSON.stringify(supplier), reference]
-          );
         }
-      } catch (error) {
-        console.error("DataMart status check:", error.message);
+      } catch (supplierError) {
+        supplier_status_message =
+          "Could not refresh DataMart status; showing the last saved status.";
+
+        console.error(
+          "DataMart status check error:",
+          supplierError.message
+        );
       }
     }
 
     return res.json({
       success: true,
+
       order: {
         reference: order.reference,
         phone: order.phone,
@@ -1503,82 +2067,161 @@ app.get("/order-status/:reference", async (req, res) => {
         supplier_reference: order.supplier_reference,
         created_at: order.created_at,
         updated_at: order.updated_at
-      }
+      },
+
+      ...(supplier_status
+        ? { supplier_status }
+        : {}),
+
+      ...(supplier_status_message
+        ? { supplier_status_message }
+        : {})
     });
   } catch (error) {
     console.error("Order status error:", error.message);
 
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
-      message: "Could not check order status."
+      message: "Could not check order status right now."
     });
   }
 });
-// CUSTOMER ORDER TRACKING
+
+// ============================================================
+// 18. LOOK UP ORDERS BY PHONE
+// ============================================================
+
 app.get("/orders-by-phone/:phone", async (req, res) => {
   try {
     const phone = normalizePhone(req.params.phone);
 
-    if (!validPhone(phone)) {
+    if (!validGhanaPhone(phone)) {
       return res.status(400).json({
         success: false,
-        message: "Please enter a valid phone number."
+        message: "Enter a valid phone number."
       });
     }
 
     const result = await pool.query(
-      `SELECT
-        reference,
-        phone,
-        network,
-        bundle,
-        amount,
-        status AS payment_status,
-        delivery_status,
-        created_at,
-        updated_at
-       FROM orders
-       WHERE RIGHT(REGEXP_REPLACE(phone, '[^0-9]', '', 'g'), 9) = $1
-       ORDER BY created_at DESC
-       LIMIT 20`,
+      `
+        SELECT
+          reference,
+          phone,
+          network,
+          bundle,
+          amount,
+          status AS payment_status,
+          delivery_status,
+          created_at,
+          updated_at
+        FROM orders
+        WHERE RIGHT(
+          REGEXP_REPLACE(phone, '[^0-9]', '', 'g'),
+          9
+        ) = $1
+        ORDER BY created_at DESC
+        LIMIT 20
+      `,
       [phone.slice(-9)]
     );
 
-    return res.json({
+    res.json({
       success: true,
+
       orders: result.rows.map(order => ({
-        reference: order.reference,
-        phone: order.phone,
-        network: order.network,
-        bundle: order.bundle,
-        amount: Number(order.amount),
-        payment_status: order.payment_status,
-        delivery_status: order.delivery_status,
-        created_at: order.created_at,
-        updated_at: order.updated_at
+        ...order,
+        amount: Number(order.amount)
       }))
     });
   } catch (error) {
-    console.error("Customer order tracking error:", error.message);
+    console.error("Order lookup:", error.message);
 
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
-      message: "Unable to check orders. Please try again."
+      message: "Could not load orders."
     });
   }
 });
-// START SERVER
+
+// ============================================================
+// 19. PAYSTACK WEBHOOK PLACEHOLDER
+// ============================================================
+
+app.post("/paystack-webhook", async (req, res) => {
+  try {
+    const signature = req.get("x-paystack-signature");
+
+    if (!signature || !PAYSTACK_SECRET_KEY) {
+      return res.sendStatus(401);
+    }
+
+    // Webhook processing is intentionally disabled.
+    // Use /verify-payment for the verified checkout flow.
+
+    return res.status(501).json({
+      success: false,
+      message:
+        "Webhook processing is not enabled. Use the verified checkout flow."
+    });
+  } catch (_error) {
+    return res.sendStatus(400);
+  }
+});
+
+// ============================================================
+// 20. ERROR HANDLER
+// ============================================================
+
+app.use((error, _req, res, _next) => {
+  if (
+    error &&
+    error.message === "Origin not allowed by CORS"
+  ) {
+    return res.status(403).json({
+      success: false,
+      message: "Origin not allowed."
+    });
+  }
+
+  console.error(
+    "Unhandled server error:",
+    error && error.message
+  );
+
+  return res.status(500).json({
+    success: false,
+    message: "Unexpected server error."
+  });
+});
+
+// ============================================================
+// 21. START SERVER
+// ============================================================
 
 async function startServer() {
+  if (!DATABASE_URL) {
+    console.error(
+      "Server cannot start without DATABASE_URL."
+    );
+
+    process.exit(1);
+  }
+
   try {
     await createOrdersTable();
     await createAgentTables();
 
     app.listen(PORT, () => {
-      console.log("Kielmen 636 Dataplug API running on port " + PORT);
+      console.log(
+        `Kielmen 636 Dataplug API listening on port ${PORT}`
+      );
     });
   } catch (error) {
-    console.error("Server startup failed:", error.message);
+    console.error(
+      "Database initialization failed:",
+      error.message
+    );
+
     process.exit(1);
   }
 }
