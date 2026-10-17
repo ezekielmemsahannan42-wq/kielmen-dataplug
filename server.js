@@ -288,7 +288,84 @@ async function purchaseDataFromSupplier(order) {
     result
   };
 }
+// OWNER DASHBOARD AUTHENTICATION
 
+const OWNER_SECRET = process.env.OWNER_SECRET;
+
+const ownerSessions = new Map();
+
+function requireOwner(req, res, next) {
+  const token = req.headers.authorization || "";
+  const sessionToken = token.startsWith("Bearer ")
+    ? token.slice(7)
+    : "";
+
+  const session = ownerSessions.get(sessionToken);
+
+  if (
+    !sessionToken ||
+    !session ||
+    session.expiresAt < Date.now()
+  ) {
+    if (sessionToken) {
+      ownerSessions.delete(sessionToken);
+    }
+
+    return res.status(401).json({
+      success: false,
+      message: "Owner login required."
+    });
+  }
+
+  next();
+}
+
+// OWNER LOGIN
+app.post("/owner/login", (req, res) => {
+  if (!OWNER_SECRET) {
+    return res.status(503).json({
+      success: false,
+      message: "Owner login is not configured."
+    });
+  }
+
+  const password = String(req.body?.password || "");
+
+  if (
+    !password ||
+    password.length > 500 ||
+    password !== OWNER_SECRET
+  ) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid owner password."
+    });
+  }
+
+  const token = crypto.randomBytes(32).toString("hex");
+
+  ownerSessions.set(token, {
+    expiresAt: Date.now() + 8 * 60 * 60 * 1000
+  });
+
+  return res.json({
+    success: true,
+    token,
+    expiresIn: 28800
+  });
+});
+
+// OWNER LOGOUT
+app.post("/owner/logout", requireOwner, (req, res) => {
+  const token = req.headers.authorization.slice(7);
+
+  ownerSessions.delete(token);
+
+  return res.json({
+    success: true,
+    message: "Logged out successfully."
+  });
+});
 // HEALTH CHECK
 
 app.get("/", (_req, res) => {
