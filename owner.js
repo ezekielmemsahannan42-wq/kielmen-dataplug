@@ -1,49 +1,38 @@
 "use strict";
 
-const API_URL =
+/*
+ * KIELMEN 636 DATAPLUG
+ * OWNER DASHBOARD
+ */
+
+const OWNER_API =
   "https://kielmen-dataplug-payment-api.onrender.com";
 
-const OWNER_TOKEN_KEY = "kielmen_owner_token";
+const TOKEN_KEY = "kielmen_owner_token";
 
-let ownerToken = sessionStorage.getItem(OWNER_TOKEN_KEY);
+let ownerToken = sessionStorage.getItem(TOKEN_KEY);
+let refreshTimer = null;
 
-function formatMoney(amount) {
-  return new Intl.NumberFormat("en-GH", {
-    style: "currency",
-    currency: "GHS"
-  }).format(Number(amount) || 0);
+/* HTML element helper */
+function byId(id) {
+  return document.getElementById(id);
 }
 
-async function ownerRequest(path, options = {}) {
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(ownerToken
-        ? { Authorization: `Bearer ${ownerToken}` }
-        : {}),
-      ...(options.headers || {})
-    }
-  });
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(
-      data.message || "Request failed. Please try again."
-    );
-  }
-
-  return data;
+/* Format Ghana cedis */
+function money(amount) {
+  return "GH₵" + Number(amount || 0).toFixed(2);
 }
 
-function showOwnerMessage(message) {
-  let element = document.getElementById("ownerMessage");
+/* Display a message safely */
+function showMessage(message) {
+  let element = byId("ownerMessage");
 
   if (!element) {
     element = document.createElement("p");
     element.id = "ownerMessage";
     element.setAttribute("role", "status");
+    element.style.cssText =
+      "padding:12px;margin:12px 0;border-radius:8px;";
 
     document.body.prepend(element);
   }
@@ -51,82 +40,145 @@ function showOwnerMessage(message) {
   element.textContent = message;
 }
 
-function showLoginForm() {
-  document.body.innerHTML = `
-    <main style="
-      max-width:420px;
-      margin:60px auto;
-      padding:24px;
-      font-family:Arial,sans-serif;
-      background:#111827;
+/* Make authenticated backend requests */
+async function ownerRequest(path, options = {}) {
+  const headers = {
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+
+  if (ownerToken) {
+    headers.Authorization = "Bearer " + ownerToken;
+  }
+
+  const response = await fetch(OWNER_API + path, {
+    ...options,
+    headers
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (response.status === 401) {
+    ownerToken = null;
+    sessionStorage.removeItem(TOKEN_KEY);
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data.message || "The request could not be completed."
+    );
+  }
+
+  return data;
+}
+
+/* Create the login screen without replacing the dashboard HTML */
+function showLogin() {
+  let overlay = byId("ownerLoginOverlay");
+
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "ownerLoginOverlay";
+
+    overlay.style.cssText = `
+      position:fixed;
+      inset:0;
+      z-index:99999;
+      background:#030712;
       color:white;
-      border-radius:16px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
       box-sizing:border-box;
-    ">
-      <h1 style="color:#4ade80">
-        Kielmen 636 Dataplug
-      </h1>
+      font-family:Arial,sans-serif;
+    `;
 
-      <h2>Owner Login</h2>
+    overlay.innerHTML = `
+      <form id="ownerLoginForm" style="
+        width:100%;
+        max-width:420px;
+        padding:25px;
+        box-sizing:border-box;
+        background:#111827;
+        border:1px solid #374151;
+        border-radius:16px;
+      ">
+        <h1 style="color:#eab308">
+          KIELMEN 636 DATAPLUG
+        </h1>
 
-      <form id="ownerLoginForm">
-        <label for="ownerPassword">Owner password</label>
+        <h2>Owner Login</h2>
+
+        <p>Sign in to manage your business.</p>
+
+        <label for="ownerPassword">
+          Owner password
+        </label>
 
         <input
           id="ownerPassword"
           type="password"
-          required
           autocomplete="current-password"
+          required
+          maxlength="500"
           style="
             display:block;
-            box-sizing:border-box;
             width:100%;
-            padding:12px;
+            box-sizing:border-box;
+            padding:13px;
             margin:12px 0;
             border-radius:8px;
           "
         >
 
         <button
+          id="ownerLoginButton"
           type="submit"
           style="
             width:100%;
-            padding:12px;
-            background:#16a34a;
-            color:white;
+            padding:13px;
             border:0;
             border-radius:8px;
+            background:#16a34a;
+            color:white;
             font-weight:bold;
           "
         >
           Log In
         </button>
 
-        <p id="loginMessage" role="status"></p>
+        <p id="ownerLoginMessage" role="status"></p>
       </form>
-    </main>
-  `;
+    `;
 
-  document
-    .getElementById("ownerLoginForm")
-    .addEventListener("submit", handleOwnerLogin);
+    document.body.appendChild(overlay);
+
+    byId("ownerLoginForm").addEventListener(
+      "submit",
+      handleLogin
+    );
+  }
+
+  overlay.style.display = "flex";
 }
 
-async function handleOwnerLogin(event) {
+/* Authenticate the owner */
+async function handleLogin(event) {
   event.preventDefault();
 
-  const passwordInput =
-    document.getElementById("ownerPassword");
-
-  const message =
-    document.getElementById("loginMessage");
+  const passwordInput = byId("ownerPassword");
+  const message = byId("ownerLoginMessage");
+  const button = byId("ownerLoginButton");
 
   const password = passwordInput.value;
 
-  message.textContent = "Signing in…";
+  button.disabled = true;
+  button.textContent = "Signing in...";
+  message.textContent = "";
 
   try {
-    const response = await fetch(`${API_URL}/owner/login`, {
+    const response = await fetch(OWNER_API + "/owner/login", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -142,348 +194,184 @@ async function handleOwnerLogin(event) {
 
     ownerToken = data.token;
 
-    sessionStorage.setItem(
-      OWNER_TOKEN_KEY,
-      ownerToken
-    );
+    sessionStorage.setItem(TOKEN_KEY, ownerToken);
 
     passwordInput.value = "";
 
-    await loadOwnerDashboard();
+    byId("ownerLoginOverlay").style.display = "none";
+
+    await loadStatistics();
+
   } catch (error) {
     message.textContent =
-      error.message || "Unable to log in.";
+      error.message || "Unable to sign in.";
+
+  } finally {
+    button.disabled = false;
+    button.textContent = "Log In";
   }
 }
 
-function renderDashboard(stats) {
-  document.body.innerHTML = `
-    <main style="
-      max-width:1000px;
-      margin:24px auto;
-      padding:16px;
-      font-family:Arial,sans-serif;
-      color:#f9fafb;
-      background:#030712;
-      box-sizing:border-box;
-    ">
-      <header style="
-        display:flex;
-        flex-wrap:wrap;
-        align-items:center;
-        justify-content:space-between;
-        gap:12px;
-      ">
-        <div>
-          <h1 style="color:#4ade80">
-            Kielmen 636 Dataplug
-          </h1>
-          <p>Owner Dashboard</p>
-        </div>
+/* Update a dashboard card */
+function setText(id, value) {
+  const element = byId(id);
 
-        <button id="ownerLogoutButton" style="
-          padding:10px 16px;
-          background:#dc2626;
-          color:white;
-          border:0;
-          border-radius:8px;
-        ">
-          Log Out
-        </button>
-      </header>
-
-      <h2>Business Overview</h2>
-
-      <section style="
-        display:grid;
-        grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
-        gap:16px;
-      ">
-        <article class="owner-card">
-          <h3>Total Orders</h3>
-          <p>${Number(stats.totalOrders) || 0}</p>
-        </article>
-
-        <article class="owner-card">
-          <h3>Paid Orders</h3>
-          <p>${Number(stats.paidOrders) || 0}</p>
-        </article>
-
-        <article class="owner-card">
-          <h3>Successful Deliveries</h3>
-          <p>${Number(stats.successfulDeliveries) || 0}</p>
-        </article>
-
-        <article class="owner-card">
-          <h3>Processing Orders</h3>
-          <p>${Number(stats.processingOrders) || 0}</p>
-        </article>
-
-        <article class="owner-card">
-          <h3>Failed Deliveries</h3>
-          <p>${Number(stats.failedDeliveries) || 0}</p>
-        </article>
-
-        <article class="owner-card">
-          <h3>Paid Revenue</h3>
-          <p>${formatMoney(stats.totalRevenue)}</p>
-        </article>
-      </section>
-
-      <p style="color:#fbbf24">
-        Revenue is not profit. Supplier costs and other expenses
-        must be recorded to calculate profit.
-      </p>
-
-      <p id="dashboardMessage" role="status"></p>
-    </main>
-
-    <style>
-      .owner-card {
-        padding:18px;
-        background:#111827;
-        border:1px solid #374151;
-        border-radius:14px;
-        overflow-wrap:anywhere;
-      }
-
-      .owner-card h3 {
-        color:#4ade80;
-        font-size:16px;
-      }
-
-      .owner-card p {
-        font-size:24px;
-        font-weight:bold;
-      }
-
-      button {
-        cursor:pointer;
-      }
-    </style>
-  `;
-
-  document
-    .getElementById("ownerLogoutButton")
-    .addEventListener("click", logoutOwner);
+  if (element) {
+    element.textContent = String(value);
+  }
 }
 
-async function loadOwnerDashboard() {
+/* Load real statistics from the backend */
+async function loadStatistics() {
   try {
-    const result = await ownerRequest("/owner/stats");
+    const data = await ownerRequest("/owner/stats");
 
-    if (!result.success || !result.stats) {
-      throw new Error("Could not load dashboard statistics.");
+    if (!data.success || !data.stats) {
+      throw new Error("Dashboard statistics are unavailable.");
     }
 
-    renderDashboard(result.stats);
+    const stats = data.stats;
+
+    /*
+     * These IDs match the existing dashboard layout.
+     * Total revenue is displayed as Total Sales.
+     */
+    setText(
+      "totalSales",
+      money(stats.totalRevenue)
+    );
+
+    setText(
+      "totalOrders",
+      stats.totalOrders
+    );
+
+    setText(
+      "successfulDeliveries",
+      stats.successfulDeliveries
+    );
+
+    setText(
+      "pendingOrders",
+      stats.processingOrders
+    );
+
+    setText(
+      "failedOrders",
+      stats.failedDeliveries
+    );
+
+    /*
+     * Profit, registered agents and withdrawals are not
+     * supplied by the current /owner/stats endpoint.
+     * Do not display invented figures.
+     */
+    setText("totalProfit", "Not available");
+    setText("registeredAgents", "Not connected");
+    setText("pendingWithdrawals", "Not connected");
+
+    /*
+     * Hide the old setup warning after successful login.
+     */
+    document.querySelectorAll("body *").forEach(element => {
+      if (
+        element.children.length === 0 &&
+        element.textContent.includes(
+          "This is the initial dashboard layout"
+        )
+      ) {
+        const warning = element.closest(
+          ".notice, .alert, .warning, section, div"
+        );
+
+        if (warning) {
+          warning.style.display = "none";
+        }
+      }
+    });
+
+    showMessage("Owner dashboard connected successfully.");
+
   } catch (error) {
-    ownerToken = null;
+    showMessage(error.message || "Unable to load statistics.");
 
-    sessionStorage.removeItem(OWNER_TOKEN_KEY);
-
-    showLoginForm();
-
-    const message = document.getElementById("loginMessage");
-
-    if (message) {
-      message.textContent =
-        error.message || "Please log in again.";
+    if (!ownerToken) {
+      showLogin();
     }
   }
 }
 
+/* Log out */
 async function logoutOwner() {
   try {
     await ownerRequest("/owner/logout", {
       method: "POST"
     });
   } catch (_error) {
-    // Clear the local session even if the server is unavailable.
+    // Clear the local session even if the API is unavailable.
   }
 
   ownerToken = null;
 
-  sessionStorage.removeItem(OWNER_TOKEN_KEY);
+  sessionStorage.removeItem(TOKEN_KEY);
 
-  showLoginForm();
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  if (ownerToken) {
-    loadOwnerDashboard();
-  } else {
-    showLoginForm();
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
   }
-});
-"use strict";
 
-/* ==========================================
-   KIELMEN 636 DATAPLUG
-   OWNER DASHBOARD SCRIPT
-   ========================================== */
-
-const OWNER_API =
-  "https://kielmen-dataplug-payment-api.onrender.com";
-
-const money = (amount) =>
-  "GH₵" + Number(amount || 0).toFixed(2);
-
-const byId = (id) => document.getElementById(id);
-
-function setText(id, value) {
-  const element = byId(id);
-  if (element) element.textContent = value;
+  showLogin();
 }
 
-function displayMessage(message) {
-  alert(message);
-}
-
-/*
- SECURITY NOTICE:
- Do not put a password, Paystack secret key, or owner API
- secret in this public JavaScript file.
-
- The dashboard must only display private records after the
- backend verifies an authenticated owner session.
-*/
-
-function renderOrders(orders) {
-  const table = byId("ordersTable");
-  if (!table) return;
-
-  table.replaceChildren();
-
-  if (!Array.isArray(orders) || orders.length === 0) {
-    const row = table.insertRow();
-    const cell = row.insertCell();
-    cell.colSpan = 7;
-    cell.className = "empty";
-    cell.textContent = "No orders found.";
+/* Add a logout button without changing the existing layout */
+function addLogoutButton() {
+  if (byId("ownerLogoutButton")) {
     return;
   }
 
-  orders.forEach((order) => {
-    const row = table.insertRow();
+  const button = document.createElement("button");
 
-    const values = [
-      order.reference || order.id || "—",
-      order.phone || "—",
-      order.network || "—",
-      order.bundle || "—",
-      money(order.amount),
-      order.status || "—",
-      order.delivery_status || "—"
-    ];
+  button.id = "ownerLogoutButton";
+  button.textContent = "Owner Log Out";
 
-    values.forEach((value) => {
-      const cell = row.insertCell();
-      cell.textContent = String(value);
-    });
-  });
+  button.style.cssText = `
+    padding:10px 16px;
+    margin:12px;
+    border:0;
+    border-radius:8px;
+    background:#dc2626;
+    color:white;
+    font-weight:bold;
+  `;
+
+  button.addEventListener("click", logoutOwner);
+
+  document.body.prepend(button);
 }
 
-function renderAgents(agents) {
-  const table = byId("agentsTable");
-  if (!table) return;
-
-  table.replaceChildren();
-
-  if (!Array.isArray(agents) || agents.length === 0) {
-    const row = table.insertRow();
-    const cell = row.insertCell();
-    cell.colSpan = 5;
-    cell.className = "empty";
-    cell.textContent = "No agent records found.";
+/* Start dashboard */
+async function initializeOwnerDashboard() {
+  if (!ownerToken) {
+    showLogin();
     return;
   }
 
-  agents.forEach((agent) => {
-    const row = table.insertRow();
+  try {
+    await loadStatistics();
 
-    [
-      agent.name || "—",
-      agent.phone || agent.email || "—",
-      money(agent.total_sales),
-      money(agent.available_earnings),
-      agent.status || "—"
-    ].forEach((value) => {
-      const cell = row.insertCell();
-      cell.textContent = String(value);
-    });
-  });
-}
+    if (ownerToken) {
+      addLogoutButton();
 
-function renderWithdrawals(withdrawals) {
-  const table = byId("withdrawalsTable");
-  if (!table) return;
+      refreshTimer = setInterval(() => {
+        if (ownerToken) {
+          loadStatistics();
+        }
+      }, 60000);
+    }
 
-  table.replaceChildren();
-
-  if (
-    !Array.isArray(withdrawals) ||
-    withdrawals.length === 0
-  ) {
-    const row = table.insertRow();
-    const cell = row.insertCell();
-    cell.colSpan = 5;
-    cell.className = "empty";
-    cell.textContent = "No withdrawal requests found.";
-    return;
+  } catch (error) {
+    showMessage(error.message || "Dashboard initialization failed.");
   }
-
-  withdrawals.forEach((request) => {
-    const row = table.insertRow();
-
-    [
-      request.agent_name || request.agent || "—",
-      money(request.amount),
-      request.mobile_money_number || "—",
-      request.created_at
-        ? new Date(request.created_at).toLocaleString()
-        : "—",
-      request.status || "—"
-    ].forEach((value) => {
-      const cell = row.insertCell();
-      cell.textContent = String(value);
-    });
-  });
-}
-
-/*
- These statistics are updated only from data returned by
- an authenticated backend endpoint.
-*/
-
-function updateStatistics(stats = {}) {
-  setText("totalSales", money(stats.total_sales));
-  setText("totalProfit", money(stats.total_profit));
-  setText("totalOrders", stats.total_orders || 0);
-  setText(
-    "successfulDeliveries",
-    stats.successful_deliveries || 0
-  );
-  setText("pendingOrders", stats.pending_orders || 0);
-  setText("failedOrders", stats.failed_orders || 0);
-  setText("registeredAgents", stats.registered_agents || 0);
-  setText("pendingWithdrawals", stats.pending_withdrawals || 0);
-}
-
-/*
- We intentionally do not request private data yet.
- The current backend needs authenticated owner endpoints
- before this dashboard can safely retrieve business records.
-*/
-
-function showBackendStatus(message) {
-  console.info("[Owner Dashboard]", message);
-}
-
-function initializeOwnerDashboard() {
-  showBackendStatus(
-    "Dashboard layout loaded. Secure owner login and backend endpoints are still required."
-  );
 }
 
 if (document.readyState === "loading") {
