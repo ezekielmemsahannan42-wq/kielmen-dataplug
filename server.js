@@ -974,14 +974,15 @@ app.get(
 );
 
 // ============================================================
+// ============================================================
 // 10. PUBLIC AGENT STOREFRONT
 // ============================================================
 
 app.get("/agents/store/:code", async (req, res) => {
   try {
-    const code = String(
-      req.params.code || ""
-    ).toUpperCase();
+    const code = String(req.params.code || "")
+      .trim()
+      .toUpperCase();
 
     const result = await pool.query(
       `
@@ -990,6 +991,7 @@ app.get("/agents/store/:code", async (req, res) => {
           agent_code,
           business_name,
           store_description,
+          phone,
           status
         FROM agents
         WHERE agent_code = $1
@@ -1025,7 +1027,10 @@ app.get("/agents/store/:code", async (req, res) => {
       store: {
         agentCode: agent.agent_code,
         businessName: agent.business_name,
-        description: agent.store_description
+        description: agent.store_description,
+        phone: agent.phone,
+        whatsapp: "https://wa.me/233" +
+          agent.phone.replace(/^0/, "").replace(/\D/g, "")
       },
 
       prices: prices.rows.map(item => ({
