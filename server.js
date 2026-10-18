@@ -2100,6 +2100,91 @@ app.get("/order-status/:reference", async (req, res) => {
 });
 
 // ============================================================
+// ============================================================
+// 18A. AGENT-SPECIFIC CUSTOMER ORDER TRACKING
+// ============================================================
+
+app.get(
+  "/agents/store/:code/orders-by-phone/:phone",
+  async (req, res) => {
+    try {
+      const code = String(req.params.code || "")
+        .trim()
+        .toUpperCase();
+
+      const phone = normalizePhone(req.params.phone);
+
+      if (!validGhanaPhone(phone)) {
+        return res.status(400).json({
+          success: false,
+          message: "Enter a valid Ghana phone number."
+        });
+      }
+
+      const agentResult = await pool.query(
+        `
+          SELECT id
+          FROM agents
+          WHERE agent_code = $1
+            AND status = 'approved'
+        `,
+        [code]
+      );
+
+      if (!agentResult.rowCount) {
+        return res.status(404).json({
+          success: false,
+          message: "Agent store not found or not active."
+        });
+      }
+
+      const result = await pool.query(
+        `
+          SELECT
+            reference,
+            phone,
+            network,
+            bundle,
+            amount,
+            status AS payment_status,
+            delivery_status,
+            created_at,
+            updated_at
+          FROM orders
+          WHERE agent_id = $1
+            AND RIGHT(
+              REGEXP_REPLACE(phone, '[^0-9]', '', 'g'),
+              9
+            ) = $2
+          ORDER BY created_at DESC
+          LIMIT 20
+        `,
+        [
+          agentResult.rows[0].id,
+          phone.slice(-9)
+        ]
+      );
+
+      return res.json({
+        success: true,
+        orders: result.rows.map(order => ({
+          ...order,
+          amount: Number(order.amount)
+        }))
+      });
+    } catch (error) {
+      console.error(
+        "Agent customer order lookup:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not load orders. Please try again."
+      });
+    }
+  }
+);
 // 18. LOOK UP ORDERS BY PHONE
 // ============================================================
 
