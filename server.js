@@ -722,7 +722,16 @@ function requireOwner(req, res, next) {
 // 8. AGENT REGISTRATION
 // ============================================================
 
-app.post("/agents/register", async (req, res) => {
+INSERT INTO agents (
+    agent_code,
+    full_name,
+    business_name,
+    email,
+    phone,
+    password_hash,
+    store_description
+)
+async (req, res) => {
   try {
     if (AGENT_TOKEN_SECRET.length < 32) {
       return res.status(503).json({
