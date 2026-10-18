@@ -1057,18 +1057,13 @@ renderOrders();
           Return to Sign In
         </a>
       </main>
-    `;
 
-    document.body.style.visibility = "visible";
-  }
-})();
-<script>
+    <script>
 "use strict";
 
-(async function () {
-  const API_BASE =
-    "https://kielmen-dataplug-payment-api.onrender.com";
+const API_BASE = "https://kielmen-dataplug-payment-api.onrender.com";
 
+(async function verifyAgent() {
   const token = sessionStorage.getItem("k636_agent_token");
 
   if (!token) {
@@ -1078,6 +1073,7 @@ renderOrders();
 
   try {
     const response = await fetch(API_BASE + "/agents/me", {
+      method: "GET",
       headers: {
         "Authorization": "Bearer " + token
       }
@@ -1095,13 +1091,13 @@ renderOrders();
     const agent = result.agent;
 
     document.getElementById("welcomeName").textContent =
-      "Welcome, " + agent.full_name + "!";
+      "Welcome, " + (agent.full_name || "Agent") + "!";
 
     document.getElementById("welcomeDetails").textContent =
-      agent.business_name;
+      agent.business_name || "Manage your data business here.";
 
     document.getElementById("agentCode").textContent =
-      agent.agent_code;
+      agent.agent_code || "Not assigned";
 
     profile = {
       businessName: agent.business_name || "",
@@ -1112,16 +1108,21 @@ renderOrders();
 
     loadProfileForm();
     renderProfile();
+    renderStoreLink();
 
     document.body.style.visibility = "visible";
 
   } catch (error) {
     document.body.innerHTML = `
       <main style="padding:24px;color:white;font-family:Arial,sans-serif">
-        <h2>Unable to verify your account</h2>
+        <h2>Unable to connect to the server</h2>
         <p>Please check your internet connection and try again.</p>
         <button onclick="location.reload()">Try Again</button>
-        <p><a href="agent-login.html">Return to Sign In</a></p>
+        <p>
+          <a href="agent-login.html" style="color:#48c6a3">
+            Return to Sign In
+          </a>
+        </p>
       </main>
     `;
 
@@ -1134,15 +1135,12 @@ async function agentLogout() {
 
   try {
     if (token) {
-      await fetch(
-        "https://kielmen-dataplug-payment-api.onrender.com/agents/logout",
-        {
-          method: "POST",
-          headers: {
-            "Authorization": "Bearer " + token
-          }
+      await fetch(API_BASE + "/agents/logout", {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer " + token
         }
-      );
+      });
     }
   } catch (error) {
     console.error("Sign-out request failed.");
