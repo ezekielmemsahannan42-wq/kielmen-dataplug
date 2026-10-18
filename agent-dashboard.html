@@ -1029,75 +1029,69 @@ function getCurrentPrices(network) {
 
 async function loadPrices() {
   try {
-    const data = await apiRequest("/agents/prices");
-
-    if (
-      data.response.ok &&
-      data.result &&
-      data.result.success
-    ) {
-      const remotePrices =
-        data.result.prices;
-
-      if (remotePrices && typeof remotePrices === "object") {
-        agentPrices = remotePrices;
-        serverPricesAvailable = true;
-        writeStorage(STORAGE.prices, agentPrices);
+    const response = await fetch(
+      `${API_BASE}/agents/prices`,
+      {
+        headers: {
+          Authorization: `Bearer ${agentToken}`
+        }
       }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Could not load prices."
+      );
     }
+
+    const prices = {};
+
+    if (Array.isArray(data.prices)) {
+      data.prices.forEach(item => {
+        const network = String(item.network)
+          .toUpperCase()
+          .replace(/[^A-Z]/g, "");
+
+        if (!prices[network]) {
+          prices[network] = {};
+        }
+
+        prices[network][item.bundle] =
+          Number(item.sellingPrice);
+      });
+    }
+
+    // Keep the backend's base prices available.
+    window.agentBasePrices = data.basePrices || {};
+
+    // Store the saved prices for the dashboard.
+    window.agentSavedPrices = prices;
+
+    try {
+      localStorage.setItem(
+        "k636_agent_prices_v1",
+        JSON.stringify(prices)
+      );
+    } catch (storageError) {
+      console.warn("Could not cache agent prices.");
+    }
+
+    return prices;
+
   } catch (error) {
-    console.warn("Could not load server prices:", error);
-  }
+    console.error("Load prices error:", error);
 
-  renderPrices();
+    alert(
+      error.message ||
+      "Could not load prices. Please try again."
+    );
+
+    return {};
+  }
 }
-
-function renderPrices() {
-  const select = document.getElementById("priceNetwork");
-  const rows = document.getElementById("priceRows");
-  const message = document.getElementById("priceMessage");
-
-  if (!select || !rows || !message) {
-    return;
-  }
-
-  const network = select.value;
-  const basePrices = BASE_PRICES[network];
-
-  if (!basePrices) {
-    rows.innerHTML = "";
-    message.textContent = "Please select a valid network.";
-    return;
-  }
-
-  const prices = getCurrentPrices(network);
-
-  rows.innerHTML = Object.entries(basePrices).map(
-    function ([bundle, base]) {
-      return `
-        <tr>
-          <td>${bundle}</td>
-          <td>${money(base)}</td>
-          <td>
-            <input
-              class="price-input"
-              type="number"
-              min="${base.toFixed(2)}"
-              step="0.01"
-              value="${prices[bundle].toFixed(2)}"
-              data-bundle="${bundle}"
-              aria-label="${network} ${bundle} selling price">
-          </td>
-        </tr>
-      `;
-    }
-  ).join("");
-
-  message.textContent = serverPricesAvailable
-    ? "Server prices loaded. Save changes to update your account."
-    : "Showing sample prices. Server prices have not been confirmed.";
-}
-
+  
 async function savePrices() {
   const network = document.getElementById("priceNetwork").value;
   const inputs = document.querySelectorAll("#priceRows input");
