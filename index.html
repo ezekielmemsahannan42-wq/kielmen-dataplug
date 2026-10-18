@@ -662,7 +662,8 @@ mobileMenu.querySelectorAll("a").forEach(function (link) {
     });
 });
   <script src="script.js?v=6"></script>
-  <script>
+
+<script>
 document.getElementById("currentYear").textContent =
     new Date().getFullYear();
 
@@ -677,6 +678,7 @@ menuButton.addEventListener("click", function () {
     mobileMenu.style.display = isOpen ? "none" : "block";
 
     menuButton.setAttribute("aria-expanded", String(!isOpen));
+
     menuButton.setAttribute(
         "aria-label",
         isOpen ? "Open menu" : "Close menu"
@@ -704,6 +706,6 @@ if (announcement && continueShopping) {
     });
 }
 </script>
+
 </body>
 </html>
-  <script>
