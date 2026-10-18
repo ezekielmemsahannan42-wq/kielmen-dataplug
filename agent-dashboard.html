@@ -1,400 +1,376 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#111211">
-<title>Kielmen 636 | Agent Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#111211">
 
-<style>
-:root {
-  --bg: #111211;
-  --card: #202120;
-  --card2: #292a29;
-  --border: #454744;
-  --text: #e8ecee;
-  --muted: #a6afb5;
-  --green: #48c6a3;
-  --green-dark: #075f43;
-  --gold: #d8a72c;
-  --red: #ff7777;
-}
+  <title>Kielmen 636 | Agent Dashboard</title>
 
-* {
-  box-sizing: border-box;
-}
+  <style>
+    :root {
+      --bg: #111211;
+      --card: #202120;
+      --card2: #292a29;
+      --border: #454744;
+      --text: #e8ecee;
+      --muted: #a6afb5;
+      --green: #48c6a3;
+      --gold: #d8a72c;
+      --red: #ff7777;
+    }
 
-  body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: Arial, Helvetica, sans-serif;
-  visibility: visible;
-  }
+    * {
+      box-sizing: border-box;
+    }
 
-button, input, select {
-  font: inherit;
-}
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
 
-button {
-  cursor: pointer;
-}
+    button, input, select {
+      font: inherit;
+    }
 
-.topbar {
-  background: #1d1e1d;
-  padding: 18px 16px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  position: sticky;
-  top: 0;
-  z-index: 5;
-}
+    button {
+      cursor: pointer;
+    }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 15px;
+      background: #1d1e1d;
+      border-bottom: 1px solid var(--border);
+    }
 
-.brand-logo {
-  width: 46px;
-  height: 46px;
-  background: #050b1e;
-  border-radius: 15px;
-  display: grid;
-  place-items: center;
-  color: var(--green);
-  font-weight: bold;
-  font-size: 19px;
-}
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
 
-.brand small {
-  display: block;
-  color: var(--muted);
-  margin-top: 5px;
-}
+    .brand-logo {
+      display: grid;
+      place-items: center;
+      width: 45px;
+      height: 45px;
+      border-radius: 14px;
+      background: #050b1e;
+      color: var(--green);
+      font-weight: bold;
+    }
 
-.online {
-  color: var(--green);
-  background: #123b2e;
-  border-radius: 20px;
-  padding: 9px 12px;
-  font-size: 12px;
-}
+    .brand small {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+    }
 
-.container {
-  padding: 18px 14px 105px;
-  max-width: 1000px;
-  margin: auto;
-}
+    .online {
+      color: var(--green);
+      font-size: 12px;
+    }
 
-.welcome {
-  padding: 22px 18px;
-  border-radius: 20px;
-  background: linear-gradient(135deg, #173a30, #202120 70%);
-  border: 1px solid var(--border);
-  margin-bottom: 18px;
-}
+    .container {
+      max-width: 1000px;
+      margin: auto;
+      padding: 18px 14px 110px;
+    }
 
-.welcome h1 {
-  font-size: 25px;
-  margin: 0 0 9px;
-}
+    .welcome {
+      padding: 22px 18px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: linear-gradient(135deg, #173a30, #202120);
+    }
 
-.welcome p {
-  color: #c0c9c9;
-  line-height: 1.5;
-  margin-bottom: 0;
-}
+    .welcome h1 {
+      margin: 0 0 10px;
+      font-size: 25px;
+      overflow-wrap: anywhere;
+    }
 
-.section-title {
-  font-size: 17px;
-  margin: 25px 0 14px;
-}
+    .welcome p {
+      line-height: 1.6;
+      color: #c0c9c9;
+    }
 
-.filters {
-  display: flex;
-  background: #191a1b;
-  border-radius: 40px;
-  padding: 5px;
-  gap: 4px;
-  margin-bottom: 16px;
-}
+    .section-title {
+      margin: 25px 0 14px;
+      font-size: 18px;
+    }
 
-.filters button {
-  flex: 1;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  padding: 12px 5px;
-  border-radius: 30px;
-}
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
 
-.filters button.active {
-  background: #494a49;
-  color: white;
-}
+    .card {
+      padding: 17px;
+      margin-bottom: 15px;
+      border: 1px solid var(--border);
+      border-radius: 17px;
+      background: var(--card);
+      min-width: 0;
+    }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
+    .stat-label {
+      color: #c3cbd0;
+      font-size: 13px;
+    }
 
-.card {
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 19px;
-  padding: 17px;
-  margin-bottom: 15px;
-}
+    .stat-value {
+      margin: 10px 0;
+      font-size: 24px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
 
-.stat-label {
-  color: #c3cbd0;
-  font-size: 13px;
-}
+    .stat-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
 
-.stat-value {
-  font-size: 25px;
-  font-weight: bold;
-  margin: 10px 0;
-  overflow-wrap: anywhere;
-}
+    .green {
+      color: var(--green);
+    }
 
-.stat-note {
-  color: var(--muted);
-  font-size: 12px;
-}
+    .network-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
 
-.green {
-  color: var(--green);
-}
+    .network {
+      min-height: 105px;
+      padding: 15px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      color: white;
+      background: #282920;
+      font-weight: bold;
+    }
 
-.gold {
-  color: #f1c36a;
-}
+    .network span {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 25px;
+    }
 
-.network-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
+    .mtn {
+      background: #332b17;
+    }
 
-.network {
-  min-height: 120px;
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  background: #282920;
-  color: white;
-  font-weight: bold;
-}
+    .telecel {
+      background: #392a2c;
+    }
 
-.network span {
-  font-size: 28px;
-}
+    .at {
+      background: #23342e;
+    }
 
-.network.mtn { background: #332b17; }
-.network.telecel { background: #392a2c; }
-.network.at { background: #23342e; }
+    .field {
+      margin-bottom: 16px;
+    }
 
-.network.selected {
-  outline: 2px solid var(--green);
-}
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      font-weight: bold;
+    }
 
-.field {
-  margin-bottom: 16px;
-}
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #505351;
+      border-radius: 10px;
+      outline: none;
+      background: var(--card2);
+      color: white;
+    }
 
-.field label {
-  display: block;
-  margin-bottom: 8px;
-  color: #d1d7da;
-  font-size: 14px;
-  font-weight: bold;
-}
+    .field input:focus,
+    .field select:focus {
+      border-color: var(--green);
+    }
 
-.field input,
-.field select {
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: 1px solid #505351;
-  background: #292a29;
-  color: white;
-  outline: none;
-}
+    .btn {
+      padding: 12px 15px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #343634;
+      color: white;
+      font-weight: bold;
+    }
 
-.field input:focus,
-.field select:focus {
-  border-color: var(--green);
-}
+    .btn-primary {
+      border-color: #08754e;
+      background: #08754e;
+    }
 
-.btn {
-  padding: 13px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  color: white;
-  background: #343634;
-  font-weight: bold;
-}
+    .btn-block {
+      width: 100%;
+    }
 
-.btn-primary {
-  background: #08754e;
-  border-color: #08754e;
-}
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
 
-.btn-block {
-  width: 100%;
-}
+    .notice {
+      padding: 13px;
+      margin: 14px 0;
+      border-left: 4px solid var(--gold);
+      border-radius: 8px;
+      background: #302509;
+      color: #e6d29b;
+      font-size: 13px;
+      line-height: 1.5;
+    }
 
-.btn-row {
-  display: flex;
-  gap: 9px;
-  flex-wrap: wrap;
-}
+    .message {
+      padding: 12px 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
 
-.notice {
-  background: #302509;
-  border-left: 4px solid var(--gold);
-  color: #e6d29b;
-  padding: 13px;
-  border-radius: 8px;
-  font-size: 13px;
-  line-height: 1.5;
-  margin: 14px 0;
-}
+    .table-wrap {
+      overflow-x: auto;
+    }
 
-.table-wrap {
-  overflow-x: auto;
-}
+    table {
+      width: 100%;
+      min-width: 400px;
+      border-collapse: collapse;
+    }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 390px;
-}
+    th, td {
+      padding: 12px 8px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      font-size: 13px;
+    }
 
-th, td {
-  padding: 12px 9px;
-  border-bottom: 1px solid var(--border);
-  text-align: left;
-  font-size: 13px;
-}
+    th {
+      color: var(--muted);
+    }
 
-th {
-  color: var(--muted);
-}
+    .price-input {
+      width: 100px;
+      padding: 9px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: #151615;
+      color: white;
+    }
 
-.badge {
-  display: inline-block;
-  border-radius: 20px;
-  padding: 6px 9px;
-  font-size: 11px;
-  background: #343634;
-  color: var(--muted);
-}
+    .share-link {
+      padding: 12px;
+      margin: 12px 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #141514;
+      color: var(--green);
+      overflow-wrap: anywhere;
+      font-size: 13px;
+    }
 
-.badge.pending {
-  background: #443516;
-  color: #f0cb75;
-}
+    .badge {
+      display: inline-block;
+      padding: 6px 9px;
+      border-radius: 20px;
+      background: #343634;
+      color: var(--muted);
+      font-size: 11px;
+    }
 
-.badge.delivered {
-  background: #123d2c;
-  color: #78e6b6;
-}
+    .page {
+      display: none;
+    }
 
-.price-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
+    .page.active {
+      display: block;
+    }
 
-.share-link {
-  overflow-wrap: anywhere;
-  background: #141514;
-  border: 1px solid var(--border);
-  padding: 13px;
-  border-radius: 10px;
-  color: var(--green);
-  font-size: 13px;
-  margin: 12px 0;
-}
+    .bottom-nav {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      padding: 8px 3px calc(8px + env(safe-area-inset-bottom));
+      border-top: 1px solid #343638;
+      background: #090a0c;
+    }
 
-.page {
-  display: none;
-}
+    .nav-btn {
+      padding: 7px 1px;
+      border: 0;
+      background: transparent;
+      color: #9ca6ad;
+      font-size: 11px;
+    }
 
-.page.active {
-  display: block;
-}
+    .nav-btn .icon {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 21px;
+    }
 
-.bottom-nav {
-  position: fixed;
-  z-index: 10;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: #090a0c;
-  border-top: 1px solid #343638;
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  padding: 9px 3px calc(9px + env(safe-area-inset-bottom));
-}
+    .nav-btn.active {
+      color: var(--green);
+    }
 
-.nav-btn {
-  background: transparent;
-  color: #9ca6ad;
-  border: 0;
-  font-size: 11px;
-  padding: 7px 1px;
-}
+    footer {
+      margin-top: 25px;
+      color: #808b8e;
+      text-align: center;
+      font-size: 11px;
+    }
 
-.nav-btn .icon {
-  display: block;
-  font-size: 22px;
-  margin-bottom: 6px;
-}
+    #pageMessage {
+      padding: 30px 18px;
+      margin: 20px auto;
+      max-width: 600px;
+      border: 1px solid var(--border);
+      border-radius: 15px;
+      background: var(--card);
+      line-height: 1.6;
+    }
 
-.nav-btn.active {
-  color: var(--green);
-}
+    #pageMessage button {
+      margin-top: 12px;
+    }
 
-.empty {
-  color: var(--muted);
-  padding: 16px 0;
-  line-height: 1.5;
-}
+    @media (min-width: 700px) {
+      .stats {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
 
-.hidden {
-  display: none !important;
-}
-
-footer {
-  text-align: center;
-  color: #808b8e;
-  font-size: 11px;
-  margin-top: 25px;
-}
-
-@media (min-width: 700px) {
-  .stats {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .network-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-</style>
+      .network-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -407,141 +383,203 @@ footer {
       <small>AGENT STORE</small>
     </div>
   </div>
-  <span class="online">● Dashboard</span>
+
+  <span class="online">● Agent Dashboard</span>
 </header>
 
-<main class="container">
+<div id="pageMessage" role="status" aria-live="polite">
+  <strong>Checking your account...</strong>
+  <p>Please wait while we verify your agent login.</p>
+</div>
 
-  <!-- DASHBOARD -->
+<main class="container" id="dashboard" hidden>
+
+  <!-- HOME -->
   <section class="page active" id="home">
+
     <div class="welcome">
-  <h1 id="welcomeName">Welcome, Agent!</h1>
-  <p id="welcomeDetails">
-    Manage your data business, selling prices, storefront link and customer orders in one place.
-  </p>
-  <p>
-    Agent Code: <strong id="agentCode">Loading...</strong>
-  </p>
-  <button class="btn" onclick="agentLogout()">Sign Out</button>
+      <h1 id="welcomeName">Welcome, Agent!</h1>
+
+      <p id="welcomeDetails">
+        Manage your data business in one place.
+      </p>
+
+      <p>
+        Agent Code:
+        <strong id="agentCode">Loading...</strong>
+      </p>
+
+      <button class="btn" onclick="agentLogout()">
+        Sign Out
+      </button>
     </div>
 
-    <h2 class="section-title">Performance overview</h2>
-
-    <div class="filters">
-      <button class="active" data-period="today">Today</button>
-      <button data-period="week">This Week</button>
-      <button data-period="month">This Month</button>
-    </div>
+    <h2 class="section-title">Performance Overview</h2>
 
     <div class="stats">
+
       <div class="card">
         <div class="stat-label">Total Orders</div>
-        <div class="stat-value" id="ordersStat">0</div>
-        <div class="stat-note">Recorded orders</div>
+        <div class="stat-value" id="ordersStat">—</div>
+        <div class="stat-note">Server order records</div>
       </div>
 
       <div class="card">
         <div class="stat-label">Total Profit</div>
-        <div class="stat-value green" id="profitStat">GH₵0.00</div>
+        <div class="stat-value green" id="profitStat">—</div>
         <div class="stat-note">Estimated profit</div>
       </div>
 
       <div class="card">
         <div class="stat-label">Total Sales</div>
-        <div class="stat-value" id="salesStat">GH₵0.00</div>
+        <div class="stat-value" id="salesStat">—</div>
         <div class="stat-note">Recorded sales</div>
       </div>
 
       <div class="card">
         <div class="stat-label">Customers</div>
-        <div class="stat-value" id="customersStat">0</div>
-        <div class="stat-note">Unique phone numbers</div>
+        <div class="stat-value" id="customersStat">—</div>
+        <div class="stat-note">Recorded customers</div>
       </div>
+
     </div>
 
-    <h2 class="section-title">Your data store</h2>
+    <h2 class="section-title">Your Data Store</h2>
+
     <div class="card">
       <div class="network-grid">
-        <button class="network mtn" onclick="selectNetwork('MTN')">
-          <span>🟡</span> MTN
+
+        <button class="network mtn"
+          onclick="selectNetwork('MTN')">
+          <span>🟡</span>MTN
         </button>
-        <button class="network telecel" onclick="selectNetwork('Telecel')">
-          <span>🔴</span> Telecel
+
+        <button class="network telecel"
+          onclick="selectNetwork('Telecel')">
+          <span>🔴</span>Telecel
         </button>
-        <button class="network at" onclick="selectNetwork('AirtelTigo')">
-          <span>🟢</span> AirtelTigo
+
+        <button class="network at"
+          onclick="selectNetwork('AirtelTigo')">
+          <span>🟢</span>AirtelTigo
         </button>
+
       </div>
-      <p class="stat-note">Select a network to manage your selling prices.</p>
-      <button class="btn btn-primary btn-block" onclick="showPage('prices')">
+
+      <p class="stat-note">
+        Select a network to view your selling prices.
+      </p>
+
+      <button class="btn btn-primary btn-block"
+        onclick="showPage('prices')">
         Manage My Prices
       </button>
     </div>
 
-    <h2 class="section-title">Recent orders</h2>
+    <h2 class="section-title">Recent Orders</h2>
+
     <div class="card">
-      <div id="recentOrders" class="empty">
-        No orders have been recorded in this browser yet.
+      <div id="recentOrders" class="message">
+        Loading order information...
       </div>
-      <button class="btn btn-block" onclick="showPage('orders')">View Orders</button>
+
+      <button class="btn btn-block"
+        onclick="showPage('orders')">
+        View Orders
+      </button>
     </div>
+
   </section>
 
   <!-- STORE -->
   <section class="page" id="store">
+
     <h1>My Store</h1>
-    <p class="stat-note">Set up your business details and share your store.</p>
+
+    <p class="stat-note">
+      Manage your business information and storefront preview.
+    </p>
 
     <div class="card">
+
       <div class="field">
-        <label for="businessName">Business name</label>
-        <input id="businessName" maxlength="60" placeholder="e.g. Kielmen Data Store">
+        <label for="businessName">Business Name</label>
+        <input id="businessName" maxlength="60"
+          placeholder="Your business name">
       </div>
 
       <div class="field">
-        <label for="agentName">Agent name</label>
-        <input id="agentName" maxlength="60" placeholder="Your name">
+        <label for="agentName">Agent Name</label>
+        <input id="agentName" maxlength="60"
+          placeholder="Your full name">
       </div>
 
       <div class="field">
-        <label for="agentPhone">Business phone number</label>
-        <input id="agentPhone" inputmode="tel" maxlength="15" placeholder="0XXXXXXXXX">
+        <label for="agentPhone">Business Phone</label>
+        <input id="agentPhone" inputmode="tel"
+          maxlength="15" placeholder="0XXXXXXXXX">
       </div>
 
       <div class="field">
-        <label for="storeDescription">Store description</label>
-        <input id="storeDescription" maxlength="120" placeholder="Affordable data bundles">
+        <label for="storeDescription">Store Description</label>
+        <input id="storeDescription" maxlength="120"
+          placeholder="Affordable data bundles">
       </div>
 
-      <button class="btn btn-primary btn-block" onclick="saveStore()">
+      <button class="btn btn-primary btn-block"
+        onclick="saveStore()">
         Save Store Details
       </button>
 
-      <div class="notice">
-        These details are currently saved only in this browser. They are not yet securely saved to your account on the server.
-      </div>
+      <p id="storeMessage" class="message">
+        Your store details are currently stored in this browser.
+      </p>
+
     </div>
 
     <div class="card">
-      <h3>Share your storefront</h3>
-      <p class="stat-note">Share your personal store link with customers.</p>
-      <div class="share-link" id="storeLink">Save your store details first.</div>
+
+      <h3>Share Your Store</h3>
+
+      <p class="stat-note">
+        This is a storefront preview link, not a separate online shop.
+      </p>
+
+      <div id="storeLink" class="share-link">
+        Save your store details first.
+      </div>
 
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="copyStoreLink()">Copy Link</button>
-        <button class="btn" onclick="shareStore()">Share</button>
+        <button class="btn btn-primary"
+          onclick="copyStoreLink()">
+          Copy Link
+        </button>
+
+        <button class="btn"
+          onclick="shareStore()">
+          Share
+        </button>
       </div>
+
     </div>
+
   </section>
 
   <!-- PRICES -->
   <section class="page" id="prices">
+
     <h1>My Selling Prices</h1>
-    <p class="stat-note">Your prices should be higher than or equal to the official base prices.</p>
+
+    <p class="stat-note">
+      The displayed base prices are sample values. Confirm supplier
+      prices before accepting customer payments.
+    </p>
 
     <div class="card">
+
       <div class="field">
-        <label for="priceNetwork">Select network</label>
+        <label for="priceNetwork">Select Network</label>
+
         <select id="priceNetwork" onchange="renderPrices()">
           <option value="MTN">MTN</option>
           <option value="Telecel">Telecel</option>
@@ -549,80 +587,114 @@ footer {
         </select>
       </div>
 
-      <div class="notice">
-        Base prices are sample values from your current project. Confirm the actual supplier prices before accepting customer payments.
-      </div>
-
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>Bundle</th>
-              <th>Base price</th>
-              <th>Your price (GH₵)</th>
+              <th>Base Price</th>
+              <th>Selling Price</th>
             </tr>
           </thead>
+
           <tbody id="priceRows"></tbody>
         </table>
       </div>
 
-      <div style="height:14px"></div>
-      <button class="btn btn-primary btn-block" onclick="savePrices()">
+      <button class="btn btn-primary btn-block"
+        onclick="savePrices()">
         Save My Prices
       </button>
 
-      <div id="priceMessage" class="empty"></div>
+      <p id="priceMessage" class="message"></p>
+
     </div>
+
   </section>
 
   <!-- ORDERS -->
   <section class="page" id="orders">
+
     <h1>Orders & Payments</h1>
-    <p class="stat-note">Orders saved in this browser only.</p>
 
     <div class="card">
-      <div class="field">
-        <label for="orderFilter">Filter orders</label>
-        <select id="orderFilter" onchange="renderOrders()">
-          <option value="all">All orders</option>
-          <option value="pending">Pending</option>
-          <option value="delivered">Delivered</option>
-          <option value="failed">Failed</option>
-        </select>
+
+      <p class="notice">
+        Orders are loaded from the server when the backend endpoint
+        is available. No real customer orders are created by this page.
+      </p>
+
+      <button class="btn btn-primary btn-block"
+        onclick="loadOrders()">
+        Refresh Orders
+      </button>
+
+      <div id="ordersList" class="message">
+        Loading orders...
       </div>
 
-      <div id="ordersList" class="empty">
-        No orders found.
-      </div>
     </div>
+
   </section>
 
   <!-- PROFILE -->
   <section class="page" id="profile">
+
     <h1>My Profile</h1>
 
     <div class="card">
-      <h3>Business profile</h3>
-      <p id="profileBusiness">Business name not set</p>
-      <p class="stat-note" id="profileAgent">Agent name not set</p>
-      <p class="stat-note" id="profilePhone">Phone number not set</p>
+
+      <h3>Account Information</h3>
+
+      <p>
+        <strong>Full Name:</strong>
+        <span id="profileAgent">Loading...</span>
+      </p>
+
+      <p>
+        <strong>Business Name:</strong>
+        <span id="profileBusiness">Loading...</span>
+      </p>
+
+      <p>
+        <strong>Phone:</strong>
+        <span id="profilePhone">Loading...</span>
+      </p>
+
+      <p>
+        <strong>Agent Code:</strong>
+        <span id="profileCode">Loading...</span>
+      </p>
+
     </div>
 
     <div class="card">
-      <h3>Account security</h3>
-      <div class="notice">
-        Secure agent registration, login, password reset and server-side access controls have not been connected yet. Do not treat this prototype as a secure account system.
-      </div>
-      <button class="btn btn-block" onclick="showPage('store')">
-        Edit Business Details
+
+      <h3>Account Security</h3>
+
+      <p class="stat-note">
+        Your account access is verified by the backend. Keep your
+        password private and always sign out when using a shared device.
+      </p>
+
+      <button class="btn btn-block"
+        onclick="agentLogout()">
+        Sign Out
       </button>
+
     </div>
 
     <div class="card">
-      <h3>Agent Store</h3>
-      <p class="stat-note">Kielmen 636 Dataplug</p>
-      <button class="btn btn-block" onclick="showPage('home')">Back to Dashboard</button>
+
+      <h3>Kielmen 636 Dataplug</h3>
+
+      <button class="btn btn-block"
+        onclick="showPage('home')">
+        Back to Dashboard
+      </button>
+
     </div>
+
   </section>
 
   <footer>
@@ -631,72 +703,97 @@ footer {
 
 </main>
 
-<nav class="bottom-nav">
-  <button class="nav-btn active" data-page="home" onclick="showPage('home')">
+<nav class="bottom-nav" id="bottomNav" hidden>
+
+  <button class="nav-btn active"
+    data-page="home" onclick="showPage('home')">
     <span class="icon">⌂</span>Home
   </button>
-  <button class="nav-btn" data-page="store" onclick="showPage('store')">
+
+  <button class="nav-btn"
+    data-page="store" onclick="showPage('store')">
     <span class="icon">▣</span>Store
   </button>
-  <button class="nav-btn" data-page="prices" onclick="showPage('prices')">
+
+  <button class="nav-btn"
+    data-page="prices" onclick="showPage('prices')">
     <span class="icon">₵</span>My Prices
   </button>
-  <button class="nav-btn" data-page="orders" onclick="showPage('orders')">
+
+  <button class="nav-btn"
+    data-page="orders" onclick="showPage('orders')">
     <span class="icon">▤</span>Orders
   </button>
-  <button class="nav-btn" data-page="profile" onclick="showPage('profile')">
+
+  <button class="nav-btn"
+    data-page="profile" onclick="showPage('profile')">
     <span class="icon">◎</span>Profile
   </button>
+
 </nav>
 
 <script>
 "use strict";
 
-/*
- * FRONTEND PROTOTYPE ONLY.
- * Browser storage is not secure authentication or a shared database.
- * Real orders, accounts, prices and payments must be validated by Render.
- */
+/* -------------------------------------------------
+   KIELMEN 636 AGENT DASHBOARD
+   Backend: Render
+-------------------------------------------------- */
+
+const AGENT_API =
+  "https://kielmen-dataplug-payment-api.onrender.com";
+
+const LOGIN_PAGE = "agent-login.html";
+
+const STORAGE = {
+  profile: "k636_agent_profile_v1",
+  prices: "k636_agent_prices_v1"
+};
 
 const BASE_PRICES = {
   MTN: {
-    "1GB": 4.50, "2GB": 9.00, "3GB": 13.00,
-    "4GB": 17.50, "5GB": 21.00, "6GB": 25.00,
-    "8GB": 34.00, "10GB": 42.00, "15GB": 59.00,
-    "20GB": 79.00, "25GB": 98.00, "30GB": 119.00,
-    "40GB": 157.00, "50GB": 197.00
+    "1GB": 4.50,
+    "2GB": 9.00,
+    "3GB": 13.00,
+    "4GB": 17.50,
+    "5GB": 21.00,
+    "6GB": 25.00,
+    "8GB": 34.00,
+    "10GB": 42.00,
+    "15GB": 59.00,
+    "20GB": 79.00,
+    "25GB": 98.00,
+    "30GB": 119.00,
+    "40GB": 157.00,
+    "50GB": 197.00
   },
+
   Telecel: {
-    "10GB": 42.00, "15GB": 57.00, "20GB": 72.00,
-    "25GB": 93.00, "30GB": 111.00, "40GB": 145.00,
-    "50GB": 179.00, "100GB": 402.00
+    "10GB": 42.00,
+    "15GB": 57.00,
+    "20GB": 72.00,
+    "25GB": 93.00,
+    "30GB": 111.00,
+    "40GB": 145.00,
+    "50GB": 179.00,
+    "100GB": 402.00
   },
+
   AirtelTigo: {
-    "1GB": 5.00, "2GB": 9.20, "5GB": 22.00,
-    "10GB": 41.00, "20GB": 78.00, "30GB": 115.00,
+    "1GB": 5.00,
+    "2GB": 9.20,
+    "5GB": 22.00,
+    "10GB": 41.00,
+    "20GB": 78.00,
+    "30GB": 115.00,
     "50GB": 188.00
   }
 };
 
-const STORAGE = {
-  profile: "k636_agent_profile_v1",
-  prices: "k636_agent_prices_v1",
-  orders: "k636_agent_demo_orders_v1"
-};
-
-function readStorage(key, fallback) {
-  try {
-    const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : fallback;
-  } catch (error) {
-    return fallback;
-  }
-}
-
-function writeStorage(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
+let agent = null;
+let agentPrices = readStorage(STORAGE.prices, {});
+let orders = [];
+let dashboardStats = null;
 let profile = readStorage(STORAGE.profile, {
   businessName: "",
   agentName: "",
@@ -704,37 +801,208 @@ let profile = readStorage(STORAGE.profile, {
   storeDescription: ""
 });
 
-let agentPrices = readStorage(STORAGE.prices, {});
-let orders = readStorage(STORAGE.orders, []);
+let serverPricesAvailable = false;
 
-function money(value) {
-  return "GH₵" + Number(value || 0).toFixed(2);
+function readStorage(key, fallback) {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch (error) {
+    return fallback;
+  }
 }
 
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, character => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  })[character]);
+function writeStorage(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function money(value) {
+  const amount = Number(value);
+
+  if (!Number.isFinite(amount)) {
+    return "GH₵0.00";
+  }
+
+  return "GH₵" + amount.toFixed(2);
+}
+
+function setMessage(title, detail, showLoginButton) {
+  const box = document.getElementById("pageMessage");
+
+  box.replaceChildren();
+
+  const heading = document.createElement("strong");
+  heading.textContent = title;
+  box.appendChild(heading);
+
+  const paragraph = document.createElement("p");
+  paragraph.textContent = detail;
+  box.appendChild(paragraph);
+
+  if (showLoginButton) {
+    const button = document.createElement("button");
+
+    button.className = "btn btn-primary";
+    button.textContent = "Return to Sign In";
+
+    button.addEventListener("click", function () {
+      window.location.href = LOGIN_PAGE;
+    });
+
+    box.appendChild(button);
+  }
+}
+
+async function apiRequest(path, options = {}) {
+  const token = sessionStorage.getItem("k636_agent_token");
+
+  const headers = {
+    "Accept": "application/json",
+    ...(options.headers || {})
+  };
+
+  if (token) {
+    headers["Authorization"] = "Bearer " + token;
+  }
+
+  if (options.body) {
+    headers["Content-Type"] = "application/json";
+  }
+
+  const response = await fetch(AGENT_API + path, {
+    ...options,
+    headers
+  });
+
+  let result;
+
+  try {
+    result = await response.json();
+  } catch (error) {
+    throw new Error("The server returned an invalid response.");
+  }
+
+  return {
+    response: response,
+    result: result
+  };
+}
+
+async function verifyAgent() {
+  const token = sessionStorage.getItem("k636_agent_token");
+
+  if (!token) {
+    setMessage(
+      "Sign-in required",
+      "Please sign in with your approved agent account.",
+      true
+    );
+    return;
+  }
+
+  try {
+    const data = await apiRequest("/agents/me");
+
+    if (
+      !data.response.ok ||
+      !data.result ||
+      !data.result.success ||
+      !data.result.agent
+    ) {
+      sessionStorage.removeItem("k636_agent_token");
+      sessionStorage.removeItem("k636_agent");
+
+      setMessage(
+        "Your session is invalid or expired",
+        "Please sign in again. If your account is pending approval, contact the store administrator.",
+        true
+      );
+
+      return;
+    }
+
+    agent = data.result.agent;
+
+    displayAgent();
+
+    document.getElementById("pageMessage").hidden = true;
+    document.getElementById("dashboard").hidden = false;
+    document.getElementById("bottomNav").hidden = false;
+
+    await loadPrices();
+    await loadOrders();
+    await loadStats();
+
+  } catch (error) {
+    setMessage(
+      "Unable to connect to the server",
+      "Check your internet connection. If the problem continues, the backend may be unavailable or its CORS settings may need checking. Your dashboard has not been authenticated yet.",
+      true
+    );
+
+    console.error("Agent verification failed:", error);
+  }
+}
+
+function displayAgent() {
+  const fullName = agent.full_name || "Agent";
+  const businessName = agent.business_name || "My Data Store";
+  const phone = agent.phone || "Not provided";
+  const code = agent.agent_code || "Not assigned";
+
+  document.getElementById("welcomeName").textContent =
+    "Welcome, " + fullName + "!";
+
+  document.getElementById("welcomeDetails").textContent =
+    businessName + " — manage your data business here.";
+
+  document.getElementById("agentCode").textContent = code;
+
+  document.getElementById("profileAgent").textContent = fullName;
+  document.getElementById("profileBusiness").textContent = businessName;
+  document.getElementById("profilePhone").textContent = phone;
+  document.getElementById("profileCode").textContent = code;
+
+  profile = {
+    businessName: businessName,
+    agentName: fullName,
+    agentPhone: agent.phone || "",
+    storeDescription: agent.store_description || ""
+  };
+
+  loadProfileForm();
+  renderStoreLink();
 }
 
 function showPage(pageId) {
-  document.querySelectorAll(".page").forEach(page => {
+  document.querySelectorAll(".page").forEach(function (page) {
     page.classList.toggle("active", page.id === pageId);
   });
 
-  document.querySelectorAll(".nav-btn").forEach(button => {
-    button.classList.toggle("active", button.dataset.page === pageId);
+  document.querySelectorAll(".nav-btn").forEach(function (button) {
+    button.classList.toggle(
+      "active",
+      button.dataset.page === pageId
+    );
   });
 
-  if (pageId === "prices") renderPrices();
-  if (pageId === "orders") renderOrders();
-  if (pageId === "profile") renderProfile();
+  if (pageId === "prices") {
+    renderPrices();
+  }
 
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (pageId === "orders") {
+    renderOrders();
+  }
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 }
 
 function selectNetwork(network) {
@@ -743,79 +1011,107 @@ function selectNetwork(network) {
   showPage("prices");
 }
 
-function saveStore() {
-  profile = {
-    businessName: document.getElementById("businessName").value.trim(),
-    agentName: document.getElementById("agentName").value.trim(),
-    agentPhone: document.getElementById("agentPhone").value.trim(),
-    storeDescription: document.getElementById("storeDescription").value.trim()
-  };
-
-  if (!profile.businessName || !profile.agentName) {
-    alert("Please enter your business name and agent name.");
-    return;
-  }
-
-  writeStorage(STORAGE.profile, profile);
-  renderProfile();
-  renderStoreLink();
-
-  alert("Store details saved in this browser. Server-side saving is not connected yet.");
-}
-
 function getCurrentPrices(network) {
   const saved = agentPrices[network] || {};
   const result = {};
 
-  Object.entries(BASE_PRICES[network]).forEach(([bundle, base]) => {
-    const savedValue = Number(saved[bundle]);
-    result[bundle] = Number.isFinite(savedValue) && savedValue >= base
-      ? savedValue
-      : base;
+  Object.entries(BASE_PRICES[network]).forEach(function ([bundle, base]) {
+    const value = Number(saved[bundle]);
+
+    result[bundle] =
+      Number.isFinite(value) && value >= base
+        ? value
+        : base;
   });
 
   return result;
 }
 
-function renderPrices() {
-  const network = document.getElementById("priceNetwork").value;
-  const rows = document.getElementById("priceRows");
-  const prices = getCurrentPrices(network);
+async function loadPrices() {
+  try {
+    const data = await apiRequest("/agents/prices");
 
-  rows.innerHTML = Object.entries(BASE_PRICES[network]).map(([bundle, base]) => {
-    return `
-      <tr>
-        <td>${escapeHTML(bundle)}</td>
-        <td>${money(base)}</td>
-        <td>
-          <input
-            aria-label="${escapeHTML(network)} ${escapeHTML(bundle)} selling price"
-            type="number"
-            min="${base.toFixed(2)}"
-            step="0.01"
-            value="${prices[bundle].toFixed(2)}"
-            data-bundle="${escapeHTML(bundle)}"
-            style="width:105px;padding:9px;background:#151615;color:white;border:1px solid #505351;border-radius:8px">
-        </td>
-      </tr>`;
-  }).join("");
+    if (
+      data.response.ok &&
+      data.result &&
+      data.result.success
+    ) {
+      const remotePrices =
+        data.result.prices;
 
-  document.getElementById("priceMessage").textContent =
-    "Your estimated profit is calculated as your selling price minus the base price.";
+      if (remotePrices && typeof remotePrices === "object") {
+        agentPrices = remotePrices;
+        serverPricesAvailable = true;
+        writeStorage(STORAGE.prices, agentPrices);
+      }
+    }
+  } catch (error) {
+    console.warn("Could not load server prices:", error);
+  }
+
+  renderPrices();
 }
 
-function savePrices() {
+function renderPrices() {
+  const select = document.getElementById("priceNetwork");
+  const rows = document.getElementById("priceRows");
+  const message = document.getElementById("priceMessage");
+
+  if (!select || !rows || !message) {
+    return;
+  }
+
+  const network = select.value;
+  const basePrices = BASE_PRICES[network];
+
+  if (!basePrices) {
+    rows.innerHTML = "";
+    message.textContent = "Please select a valid network.";
+    return;
+  }
+
+  const prices = getCurrentPrices(network);
+
+  rows.innerHTML = Object.entries(basePrices).map(
+    function ([bundle, base]) {
+      return `
+        <tr>
+          <td>${bundle}</td>
+          <td>${money(base)}</td>
+          <td>
+            <input
+              class="price-input"
+              type="number"
+              min="${base.toFixed(2)}"
+              step="0.01"
+              value="${prices[bundle].toFixed(2)}"
+              data-bundle="${bundle}"
+              aria-label="${network} ${bundle} selling price">
+          </td>
+        </tr>
+      `;
+    }
+  ).join("");
+
+  message.textContent = serverPricesAvailable
+    ? "Server prices loaded. Save changes to update your account."
+    : "Showing sample prices. Server prices have not been confirmed.";
+}
+
+async function savePrices() {
   const network = document.getElementById("priceNetwork").value;
   const inputs = document.querySelectorAll("#priceRows input");
   const newPrices = {};
 
   for (const input of inputs) {
     const bundle = input.dataset.bundle;
-    const price = Number(input.value);
     const base = BASE_PRICES[network][bundle];
+    const price = Number(input.value);
 
     if (!Number.isFinite(price) || price < base) {
-      alert(bundle + " must be priced at least " + money(base) + ".");
+      alert(
+        bundle + " must be at least " + money(base) + "."
+      );
       input.focus();
       return;
     }
@@ -823,26 +1119,109 @@ function savePrices() {
     newPrices[bundle] = Math.round(price * 100) / 100;
   }
 
-  agentPrices[network] = newPrices;
-  writeStorage(STORAGE.prices, agentPrices);
+  const previousPrices = agentPrices;
+  const updatedPrices = {
+    ...agentPrices,
+    [network]: newPrices
+  };
 
-  document.getElementById("priceMessage").textContent =
-    "Prices saved in this browser. They are not yet shared with customers or saved on the server.";
+  try {
+    const data = await apiRequest("/agents/prices", {
+      method: "PUT",
+      body: JSON.stringify({
+        network: network,
+        prices: newPrices
+      })
+    });
 
-  alert("Selling prices saved locally.");
+    if (!data.response.ok || !data.result.success) {
+      alert(
+        data.result.message ||
+        "The server did not save your prices."
+      );
+      return;
+    }
+
+    agentPrices = data.result.prices || updatedPrices;
+    serverPricesAvailable = true;
+    writeStorage(STORAGE.prices, agentPrices);
+
+    document.getElementById("priceMessage").textContent =
+      "Your prices were saved on the server.";
+
+    alert("Your selling prices have been saved.");
+
+  } catch (error) {
+    /*
+     * Do not claim server saving succeeded.
+     * Keep the current prices visible without pretending
+     * they were stored in the agent account.
+     */
+    agentPrices = previousPrices;
+
+    document.getElementById("priceMessage").textContent =
+      "Could not save prices to the server. Please try again.";
+
+    alert(
+      "Unable to save prices to the server. Please check your connection."
+    );
+  }
+
+  renderPrices();
 }
 
-function renderStoreLink() {
-  const linkBox = document.getElementById("storeLink");
+function loadProfileForm() {
+  document.getElementById("businessName").value =
+    profile.businessName || "";
 
-  if (!profile.businessName) {
-    linkBox.textContent = "Enter your business details to create a preview link.";
+  document.getElementById("agentName").value =
+    profile.agentName || "";
+
+  document.getElementById("agentPhone").value =
+    profile.agentPhone || "";
+
+  document.getElementById("storeDescription").value =
+    profile.storeDescription || "";
+}
+
+function saveStore() {
+  const businessName =
+    document.getElementById("businessName").value.trim();
+
+  const agentName =
+    document.getElementById("agentName").value.trim();
+
+  const agentPhone =
+    document.getElementById("agentPhone").value.trim();
+
+  const storeDescription =
+    document.getElementById("storeDescription").value.trim();
+
+  if (!businessName || !agentName) {
+    alert("Please enter your business name and agent name.");
     return;
   }
 
-  const url = new URL("index.html", window.location.href);
-  url.searchParams.set("agent", makeSlug(profile.businessName));
-  linkBox.textContent = url.href;
+  profile = {
+    businessName: businessName,
+    agentName: agentName,
+    agentPhone: agentPhone,
+    storeDescription: storeDescription
+  };
+
+  const saved = writeStorage(STORAGE.profile, profile);
+
+  renderStoreLink();
+
+  document.getElementById("storeMessage").textContent = saved
+    ? "Details saved in this browser only. Server-side profile saving is not connected."
+    : "Your browser could not save these details.";
+
+  alert(
+    saved
+      ? "Store details saved in this browser."
+      : "Could not save details in this browser."
+  );
 }
 
 function makeSlug(value) {
@@ -851,6 +1230,24 @@ function makeSlug(value) {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+function renderStoreLink() {
+  const box = document.getElementById("storeLink");
+
+  if (!profile.businessName) {
+    box.textContent = "Save your store details first.";
+    return;
+  }
+
+  const url = new URL("index.html", window.location.href);
+
+  url.searchParams.set(
+    "agent",
+    makeSlug(profile.businessName)
+  );
+
+  box.textContent = url.href;
 }
 
 async function copyStoreLink() {
@@ -863,7 +1260,7 @@ async function copyStoreLink() {
 
   try {
     await navigator.clipboard.writeText(link);
-    alert("Link copied.");
+    alert("Store link copied.");
   } catch (error) {
     window.prompt("Copy your store link:", link);
   }
@@ -877,11 +1274,17 @@ async function shareStore() {
     return;
   }
 
-  const text = "Visit " + profile.businessName + " for data bundles: " + link;
+  const text =
+    "Visit " + profile.businessName +
+    " for data bundles: " + link;
 
   if (navigator.share) {
     try {
-      await navigator.share({ title: profile.businessName, text, url: link });
+      await navigator.share({
+        title: profile.businessName,
+        text: text,
+        url: link
+      });
     } catch (error) {
       // The user may cancel the share sheet.
     }
@@ -894,184 +1297,143 @@ async function shareStore() {
   }
 }
 
-function renderOrders() {
-  const list = document.getElementById("ordersList");
-  const filter = document.getElementById("orderFilter").value;
+async function loadOrders() {
+  const target = document.getElementById("ordersList");
 
-  const filtered = orders.filter(order =>
-    filter === "all" || order.status === filter
-  );
+  target.textContent = "Loading orders from the server...";
 
-  if (!filtered.length) {
-    list.innerHTML = '<div class="empty">No orders found. Real customer orders will appear here after backend integration.</div>';
+  try {
+    const data = await apiRequest("/agents/orders");
+
+    if (
+      !data.response.ok ||
+      !data.result ||
+      !data.result.success
+    ) {
+      target.textContent =
+        "The server did not return your orders. Please try again.";
+      return;
+    }
+
+    const result = data.result;
+    const receivedOrders = Array.isArray(result.orders)
+      ? result.orders
+      : [];
+
+    orders = receivedOrders;
+
+    renderOrders();
     renderRecentOrders();
+
+  } catch (error) {
+    target.textContent =
+      "Unable to load orders. Check your connection and try again.";
+  }
+}
+
+function renderOrders() {
+  const target = document.getElementById("ordersList");
+
+  if (!orders.length) {
+    target.textContent =
+      "No server orders were returned for this account.";
     return;
   }
 
-  list.innerHTML = filtered.slice().reverse().map(order => `
-    <div class="card">
-      <div class="btn-row" style="justify-content:space-between">
-        <strong>${escapeHTML(order.network)} · ${escapeHTML(order.bundle)}</strong>
-        <span class="badge ${escapeHTML(order.status)}">${escapeHTML(order.status)}</span>
-      </div>
-      <p class="stat-note">Phone: ${escapeHTML(order.phone)}</p>
-      <p class="stat-note">Reference: ${escapeHTML(order.reference)}</p>
-      <strong>${money(order.amount)}</strong>
-    </div>
-  `).join("");
+  target.innerHTML = orders.map(function (order) {
+    const network = order.network || "Network";
+    const bundle = order.bundle || "Bundle";
+    const status = order.status || "unknown";
+    const amount = order.amount || order.total || 0;
+    const phone = order.phone || order.customer_phone || "Not provided";
 
-  renderRecentOrders();
+    return `
+      <div class="card">
+        <strong>${escapeHTML(network)} · ${escapeHTML(bundle)}</strong>
+        <p class="stat-note">Phone: ${escapeHTML(phone)}</p>
+        <p class="stat-note">Status: ${escapeHTML(status)}</p>
+        <strong>${money(amount)}</strong>
+      </div>
+    `;
+  }).join("");
 }
 
 function renderRecentOrders() {
   const target = document.getElementById("recentOrders");
 
   if (!orders.length) {
-    target.textContent = "No orders have been recorded in this browser yet.";
+    target.textContent =
+      "No server orders have been returned yet.";
     return;
   }
 
-  target.innerHTML = orders.slice(-3).reverse().map(order => `
-    <div style="padding:12px 0;border-bottom:1px solid var(--border)">
-      <strong>${escapeHTML(order.network)} · ${escapeHTML(order.bundle)}</strong>
-      <p class="stat-note">${escapeHTML(order.phone)}</p>
-      <div class="btn-row" style="justify-content:space-between">
-        <span class="badge ${escapeHTML(order.status)}">${escapeHTML(order.status)}</span>
-        <strong>${money(order.amount)}</strong>
+  target.innerHTML = orders.slice(0, 3).map(function (order) {
+    return `
+      <div class="message">
+        <strong>
+          ${escapeHTML(order.network || "Network")}
+          · ${escapeHTML(order.bundle || "Bundle")}
+        </strong>
+        <br>
+        Status: ${escapeHTML(order.status || "unknown")}
+        <br>
+        ${money(order.amount || order.total || 0)}
       </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 }
 
-function renderStats() {
-  const sales = orders.reduce((sum, order) => sum + Number(order.amount || 0), 0);
-  const profit = orders.reduce((sum, order) => sum + Number(order.profit || 0), 0);
-  const customers = new Set(orders.map(order => order.phone)).size;
-
-  document.getElementById("ordersStat").textContent = orders.length;
-  document.getElementById("salesStat").textContent = money(sales);
-  document.getElementById("profitStat").textContent = money(profit);
-  document.getElementById("customersStat").textContent = customers;
-}
-
-function renderProfile() {
-  document.getElementById("profileBusiness").textContent =
-    profile.businessName || "Business name not set";
-
-  document.getElementById("profileAgent").textContent =
-    profile.agentName || "Agent name not set";
-
-  document.getElementById("profilePhone").textContent =
-    profile.agentPhone || "Phone number not set";
-}
-
-function loadProfileForm() {
-  document.getElementById("businessName").value = profile.businessName || "";
-  document.getElementById("agentName").value = profile.agentName || "";
-  document.getElementById("agentPhone").value = profile.agentPhone || "";
-  document.getElementById("storeDescription").value = profile.storeDescription || "";
-}
-
-document.querySelectorAll(".filters button").forEach(button => {
-  button.addEventListener("click", () => {
-    document.querySelectorAll(".filters button").forEach(item =>
-      item.classList.remove("active")
-    );
-
-    button.classList.add("active");
-
-    /*
-     * The current demo uses browser-local orders.
-     * Date-based reporting will be added with the real backend.
-     */
-    alert("Date-based performance reports will work after server-side orders are connected.");
-  });
-});
-
-loadProfileForm();
-renderPrices();
-renderProfile();
-renderStoreLink();
-renderStats();
-renderOrders();
-</script>
-<script>
-  <body>
-
-<div style="background:green;color:white;padding:20px;font-size:20px;">
-  DASHBOARD DISPLAY TEST
-</div>
-
-<header class="topbar">
-"use strict";
-
-const AGENT_API = "https://kielmen-dataplug-payment-api.onrender.com";
-
-async function verifyAgent() {
-  const token = sessionStorage.getItem("k636_agent_token");
-
-  if (!token) {
-    window.location.replace("agent-login.html");
-    return;
-  }
-
+async function loadStats() {
   try {
-    const response = await fetch(AGENT_API + "/agents/me", {
-      method: "GET",
-      headers: {
-        "Authorization": "Bearer " + token
-      }
-    });
+    const data = await apiRequest("/agents/stats");
 
-    const result = await response.json();
-
-    if (!response.ok || !result.success || !result.agent) {
-      sessionStorage.removeItem("k636_agent_token");
-      sessionStorage.removeItem("k636_agent");
-      window.location.replace("agent-login.html");
+    if (
+      !data.response.ok ||
+      !data.result ||
+      !data.result.success
+    ) {
+      setStatsUnavailable();
       return;
     }
 
-    const agent = result.agent;
+    dashboardStats = data.result;
 
-    document.getElementById("welcomeName").textContent =
-      "Welcome, " + (agent.full_name || "Agent") + "!";
+    const stats = dashboardStats.stats || dashboardStats;
 
-    document.getElementById("welcomeDetails").textContent =
-      agent.business_name || "Manage your data business here.";
+    document.getElementById("ordersStat").textContent =
+      stats.totalOrders ?? stats.total_orders ?? "—";
 
-    document.getElementById("agentCode").textContent =
-      agent.agent_code || "Not assigned";
+    document.getElementById("salesStat").textContent =
+      money(stats.totalSales ?? stats.total_sales ?? 0);
 
-    profile = {
-      businessName: agent.business_name || "",
-      agentName: agent.full_name || "",
-      agentPhone: agent.phone || "",
-      storeDescription: agent.store_description || ""
-    };
+    document.getElementById("profitStat").textContent =
+      money(stats.totalProfit ?? stats.total_profit ?? 0);
 
-    loadProfileForm();
-    renderProfile();
-    renderStoreLink();
-
-    document.body.style.visibility = "visible";
+    document.getElementById("customersStat").textContent =
+      stats.totalCustomers ?? stats.total_customers ?? "—";
 
   } catch (error) {
-    document.body.innerHTML = `
-      <main style="padding:24px;color:white;font-family:Arial,sans-serif">
-        <h2>Unable to connect to the server</h2>
-        <p>Please check your internet connection and try again.</p>
-        <button onclick="location.reload()">Try Again</button>
-        <p>
-          <a href="agent-login.html" style="color:#48c6a3">
-            Return to Sign In
-          </a>
-        </p>
-      </main>
-    `;
-
-    document.body.style.visibility = "visible";
+    setStatsUnavailable();
   }
+}
+
+function setStatsUnavailable() {
+  document.getElementById("ordersStat").textContent = "—";
+  document.getElementById("salesStat").textContent = "—";
+  document.getElementById("profitStat").textContent = "—";
+  document.getElementById("customersStat").textContent = "—";
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, function (character) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[character];
+  });
 }
 
 async function agentLogout() {
@@ -1087,14 +1449,15 @@ async function agentLogout() {
       });
     }
   } catch (error) {
-    console.error("Sign-out request failed.");
+    console.warn("Sign-out request could not reach the server.");
   } finally {
     sessionStorage.removeItem("k636_agent_token");
     sessionStorage.removeItem("k636_agent");
-    window.location.replace("agent-login.html");
+    window.location.replace(LOGIN_PAGE);
   }
 }
 
+/* Start only after the page structure exists. */
 verifyAgent();
 </script>
 
