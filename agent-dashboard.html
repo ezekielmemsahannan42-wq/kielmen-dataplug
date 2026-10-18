@@ -29,6 +29,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
+  visibility: hidden;
 }
 
 button, input, select {
@@ -988,6 +989,73 @@ renderStoreLink();
 renderStats();
 renderOrders();
 </script>
+<script>
+(async function () {
+  "use strict";
 
+  const API_BASE =
+    "https://kielmen-dataplug-payment-api.onrender.com";
+
+  const token = sessionStorage.getItem("k636_agent_token");
+
+  // No login token? Send the visitor to sign in.
+  if (!token) {
+    window.location.replace("agent-login.html");
+    return;
+  }
+
+  try {
+    const response = await fetch(API_BASE + "/agents/me", {
+      method: "GET",
+      headers: {
+        "Authorization": "Bearer " + token
+      }
+    });
+
+    const result = await response.json();
+
+    // Invalid, expired, or unapproved session.
+    if (!response.ok || !result.success) {
+      sessionStorage.removeItem("k636_agent_token");
+      sessionStorage.removeItem("k636_agent");
+
+      window.location.replace("agent-login.html");
+      return;
+    }
+
+    // Authentication succeeded.
+    document.body.style.visibility = "visible";
+
+  } catch (error) {
+    // Do not expose the dashboard when verification fails.
+    document.body.innerHTML = `
+      <main style="
+        max-width:500px;
+        margin:60px auto;
+        padding:20px;
+        color:white;
+        background:#202120;
+        font-family:Arial,sans-serif;
+        border-radius:15px;
+      ">
+        <h2>Unable to Verify Your Account</h2>
+        <p>
+          We could not connect to the authentication server.
+          Please check your internet connection and try again.
+        </p>
+        <button onclick="location.reload()"
+          style="padding:12px;margin-right:8px;">
+          Try Again
+        </button>
+        <a href="agent-login.html" style="color:#48c6a3;">
+          Return to Sign In
+        </a>
+      </main>
+    `;
+
+    document.body.style.visibility = "visible";
+  }
+})();
+</script>
 </body>
 </html>
