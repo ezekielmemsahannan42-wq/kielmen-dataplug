@@ -719,16 +719,17 @@ function requireOwner(req, res, next) {
 }
 
 // ============================================================
-// 8. AGENT REGISTRATION
+// ============================================================
+// 8. AGENT REGISTRATION — AUTOMATIC APPROVAL
 // ============================================================
 
-app.post("/agents/register"async (req, res) => {
+app.post("/agents/register", async (req, res) => {
   try {
     if (AGENT_TOKEN_SECRET.length < 32) {
       return res.status(503).json({
         success: false,
         message:
-          "Set AGENT_TOKEN_SECRET to a random secret of at least 32 characters in Render."
+          "Agent authentication is not configured. Please try again later."
       });
     }
 
@@ -769,7 +770,7 @@ app.post("/agents/register"async (req, res) => {
       return res.status(400).json({
         success: false,
         message:
-          "Enter valid details. Password must be at least 12 characters."
+          "Enter valid details. Your password must contain at least 12 characters, and your phone number must be valid."
       });
     }
 
@@ -781,38 +782,17 @@ app.post("/agents/register"async (req, res) => {
 
     const result = await pool.query(
       `
-        const result = await pool.query(
-    `INSERT INTO agents (
-        agent_code,
-        full_name,
-        business_name,
-        email,
-        phone,
-        password_hash,
-        store_description,
-        status
-    )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, 'approved')
-    RETURNING
-        id,
-        agent_code,
-        full_name,
-        business_name,
-        email,
-        phone,
-        status,
-        created_at`,
-    [
-        code,
-        fullName,
-        businessName,
-        email,
-        phone,
-        hash,
-        storeDescription
-    ]
-);
-        VALUES ($1,$2,$3,$4,$5,$6,$7)
+        INSERT INTO agents (
+          agent_code,
+          full_name,
+          business_name,
+          email,
+          phone,
+          password_hash,
+          store_description,
+          status
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, 'approved')
         RETURNING
           id,
           agent_code,
@@ -834,25 +814,30 @@ app.post("/agents/register"async (req, res) => {
       ]
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message:
-        message: "Registration successful! You can now log in to your agent account.",
+        "Registration successful! Your account is ready. You can log in now.",
       agent: result.rows[0]
     });
+
   } catch (error) {
     if (error.code === "23505") {
       return res.status(409).json({
         success: false,
-        message: "Email or phone already registered."
+        message:
+          "This email address or phone number is already registered."
       });
     }
 
-    console.error("Agent registration:", error.message);
+    console.error(
+      "Agent registration:",
+      error.message
+    );
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Registration failed."
+      message: "Registration failed. Please try again."
     });
   }
 });
