@@ -1311,7 +1311,304 @@ app.get(
   }
 );
 
+// ============================================================
+// 12A. AGENT WITHDRAWAL BALANCE AND REQUESTS
+// ============================================================
 
+// Get an agent's available and pending withdrawal balances.
+app.get(
+  "/agents/withdrawals",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `
+          WITH earnings AS (
+            SELECT
+              COALESCE(
+                SUM(amount - agent_base_price),
+                0
+              ) AS total_earnings
+            FROM orders
+            WHERE agent_id = $1
+              AND status = 'paid'
+              AND delivery_status = 'delivered'
+              AND delivered_at IS NOT NULL
+              AND delivered_at <
+                date_trunc(
+                  'day',
+                  NOW() AT TIME ZONE 'Africa/Accra'
+                ) AT TIME ZONE 'Africa/Accra'
+              AND agent_base_price IS NOT NULL
+              AND amount > agent_base_price
+          ),
+          withdrawals AS (
+            SELECT
+              COALESCE(
+                SUM(amount) FILTER (
+                  WHERE status IN ('pending', 'approved', 'paid')
+                ),
+                0
+              ) AS used_amount,
+
+              COALESCE(
+                SUM(amount) FILTER (
+                  WHERE status IN ('pending', 'approved')
+                ),
+                0
+              ) AS pending_amount
+            FROM agent_withdrawals
+            WHERE agent_id = $1
+          )
+          SELECT
+            earnings.total_earnings,
+            withdrawals.used_amount,
+            withdrawals.pending_amount
+          FROM earnings, withdrawals
+        `,
+        [req.agentId]
+      );
+
+      const row = result.rows[0];
+
+      const totalEarnings = Number(row.total_earnings);
+      const usedAmount = Number(row.used_amount);
+      const pendingAmount = Number(row.pending_amount);
+
+      res.json({
+        success: true,
+        currency: "GHS",
+        minimumWithdrawal: 0.10,
+        maximumWithdrawal: 1000.00,
+        totalEarnings: Number(totalEarnings.toFixed(2)),
+        pendingWithdrawals: Number(pendingAmount.toFixed(2)),
+        availableBalance: Number(
+          Math.max(0, totalEarnings - usedAmount).toFixed(2)
+        )
+      });
+    } catch (error) {
+      console.error("Withdrawal balance:", error.message);
+
+      res.status(500).json({
+        success: false,
+        message: "Could not load your withdrawal balance."
+      });
+    }
+  }
+);
+
+// Submit a withdrawal request.
+app.post(
+  "/agents/withdrawals",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    const amount = Number(req.body?.amount);
+    const phone = normalizePhone(req.body?.phone);
+    const provider = String(req.body?.provider || "")
+      .trim()
+      .toUpperCase();
+
+    if (
+      !Number.isFinite(amount) ||
+      Math.round(amount * 100) !== amount * 100 ||
+      amount < 0.10 ||
+      amount > 1000
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Enter a withdrawal amount between GH₵0.10 and GH₵1,000.00."
+      });
+    }
+
+    if (!validGhanaPhone(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter a valid Ghana Mobile Money number."
+      });
+    }
+
+    if (!["MTN", "TELECEL", "AIRTELTIGO"].includes(provider)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Select MTN MoMo, Telecel Cash, or AirtelTigo Money."
+      });
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      // Lock the agent row so simultaneous requests cannot
+      // withdraw the same balance twice.
+      const agentResult = await client.query(
+        `
+          SELECT id
+          FROM agents
+          WHERE id = $1
+            AND status = 'approved'
+          FOR UPDATE
+        `,
+        [req.agentId]
+      );
+
+      if (!agentResult.rowCount) {
+        await client.query("ROLLBACK");
+
+        return res.status(403).json({
+          success: false,
+          message: "Your agent account is not approved."
+        });
+      }
+
+      const balanceResult = await client.query(
+        `
+          WITH earnings AS (
+            SELECT
+              COALESCE(
+                SUM(amount - agent_base_price),
+                0
+              ) AS total_earnings
+            FROM orders
+            WHERE agent_id = $1
+              AND status = 'paid'
+              AND delivery_status = 'delivered'
+              AND delivered_at IS NOT NULL
+              AND delivered_at <
+                date_trunc(
+                  'day',
+                  NOW() AT TIME ZONE 'Africa/Accra'
+                ) AT TIME ZONE 'Africa/Accra'
+              AND agent_base_price IS NOT NULL
+              AND amount > agent_base_price
+          ),
+          withdrawals AS (
+            SELECT
+              COALESCE(
+                SUM(amount) FILTER (
+                  WHERE status IN ('pending', 'approved', 'paid')
+                ),
+                0
+              ) AS used_amount
+            FROM agent_withdrawals
+            WHERE agent_id = $1
+          )
+          SELECT
+            earnings.total_earnings,
+            withdrawals.used_amount
+          FROM earnings, withdrawals
+        `,
+        [req.agentId]
+      );
+
+      const balance = balanceResult.rows[0];
+
+      const availableBalance = Math.max(
+        0,
+        Number(balance.total_earnings) -
+        Number(balance.used_amount)
+      );
+
+      if (amount > availableBalance + 0.000001) {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          success: false,
+          message:
+            `Insufficient available balance. Your available balance is GH₵${availableBalance.toFixed(2)}.`
+        });
+      }
+
+      const withdrawalResult = await client.query(
+        `
+          INSERT INTO agent_withdrawals (
+            agent_id,
+            amount,
+            phone,
+            provider,
+            status
+          )
+          VALUES ($1, $2, $3, $4, 'pending')
+          RETURNING
+            id,
+            amount,
+            phone,
+            provider,
+            status,
+            created_at
+        `,
+        [req.agentId, amount, phone, provider]
+      );
+
+      await client.query("COMMIT");
+
+      return res.status(201).json({
+        success: true,
+        message:
+          "Withdrawal request submitted successfully. It is pending owner review; money has not yet been sent.",
+        withdrawal: withdrawalResult.rows[0]
+      });
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+
+      console.error("Withdrawal request:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not submit your withdrawal request."
+      });
+    } finally {
+      client.release();
+    }
+  }
+);
+
+// View the logged-in agent's withdrawal history.
+app.get(
+  "/agents/withdrawals/history",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `
+          SELECT
+            id,
+            amount,
+            phone,
+            provider,
+            status,
+            created_at,
+            updated_at
+          FROM agent_withdrawals
+          WHERE agent_id = $1
+          ORDER BY created_at DESC
+          LIMIT 100
+        `,
+        [req.agentId]
+      );
+
+      res.json({
+        success: true,
+        withdrawals: result.rows.map(item => ({
+          ...item,
+          amount: Number(item.amount)
+        }))
+      });
+    } catch (error) {
+      console.error("Withdrawal history:", error.message);
+
+      res.status(500).json({
+        success: false,
+        message: "Could not load withdrawal history."
+      });
+    }
+  }
+);
 
 // ============================================================
 // 13. OWNER LOGIN AND MANAGEMENT
