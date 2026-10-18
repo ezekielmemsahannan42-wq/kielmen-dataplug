@@ -1030,7 +1030,7 @@ function getCurrentPrices(network) {
 async function loadPrices() {
   try {
     const response = await fetch(
-      `${API_BASE}/agents/prices`,
+      `${AGENT_API}/agents/prices`,
       {
         headers: {
           Authorization: `Bearer ${agentToken}`
@@ -1093,75 +1093,77 @@ async function loadPrices() {
 }
   
 async function savePrices() {
-  const network = document.getElementById("priceNetwork").value;
-  const inputs = document.querySelectorAll("#priceRows input");
-  const newPrices = {};
+  const token = sessionStorage.getItem("k636_agent_token");
 
-  for (const input of inputs) {
-    const bundle = input.dataset.bundle;
-    const base = BASE_PRICES[network][bundle];
-    const price = Number(input.value);
-
-    if (!Number.isFinite(price) || price < base) {
-      alert(
-        bundle + " must be at least " + money(base) + "."
-      );
-      input.focus();
-      return;
-    }
-
-    newPrices[bundle] = Math.round(price * 100) / 100;
+  if (!token) {
+    alert("Your session has expired. Please log in again.");
+    return;
   }
 
-  const previousPrices = agentPrices;
-  const updatedPrices = {
-    ...agentPrices,
-    [network]: newPrices
-  };
+  const inputs = document.querySelectorAll(
+    "[data-network][data-bundle]"
+  );
+
+  const prices = [];
+
+  inputs.forEach(input => {
+    const network = input.dataset.network;
+    const bundle = input.dataset.bundle;
+    const sellingPrice = Number(input.value);
+
+    if (
+      network &&
+      bundle &&
+      input.value.trim() !== "" &&
+      Number.isFinite(sellingPrice) &&
+      sellingPrice >= 0
+    ) {
+      prices.push({
+        network,
+        bundle,
+        sellingPrice
+      });
+    }
+  });
+
+  if (prices.length === 0) {
+    alert("No valid prices were found. Please check your price fields.");
+    return;
+  }
 
   try {
-    const data = await apiRequest("/agents/prices", {
-      method: "PUT",
-      body: JSON.stringify({
-        network: network,
-        prices: newPrices
-      })
-    });
+    const response = await fetch(
+      `${AGENT_API}/agents/prices`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ prices })
+      }
+    );
 
-    if (!data.response.ok || !data.result.success) {
-      alert(
-        data.result.message ||
-        "The server did not save your prices."
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Unable to save prices."
       );
-      return;
     }
 
-    agentPrices = data.result.prices || updatedPrices;
-    serverPricesAvailable = true;
-    writeStorage(STORAGE.prices, agentPrices);
+    alert("Your selling prices have been saved successfully!");
 
-    document.getElementById("priceMessage").textContent =
-      "Your prices were saved on the server.";
-
-    alert("Your selling prices have been saved.");
+    await loadPrices();
 
   } catch (error) {
-    /*
-     * Do not claim server saving succeeded.
-     * Keep the current prices visible without pretending
-     * they were stored in the agent account.
-     */
-    agentPrices = previousPrices;
-
-    document.getElementById("priceMessage").textContent =
-      "Could not save prices to the server. Please try again.";
+    console.error("Save prices error:", error);
 
     alert(
-      "Unable to save prices to the server. Please check your connection."
+      error.message ||
+      "Unable to save prices. Please try again."
     );
   }
-
-  renderPrices();
 }
 
 function loadProfileForm() {
