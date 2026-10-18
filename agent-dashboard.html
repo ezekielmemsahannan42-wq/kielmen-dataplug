@@ -316,7 +316,7 @@
       left: 0;
       z-index: 20;
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       padding: 8px 3px calc(8px + env(safe-area-inset-bottom));
       border-top: 1px solid #343638;
       background: #090a0c;
@@ -698,6 +698,105 @@
   </section>
 
   <footer>
+    <!-- WITHDRAWALS -->
+<section class="page" id="withdrawals">
+
+  <h1>Withdraw Earnings</h1>
+
+  <p class="stat-note">
+    Withdraw your eligible earnings to your Mobile Money account.
+    Today's profits become available the following day.
+  </p>
+
+  <div class="stats">
+
+    <div class="card">
+      <div class="stat-label">Available Balance</div>
+      <div class="stat-value green" id="withdrawAvailable">
+        GH₵0.00
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stat-label">Pending Withdrawals</div>
+      <div class="stat-value" id="withdrawPending">
+        GH₵0.00
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card">
+
+    <h3>Request a Withdrawal</h3>
+
+    <div class="notice">
+      Minimum: GH₵0.10 · Maximum per request: GH₵1,000.00.
+      Your request must not exceed your available balance.
+    </div>
+
+    <div class="field">
+      <label for="withdrawAmount">Amount (GH₵)</label>
+      <input
+        type="number"
+        id="withdrawAmount"
+        min="0.10"
+        max="1000"
+        step="0.01"
+        placeholder="e.g. 50.00"
+      >
+    </div>
+
+    <div class="field">
+      <label for="withdrawProvider">Mobile Money Provider</label>
+      <select id="withdrawProvider">
+        <option value="MTN">MTN MoMo</option>
+        <option value="TELECEL">Telecel Cash</option>
+        <option value="AIRTELTIGO">AirtelTigo Money</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="withdrawPhone">Mobile Money Number</label>
+      <input
+        type="tel"
+        id="withdrawPhone"
+        inputmode="tel"
+        maxlength="15"
+        placeholder="0241234567"
+      >
+    </div>
+
+    <button
+      class="btn btn-primary btn-block"
+      id="withdrawSubmit"
+      onclick="submitWithdrawal()"
+    >
+      Request Withdrawal
+    </button>
+
+    <p id="withdrawMessage" class="message" aria-live="polite"></p>
+
+  </div>
+
+  <div class="card">
+
+    <h3>Withdrawal History</h3>
+
+    <button
+      class="btn btn-block"
+      onclick="loadWithdrawals()"
+    >
+      Refresh Balance & History
+    </button>
+
+    <div id="withdrawHistory" class="message">
+      Loading withdrawal history...
+    </div>
+
+  </div>
+
+</section>
     Kielmen 636 Dataplug · Agent Dashboard
   </footer>
 
@@ -728,6 +827,11 @@
   <button class="nav-btn"
     data-page="profile" onclick="showPage('profile')">
     <span class="icon">◎</span>Profile
+  </button>
+
+  <button class="nav-btn"
+    data-page="withdrawals" onclick="showPage('withdrawals')">
+    <span class="icon">💰</span>Withdraw
   </button>
 
 </nav>
@@ -994,7 +1098,9 @@ function showPage(pageId) {
   if (pageId === "prices") {
     renderPrices();
   }
-
+  if (pageId === "withdrawals") {
+    loadWithdrawals();
+  }
   if (pageId === "orders") {
     renderOrders();
   }
@@ -1527,6 +1633,177 @@ async function loadStats() {
   }
 }
 
+  // ============================================================
+// AGENT WITHDRAWALS
+// ============================================================
+
+async function loadWithdrawals() {
+  const balanceElement = document.getElementById("withdrawAvailable");
+  const pendingElement = document.getElementById("withdrawPending");
+  const historyElement = document.getElementById("withdrawHistory");
+  const messageElement = document.getElementById("withdrawMessage");
+
+  if (!balanceElement || !pendingElement || !historyElement) {
+    return;
+  }
+
+  balanceElement.textContent = "Loading...";
+  pendingElement.textContent = "Loading...";
+  historyElement.textContent = "Loading withdrawal history...";
+
+  try {
+    const [balanceData, historyData] = await Promise.all([
+      apiRequest("/agents/withdrawals"),
+      apiRequest("/agents/withdrawals/history")
+    ]);
+
+    if (
+      !balanceData.response.ok ||
+      !balanceData.result ||
+      !balanceData.result.success
+    ) {
+      throw new Error(
+        balanceData.result?.message ||
+        "Could not load your withdrawal balance."
+      );
+    }
+
+    if (
+      !historyData.response.ok ||
+      !historyData.result ||
+      !historyData.result.success
+    ) {
+      throw new Error(
+        historyData.result?.message ||
+        "Could not load your withdrawal history."
+      );
+    }
+
+    const balance = balanceData.result;
+
+    balanceElement.textContent = money(balance.availableBalance);
+    pendingElement.textContent = money(balance.pendingWithdrawals);
+
+    const history = historyData.result.withdrawals || [];
+
+    if (!history.length) {
+      historyElement.textContent = "You have not made any withdrawal requests yet.";
+    } else {
+      historyElement.innerHTML = history.map(function (item) {
+        return `
+          <div class="card">
+            <strong>${money(item.amount)}</strong>
+            <p class="stat-note">
+              Provider: ${escapeHTML(item.provider || "Not provided")}
+            </p>
+            <p class="stat-note">
+              Number: ${escapeHTML(item.phone || "Not provided")}
+            </p>
+            <p class="stat-note">
+              Status: ${escapeHTML(item.status || "pending").toUpperCase()}
+            </p>
+            <p class="stat-note">
+              Requested: ${escapeHTML(
+                item.created_at
+                  ? new Date(item.created_at).toLocaleString()
+                  : "Date unavailable"
+              )}
+            </p>
+          </div>
+        `;
+      }).join("");
+    }
+
+    if (messageElement) {
+      messageElement.textContent =
+        "Your balance and withdrawal history are up to date.";
+    }
+
+  } catch (error) {
+    balanceElement.textContent = "Unavailable";
+    pendingElement.textContent = "Unavailable";
+    historyElement.textContent =
+      error.message || "Could not load withdrawal information.";
+
+    if (messageElement) {
+      messageElement.textContent = "Please try again.";
+    }
+
+    console.error("Load withdrawals error:", error);
+  }
+}
+
+async function submitWithdrawal() {
+  const amountInput = document.getElementById("withdrawAmount");
+  const providerInput = document.getElementById("withdrawProvider");
+  const phoneInput = document.getElementById("withdrawPhone");
+  const button = document.getElementById("withdrawSubmit");
+  const message = document.getElementById("withdrawMessage");
+
+  const amount = Number(amountInput.value);
+  const provider = providerInput.value;
+  const phone = phoneInput.value.trim();
+
+  if (
+    !Number.isFinite(amount) ||
+    Math.round(amount * 100) !== amount * 100 ||
+    amount < 0.10 ||
+    amount > 1000
+  ) {
+    message.textContent =
+      "Enter an amount between GH₵0.10 and GH₵1,000.00.";
+    return;
+  }
+
+  if (!phone) {
+    message.textContent = "Enter your Mobile Money number.";
+    return;
+  }
+
+  if (!confirm(
+    `Request a withdrawal of ${money(amount)} to ${provider} number ${phone}?`
+  )) {
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Submitting...";
+  message.textContent = "Submitting your request...";
+
+  try {
+    const data = await apiRequest("/agents/withdrawals", {
+      method: "POST",
+      body: JSON.stringify({
+        amount: amount,
+        provider: provider,
+        phone: phone
+      })
+    });
+
+    if (!data.response.ok || !data.result || !data.result.success) {
+      throw new Error(
+        data.result?.message ||
+        "Your withdrawal request could not be submitted."
+      );
+    }
+
+    message.textContent =
+      data.result.message ||
+      "Your withdrawal request has been submitted.";
+
+    amountInput.value = "";
+
+    await loadWithdrawals();
+
+  } catch (error) {
+    message.textContent =
+      error.message || "Could not submit your request.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Request Withdrawal";
+  }
+      }
+  
 function setStatsUnavailable() {
   document.getElementById("ordersStat").textContent = "—";
   document.getElementById("salesStat").textContent = "—";
