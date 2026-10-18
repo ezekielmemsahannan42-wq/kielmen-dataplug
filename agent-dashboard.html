@@ -1062,31 +1062,13 @@ renderOrders();
     document.body.style.visibility = "visible";
   }
 })();
-</script>
-      async function agentLogout() {
-  const token = sessionStorage.getItem("k636_agent_token");
+<script>
+"use strict";
 
-  try {
-    if (token) {
-      await fetch(
-        "https://kielmen-dataplug-payment-api.onrender.com/agents/logout",
-        {
-          method: "POST",
-          headers: {
-            "Authorization": "Bearer " + token
-          }
-        }
-      );
-    }
-  } catch (error) {
-    console.error("Sign-out request failed.");
-  } finally {
-    sessionStorage.removeItem("k636_agent_token");
-    sessionStorage.removeItem("k636_agent");
-    window.location.replace("agent-login.html");
-  }
-}
-      async function loadAuthenticatedAgent() {
+(async function () {
+  const API_BASE =
+    "https://kielmen-dataplug-payment-api.onrender.com";
+
   const token = sessionStorage.getItem("k636_agent_token");
 
   if (!token) {
@@ -1095,14 +1077,11 @@ renderOrders();
   }
 
   try {
-    const response = await fetch(
-      "https://kielmen-dataplug-payment-api.onrender.com/agents/me",
-      {
-        headers: {
-          "Authorization": "Bearer " + token
-        }
+    const response = await fetch(API_BASE + "/agents/me", {
+      headers: {
+        "Authorization": "Bearer " + token
       }
-    );
+    });
 
     const result = await response.json();
 
@@ -1131,17 +1110,49 @@ renderOrders();
       storeDescription: agent.store_description || ""
     };
 
+    loadProfileForm();
     renderProfile();
 
-  } catch (error) {
-    document.getElementById("welcomeName").textContent =
-      "Unable to load your account";
+    document.body.style.visibility = "visible";
 
-    document.getElementById("welcomeDetails").textContent =
-      "Check your connection and refresh the page.";
+  } catch (error) {
+    document.body.innerHTML = `
+      <main style="padding:24px;color:white;font-family:Arial,sans-serif">
+        <h2>Unable to verify your account</h2>
+        <p>Please check your internet connection and try again.</p>
+        <button onclick="location.reload()">Try Again</button>
+        <p><a href="agent-login.html">Return to Sign In</a></p>
+      </main>
+    `;
+
+    document.body.style.visibility = "visible";
+  }
+})();
+
+async function agentLogout() {
+  const token = sessionStorage.getItem("k636_agent_token");
+
+  try {
+    if (token) {
+      await fetch(
+        "https://kielmen-dataplug-payment-api.onrender.com/agents/logout",
+        {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + token
+          }
+        }
+      );
+    }
+  } catch (error) {
+    console.error("Sign-out request failed.");
+  } finally {
+    sessionStorage.removeItem("k636_agent_token");
+    sessionStorage.removeItem("k636_agent");
+    window.location.replace("agent-login.html");
   }
 }
+</script>
 
-loadAuthenticatedAgent();
 </body>
 </html>
