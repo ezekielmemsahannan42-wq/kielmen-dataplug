@@ -1380,7 +1380,7 @@ app.get(
         success: true,
         currency: "GHS",
         minimumWithdrawal: 0.10,
-        maximumWithdrawal: 1000.00,
+        maximumWithdrawal: null,
         totalEarnings: Number(totalEarnings.toFixed(2)),
         pendingWithdrawals: Number(pendingAmount.toFixed(2)),
         availableBalance: Number(
@@ -1411,16 +1411,16 @@ app.post(
       .toUpperCase();
 
     if (
-      !Number.isFinite(amount) ||
-      Math.round(amount * 100) !== amount * 100 ||
-      amount < 0.10 ||
-      amount > 1000
-    ) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Enter a withdrawal amount between GH₵0.10 and GH₵1,000.00."
-      });
+  !Number.isFinite(amount) ||
+  Math.round(amount * 100) !== amount * 100 ||
+  amount < 0.10 ||
+  amount <= 0
+) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "The minimum withdrawal is GH₵0.10. There is no maximum limit, but you cannot withdraw more than your available balance."
+  });
     }
 
     if (!validGhanaPhone(phone)) {
