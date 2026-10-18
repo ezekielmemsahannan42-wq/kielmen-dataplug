@@ -661,10 +661,62 @@ mobileMenu.querySelectorAll("a").forEach(function (link) {
         menuButton.textContent = "☰";
     });
 });
-  mobileMenu.querySelectorAll("a").forEach(function (link) {
+  <script src="script.js?v=6"></script>
+  <script>
+document.getElementById("currentYear").textContent =
+    new Date().getFullYear();
+
+const menuButton = document.getElementById("menuButton");
+const mobileMenu = document.getElementById("mobileMenu");
+
+menuButton.setAttribute("aria-expanded", "false");
+
+menuButton.addEventListener("click", function () {
+    const isOpen =
+        mobileMenu.style.display === "block";
+
+    mobileMenu.style.display =
+        isOpen ? "none" : "block";
+
+    menuButton.setAttribute(
+        "aria-expanded",
+        String(!isOpen)
+    );
+
+    menuButton.setAttribute(
+        "aria-label",
+        isOpen ? "Open menu" : "Close menu"
+    );
+
+    menuButton.textContent = isOpen ? "☰" : "✕";
+});
+
+mobileMenu.querySelectorAll("a").forEach(function (link) {
     link.addEventListener("click", function () {
-      mobileMenu.style.display = "none";
-      menu
+        mobileMenu.style.display = "none";
+
+        menuButton.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+        menuButton.setAttribute(
+            "aria-label",
+            "Open menu"
+        );
+
+        menuButton.textContent = "☰";
+    });
+});
+
+const announcement = document.getElementById("announcement");
+const continueShopping = document.getElementById("continueShopping");
+
+if (continueShopping && announcement) {
+    continueShopping.addEventListener("click", function () {
+        announcement.close();
+    });
+}
 </script>
 </body>
-</html> 
+</html>
