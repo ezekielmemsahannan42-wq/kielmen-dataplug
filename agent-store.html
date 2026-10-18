@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111211">
+
+  <title>Agent Data Store | Kielmen 636</title>
+
+  <style>
+    :root {
+      --bg: #111211;
+      --card: #202120;
+      --border: #454744;
+      --text: #f2f4f4;
+      --muted: #a6afb5;
+      --green: #48c6a3;
+      --gold: #d8a72c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .header {
+      padding: 22px 16px;
+      background: #1c1e1c;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .logo {
+      display: inline-grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      border-radius: 16px;
+      background: #050b1e;
+      color: var(--green);
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .header h1 {
+      margin-bottom: 8px;
+      overflow-wrap: anywhere;
+    }
+
+    .header p {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 18px 14px 50px;
+    }
+
+    .card {
+      padding: 18px;
+      margin-bottom: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #151615;
+      color: white;
+    }
+
+    .bundles {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .bundle {
+      padding: 16px 10px;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: #292a29;
+      color: white;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .bundle strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 18px;
+    }
+
+    .bundle span {
+      color: var(--green);
+      font-weight: bold;
+    }
+
+    .bundle.selected {
+      border: 2px solid var(--green);
+      background: #173a30;
+    }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border: 0;
+      border-radius: 10px;
+      background: #08754e;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .secondary {
+      margin-top: 10px;
+      background: #343634;
+    }
+
+    .notice {
+      padding: 12px;
+      margin: 12px 0;
+      border-left: 4px solid var(--gold);
+      border-radius: 7px;
+      background: #302509;
+      color: #ead7a1;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .message {
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .price {
+      font-size: 25px;
+      font-weight: bold;
+      color: var(--green);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    footer {
+      padding: 20px 10px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+    }
+
+    @media (min-width: 600px) {
+      .bundles {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header class="header">
+  <div class="logo">K636</div>
+  <h1 id="businessName">Loading Store...</h1>
+  <p id="storeDescription">
+    Affordable data bundles from your trusted agent.
+  </p>
+  <p id="agentCode"></p>
+</header>
+
+<main class="container">
+
+  <div class="card">
+    <h2>Available Data Bundles</h2>
+    <p class="message">
+      Choose your network and select your preferred data bundle.
+    </p>
+
+    <div class="field">
+      <label for="network">Select Network</label>
+      <select id="network">
+        <option value="">Loading networks...</option>
+      </select>
+    </div>
+
+    <div id="bundleMessage" class="message" aria-live="polite">
+      Loading available bundles...
+    </div>
+
+    <div id="bundles" class="bundles"></div>
+  </div>
+
+  <div class="card">
+    <h2>Place Your Order</h2>
+
+    <div class="field">
+      <label for="customerPhone">Phone Number Receiving Data</label>
+      <input
+        type="tel"
+        id="customerPhone"
+        inputmode="tel"
+        maxlength="15"
+        placeholder="0241234567"
+        autocomplete="tel"
+      >
+    </div>
+
+    <div class="field">
+      <label>Selected Bundle</label>
+      <p id="selectedBundle" class="message">
+        Please select a bundle above.
+      </p>
+      <div id="selectedPrice" class="price">GH₵0.00</div>
+    </div>
+
+    <div class="notice">
+      Check the network, bundle, phone number and price before paying.
+      Never pay twice for the same order.
+    </div>
+
+    <button id="payButton" class="btn" onclick="startPayment()" disabled>
+      Select a Bundle First
+    </button>
+
+    <p id="checkoutMessage" class="message" aria-live="polite"></p>
+  </div>
+
+  <div class="card">
+    <h2>Need Help?</h2>
+    <p class="message">
+      Contact the store owner if you need help with your order.
+    </p>
+    <a
+      id="whatsappLink"
+      class="btn secondary"
+      href="https://wa.me/233533878548"
+      target="_blank"
+      rel="noopener"
+      style="text-decoration:none;text-align:center"
+    >
+      Chat on WhatsApp
+    </a>
+  </div>
+
+  <footer>
+    Powered by Kielmen 636 Dataplug
+  </footer>
+
+</main>
+
+<script>
+"use strict";
+
+const API = "https://kielmen-dataplug-payment-api.onrender.com";
+
+const networkSelect = document.getElementById("network");
+const bundlesElement = document.getElementById("bundles");
+const bundleMessage = document.getElementById("bundleMessage");
+const payButton = document.getElementById("payButton");
+
+const params = new URLSearchParams(window.location.search);
+const agentCode = (params.get("code") || "").trim().toUpperCase();
+
+let store = null;
+let prices = [];
+let selectedBundle = null;
+let selectedNetwork = "";
+
+function money(value) {
+  const amount = Number(value);
+  return "GH₵" + (Number.isFinite(amount) ? amount : 0).toFixed(2);
+}
+
+function normalizeNetwork(value) {
+  const raw = String(value || "").toUpperCase().replace(/[\s_-]/g, "");
+
+  if (raw === "MTN" || raw === "YELLO") return "MTN";
+  if (raw === "TELECEL" || raw === "VODAFONE") return "TELECEL";
+  if (raw === "AIRTELTIGO" || raw === "AIRTEL" || raw === "ATPREMIUM") {
+    return "AIRTELTIGO";
+  }
+
+  return "";
+}
+
+function networkName(value) {
+  if (value === "MTN") return "MTN";
+  if (value === "TELECEL") return "Telecel";
+  if (value === "AIRTELTIGO") return "AirtelTigo";
+  return value;
+}
+
+async function loadStore() {
+  if (!agentCode) {
+    showStoreError(
+      "This store link is missing its agent code. Ask the agent to share their store link again."
+    );
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${API}/agents/store/${encodeURIComponent(agentCode)}`
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success || !data.store) {
+      throw new Error(data.message || "This store could not be found.");
+    }
+
+    store = data.store;
+    prices = Array.isArray(data.prices) ? data.prices : [];
+
+    document.getElementById("businessName").textContent =
+      store.businessName || "Agent Data Store";
+
+    document.getElementById("storeDescription").textContent =
+      store.description || "Affordable data bundles from your trusted agent.";
+
+    document.getElementById("agentCode").textContent =
+      "Agent Code: " + (store.agentCode || agentCode);
+
+    if (store.whatsapp) {
+      document.getElementById("whatsappLink").href = store.whatsapp;
+    }
+
+    const networks = [...new Set(
+      prices.map(item => normalizeNetwork(item.network)).filter(Boolean)
+    )];
+
+    networkSelect.replaceChildren();
+
+    if (!networks.length) {
+      networkSelect.add(new Option("No bundles available", ""));
+      bundleMessage.textContent =
+        "This agent has not saved any selling prices yet.";
+      payButton.disabled = true;
+      payButton.textContent = "Bundles Unavailable";
+      return;
+    }
+
+    networkSelect.add(new Option("Choose a network", ""));
+
+    networks.forEach(network => {
+      networkSelect.add(new Option(networkName(network), network));
+    });
+
+    bundleMessage.textContent =
+      "Select a network to view its available bundles.";
+
+  } catch (error) {
+    showStoreError(error.message || "Could not load this store.");
+  }
+}
+
+function showStoreError(message) {
+  document.getElementById("businessName").textContent = "Store Unavailable";
+  bundleMessage.textContent = message;
+  bundlesElement.replaceChildren();
+  payButton.disabled = true;
+  payButton.textContent = "Store Unavailable";
+}
+
+networkSelect.addEventListener("change", function () {
+  selectedNetwork = normalizeNetwork(networkSelect.value);
+  selectedBundle = null;
+
+  document.getElementById("selectedBundle").textContent =
+    "Please select a bundle.";
+
+  document.getElementById("selectedPrice").textContent = money(0);
+
+  payButton.disabled = true;
+  payButton.textContent = "Select a Bundle First";
+
+  renderBundles();
+});
+
+function renderBundles() {
+  bundlesElement.replaceChildren();
+
+  if (!selectedNetwork) {
+    bundleMessage.textContent = "Choose a network to view bundles.";
+    return;
+  }
+
+  const available = prices.filter(item =>
+    normalizeNetwork(item.network) === selectedNetwork &&
+    Number.isFinite(Number(item.sellingPrice)) &&
+    Number(item.sellingPrice) > 0
+  );
+
+  if (!available.length) {
+    bundleMessage.textContent =
+      "No bundles are available for this network.";
+    return;
+  }
+
+  bundleMessage.textContent =
+    "Select a bundle. Prices shown are set by this agent.";
+
+  available.forEach(item => {
+    const bundle = String(item.bundle || "").toUpperCase();
+    const price = Number(item.sellingPrice);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "bundle";
+
+    const title = document.createElement("strong");
+    title.textContent = bundle;
+
+    const amount = document.createElement("span");
+    amount.textContent = money(price);
+
+    button.append(title, amount);
+
+    button.addEventListener("click", function () {
+      selectedBundle = {
+        network: selectedNetwork,
+        bundle: bundle,
+        price: price
+      };
+
+      document.querySelectorAll(".bundle").forEach(item => {
+        item.classList.remove("selected");
+      });
+
+      button.classList.add("selected");
+
+      document.getElementById("selectedBundle").textContent =
+        networkName(selectedNetwork) + " · " + bundle;
+
+      document.getElementById("selectedPrice").textContent =
+        money(price);
+
+      payButton.disabled = false;
+      payButton.textContent = "Proceed to Payment · " + money(price);
+    });
+
+    bundlesElement.appendChild(button);
+  });
+}
+
+function normalizePhone(value) {
+  let phone = String(value || "").replace(/[^\d+]/g, "");
+
+  if (phone.startsWith("+233")) {
+    phone = "0" + phone.slice(4);
+  } else if (phone.startsWith("233")) {
+    phone = "0" + phone.slice(3);
+  }
+
+  return phone;
+}
+
+async function startPayment() {
+  const message = document.getElementById("checkoutMessage");
+  const phone = normalizePhone(
+    document.getElementById("customerPhone").value
+  );
+
+  if (!selectedBundle) {
+    message.textContent = "Please select a data bundle.";
+    return;
+  }
+
+  if (!/^0\d{9}$/.test(phone)) {
+    message.textContent =
+      "Enter a valid Ghana phone number, for example 0241234567.";
+    return;
+  }
+
+  if (!agentCode) {
+    message.textContent =
+      "The agent code is missing from this store link.";
+    return;
+  }
+
+  if (!confirm(
+    `Buy ${selectedBundle.bundle} ${networkName(selectedBundle.network)} data for ${money(selectedBundle.price)} to ${phone}?`
+  )) {
+    return;
+  }
+
+  payButton.disabled = true;
+  payButton.textContent = "Starting Secure Payment...";
+  message.textContent = "Connecting to the payment server...";
+
+  try {
+    const response = await fetch(`${API}/initialize-payment`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        phone: phone,
+        network: selectedBundle.network,
+        bundle: selectedBundle.bundle,
+        agentCode: agentCode
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success || !data.authorization_url) {
+      throw new Error(
+        data.message || "Could not start payment. Please try again."
+      );
+    }
+
+    // Payment is handled on Paystack's secure checkout page.
+    window.location.href = data.authorization_url;
+
+  } catch (error) {
+    message.textContent =
+      error.message || "Payment could not be started.";
+
+    payButton.disabled = false;
+    payButton.textContent =
+      "Proceed to Payment · " + money(selectedBundle.price);
+  }
+}
+
+loadStore();
+</script>
+
+</body>
+  </html>
