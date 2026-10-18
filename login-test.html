@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kielmen Agent Login Test</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 25px;
+      background: #111211;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    .card {
+      max-width: 420px;
+      margin: 30px auto;
+      padding: 25px;
+      background: #202120;
+      border: 1px solid #48c6a3;
+      border-radius: 15px;
+    }
+
+    h1 {
+      color: #48c6a3;
+    }
+
+    input, button {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 13px;
+      margin-top: 15px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    input {
+      background: #292a29;
+      color: white;
+      border: 1px solid #505351;
+    }
+
+    button {
+      background: #08754e;
+      color: white;
+      border: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h1>Agent Sign In</h1>
+
+    <p id="status">
+      SUCCESS: The login page HTML is displaying.
+    </p>
+
+    <form id="testForm">
+      <input type="email" placeholder="Email address" required>
+      <input type="password" placeholder="Password" required>
+      <button type="submit">Test Form</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById("testForm").addEventListener(
+      "submit",
+      function(event) {
+        event.preventDefault();
+
+        document.getElementById("status").textContent =
+          "SUCCESS: The login form and JavaScript are working.";
+      }
+    );
+  </script>
+</body>
+</html>
