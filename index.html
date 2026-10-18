@@ -418,11 +418,45 @@
     </div>
   </div>
 
-  <nav id="mobileMenu" class="mobile-menu" style="display:none;padding:12px 20px 18px;background:#111318;">
-    <a href="#bundles" style="display:block;padding:12px;">Buy Data Bundles</a>
-    <a href="#checkout" style="display:block;padding:12px;">Checkout</a>
-    <a href="agent-register.html" style="display:block;padding:12px;">Become an Agent</a>
-    <a href="https://wa.me/233533878548" style="display:block;padding:12px;">Contact Support</a>
+  <nav id="mobileMenu" class="mobile-menu"
+     style="display:none;padding:12px 20px 18px;background:#111318;"
+     aria-label="Main navigation">
+
+    <a href="index.html"
+       style="display:block;padding:14px;border-bottom:1px solid #333;">
+       🏠 Home
+    </a>
+
+    <a href="#bundles"
+       style="display:block;padding:14px;border-bottom:1px solid #333;">
+       🛒 Buy Data Bundles
+    </a>
+
+    <a href="#checkout"
+       style="display:block;padding:14px;border-bottom:1px solid #333;">
+       💳 Checkout
+    </a>
+
+    <a href="#track-order"
+       style="display:block;padding:14px;border-bottom:1px solid #333;">
+       📦 Track Your Order
+    </a>
+
+    <a href="#agent-section"
+       style="display:block;padding:14px;border-bottom:1px solid #333;">
+       🤝 Become an Agent
+    </a>
+
+    <a href="agent-dashboard.html"
+       style="display:block;padding:14px;border-bottom:1px solid #333;">
+       🔐 Agent Sign In
+    </a>
+
+    <a href="https://wa.me/233533878548"
+       style="display:block;padding:14px;">
+       💬 Contact Support
+    </a>
+
   </nav>
 </header>
 
@@ -501,11 +535,18 @@
     </form>
   </section>
 
-  <section class="agent-box">
-    <h2>Become a Kielmen Data Agent</h2>
-    <p>Interested in selling data bundles? Explore agent registration and your agent portal.</p>
-    <a href="agent-register.html">Register as an Agent</a>
-    <a href="agent-dashboard.html">Agent Portal</a>
+  <section class="agent-box" id="agent-section">
+    <h2>🤝 Become a Kielmen Data Agent</h2>
+
+    <p>
+        Interested in selling data bundles?
+        Join Kielmen 636 Dataplug and start your own data business.
+        Register today to apply for an agent account.
+    </p>
+
+    <a href="agent-register.html">
+        Become an Agent / Sign Up
+    </a>
   </section>
 
   <section class="agent-box">
@@ -579,15 +620,51 @@
   document.getElementById("currentYear").textContent = new Date().getFullYear();
 
   const menuButton = document.getElementById("menuButton");
-  const mobileMenu = document.getElementById("mobileMenu");
+const mobileMenu = document.getElementById("mobileMenu");
 
-  menuButton.addEventListener("click", function () {
-    const isOpen = mobileMenu.style.display === "block";
-    mobileMenu.style.display = isOpen ? "none" : "block";
-    menuButton.setAttribute("aria-expanded", String(!isOpen));
-  });
+menuButton.setAttribute("aria-expanded", "false");
 
+menuButton.addEventListener("click", function () {
+    const isOpen =
+        mobileMenu.style.display === "block";
+
+    mobileMenu.style.display =
+        isOpen ? "none" : "block";
+
+    menuButton.setAttribute(
+        "aria-expanded",
+        String(!isOpen)
+    );
+
+    menuButton.setAttribute(
+        "aria-label",
+        isOpen ? "Open menu" : "Close menu"
+    );
+
+    menuButton.textContent = isOpen ? "☰" : "✕";
+});
+
+mobileMenu.querySelectorAll("a").forEach(function (link) {
+    link.addEventListener("click", function () {
+        mobileMenu.style.display = "none";
+
+        menuButton.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+        menuButton.setAttribute(
+            "aria-label",
+            "Open menu"
+        );
+
+        menuButton.textContent = "☰";
+    });
+});
   mobileMenu.querySelectorAll("a").forEach(function (link) {
     link.addEventListener("click", function () {
       mobileMenu.style.display = "none";
       menu
+</script>
+</body>
+</html> 
