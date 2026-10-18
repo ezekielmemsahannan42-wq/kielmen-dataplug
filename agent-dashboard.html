@@ -1033,7 +1033,7 @@ async function loadPrices() {
       `${AGENT_API}/agents/prices`,
       {
         headers: {
-          Authorization: `Bearer ${agentToken}`
+          Authorization: `Bearer ${sessionStorage.getItem("k636_agent_token")}`
         }
       }
     );
@@ -1138,7 +1138,7 @@ async function savePrices() {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${sessionStorage.getItem("k636_agent_token")}`
         },
         body: JSON.stringify({ prices })
       }
