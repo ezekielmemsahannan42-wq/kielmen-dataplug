@@ -415,8 +415,14 @@ footer {
   <!-- DASHBOARD -->
   <section class="page active" id="home">
     <div class="welcome">
-      <h1>Welcome, Agent!</h1>
-      <p>Manage your data business, selling prices, storefront link and customer orders in one place.</p>
+  <h1 id="welcomeName">Welcome, Agent!</h1>
+  <p id="welcomeDetails">
+    Manage your data business, selling prices, storefront link and customer orders in one place.
+  </p>
+  <p>
+    Agent Code: <strong id="agentCode">Loading...</strong>
+  </p>
+  <button class="btn" onclick="agentLogout()">Sign Out</button>
     </div>
 
     <h2 class="section-title">Performance overview</h2>
@@ -1057,5 +1063,85 @@ renderOrders();
   }
 })();
 </script>
+      async function agentLogout() {
+  const token = sessionStorage.getItem("k636_agent_token");
+
+  try {
+    if (token) {
+      await fetch(
+        "https://kielmen-dataplug-payment-api.onrender.com/agents/logout",
+        {
+          method: "POST",
+          headers: {
+            "Authorization": "Bearer " + token
+          }
+        }
+      );
+    }
+  } catch (error) {
+    console.error("Sign-out request failed.");
+  } finally {
+    sessionStorage.removeItem("k636_agent_token");
+    sessionStorage.removeItem("k636_agent");
+    window.location.replace("agent-login.html");
+  }
+}
+      async function loadAuthenticatedAgent() {
+  const token = sessionStorage.getItem("k636_agent_token");
+
+  if (!token) {
+    window.location.replace("agent-login.html");
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      "https://kielmen-dataplug-payment-api.onrender.com/agents/me",
+      {
+        headers: {
+          "Authorization": "Bearer " + token
+        }
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success || !result.agent) {
+      sessionStorage.removeItem("k636_agent_token");
+      sessionStorage.removeItem("k636_agent");
+      window.location.replace("agent-login.html");
+      return;
+    }
+
+    const agent = result.agent;
+
+    document.getElementById("welcomeName").textContent =
+      "Welcome, " + agent.full_name + "!";
+
+    document.getElementById("welcomeDetails").textContent =
+      agent.business_name;
+
+    document.getElementById("agentCode").textContent =
+      agent.agent_code;
+
+    profile = {
+      businessName: agent.business_name || "",
+      agentName: agent.full_name || "",
+      agentPhone: agent.phone || "",
+      storeDescription: agent.store_description || ""
+    };
+
+    renderProfile();
+
+  } catch (error) {
+    document.getElementById("welcomeName").textContent =
+      "Unable to load your account";
+
+    document.getElementById("welcomeDetails").textContent =
+      "Check your connection and refresh the page.";
+  }
+}
+
+loadAuthenticatedAgent();
 </body>
 </html>
