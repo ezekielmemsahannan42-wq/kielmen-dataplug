@@ -1786,6 +1786,110 @@ app.get(
 );
 
 // ============================================================
+// OWNER: UPDATE WITHDRAWAL STATUS
+// ============================================================
+
+app.patch(
+  "/owner/withdrawals/:id/status",
+  requireOwner,
+  async (req, res) => {
+    const id = Number(req.params.id);
+    const status = String(req.body?.status || "")
+      .trim()
+      .toLowerCase();
+
+    if (!Number.isSafeInteger(id) || id < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid withdrawal ID."
+      });
+    }
+
+    if (!["paid", "rejected"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Status must be paid or rejected."
+      });
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      const result = await client.query(
+        `
+          SELECT id, amount, status
+          FROM agent_withdrawals
+          WHERE id = $1
+          FOR UPDATE
+        `,
+        [id]
+      );
+
+      if (!result.rowCount) {
+        await client.query("ROLLBACK");
+
+        return res.status(404).json({
+          success: false,
+          message: "Withdrawal request not found."
+        });
+      }
+
+      const withdrawal = result.rows[0];
+
+      if (withdrawal.status !== "pending") {
+        await client.query("ROLLBACK");
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "Only pending requests can be marked paid or rejected."
+        });
+      }
+
+      const updated = await client.query(
+        `
+          UPDATE agent_withdrawals
+          SET status = $1,
+              updated_at = NOW()
+          WHERE id = $2
+          RETURNING id, amount, status, updated_at
+        `,
+        [status, id]
+      );
+
+      await client.query("COMMIT");
+
+      return res.json({
+        success: true,
+        message:
+          status === "paid"
+            ? "Withdrawal marked as paid. Ensure the Mobile Money transfer has actually succeeded."
+            : "Withdrawal rejected. The reserved amount is now available again.",
+        withdrawal: {
+          ...updated.rows[0],
+          amount: Number(updated.rows[0].amount)
+        }
+      });
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+
+      console.error(
+        "Owner update withdrawal:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not update withdrawal status."
+      });
+    } finally {
+      client.release();
+    }
+  }
+);
+// ============================================================
 // 14. BASIC API ROUTES
 // ============================================================
 
