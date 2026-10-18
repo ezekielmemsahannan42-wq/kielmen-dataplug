@@ -1026,7 +1026,67 @@ function getCurrentPrices(network) {
 
   return result;
 }
+function renderPrices() {
+  const network = document.getElementById("priceNetwork").value;
+  const rows = document.getElementById("priceRows");
+  const message = document.getElementById("priceMessage");
 
+  if (!BASE_PRICES[network]) {
+    rows.innerHTML = "";
+    message.textContent = "Network prices are unavailable.";
+    return;
+  }
+
+  rows.innerHTML = "";
+
+  const savedPrices =
+    window.agentSavedPrices || agentPrices || {};
+
+  const normalizedNetwork = network
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "");
+
+  const networkPrices =
+    savedPrices[normalizedNetwork] ||
+    savedPrices[network] ||
+    {};
+
+  Object.entries(BASE_PRICES[network]).forEach(
+    function ([bundle, basePrice]) {
+      const savedPrice = Number(networkPrices[bundle]);
+
+      const sellingPrice =
+        Number.isFinite(savedPrice) && savedPrice >= basePrice
+          ? savedPrice
+          : basePrice;
+
+      const row = document.createElement("tr");
+
+      row.innerHTML = `
+        <td>${escapeHTML(bundle)}</td>
+        <td>${money(basePrice)}</td>
+        <td>
+          <input
+            class="price-input"
+            type="number"
+            min="${basePrice}"
+            step="0.01"
+            value="${sellingPrice.toFixed(2)}"
+            data-network="${escapeHTML(network)}"
+            data-bundle="${escapeHTML(bundle)}"
+            aria-label="${escapeHTML(network)} ${escapeHTML(bundle)} selling price"
+          >
+        </td>
+      `;
+
+      rows.appendChild(row);
+    }
+  );
+
+  message.textContent =
+    "Set your selling prices, then tap Save My Prices.";
+}
+  
 async function loadPrices() {
   try {
     const response = await fetch(
