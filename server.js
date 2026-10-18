@@ -1325,54 +1325,70 @@ app.get(
       const result = await pool.query(
         `
           WITH earnings AS (
-            SELECT
-              COALESCE(
-                SUM(amount - agent_base_price),
-                0
-              ) AS total_earnings
-            FROM orders
-            WHERE agent_id = $1
-              AND status = 'paid'
-              AND delivery_status = 'delivered'
-              AND delivered_at IS NOT NULL
-              AND delivered_at <
-                date_trunc(
-                  'day',
-                  NOW() AT TIME ZONE 'Africa/Accra'
-                ) AT TIME ZONE 'Africa/Accra'
-              AND agent_base_price IS NOT NULL
-              AND amount > agent_base_price
-          ),
-          withdrawals AS (
-            SELECT
-              COALESCE(
-                SUM(amount) FILTER (
-                  WHERE status IN ('pending', 'approved', 'paid')
-                ),
-                0
-              ) AS used_amount,
+  SELECT
+    COALESCE(
+      SUM(amount - agent_base_price) FILTER (
+        WHERE delivered_at <
+          date_trunc(
+            'day',
+            NOW() AT TIME ZONE 'Africa/Accra'
+          ) AT TIME ZONE 'Africa/Accra'
+      ),
+      0
+    ) AS eligible_earnings,
 
-              COALESCE(
-                SUM(amount) FILTER (
-                  WHERE status IN ('pending', 'approved')
-                ),
-                0
-              ) AS pending_amount
-            FROM agent_withdrawals
-            WHERE agent_id = $1
-          )
-          SELECT
-            earnings.total_earnings,
-            withdrawals.used_amount,
-            withdrawals.pending_amount
-          FROM earnings, withdrawals
+    COALESCE(
+      SUM(amount - agent_base_price) FILTER (
+        WHERE delivered_at >=
+          date_trunc(
+            'day',
+            NOW() AT TIME ZONE 'Africa/Accra'
+          ) AT TIME ZONE 'Africa/Accra'
+      ),
+      0
+    ) AS todays_earnings
+
+  FROM orders
+  WHERE agent_id = $1
+    AND status = 'paid'
+    AND delivery_status = 'delivered'
+    AND delivered_at IS NOT NULL
+    AND agent_base_price IS NOT NULL
+    AND amount > agent_base_price
+),
+withdrawals AS (
+  SELECT
+    COALESCE(
+      SUM(amount) FILTER (
+        WHERE status IN ('pending', 'approved', 'paid')
+      ),
+      0
+    ) AS used_amount,
+
+    COALESCE(
+      SUM(amount) FILTER (
+        WHERE status IN ('pending', 'approved')
+      ),
+      0
+    ) AS pending_amount
+
+  FROM agent_withdrawals
+  WHERE agent_id = $1
+)
+SELECT
+  earnings.eligible_earnings,
+  earnings.todays_earnings,
+  withdrawals.used_amount,
+  withdrawals.pending_amount
+FROM earnings, withdrawals
         `,
         [req.agentId]
       );
 
       const row = result.rows[0];
 
-      const totalEarnings = Number(row.total_earnings);
+      const totalEarnings = Number(row.eligible_earnings);
+const todaysProfit = Number(row.todays_earnings);
       const usedAmount = Number(row.used_amount);
       const pendingAmount = Number(row.pending_amount);
 
@@ -1382,6 +1398,7 @@ app.get(
         minimumWithdrawal: 0.10,
         maximumWithdrawal: null,
         totalEarnings: Number(totalEarnings.toFixed(2)),
+        todaysProfit: Number(todaysProfit.toFixed(2)),
         pendingWithdrawals: Number(pendingAmount.toFixed(2)),
         availableBalance: Number(
           Math.max(0, totalEarnings - usedAmount).toFixed(2)
