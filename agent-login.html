@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111211">
-  <title>Agent Sign In | Kielmen 636 Dataplug">
+
+  <title>Agent Sign In | Kielmen 636 Dataplug</title>
 
   <style>
     * { box-sizing: border-box; }
@@ -62,6 +63,7 @@
       color: white;
       font-weight: bold;
       font-size: 16px;
+      cursor: pointer;
     }
 
     button:disabled { opacity: .6; }
@@ -118,7 +120,9 @@
       </button>
     </form>
 
-    <p id="message" role="status" aria-live="polite"></p>
+    <p id="message" role="status" aria-live="polite">
+      Enter your registered email and password.
+    </p>
 
     <div class="links">
       <a href="agent-register.html">Become an Agent / Sign Up</a>
@@ -137,43 +141,48 @@
     const button = document.getElementById("loginButton");
     const message = document.getElementById("message");
 
-    form.addEventListener("submit", async function (event) {
+    form.addEventListener("submit", async function(event) {
       event.preventDefault();
 
       button.disabled = true;
       button.textContent = "Signing in...";
-      message.textContent = "Checking your account...";
+      message.textContent = "Connecting to the server...";
 
       try {
-        const response = await fetch(
-          API_BASE + "/agents/login",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              email: document.getElementById("email").value.trim(),
-              password: document.getElementById("password").value
-            })
-          }
-        );
+        const response = await fetch(API_BASE + "/agents/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            email: document.getElementById("email").value.trim(),
+            password: document.getElementById("password").value
+          })
+        });
 
-        const result = await response.json();
+        let result;
+
+        try {
+          result = await response.json();
+        } catch {
+          throw new Error(
+            "The server did not return valid JSON. Please try again later."
+          );
+        }
 
         if (!response.ok || !result.success) {
           message.textContent =
-            result.message || "Sign in failed.";
+            result.message || "Login failed. Check your details.";
           return;
         }
 
         if (!result.token || !result.agent) {
           message.textContent =
-            "The server returned an incomplete login response.";
+            "Login response is incomplete. Please contact the administrator.";
           return;
         }
 
-        // Keep the session in this browser tab.
         sessionStorage.setItem(
           "k636_agent_token",
           result.token
@@ -184,13 +193,15 @@
           JSON.stringify(result.agent)
         );
 
-        message.textContent = "Sign in successful. Opening dashboard...";
+        message.textContent = "Login successful. Opening dashboard...";
 
-        window.location.replace("agent-dashboard.html");
+        window.location.href =
+          "agent-dashboard.html?refresh=" + Date.now();
 
       } catch (error) {
         message.textContent =
-          "Could not connect to the server. Please try again.";
+          error.message ||
+          "Unable to connect. Check your internet and try again.";
       } finally {
         button.disabled = false;
         button.textContent = "Sign In";
@@ -198,4 +209,4 @@
     });
   </script>
 </body>
-  </html>
+</html>
