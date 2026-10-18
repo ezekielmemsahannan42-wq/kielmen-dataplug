@@ -2016,8 +2016,9 @@ app.get("/order-status/:reference", async (req, res) => {
             `
               UPDATE orders
               SET delivery_status = 'delivered',
-                  supplier_response = $1::jsonb,
-                  updated_at = NOW()
+    delivered_at = COALESCE(delivered_at, NOW()),
+    supplier_response = $1::jsonb,
+    updated_at = NOW()
               WHERE reference = $2
                 AND status = 'paid'
             `,
