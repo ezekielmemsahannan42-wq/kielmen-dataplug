@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111211">
+  <title>Agent Sign In | Kielmen 636 Dataplug">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: #111211;
+      color: #e8ecee;
+      font-family: Arial, sans-serif;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      padding: 28px 22px;
+      background: #202120;
+      border: 1px solid #454744;
+      border-radius: 20px;
+    }
+
+    h1 { margin-top: 0; }
+
+    .subtitle {
+      color: #a6afb5;
+      line-height: 1.6;
+    }
+
+    label {
+      display: block;
+      margin: 18px 0 8px;
+      font-weight: bold;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      border: 1px solid #505351;
+      border-radius: 10px;
+      background: #292a29;
+      color: white;
+      font-size: 16px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 22px;
+      padding: 14px;
+      border: 0;
+      border-radius: 10px;
+      background: #08754e;
+      color: white;
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    button:disabled { opacity: .6; }
+
+    #message {
+      margin-top: 16px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    a { color: #48c6a3; }
+
+    .links {
+      margin-top: 20px;
+      line-height: 2;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="login-card">
+    <h1>🔐 Agent Sign In</h1>
+
+    <p class="subtitle">
+      Sign in to your Kielmen 636 Dataplug agent account.
+    </p>
+
+    <form id="loginForm">
+      <label for="email">Email Address</label>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        autocomplete="username"
+        placeholder="Enter your registered email"
+        maxlength="255"
+        required
+      >
+
+      <label for="password">Password</label>
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        placeholder="Enter your password"
+        minlength="12"
+        maxlength="128"
+        required
+      >
+
+      <button id="loginButton" type="submit">
+        Sign In
+      </button>
+    </form>
+
+    <p id="message" role="status" aria-live="polite"></p>
+
+    <div class="links">
+      <a href="agent-register.html">Become an Agent / Sign Up</a>
+      <br>
+      <a href="index.html">← Back to Home</a>
+    </div>
+  </main>
+
+  <script>
+    "use strict";
+
+    const API_BASE =
+      "https://kielmen-dataplug-payment-api.onrender.com";
+
+    const form = document.getElementById("loginForm");
+    const button = document.getElementById("loginButton");
+    const message = document.getElementById("message");
+
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      button.disabled = true;
+      button.textContent = "Signing in...";
+      message.textContent = "Checking your account...";
+
+      try {
+        const response = await fetch(
+          API_BASE + "/agents/login",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              email: document.getElementById("email").value.trim(),
+              password: document.getElementById("password").value
+            })
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+          message.textContent =
+            result.message || "Sign in failed.";
+          return;
+        }
+
+        if (!result.token || !result.agent) {
+          message.textContent =
+            "The server returned an incomplete login response.";
+          return;
+        }
+
+        // Keep the session in this browser tab.
+        sessionStorage.setItem(
+          "k636_agent_token",
+          result.token
+        );
+
+        sessionStorage.setItem(
+          "k636_agent",
+          JSON.stringify(result.agent)
+        );
+
+        message.textContent = "Sign in successful. Opening dashboard...";
+
+        window.location.replace("agent-dashboard.html");
+
+      } catch (error) {
+        message.textContent =
+          "Could not connect to the server. Please try again.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Sign In";
+      }
+    });
+  </script>
+</body>
+  </html>
