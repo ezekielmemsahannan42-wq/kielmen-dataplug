@@ -1053,89 +1053,28 @@ renderOrders();
           style="padding:12px;margin-right:8px;">
           Try Again
         </button>
-        <a href="agent-login.html" style="color:#48c6a3;">
+                <a href="agent-login.html" style="color:#48c6a3;">
           Return to Sign In
         </a>
-      </main>
-
-    <script>
-"use strict";
-
-const API_BASE = "https://kielmen-dataplug-payment-api.onrender.com";
-
-(async function verifyAgent() {
-  const token = sessionStorage.getItem("k636_agent_token");
-
-  if (!token) {
-    window.location.replace("agent-login.html");
-    return;
-  }
-
-  try {
-    const response = await fetch(API_BASE + "/agents/me", {
-      method: "GET",
-      headers: {
-        "Authorization": "Bearer " + token
-      }
-    });
-
-    const result = await response.json();
-
-    if (!response.ok || !result.success || !result.agent) {
-      sessionStorage.removeItem("k636_agent_token");
-      sessionStorage.removeItem("k636_agent");
-      window.location.replace("agent-login.html");
-      return;
-    }
-
-    const agent = result.agent;
-
-    document.getElementById("welcomeName").textContent =
-      "Welcome, " + (agent.full_name || "Agent") + "!";
-
-    document.getElementById("welcomeDetails").textContent =
-      agent.business_name || "Manage your data business here.";
-
-    document.getElementById("agentCode").textContent =
-      agent.agent_code || "Not assigned";
-
-    profile = {
-      businessName: agent.business_name || "",
-      agentName: agent.full_name || "",
-      agentPhone: agent.phone || "",
-      storeDescription: agent.store_description || ""
-    };
-
-    loadProfileForm();
-    renderProfile();
-    renderStoreLink();
-
-    document.body.style.visibility = "visible";
-
-  } catch (error) {
-    document.body.innerHTML = `
-      <main style="padding:24px;color:white;font-family:Arial,sans-serif">
-        <h2>Unable to connect to the server</h2>
-        <p>Please check your internet connection and try again.</p>
-        <button onclick="location.reload()">Try Again</button>
-        <p>
-          <a href="agent-login.html" style="color:#48c6a3">
-            Return to Sign In
-          </a>
-        </p>
       </main>
     `;
 
     document.body.style.visibility = "visible";
   }
 })();
+</script>
+
+<script>
+"use strict";
+
+const API_BASE_AGENT = "https://kielmen-dataplug-payment-api.onrender.com";
 
 async function agentLogout() {
   const token = sessionStorage.getItem("k636_agent_token");
 
   try {
     if (token) {
-      await fetch(API_BASE + "/agents/logout", {
+      await fetch(API_BASE_AGENT + "/agents/logout", {
         method: "POST",
         headers: {
           "Authorization": "Bearer " + token
