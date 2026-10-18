@@ -1229,21 +1229,75 @@ function makeSlug(value) {
 }
 
 function renderStoreLink() {
-  const box = document.getElementById("storeLink");
+  const agentData = JSON.parse(
+    sessionStorage.getItem("k636_agent") || "{}"
+  );
 
-  if (!profile.businessName) {
-    box.textContent = "Save your store details first.";
+  const agentCode =
+    agentData.agentCode ||
+    agentData.agent_code ||
+    agentData.code ||
+    "";
+
+  const linkElement =
+    document.getElementById("storeLink");
+
+  const shareButton =
+    document.getElementById("shareStoreButton");
+
+  const copyButton =
+    document.getElementById("copyStoreButton");
+
+  if (!agentCode) {
+    if (linkElement) {
+      linkElement.textContent =
+        "Your agent code could not be found. Please log in again.";
+    }
+
     return;
   }
 
-  const url = new URL("index.html", window.location.href);
+  const storeURL =
+  `https://ezekielmemsahannan42-wq.github.io/kielmen-dataplug/agent-store.html?code=${encodeURIComponent(agentCode)}`;
 
-  url.searchParams.set(
-    "agent",
-    makeSlug(profile.businessName)
-  );
+  if (linkElement) {
+    if ("value" in linkElement) {
+      linkElement.value = storeURL;
+    } else {
+      linkElement.textContent = storeURL;
+    }
+  }
 
-  box.textContent = url.href;
+  if (copyButton) {
+    copyButton.onclick = async function () {
+      try {
+        await navigator.clipboard.writeText(storeURL);
+        alert("Your store link has been copied!");
+      } catch (error) {
+        prompt("Copy your store link:", storeURL);
+      }
+    };
+  }
+
+  if (shareButton) {
+    shareButton.onclick = async function () {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "My Data Store",
+            text: "Order your data bundles from my store.",
+            url: storeURL
+          });
+        } catch (error) {
+          if (error.name !== "AbortError") {
+            prompt("Copy your store link:", storeURL);
+          }
+        }
+      } else {
+        prompt("Copy your store link:", storeURL);
+      }
+    };
+  }
 }
 
 async function copyStoreLink() {
