@@ -279,6 +279,17 @@ async function createOrdersTable() {
     )
   `);
 
+    // Record the time an order's data delivery is completed.
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ
+  `);
+
+  // Record when an agent's withdrawal request is reviewed.
+  await pool.query(`
+    ALTER TABLE agent_withdrawals
+    ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ
+  `);
   await pool.query(`
     ALTER TABLE orders
     ADD COLUMN IF NOT EXISTS delivery_status
@@ -1300,19 +1311,7 @@ app.get(
   }
 );
 
-// Withdrawals remain disabled until an auditable balance ledger exists.
-app.post(
-  "/agents/withdrawals",
-  requireAgent,
-  requireApprovedAgent,
-  async (_req, res) => {
-    res.status(503).json({
-      success: false,
-      message:
-        "Withdrawals are temporarily disabled until an auditable earnings and balance ledger is implemented. Contact the owner for manual review."
-    });
-  }
-);
+
 
 // ============================================================
 // 13. OWNER LOGIN AND MANAGEMENT
