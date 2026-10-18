@@ -731,8 +731,7 @@
     <h3>Request a Withdrawal</h3>
 
     <div class="notice">
-      Minimum: GH₵0.10 · Maximum per request: GH₵1,000.00.
-      Your request must not exceed your available balance.
+      Minimum withdrawal: GH₵0.10. There is no maximum withdrawal limit, provided your available balance covers the request. Today's profit becomes withdrawable the following day.
     </div>
 
     <div class="field">
@@ -741,8 +740,7 @@
         type="number"
         id="withdrawAmount"
         min="0.10"
-        max="1000"
-        step="0.01"
+step="0.01"
         placeholder="e.g. 50.00"
       >
     </div>
@@ -1638,98 +1636,85 @@ async function loadStats() {
 // ============================================================
 
 async function loadWithdrawals() {
-  const balanceElement = document.getElementById("withdrawAvailable");
-  const pendingElement = document.getElementById("withdrawPending");
-  const historyElement = document.getElementById("withdrawHistory");
-  const messageElement = document.getElementById("withdrawMessage");
-
-  if (!balanceElement || !pendingElement || !historyElement) {
-    return;
-  }
-
-  balanceElement.textContent = "Loading...";
-  pendingElement.textContent = "Loading...";
-  historyElement.textContent = "Loading withdrawal history...";
+  const balanceElement = document.getElementById("availableBalance");
+  const todayElement = document.getElementById("todayProfit");
+  const pendingElement = document.getElementById("pendingWithdrawals");
+  const historyElement = document.getElementById("withdrawalHistory");
 
   try {
-    const [balanceData, historyData] = await Promise.all([
-      apiRequest("/agents/withdrawals"),
-      apiRequest("/agents/withdrawals/history")
-    ]);
+    const balanceData = await apiRequest("/agents/withdrawals");
 
-    if (
-      !balanceData.response.ok ||
-      !balanceData.result ||
-      !balanceData.result.success
-    ) {
+    if (!balanceData.response.ok || !balanceData.result?.success) {
       throw new Error(
-        balanceData.result?.message ||
-        "Could not load your withdrawal balance."
-      );
-    }
-
-    if (
-      !historyData.response.ok ||
-      !historyData.result ||
-      !historyData.result.success
-    ) {
-      throw new Error(
-        historyData.result?.message ||
-        "Could not load your withdrawal history."
+        balanceData.result?.message || "Could not load withdrawal balance."
       );
     }
 
     const balance = balanceData.result;
 
-    balanceElement.textContent = money(balance.availableBalance);
-    pendingElement.textContent = money(balance.pendingWithdrawals);
-
-    const history = historyData.result.withdrawals || [];
-
-    if (!history.length) {
-      historyElement.textContent = "You have not made any withdrawal requests yet.";
-    } else {
-      historyElement.innerHTML = history.map(function (item) {
-        return `
-          <div class="card">
-            <strong>${money(item.amount)}</strong>
-            <p class="stat-note">
-              Provider: ${escapeHTML(item.provider || "Not provided")}
-            </p>
-            <p class="stat-note">
-              Number: ${escapeHTML(item.phone || "Not provided")}
-            </p>
-            <p class="stat-note">
-              Status: ${escapeHTML(item.status || "pending").toUpperCase()}
-            </p>
-            <p class="stat-note">
-              Requested: ${escapeHTML(
-                item.created_at
-                  ? new Date(item.created_at).toLocaleString()
-                  : "Date unavailable"
-              )}
-            </p>
-          </div>
-        `;
-      }).join("");
+    if (balanceElement) {
+      balanceElement.textContent = money(balance.availableBalance);
     }
 
-    if (messageElement) {
-      messageElement.textContent =
-        "Your balance and withdrawal history are up to date.";
+    if (todayElement) {
+      todayElement.textContent = money(balance.todaysProfit);
     }
 
+    if (pendingElement) {
+      pendingElement.textContent = money(balance.pendingWithdrawals);
+    }
+
+    if (historyElement) {
+      historyElement.textContent = "Loading withdrawal history...";
+
+      const historyData = await apiRequest("/agents/withdrawals/history");
+
+      if (
+        !historyData.response.ok ||
+        !historyData.result?.success
+      ) {
+        throw new Error(
+          historyData.result?.message || "Could not load withdrawal history."
+        );
+      }
+
+      const withdrawals = historyData.result.withdrawals || [];
+
+      if (withdrawals.length === 0) {
+        historyElement.textContent = "You have no withdrawal requests yet.";
+      } else {
+        historyElement.innerHTML = withdrawals.map(function (item) {
+          return `
+            <div class="card">
+              <strong>${money(item.amount)}</strong>
+              <p class="stat-note">
+                Provider: ${escapeHTML(item.provider || "Not provided")}
+              </p>
+              <p class="stat-note">
+                Mobile Money: ${escapeHTML(item.phone || "Not provided")}
+              </p>
+              <p class="stat-note">
+                Status: ${escapeHTML(item.status || "pending")}
+              </p>
+              <p class="stat-note">
+                Date: ${escapeHTML(
+                  item.created_at
+                    ? new Date(item.created_at).toLocaleString()
+                    : "Not available"
+                )}
+              </p>
+            </div>
+          `;
+        }).join("");
+      }
+    }
   } catch (error) {
-    balanceElement.textContent = "Unavailable";
-    pendingElement.textContent = "Unavailable";
-    historyElement.textContent =
-      error.message || "Could not load withdrawal information.";
-
-    if (messageElement) {
-      messageElement.textContent = "Please try again.";
-    }
-
     console.error("Load withdrawals error:", error);
+
+    if (historyElement) {
+      historyElement.textContent =
+        error.message || "Unable to load withdrawal information.";
+    }
   }
 }
 
@@ -1744,31 +1729,33 @@ async function submitWithdrawal() {
   const provider = providerInput.value;
   const phone = phoneInput.value.trim();
 
+  // Minimum withdrawal: GH₵0.10. No maximum limit.
   if (
+    amountInput.value.trim() === "" ||
     !Number.isFinite(amount) ||
     Math.round(amount * 100) !== amount * 100 ||
-    amount < 0.10 ||
-    amount > 1000
+    amount < 0.10
   ) {
     message.textContent =
-      "Enter an amount between GH₵0.10 and GH₵1,000.00.";
+      "Enter a valid withdrawal amount of at least GH₵0.10.";
     return;
   }
 
   if (!phone) {
-    message.textContent = "Enter your Mobile Money number.";
+    message.textContent =
+      "Please enter your Mobile Money number.";
     return;
   }
 
   if (!confirm(
-    `Request a withdrawal of ${money(amount)} to ${provider} number ${phone}?`
+    `Request ${money(amount)} to ${provider} number ${phone}?`
   )) {
     return;
   }
 
   button.disabled = true;
   button.textContent = "Submitting...";
-  message.textContent = "Submitting your request...";
+  message.textContent = "Submitting your withdrawal request...";
 
   try {
     const data = await apiRequest("/agents/withdrawals", {
@@ -1780,7 +1767,11 @@ async function submitWithdrawal() {
       })
     });
 
-    if (!data.response.ok || !data.result || !data.result.success) {
+    if (
+      !data.response.ok ||
+      !data.result ||
+      !data.result.success
+    ) {
       throw new Error(
         data.result?.message ||
         "Your withdrawal request could not be submitted."
@@ -1789,7 +1780,7 @@ async function submitWithdrawal() {
 
     message.textContent =
       data.result.message ||
-      "Your withdrawal request has been submitted.";
+      "Your withdrawal request has been submitted successfully. It is awaiting review.";
 
     amountInput.value = "";
 
@@ -1797,12 +1788,13 @@ async function submitWithdrawal() {
 
   } catch (error) {
     message.textContent =
-      error.message || "Could not submit your request.";
+      error.message ||
+      "Unable to submit your withdrawal request. Please try again.";
   } finally {
     button.disabled = false;
     button.textContent = "Request Withdrawal";
   }
-      }
+}
   
 function setStatsUnavailable() {
   document.getElementById("ordersStat").textContent = "—";
