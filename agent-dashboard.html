@@ -697,8 +697,7 @@
 
   </section>
 
-  <footer>
-    <!-- WITHDRAWALS -->
+  <!-- WITHDRAWALS -->
 <section class="page" id="withdrawals">
 
   <h1>Withdraw Earnings</h1>
@@ -710,19 +709,35 @@
 
   <div class="stats">
 
-    <div class="card">
-      <div class="stat-label">Available Balance</div>
-      <div class="stat-value green" id="withdrawAvailable">
-        GH₵0.00
-      </div>
+  <div class="card">
+    <div class="stat-label">Available Balance</div>
+    <div class="stat-value green" id="availableBalance">
+      GH₵0.00
     </div>
+    <div class="stat-note">
+      Available for withdrawal now.
+    </div>
+  </div>
 
-    <div class="card">
-      <div class="stat-label">Pending Withdrawals</div>
-      <div class="stat-value" id="withdrawPending">
-        GH₵0.00
-      </div>
+  <div class="card">
+    <div class="stat-label">Today's Profit</div>
+    <div class="stat-value" id="todayProfit">
+      GH₵0.00
     </div>
+    <div class="stat-note">
+      Available for withdrawal tomorrow.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="stat-label">Pending Withdrawals</div>
+    <div class="stat-value" id="pendingWithdrawals">
+      GH₵0.00
+    </div>
+    <div class="stat-note">
+      Requests awaiting processing.
+    </div>
+  </div>
 
   </div>
 
@@ -788,15 +803,17 @@ step="0.01"
       Refresh Balance & History
     </button>
 
-    <div id="withdrawHistory" class="message">
+    <div id="withdrawalHistory" class="message">
       Loading withdrawal history...
     </div>
 
   </div>
 
 </section>
-    Kielmen 636 Dataplug · Agent Dashboard
-  </footer>
+
+<footer>
+  Kielmen 636 Dataplug · Agent Dashboard
+</footer>
 
 </main>
 
@@ -1620,11 +1637,11 @@ async function loadStats() {
     document.getElementById("salesStat").textContent =
       money(stats.totalSales ?? stats.total_sales ?? 0);
 
-    document.getElementById("profitStat").textContent =
-      money(stats.totalProfit ?? stats.total_profit ?? 0);
+   document.getElementById("profitStat").textContent =
+  money(stats.estimatedMargin ?? 0);
 
-    document.getElementById("customersStat").textContent =
-      stats.totalCustomers ?? stats.total_customers ?? "—";
+document.getElementById("customersStat").textContent =
+  stats.customers ?? "—";
 
   } catch (error) {
     setStatsUnavailable();
