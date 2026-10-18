@@ -722,16 +722,7 @@ function requireOwner(req, res, next) {
 // 8. AGENT REGISTRATION
 // ============================================================
 
-INSERT INTO agents (
-    agent_code,
-    full_name,
-    business_name,
-    email,
-    phone,
-    password_hash,
-    store_description
-)
-async (req, res) => {
+app.post("/agents/register"async (req, res) => {
   try {
     if (AGENT_TOKEN_SECRET.length < 32) {
       return res.status(503).json({
@@ -790,15 +781,37 @@ async (req, res) => {
 
     const result = await pool.query(
       `
-        INSERT INTO agents (
-          agent_code,
-          full_name,
-          business_name,
-          email,
-          phone,
-          password_hash,
-          store_description
-        )
+        const result = await pool.query(
+    `INSERT INTO agents (
+        agent_code,
+        full_name,
+        business_name,
+        email,
+        phone,
+        password_hash,
+        store_description,
+        status
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, 'approved')
+    RETURNING
+        id,
+        agent_code,
+        full_name,
+        business_name,
+        email,
+        phone,
+        status,
+        created_at`,
+    [
+        code,
+        fullName,
+        businessName,
+        email,
+        phone,
+        hash,
+        storeDescription
+    ]
+);
         VALUES ($1,$2,$3,$4,$5,$6,$7)
         RETURNING
           id,
@@ -824,7 +837,7 @@ async (req, res) => {
     res.status(201).json({
       success: true,
       message:
-        "Registration submitted. Wait for owner approval.",
+        message: "Registration successful! You can now log in to your agent account.",
       agent: result.rows[0]
     });
   } catch (error) {
