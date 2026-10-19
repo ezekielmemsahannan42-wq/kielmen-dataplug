@@ -285,12 +285,7 @@ async function createOrdersTable() {
     ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ
   `);
 
-  // Record when an agent's withdrawal request is reviewed.
-  await pool.query(`
-    ALTER TABLE agent_withdrawals
-    ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ
-  `);
-  await pool.query(`
+ await pool.query(`
     ALTER TABLE orders
     ADD COLUMN IF NOT EXISTS delivery_status
     VARCHAR(30) NOT NULL DEFAULT 'not_started'
@@ -392,7 +387,11 @@ async function createAgentTables() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
-
+  // Record when an agent's withdrawal request is reviewed.
+  await pool.query(`
+    ALTER TABLE agent_withdrawals
+    ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ
+  `);
   await pool.query(`
     ALTER TABLE orders
     ADD COLUMN IF NOT EXISTS agent_id BIGINT
