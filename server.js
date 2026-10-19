@@ -1311,10 +1311,10 @@ app.get(
 );
 
 // ============================================================
-// 12A. AGENT WITHDRAWAL BALANCE AND REQUESTS
+// ============================================================
+// 12A. AGENT WITHDRAWAL BALANCE
 // ============================================================
 
-// Get an agent's available and pending withdrawal balances.
 app.get(
   "/agents/withdrawals",
   requireAgent,
@@ -1323,88 +1323,152 @@ app.get(
     try {
       const result = await pool.query(
         `
-          WITH earnings AS (
-  SELECT
-    COALESCE(
-      SUM(amount - agent_base_price) FILTER (
-        WHERE delivered_at <
-          date_trunc(
-            'day',
-            NOW() AT TIME ZONE 'Africa/Accra'
-          ) AT TIME ZONE 'Africa/Accra'
-      ),
-      0
-    ) AS eligible_earnings,
+        WITH time_boundary AS (
+          SELECT
+            date_trunc(
+              'day',
+              NOW() AT TIME ZONE 'Africa/Accra'
+            ) AT TIME ZONE 'Africa/Accra' AS today_start
+        ),
 
-    COALESCE(
-      SUM(amount - agent_base_price) FILTER (
-        WHERE delivered_at >=
-          date_trunc(
-            'day',
-            NOW() AT TIME ZONE 'Africa/Accra'
-          ) AT TIME ZONE 'Africa/Accra'
-      ),
-      0
-    ) AS todays_earnings
+        earnings AS (
+          SELECT
+            COALESCE(
+              SUM(o.amount - o.agent_base_price) FILTER (
+                WHERE o.delivered_at < t.today_start
+              ),
+              0
+            ) AS previous_earnings,
 
-  FROM orders
-  WHERE agent_id = $1
-    AND status = 'paid'
-    AND delivery_status = 'delivered'
-    AND delivered_at IS NOT NULL
-    AND agent_base_price IS NOT NULL
-    AND amount > agent_base_price
-),
-withdrawals AS (
-  SELECT
-    COALESCE(
-      SUM(amount) FILTER (
-        WHERE status IN ('pending', 'approved', 'paid')
-      ),
-      0
-    ) AS used_amount,
+            COALESCE(
+              SUM(o.amount - o.agent_base_price) FILTER (
+                WHERE o.delivered_at >= t.today_start
+              ),
+              0
+            ) AS todays_earnings,
 
-    COALESCE(
-      SUM(amount) FILTER (
-        WHERE status IN ('pending', 'approved')
-      ),
-      0
-    ) AS pending_amount
+            COUNT(*) FILTER (
+              WHERE o.delivered_at < t.today_start
+            ) AS previous_orders,
 
-  FROM agent_withdrawals
-  WHERE agent_id = $1
-)
-SELECT
-  earnings.eligible_earnings,
-  earnings.todays_earnings,
-  withdrawals.used_amount,
-  withdrawals.pending_amount
-FROM earnings, withdrawals
+            COUNT(*) FILTER (
+              WHERE o.delivered_at >= t.today_start
+            ) AS todays_orders
+
+          FROM orders o
+          CROSS JOIN time_boundary t
+
+          WHERE o.agent_id = $1
+            AND o.status = 'paid'
+            AND o.delivery_status = 'delivered'
+            AND o.delivered_at IS NOT NULL
+            AND o.agent_base_price IS NOT NULL
+            AND o.amount > o.agent_base_price
+        ),
+
+        withdrawals AS (
+          SELECT
+            COALESCE(
+              SUM(amount) FILTER (
+                WHERE status IN ('pending', 'approved', 'paid')
+              ),
+              0
+            ) AS reserved_amount,
+
+            COALESCE(
+              SUM(amount) FILTER (
+                WHERE status IN ('pending', 'approved')
+              ),
+              0
+            ) AS pending_amount
+
+          FROM agent_withdrawals
+          WHERE agent_id = $1
+        )
+
+        SELECT
+          earnings.previous_earnings,
+          earnings.todays_earnings,
+          earnings.previous_orders,
+          earnings.todays_orders,
+          withdrawals.reserved_amount,
+          withdrawals.pending_amount
+
+        FROM earnings
+        CROSS JOIN withdrawals
         `,
         [req.agentId]
       );
 
       const row = result.rows[0];
 
-      const totalEarnings = Number(row.eligible_earnings);
-const todaysProfit = Number(row.todays_earnings);
-      const usedAmount = Number(row.used_amount);
-      const pendingAmount = Number(row.pending_amount);
+      const previousEarnings =
+        Number(row.previous_earnings || 0);
+
+      const todaysProfit =
+        Number(row.todays_earnings || 0);
+
+      const reservedAmount =
+        Number(row.reserved_amount || 0);
+
+      const pendingAmount =
+        Number(row.pending_amount || 0);
+
+      // Previous earnings minus withdrawals already reserved
+      // or completed. A paid withdrawal must not be counted twice.
+      const availableBalance = Math.max(
+        0,
+        previousEarnings - reservedAmount
+      );
 
       res.json({
         success: true,
         currency: "GHS",
         minimumWithdrawal: 0.10,
         maximumWithdrawal: null,
-        totalEarnings: Number(totalEarnings.toFixed(2)),
-        todaysProfit: Number(todaysProfit.toFixed(2)),
-        pendingWithdrawals: Number(pendingAmount.toFixed(2)),
+
+        totalEarnings: Number(
+          previousEarnings.toFixed(2)
+        ),
+
+        todaysProfit: Number(
+          todaysProfit.toFixed(2)
+        ),
+
+        pendingWithdrawals: Number(
+          pendingAmount.toFixed(2)
+        ),
+
         availableBalance: Number(
-          Math.max(0, totalEarnings - usedAmount).toFixed(2)
-        )
+          availableBalance.toFixed(2)
+        ),
+
+        diagnostics: {
+          previousEligibleOrders:
+            Number(row.previous_orders || 0),
+
+          todaysEligibleOrders:
+            Number(row.todays_orders || 0),
+
+          previousEarnings: Number(
+            previousEarnings.toFixed(2)
+          ),
+
+          todaysProfit: Number(
+            todaysProfit.toFixed(2)
+          ),
+
+          reservedWithdrawals: Number(
+            reservedAmount.toFixed(2)
+          )
+        }
       });
+
     } catch (error) {
-      console.error("Withdrawal balance:", error.message);
+      console.error(
+        "Withdrawal balance error:",
+        error.message
+      );
 
       res.status(500).json({
         success: false,
