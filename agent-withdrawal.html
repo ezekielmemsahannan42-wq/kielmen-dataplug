@@ -253,27 +253,10 @@ footer {
 <script>
 const API = "https://kielmen-dataplug-payment-api.onrender.com";
 
-function getToken() {
-    // Reuse an existing token only if the dashboard stores it
-    // under one of these common names.
-    const names = [
-        "agentToken",
-        "agent_token",
-        "agentAuthToken",
-        "token"
-    ];
-
-    for (const name of names) {
-        const value =
-            sessionStorage.getItem(name) ||
-            localStorage.getItem(name);
-
-        if (value) return value;
+    function getToken() {
+    return sessionStorage.getItem("k636_agent_token");
     }
-
-    return null;
-}
-
+    
 async function apiRequest(path, options = {}) {
     const token = getToken();
 
