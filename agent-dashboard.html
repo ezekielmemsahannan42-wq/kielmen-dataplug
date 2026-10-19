@@ -1665,87 +1665,234 @@ async function loadStats() {
 // ============================================================
 
 async function loadWithdrawals() {
-  const balanceElement = document.getElementById("availableBalance");
-  const todayElement = document.getElementById("todayProfit");
-  const pendingElement = document.getElementById("pendingWithdrawals");
-  const historyElement = document.getElementById("withdrawalHistory");
+  const balanceElement =
+    document.getElementById("availableBalance");
+
+  const todayElement =
+    document.getElementById("todayProfit");
+
+  const pendingElement =
+    document.getElementById("pendingWithdrawals");
+
+  const historyElement =
+    document.getElementById("withdrawalHistory");
+
+  const messageElement =
+    document.getElementById("withdrawMessage");
+
+  // Step 1: Check that the agent is logged in.
+  const token =
+    sessionStorage.getItem("k636_agent_token");
+
+  if (!token) {
+    const errorMessage =
+      "Your agent session is missing. Please sign in again.";
+
+    if (messageElement) {
+      messageElement.textContent = errorMessage;
+    }
+
+    if (historyElement) {
+      historyElement.textContent = errorMessage;
+    }
+
+    return;
+  }
+
+  // Do not leave old values on screen while refreshing.
+  if (messageElement) {
+    messageElement.textContent =
+      "Checking your earnings with the server...";
+  }
+
+  if (historyElement) {
+    historyElement.textContent =
+      "Loading withdrawal history...";
+  }
 
   try {
-    const balanceData = await apiRequest("/agents/withdrawals");
+    // Step 2: Ask Render for the authenticated agent's balances.
+    const balanceData =
+      await apiRequest("/agents/withdrawals");
 
-    if (!balanceData.response.ok || !balanceData.result?.success) {
+    if (
+      !balanceData.response.ok ||
+      !balanceData.result ||
+      balanceData.result.success !== true
+    ) {
       throw new Error(
-        balanceData.result?.message || "Could not load withdrawal balance."
+        balanceData.result?.message ||
+        "The server could not retrieve your withdrawal balances."
       );
     }
 
     const balance = balanceData.result;
 
-    if (balanceElement) {
-      balanceElement.textContent = money(balance.availableBalance);
+    // Step 3: Check the actual values returned by Render.
+    // Do not silently convert missing values into zero.
+    const requiredFields = [
+      "availableBalance",
+      "todaysProfit",
+      "pendingWithdrawals"
+    ];
+
+    const missingFields = requiredFields.filter(
+      field =>
+        !Object.prototype.hasOwnProperty.call(balance, field) ||
+        balance[field] === null ||
+        balance[field] === undefined ||
+        balance[field] === "" ||
+        !Number.isFinite(Number(balance[field]))
+    );
+
+    if (missingFields.length > 0) {
+      throw new Error(
+        "The server response is missing valid balance fields: " +
+        missingFields.join(", ") +
+        ". Check the response format in server.js."
+      );
     }
 
-    if (todayElement) {
-      todayElement.textContent = money(balance.todaysProfit);
+    // Step 4: Display the balances returned by the backend.
+    // These values are NOT recalculated in the browser.
+    balanceElement.textContent =
+      money(balance.availableBalance);
+
+    todayElement.textContent =
+      money(balance.todaysProfit);
+
+    pendingElement.textContent =
+      money(balance.pendingWithdrawals);
+
+    // Step 5: Explain the intended calculation.
+    // The server remains responsible for enforcing these rules.
+    if (messageElement) {
+      const available =
+        Number(balance.availableBalance);
+
+      const today =
+        Number(balance.todaysProfit);
+
+      const pending =
+        Number(balance.pendingWithdrawals);
+
+      if (available === 0 && today === 0 && pending === 0) {
+        messageElement.textContent =
+          "The server returned GH₵0.00 for all three balances. " +
+          "This page is receiving the response, but we have not " +
+          "yet confirmed whether eligible delivered orders exist. " +
+          "Next, check the agent's orders and the server's " +
+          "eligibility calculation.";
+      } else {
+        messageElement.textContent =
+          "Balances loaded successfully. Available balance: " +
+          money(available) +
+          ". Today's profit: " +
+          money(today) +
+          ". Pending withdrawals: " +
+          money(pending) +
+          ".";
+      }
     }
 
-    if (pendingElement) {
-      pendingElement.textContent = money(balance.pendingWithdrawals);
-    }
-
-    if (historyElement) {
-      historyElement.textContent = "Loading withdrawal history...";
-
-      const historyData = await apiRequest("/agents/withdrawals/history");
+    // Step 6: Load the withdrawal history separately.
+    // A history failure should not erase balances that loaded correctly.
+    try {
+      const historyData =
+        await apiRequest("/agents/withdrawals/history");
 
       if (
         !historyData.response.ok ||
-        !historyData.result?.success
+        !historyData.result ||
+        historyData.result.success !== true
       ) {
         throw new Error(
-          historyData.result?.message || "Could not load withdrawal history."
+          historyData.result?.message ||
+          "Could not retrieve withdrawal history."
         );
       }
 
-      const withdrawals = historyData.result.withdrawals || [];
+      const withdrawals =
+        historyData.result.withdrawals;
+
+      if (!Array.isArray(withdrawals)) {
+        throw new Error(
+          "The server did not return withdrawal history as an array."
+        );
+      }
 
       if (withdrawals.length === 0) {
-        historyElement.textContent = "You have no withdrawal requests yet.";
+        historyElement.textContent =
+          "No withdrawal requests have been recorded yet.";
       } else {
-        historyElement.innerHTML = withdrawals.map(function (item) {
-          return `
-            <div class="card">
-              <strong>${money(item.amount)}</strong>
-              <p class="stat-note">
-                Provider: ${escapeHTML(item.provider || "Not provided")}
-              </p>
-              <p class="stat-note">
-                Mobile Money: ${escapeHTML(item.phone || "Not provided")}
-              </p>
-              <p class="stat-note">
-                Status: ${escapeHTML(item.status || "pending")}
-              </p>
-              <p class="stat-note">
-                Date: ${escapeHTML(
-                  item.created_at
-                    ? new Date(item.created_at).toLocaleString()
-                    : "Not available"
-                )}
-              </p>
-            </div>
-          `;
-        }).join("");
+        historyElement.innerHTML =
+          withdrawals.map(function(item) {
+            const amount = money(item.amount);
+
+            const provider =
+              escapeHTML(item.provider || "Not provided");
+
+            const phone =
+              escapeHTML(item.phone || "Not provided");
+
+            const status =
+              escapeHTML(item.status || "unknown");
+
+            const date = escapeHTML(
+              item.created_at
+                ? new Date(item.created_at).toLocaleString()
+                : "Not available"
+            );
+
+            return `
+              <div class="card">
+                <strong>${amount}</strong>
+                <p class="stat-note">
+                  Provider: ${provider}
+                </p>
+                <p class="stat-note">
+                  Mobile Money: ${phone}
+                </p>
+                <p class="stat-note">
+                  Status: ${status}
+                </p>
+                <p class="stat-note">
+                  Date: ${date}
+                </p>
+              </div>
+            `;
+          }).join("");
       }
+
+    } catch (historyError) {
+      console.error(
+        "Withdrawal history error:",
+        historyError
+      );
+
+      historyElement.textContent =
+        "Your balances loaded, but withdrawal history failed: " +
+        historyError.message;
     }
+
   } catch (error) {
-    console.error("Load withdrawals error:", error);
+    console.error(
+      "Withdrawal balance diagnostic:",
+      error
+    );
+
+    if (messageElement) {
+      messageElement.textContent =
+        "Unable to verify your balances: " +
+        error.message;
+    }
 
     if (historyElement) {
       historyElement.textContent =
-        error.message || "Unable to load withdrawal information.";
+        "Balance retrieval failed. Please try refreshing.";
     }
   }
-}
+  }
 
 async function submitWithdrawal() {
   const amountInput = document.getElementById("withdrawAmount");
