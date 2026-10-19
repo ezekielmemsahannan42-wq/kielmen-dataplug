@@ -719,15 +719,7 @@
     </div>
   </div>
 
-    <div class="card">
-  <div class="stat-label">Today's Profit</div>
-  <div class="stat-value" id="withdrawToday">
-    GH₵0.00
-  </div>
-  <div class="stat-note">
-    Available for withdrawal tomorrow.
-  </div>
-    </div>
+    
 
   <div class="card">
     <div class="stat-label">Today's Profit</div>
@@ -1645,24 +1637,25 @@ async function loadStats() {
       stats.totalOrders ?? stats.total_orders ?? "—";
 
     document.getElementById("salesStat").textContent =
-      money(stats.totalSales ?? stats.total_sales ?? 
-            
+      money(stats.totalSales ?? stats.total_sales ?? 0);
 
-            document.getElementById("profitStat").textContent =
-    money(
+    document.getElementById("profitStat").textContent =
+      money(
         stats.estimatedMargin ??
         stats.estimated_margin ??
         stats.totalProfit ??
         stats.total_profit ??
         0
-    );
+      );
 
-document.getElementById("customersStat").textContent =
-    stats.customers ??
-    stats.totalCustomers ??
-    stats.total_customers ??
-    "—";
+    document.getElementById("customersStat").textContent =
+      stats.customers ??
+      stats.totalCustomers ??
+      stats.total_customers ??
+      "—";
+
   } catch (error) {
+    console.error("Load stats error:", error);
     setStatsUnavailable();
   }
 }
@@ -1672,10 +1665,10 @@ document.getElementById("customersStat").textContent =
 // ============================================================
 
 async function loadWithdrawals() {
-  const balanceElement = document.getElementById("withdrawAvailable");
-const todayElement = document.getElementById("todayProfit");
-const pendingElement = document.getElementById("withdrawPending");
-const historyElement = document.getElementById("withdrawHistory");
+  const balanceElement = document.getElementById("availableBalance");
+  const todayElement = document.getElementById("todayProfit");
+  const pendingElement = document.getElementById("pendingWithdrawals");
+  const historyElement = document.getElementById("withdrawalHistory");
 
   try {
     const balanceData = await apiRequest("/agents/withdrawals");
