@@ -719,6 +719,16 @@
     </div>
   </div>
 
+    <div class="card">
+  <div class="stat-label">Today's Profit</div>
+  <div class="stat-value" id="withdrawToday">
+    GH₵0.00
+  </div>
+  <div class="stat-note">
+    Available for withdrawal tomorrow.
+  </div>
+    </div>
+
   <div class="card">
     <div class="stat-label">Today's Profit</div>
     <div class="stat-value" id="todayProfit">
@@ -1653,9 +1663,9 @@ document.getElementById("customersStat").textContent =
 // ============================================================
 
 async function loadWithdrawals() {
-  const balanceElement = document.getElementById("availableBalance");
-  const todayElement = document.getElementById("todayProfit");
-  const pendingElement = document.getElementById("pendingWithdrawals");
+  const balanceElement = document.getElementById("withdrawAvailable");
+const todayElement = document.getElementById("withdrawToday");
+const pendingElement = document.getElementById("withdrawPending");
   const historyElement = document.getElementById("withdrawalHistory");
 
   try {
