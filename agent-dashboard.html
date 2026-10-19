@@ -1645,14 +1645,23 @@ async function loadStats() {
       stats.totalOrders ?? stats.total_orders ?? "—";
 
     document.getElementById("salesStat").textContent =
-      money(stats.totalSales ?? stats.total_sales ?? 0);
+      money(stats.totalSales ?? stats.total_sales ?? 
+            
 
-   document.getElementById("profitStat").textContent =
-  money(stats.estimatedMargin ?? 0);
+            document.getElementById("profitStat").textContent =
+    money(
+        stats.estimatedMargin ??
+        stats.estimated_margin ??
+        stats.totalProfit ??
+        stats.total_profit ??
+        0
+    );
 
 document.getElementById("customersStat").textContent =
-  stats.customers ?? "—";
-
+    stats.customers ??
+    stats.totalCustomers ??
+    stats.total_customers ??
+    "—";
   } catch (error) {
     setStatsUnavailable();
   }
@@ -1664,9 +1673,9 @@ document.getElementById("customersStat").textContent =
 
 async function loadWithdrawals() {
   const balanceElement = document.getElementById("withdrawAvailable");
-const todayElement = document.getElementById("withdrawToday");
+const todayElement = document.getElementById("todayProfit");
 const pendingElement = document.getElementById("withdrawPending");
-  const historyElement = document.getElementById("withdrawalHistory");
+const historyElement = document.getElementById("withdrawHistory");
 
   try {
     const balanceData = await apiRequest("/agents/withdrawals");
