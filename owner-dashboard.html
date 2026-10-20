@@ -306,36 +306,122 @@
 
     </section>
 
-    <section class="section">
-      <h2>Order Management</h2>
+    <!-- ORDER MANAGEMENT -->
+<section class="section">
+  <h2>📦 Order Management</h2>
 
-      <div class="info-panel">
-        Your payment and delivery records are stored by the
-        backend. A protected order-list endpoint is required
-        before private customer orders can be displayed here.
-      </div>
-    </section>
+  <div class="info-panel">
+    <input
+      id="orderSearch"
+      type="search"
+      placeholder="Search reference, phone or agent"
+      style="padding:10px;width:100%;max-width:400px;"
+    >
 
-    <section class="section">
-      <h2>Agent Management</h2>
+    <select id="orderPaymentFilter" style="padding:10px;">
+      <option value="">All payment statuses</option>
+      <option value="paid">Paid</option>
+      <option value="pending">Pending</option>
+    </select>
 
-      <div class="info-panel">
-        Agent registration, agent records, and agent activity
-        will appear here after their backend endpoints are
-        connected.
-      </div>
-    </section>
+    <select id="orderDeliveryFilter" style="padding:10px;">
+      <option value="">All delivery statuses</option>
+      <option value="delivered">Delivered</option>
+      <option value="processing">Processing</option>
+      <option value="failed">Failed</option>
+    </select>
 
-    <section class="section">
-      <h2>Withdrawal Management</h2>
+    <button class="button refresh" id="searchOrders">
+      Search Orders
+    </button>
 
-      <div class="info-panel">
-        Withdrawal requests and approval actions require
-        protected backend endpoints and verified withdrawal
-        records. No withdrawal will be processed from this
-        placeholder.
-      </div>
-    </section>
+    <div style="overflow-x:auto;margin-top:20px;">
+      <table style="width:100%;border-collapse:collapse;min-width:700px;">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Phone</th>
+            <th>Network</th>
+            <th>Bundle</th>
+            <th>Amount</th>
+            <th>Payment</th>
+            <th>Delivery</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTableBody">
+          <tr><td colspan="7">Loading orders...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- AGENT MANAGEMENT -->
+<section class="section">
+  <h2>👥 Agent Management</h2>
+
+  <div class="info-panel">
+    <input
+      id="agentSearch"
+      type="search"
+      placeholder="Search agent name or business"
+      style="padding:10px;width:100%;max-width:400px;"
+    >
+
+    <div style="overflow-x:auto;margin-top:20px;">
+      <table style="width:100%;border-collapse:collapse;min-width:650px;">
+        <thead>
+          <tr>
+            <th>Agent Code</th>
+            <th>Name</th>
+            <th>Business</th>
+            <th>Status</th>
+            <th>Orders</th>
+            <th>Paid Sales</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody id="agentsTableBody">
+          <tr><td colspan="7">Loading agents...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="agentDetails" style="margin-top:20px;"></div>
+  </div>
+</section>
+
+<!-- WITHDRAWAL MANAGEMENT -->
+<section class="section">
+  <h2>💸 Withdrawal Management</h2>
+
+  <div class="info-panel">
+    <p>
+      Review withdrawal requests and confirm Mobile Money
+      payments before marking a request as paid.
+    </p>
+
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;min-width:700px;">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Agent</th>
+            <th>Amount</th>
+            <th>MoMo Number</th>
+            <th>Provider</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="withdrawalsTableBody">
+          <tr><td colspan="7">Loading withdrawals...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
 
   </main>
 
