@@ -30,6 +30,8 @@ const DATABASE_URL = process.env.DATABASE_URL;
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_CUSTOMER_EMAIL = process.env.PAYSTACK_CUSTOMER_EMAIL;
 const DATAMART_API_KEY = process.env.DATAMART_API_KEY;
+const WITHDRAWALS_ENABLED =
+  String(process.env.WITHDRAWALS_ENABLED || "false").toLowerCase() === "true";
 
 const DATAMART_PURCHASES_ENABLED =
   String(process.env.DATAMART_PURCHASES_ENABLED || "").toLowerCase() === "true";
@@ -1319,6 +1321,7 @@ app.get(
   "/agents/withdrawals",
   requireAgent,
   requireApprovedAgent,
+  requireWithdrawalsEnabled,
   async (req, res) => {
     try {
       const result = await pool.query(
@@ -1399,7 +1402,16 @@ app.get(
         `,
         [req.agentId]
       );
+function requireWithdrawalsEnabled(req, res, next) {
+  if (!WITHDRAWALS_ENABLED) {
+    return res.status(503).json({
+      success: false,
+      message: "Withdrawals are temporarily disabled."
+    });
+  }
 
+  next();
+}
       const row = result.rows[0];
       console.log("WITHDRAWAL DIAGNOSTICS:", {
   agentId: req.agentId,
