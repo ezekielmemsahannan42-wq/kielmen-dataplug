@@ -1208,171 +1208,173 @@ app.put(
 // ============================================================
 
 // ============================================================
+// ============================================================
 // AGENT STATISTICS AND PROFIT
 // ============================================================
 
-// AGENT STATISTICS
-app.get('/agents/stats', authenticateAgent, async (req, res) => {
+app.get(
+  "/agents/stats",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
     try {
-        const agentId = req.agentId;
+      const result = await pool.query(
+        `
+        SELECT
+          COUNT(*) AS total_orders,
 
-        const result = await pool.query(
-            `
-            SELECT
-                COUNT(*) AS total_orders,
+          COUNT(*) FILTER (
+            WHERE LOWER(COALESCE(status, '')) = 'paid'
+          ) AS paid_orders,
 
-                COUNT(*) FILTER (
-                    WHERE LOWER(COALESCE(status, '')) = 'paid'
-                ) AS paid_orders,
+          COUNT(*) FILTER (
+            WHERE LOWER(COALESCE(status, '')) = 'paid'
+              AND LOWER(COALESCE(delivery_status, ''))
+                IN (
+                  'delivered',
+                  'completed',
+                  'success',
+                  'successful'
+                )
+          ) AS delivered_orders,
 
-                COUNT(*) FILTER (
-                    WHERE LOWER(COALESCE(status, '')) = 'paid'
-                    AND LOWER(COALESCE(delivery_status, ''))
-                        IN ('delivered', 'completed', 'success', 'successful')
-                ) AS delivered_orders,
+          COUNT(*) FILTER (
+            WHERE LOWER(COALESCE(status, '')) = 'paid'
+              AND agent_base_price IS NULL
+          ) AS missing_base_price_orders,
 
-                COUNT(*) FILTER (
-                    WHERE LOWER(COALESCE(status, '')) = 'paid'
-                    AND agent_base_price IS NULL
-                ) AS missing_base_price_orders,
+          COUNT(*) FILTER (
+            WHERE LOWER(COALESCE(status, '')) = 'paid'
+              AND LOWER(COALESCE(delivery_status, ''))
+                NOT IN (
+                  'delivered',
+                  'completed',
+                  'success',
+                  'successful',
+                  'failed',
+                  'rejected',
+                  'cancelled',
+                  'canceled'
+                )
+              AND agent_base_price IS NOT NULL
+          ) AS pending_delivery_orders,
 
-                COUNT(*) FILTER (
-                    WHERE LOWER(COALESCE(status, '')) = 'paid'
-                    AND LOWER(COALESCE(delivery_status, ''))
-                        NOT IN (
-                            'delivered',
-                            'completed',
-                            'success',
-                            'successful',
-                            'failed',
-                            'cancelled'
-                        )
-                    AND agent_base_price IS NOT NULL
-                ) AS pending_delivery_orders,
-
-                COALESCE(
-                    SUM(amount::numeric),
-                    0
-                ) FILTER (
-                    WHERE LOWER(COALESCE(status, '')) = 'paid'
-                ) AS total_sales,
-
-                COALESCE(
-                    SUM(
-                        GREATEST(
-                            amount::numeric - agent_base_price::numeric,
-                            0
-                        )
-                    ) FILTER (
-                        WHERE LOWER(COALESCE(status, '')) = 'paid'
-                        AND agent_base_price IS NOT NULL
-                    ),
-                    0
-                ) AS estimated_profit,
-
-                COALESCE(
-                    SUM(
-                        GREATEST(
-                            amount::numeric - agent_base_price::numeric,
-                            0
-                        )
-                    ) FILTER (
-                        WHERE LOWER(COALESCE(status, '')) = 'paid'
-                        AND LOWER(COALESCE(delivery_status, ''))
-                            IN (
-                                'delivered',
-                                'completed',
-                                'success',
-                                'successful'
-                            )
-                        AND agent_base_price IS NOT NULL
-                    ),
-                    0
-                ) AS confirmed_profit,
-
-                COALESCE(
-                    SUM(
-                        GREATEST(
-                            amount::numeric - agent_base_price::numeric,
-                            0
-                        )
-                    ) FILTER (
-                        WHERE LOWER(COALESCE(status, '')) = 'paid'
-                        AND LOWER(COALESCE(delivery_status, ''))
-                            NOT IN (
-                                'delivered',
-                                'completed',
-                                'success',
-                                'successful',
-                                'failed',
-                                'cancelled'
-                            )
-                        AND agent_base_price IS NOT NULL
-                    ),
-                    0
-                ) AS pending_delivery_profit,
-
-                COUNT(DISTINCT phone) AS customers
-
-            FROM orders
-            WHERE agent_id = $1
-            `,
-            [agentId]
-        );
-
-        const row = result.rows[0];
-
-        const stats = {
-            totalOrders: Number(row.total_orders || 0),
-            paidOrders: Number(row.paid_orders || 0),
-            deliveredOrders: Number(row.delivered_orders || 0),
-
-            totalSales: Number(row.total_sales || 0),
-
-            // Estimated margin from paid orders with a recorded base price.
-            estimatedProfit: Number(row.estimated_profit || 0),
-
-            // Profit from orders confirmed as delivered.
-            confirmedProfit: Number(row.confirmed_profit || 0),
-
-            // Estimated margin from orders still awaiting delivery.
-            pendingDeliveryProfit: Number(
-                row.pending_delivery_profit || 0
+          COALESCE(
+            SUM(amount) FILTER (
+              WHERE LOWER(COALESCE(status, '')) = 'paid'
             ),
+            0
+          ) AS total_sales,
 
-            pendingDeliveryOrders: Number(
-                row.pending_delivery_orders || 0
+          COALESCE(
+            SUM(
+              GREATEST(amount - agent_base_price, 0)
+            ) FILTER (
+              WHERE LOWER(COALESCE(status, '')) = 'paid'
+                AND agent_base_price IS NOT NULL
             ),
+            0
+          ) AS estimated_profit,
 
-            missingBasePriceOrders: Number(
-                row.missing_base_price_orders || 0
+          COALESCE(
+            SUM(
+              GREATEST(amount - agent_base_price, 0)
+            ) FILTER (
+              WHERE LOWER(COALESCE(status, '')) = 'paid'
+                AND LOWER(COALESCE(delivery_status, ''))
+                  IN (
+                    'delivered',
+                    'completed',
+                    'success',
+                    'successful'
+                  )
+                AND agent_base_price IS NOT NULL
             ),
+            0
+          ) AS confirmed_profit,
 
-            customers: Number(row.customers || 0),
+          COALESCE(
+            SUM(
+              GREATEST(amount - agent_base_price, 0)
+            ) FILTER (
+              WHERE LOWER(COALESCE(status, '')) = 'paid'
+                AND LOWER(COALESCE(delivery_status, ''))
+                  NOT IN (
+                    'delivered',
+                    'completed',
+                    'success',
+                    'successful',
+                    'failed',
+                    'rejected',
+                    'cancelled',
+                    'canceled'
+                  )
+                AND agent_base_price IS NOT NULL
+            ),
+            0
+          ) AS pending_delivery_profit,
 
-            // Compatibility with existing dashboard code.
-            totalProfit: Number(row.estimated_profit || 0),
-            estimatedMargin: Number(row.estimated_profit || 0),
+          COUNT(DISTINCT phone) AS customers
 
-            marginNote:
-                'Estimated profit includes paid orders with a recorded base price. Confirmed profit includes delivered orders only.'
-        };
+        FROM orders
+        WHERE agent_id = $1
+        `,
+        [req.agentId]
+      );
 
-        res.json({
-            success: true,
-            stats
-        });
+      const row = result.rows[0];
+
+      const stats = {
+        totalOrders: Number(row.total_orders || 0),
+        paidOrders: Number(row.paid_orders || 0),
+        deliveredOrders: Number(row.delivered_orders || 0),
+
+        totalSales: Number(row.total_sales || 0),
+
+        estimatedProfit: Number(row.estimated_profit || 0),
+
+        confirmedProfit: Number(row.confirmed_profit || 0),
+
+        pendingDeliveryProfit: Number(
+          row.pending_delivery_profit || 0
+        ),
+
+        pendingDeliveryOrders: Number(
+          row.pending_delivery_orders || 0
+        ),
+
+        missingBasePriceOrders: Number(
+          row.missing_base_price_orders || 0
+        ),
+
+        customers: Number(row.customers || 0),
+
+        // Keep compatibility with older dashboard code.
+        totalProfit: Number(row.estimated_profit || 0),
+        estimatedMargin: Number(row.estimated_profit || 0),
+
+        marginNote:
+          "Estimated profit is based on paid agent orders with recorded base prices. Confirmed profit is based on delivered orders."
+      };
+
+      return res.json({
+        success: true,
+        stats
+      });
 
     } catch (error) {
-        console.error('Agent statistics error:', error);
+      console.error(
+        "Agent statistics error:",
+        error.message
+      );
 
-        res.status(500).json({
-            success: false,
-            message: 'Unable to load agent statistics.'
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Unable to load agent statistics."
+      });
     }
-});
-
+  }
+);
 // ============================================================
 // ============================================================
 // 12A. AGENT WITHDRAWAL BALANCE
