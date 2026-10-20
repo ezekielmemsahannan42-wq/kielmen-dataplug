@@ -2523,14 +2523,14 @@ app.get("/order-status/:reference", async (req, res) => {
 );
 
         const normalizedStatus = String(
-          supplierResult.status ||
-          (
-            supplierResult.data &&
-            supplierResult.data.status
-          ) ||
-          supplierResult.delivery_status ||
-          ""
-        ).toLowerCase();
+  supplierResult.data?.orderStatus ||
+  supplierResult.orderStatus ||
+  supplierResult.data?.delivery_status ||
+  supplierResult.delivery_status ||
+  supplierResult.data?.status ||
+  supplierResult.status ||
+  ""
+).trim().toLowerCase();
 
         if (
           [
