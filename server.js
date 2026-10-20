@@ -2021,6 +2021,379 @@ app.patch(
     }
   }
 );
+
+
+// ============================================================
+// NEW OWNER DASHBOARD ROUTES
+// ============================================================
+
+// 1. GET /owner/stats
+
+// 2. GET /owner/orders
+
+// 3. GET /owner/agents/:id/details
+
+// ============================================================
+// NEW OWNER DASHBOARD ROUTES
+// Place immediately before Section 14
+// ============================================================
+
+
+// 1. OWNER DASHBOARD STATISTICS
+
+app.get("/owner/stats", requireOwner, async (_req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        COUNT(*)::int AS total_orders,
+
+        COALESCE(
+          SUM(amount) FILTER (
+            WHERE LOWER(status) = 'paid'
+          ), 0
+        )::numeric(12,2) AS total_revenue,
+
+        COUNT(*) FILTER (
+          WHERE LOWER(status) = 'paid'
+        )::int AS paid_orders,
+
+        COUNT(*) FILTER (
+          WHERE LOWER(delivery_status) = 'delivered'
+        )::int AS successful_deliveries,
+
+        COUNT(*) FILTER (
+          WHERE LOWER(delivery_status) IN (
+            'processing', 'pending', 'not_started'
+          )
+        )::int AS processing_orders,
+
+        COUNT(*) FILTER (
+          WHERE LOWER(delivery_status) = 'failed'
+        )::int AS failed_deliveries,
+
+        COALESCE(
+          SUM(
+            GREATEST(amount - agent_base_price, 0)
+          ) FILTER (
+            WHERE LOWER(status) = 'paid'
+              AND LOWER(delivery_status) = 'delivered'
+              AND agent_id IS NOT NULL
+              AND agent_base_price IS NOT NULL
+          ), 0
+        )::numeric(12,2) AS total_agent_profit
+
+      FROM orders
+    `);
+
+    const agentsResult = await pool.query(`
+      SELECT COUNT(*)::int AS total_agents
+      FROM agents
+    `);
+
+    const withdrawalsResult = await pool.query(`
+      SELECT
+        COUNT(*) FILTER (
+          WHERE LOWER(status) = 'pending'
+        )::int AS pending_withdrawals,
+
+        COALESCE(
+          SUM(amount) FILTER (
+            WHERE LOWER(status) = 'pending'
+          ), 0
+        )::numeric(12,2) AS pending_withdrawal_amount
+
+      FROM agent_withdrawals
+    `);
+
+    const row = result.rows[0];
+    const withdrawal = withdrawalsResult.rows[0];
+
+    res.json({
+      success: true,
+
+      stats: {
+        totalOrders: Number(row.total_orders),
+        totalRevenue: Number(row.total_revenue),
+        totalSales: Number(row.total_revenue),
+        paidOrders: Number(row.paid_orders),
+        successfulDeliveries: Number(row.successful_deliveries),
+        deliveredOrders: Number(row.successful_deliveries),
+        processingOrders: Number(row.processing_orders),
+        pendingOrders: Number(row.processing_orders),
+        failedDeliveries: Number(row.failed_deliveries),
+        failedOrders: Number(row.failed_deliveries),
+        totalAgentProfit: Number(row.total_agent_profit),
+        totalProfit: Number(row.total_agent_profit),
+        registeredAgents: Number(
+          agentsResult.rows[0].total_agents
+        ),
+        pendingWithdrawals: Number(
+          withdrawal.pending_withdrawals
+        ),
+        pendingWithdrawalAmount: Number(
+          withdrawal.pending_withdrawal_amount
+        )
+      },
+
+      note:
+        "Agent profit is an estimated margin on paid and delivered agent orders. It is not net business profit."
+    });
+
+  } catch (error) {
+    console.error("Owner statistics:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load owner statistics."
+    });
+  }
+});
+
+
+// 2. OWNER ORDER LIST
+
+app.get("/owner/orders", requireOwner, async (req, res) => {
+  try {
+    const status = String(req.query.status || "")
+      .trim()
+      .toLowerCase();
+
+    const deliveryStatus = String(
+      req.query.delivery_status || ""
+    ).trim().toLowerCase();
+
+    const search = String(req.query.search || "")
+      .trim()
+      .slice(0, 100);
+
+    const limitValue = Number(req.query.limit || 100);
+
+    const limit = Number.isInteger(limitValue)
+      ? Math.max(1, Math.min(limitValue, 500))
+      : 100;
+
+    const result = await pool.query(`
+      SELECT
+        o.id,
+        o.reference,
+        o.phone,
+        o.network,
+        o.bundle,
+        o.amount,
+        o.status,
+        o.delivery_status,
+        o.supplier_reference,
+        o.agent_id,
+        o.agent_base_price,
+        o.created_at,
+        o.delivered_at,
+        a.agent_code,
+        a.business_name AS agent_business_name,
+
+        CASE
+          WHEN o.status = 'paid'
+            AND o.delivery_status = 'delivered'
+            AND o.agent_base_price IS NOT NULL
+          THEN GREATEST(o.amount - o.agent_base_price, 0)
+          ELSE 0
+        END AS estimated_agent_margin
+
+      FROM orders o
+
+      LEFT JOIN agents a
+        ON a.id = o.agent_id
+
+      WHERE
+        ($1 = '' OR LOWER(o.status) = $1)
+        AND
+        ($2 = '' OR LOWER(o.delivery_status) = $2)
+        AND
+        (
+          $3 = ''
+          OR o.reference ILIKE '%' || $3 || '%'
+          OR o.phone ILIKE '%' || $3 || '%'
+          OR COALESCE(a.business_name, '') ILIKE '%' || $3 || '%'
+          OR COALESCE(a.agent_code, '') ILIKE '%' || $3 || '%'
+        )
+
+      ORDER BY o.created_at DESC
+      LIMIT $4
+    `, [status, deliveryStatus, search, limit]);
+
+    res.json({
+      success: true,
+
+      orders: result.rows.map(order => ({
+        ...order,
+        amount: Number(order.amount),
+        agent_base_price:
+          order.agent_base_price === null
+            ? null
+            : Number(order.agent_base_price),
+        estimated_agent_margin:
+          Number(order.estimated_agent_margin)
+      }))
+    });
+
+  } catch (error) {
+    console.error("Owner order list:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Could not load customer orders."
+    });
+  }
+});
+
+
+// 3. DETAILS FOR ONE AGENT
+
+app.get(
+  "/owner/agents/:id/details",
+  requireOwner,
+  async (req, res) => {
+    const id = Number(req.params.id);
+
+    if (!Number.isSafeInteger(id) || id < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid agent ID."
+      });
+    }
+
+    try {
+      const agentResult = await pool.query(`
+        SELECT
+          id,
+          agent_code,
+          full_name,
+          business_name,
+          email,
+          phone,
+          status,
+          store_description,
+          created_at
+        FROM agents
+        WHERE id = $1
+      `, [id]);
+
+      if (!agentResult.rowCount) {
+        return res.status(404).json({
+          success: false,
+          message: "Agent not found."
+        });
+      }
+
+      const statsResult = await pool.query(`
+        SELECT
+          COUNT(*)::int AS total_orders,
+
+          COUNT(*) FILTER (
+            WHERE LOWER(status) = 'paid'
+          )::int AS paid_orders,
+
+          COUNT(*) FILTER (
+            WHERE LOWER(delivery_status) = 'delivered'
+          )::int AS delivered_orders,
+
+          COALESCE(
+            SUM(amount) FILTER (
+              WHERE LOWER(status) = 'paid'
+            ), 0
+          )::numeric(12,2) AS total_sales,
+
+          COALESCE(
+            SUM(GREATEST(amount - agent_base_price, 0))
+              FILTER (
+                WHERE LOWER(status) = 'paid'
+                  AND LOWER(delivery_status) = 'delivered'
+                  AND agent_base_price IS NOT NULL
+              ), 0
+          )::numeric(12,2) AS estimated_profit
+
+        FROM orders
+        WHERE agent_id = $1
+      `, [id]);
+
+      const ordersResult = await pool.query(`
+        SELECT
+          reference,
+          phone,
+          network,
+          bundle,
+          amount,
+          agent_base_price,
+          status,
+          delivery_status,
+          created_at,
+          delivered_at
+        FROM orders
+        WHERE agent_id = $1
+        ORDER BY created_at DESC
+        LIMIT 100
+      `, [id]);
+
+      const withdrawalsResult = await pool.query(`
+        SELECT
+          id,
+          amount,
+          phone,
+          provider,
+          status,
+          created_at,
+          updated_at
+        FROM agent_withdrawals
+        WHERE agent_id = $1
+        ORDER BY created_at DESC
+        LIMIT 100
+      `, [id]);
+
+      const stats = statsResult.rows[0];
+
+      res.json({
+        success: true,
+
+        agent: agentResult.rows[0],
+
+        stats: {
+          totalOrders: Number(stats.total_orders),
+          paidOrders: Number(stats.paid_orders),
+          deliveredOrders: Number(stats.delivered_orders),
+          totalSales: Number(stats.total_sales),
+          totalProfit: Number(stats.estimated_profit),
+          estimatedProfit: Number(stats.estimated_profit)
+        },
+
+        orders: ordersResult.rows.map(order => ({
+          ...order,
+          amount: Number(order.amount),
+          agent_base_price:
+            order.agent_base_price === null
+              ? null
+              : Number(order.agent_base_price)
+        })),
+
+        withdrawals: withdrawalsResult.rows.map(item => ({
+          ...item,
+          amount: Number(item.amount)
+        }))
+      });
+
+    } catch (error) {
+      console.error("Owner agent details:", error.message);
+
+      res.status(500).json({
+        success: false,
+        message: "Could not load agent details."
+      });
+    }
+  }
+);
+
+
+// ============================================================
+// END NEW OWNER DASHBOARD ROUTES
+// ============================================================
 // ============================================================
 // 14. BASIC API ROUTES
 // ============================================================
