@@ -1,11 +1,10 @@
 "use strict";
 
-/*
- * KIELMEN 636 DATAPLUG
- * OWNER DASHBOARD
- *
- * BACKEND: Render
- */
+/* =========================================
+   KIELMEN 636 DATAPLUG
+   OWNER DASHBOARD
+   Backend: Render
+========================================= */
 
 const OWNER_API =
   "https://kielmen-dataplug-payment-api.onrender.com";
@@ -14,6 +13,7 @@ const TOKEN_KEY = "kielmen_owner_token";
 
 let ownerToken = sessionStorage.getItem(TOKEN_KEY);
 let refreshTimer = null;
+let dashboardLoading = false;
 
 /* =========================================
    GENERAL HELPERS
@@ -23,16 +23,12 @@ function byId(id) {
   return document.getElementById(id);
 }
 
-function money(amount) {
-  return "GH₵" + Number(amount || 0).toFixed(2);
-}
+function money(value) {
+  const amount = Number(value);
 
-function showMessage(message) {
-  const element = byId("ownerMessage");
-
-  if (element) {
-    element.textContent = message;
-  }
+  return "GH₵" + (
+    Number.isFinite(amount) ? amount : 0
+  ).toFixed(2);
 }
 
 function escapeHTML(value) {
@@ -45,24 +41,51 @@ function escapeHTML(value) {
   })[char]);
 }
 
+function showMessage(message) {
+  const element = byId("ownerMessage");
+
+  if (element) {
+    element.textContent = message;
+  }
+}
+
+function setText(id, value) {
+  const element = byId(id);
+
+  if (element) {
+    element.textContent = String(value ?? 0);
+  }
+}
+
 /* =========================================
-   AUTHENTICATED API REQUESTS
+   API REQUESTS
 ========================================= */
 
 async function ownerRequest(path, options = {}) {
   const headers = {
-    "Content-Type": "application/json",
     ...(options.headers || {})
   };
+
+  if (options.body && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
 
   if (ownerToken) {
     headers.Authorization = "Bearer " + ownerToken;
   }
 
-  const response = await fetch(OWNER_API + path, {
-    ...options,
-    headers
-  });
+  let response;
+
+  try {
+    response = await fetch(OWNER_API + path, {
+      ...options,
+      headers
+    });
+  } catch (_error) {
+    throw new Error(
+      "Cannot connect to the server. Check your internet connection and Render service."
+    );
+  }
 
   const data = await response.json().catch(() => ({}));
 
@@ -73,7 +96,8 @@ async function ownerRequest(path, options = {}) {
 
   if (!response.ok) {
     throw new Error(
-      data.message || "The request could not be completed."
+      data.message ||
+      `Request failed with HTTP ${response.status}.`
     );
   }
 
@@ -82,22 +106,28 @@ async function ownerRequest(path, options = {}) {
 
 /* =========================================
    OWNER LOGIN
-   Endpoint: POST /owner/login
+   POST /owner/login
 ========================================= */
 
 function showLogin() {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+
   let overlay = byId("ownerLoginOverlay");
 
   if (!overlay) {
     overlay = document.createElement("div");
+
     overlay.id = "ownerLoginOverlay";
 
     overlay.style.cssText = `
       position:fixed;
       inset:0;
-      z-index:99999;
+      z-index:999999;
       background:#030712;
-      color:white;
+      color:#ffffff;
       display:flex;
       align-items:center;
       justify-content:center;
@@ -113,6 +143,7 @@ function showLogin() {
         background:#111827;
         border:1px solid #374151;
         border-radius:16px;
+        box-sizing:border-box;
       ">
         <h1 style="color:#eab308">
           KIELMEN 636 DATAPLUG
@@ -131,7 +162,6 @@ function showLogin() {
           type="password"
           autocomplete="current-password"
           required
-          maxlength="500"
           style="
             display:block;
             width:100%;
@@ -153,6 +183,7 @@ function showLogin() {
             background:#16a34a;
             color:white;
             font-weight:bold;
+            cursor:pointer;
           "
         >
           Log In
@@ -201,7 +232,9 @@ async function handleLogin(event) {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok || !data.success || !data.token) {
-      throw new Error(data.message || "Login failed.");
+      throw new Error(
+        data.message || "Owner login failed."
+      );
     }
 
     ownerToken = data.token;
@@ -215,7 +248,8 @@ async function handleLogin(event) {
     await startDashboard();
 
   } catch (error) {
-    message.textContent = error.message || "Unable to sign in.";
+    message.textContent =
+      error.message || "Unable to sign in.";
   } finally {
     button.disabled = false;
     button.textContent = "Log In";
@@ -223,34 +257,28 @@ async function handleLogin(event) {
 }
 
 /* =========================================
-   DASHBOARD STATISTICS
-   Endpoint: GET /owner/stats
+   STATISTICS
+   GET /owner/stats
 ========================================= */
-
-function setText(id, value) {
-  const element = byId(id);
-
-  if (element) {
-    element.textContent = String(value ?? 0);
-  }
-}
 
 async function loadStatistics() {
   const data = await ownerRequest("/owner/stats");
 
   if (!data.success || !data.stats) {
-    throw new Error("Dashboard statistics are unavailable.");
+    throw new Error("Statistics could not be loaded.");
   }
 
   const stats = data.stats;
 
-  setText("totalSales", money(
-    stats.totalSales ?? stats.totalRevenue
-  ));
+  setText(
+    "totalSales",
+    money(stats.totalSales ?? stats.totalRevenue)
+  );
 
-  setText("totalProfit", money(
-    stats.totalProfit ?? stats.totalAgentProfit
-  ));
+  setText(
+    "totalProfit",
+    money(stats.totalProfit ?? stats.totalAgentProfit)
+  );
 
   setText("totalOrders", stats.totalOrders);
 
@@ -281,27 +309,42 @@ async function loadStatistics() {
 }
 
 /* =========================================
-   CUSTOMER ORDER MANAGEMENT
-   Endpoint: GET /owner/orders
+   CUSTOMER ORDERS
+   GET /owner/orders
 ========================================= */
 
 async function loadOrders() {
   const tbody = byId("ordersTableBody");
 
-  if (!tbody) return;
+  if (!tbody) {
+    return;
+  }
 
   tbody.innerHTML =
     '<tr><td colspan="7">Loading orders...</td></tr>';
 
   const params = new URLSearchParams();
 
-  const search = byId("orderSearch")?.value.trim() || "";
-  const payment = byId("orderPaymentFilter")?.value || "";
-  const delivery = byId("orderDeliveryFilter")?.value || "";
+  const search =
+    byId("orderSearch")?.value.trim() || "";
 
-  if (search) params.set("search", search);
-  if (payment) params.set("status", payment);
-  if (delivery) params.set("delivery_status", delivery);
+  const paymentStatus =
+    byId("orderPaymentFilter")?.value || "";
+
+  const deliveryStatus =
+    byId("orderDeliveryFilter")?.value || "";
+
+  if (search) {
+    params.set("search", search);
+  }
+
+  if (paymentStatus) {
+    params.set("status", paymentStatus);
+  }
+
+  if (deliveryStatus) {
+    params.set("delivery_status", deliveryStatus);
+  }
 
   params.set("limit", "100");
 
@@ -309,6 +352,10 @@ async function loadOrders() {
     const data = await ownerRequest(
       "/owner/orders?" + params.toString()
     );
+
+    if (!data.success) {
+      throw new Error("Could not retrieve orders.");
+    }
 
     const orders = data.orders || [];
 
@@ -331,26 +378,37 @@ async function loadOrders() {
     `).join("");
 
   } catch (error) {
-    tbody.innerHTML =
-      `<tr><td colspan="7">${escapeHTML(error.message)}</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7">${escapeHTML(error.message)}</td>
+      </tr>
+    `;
+
+    throw error;
   }
 }
 
 /* =========================================
    AGENT MANAGEMENT
-   Endpoint: GET /owner/agents
+   GET /owner/agents
 ========================================= */
 
 async function loadAgents() {
   const tbody = byId("agentsTableBody");
 
-  if (!tbody) return;
+  if (!tbody) {
+    return;
+  }
 
   tbody.innerHTML =
     '<tr><td colspan="7">Loading agents...</td></tr>';
 
   try {
     const data = await ownerRequest("/owner/agents");
+
+    if (!data.success) {
+      throw new Error("Could not retrieve agents.");
+    }
 
     let agents = data.agents || [];
 
@@ -389,41 +447,52 @@ async function loadAgents() {
         <td>
           <button
             type="button"
-            class="button refresh"
             data-agent-details="${escapeHTML(agent.id)}"
           >
-            View
+            View Details
           </button>
         </td>
       </tr>
     `).join("");
 
   } catch (error) {
-    tbody.innerHTML =
-      `<tr><td colspan="7">${escapeHTML(error.message)}</td></tr>`;
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7">${escapeHTML(error.message)}</td>
+      </tr>
+    `;
+
+    throw error;
   }
 }
 
 /* =========================================
    INDIVIDUAL AGENT DETAILS
-   Endpoint: GET /owner/agents/:id/details
+   GET /owner/agents/:id/details
 ========================================= */
 
 async function loadAgentDetails(id) {
   const panel = byId("agentDetails");
 
-  if (!panel) return;
+  if (!panel) {
+    return;
+  }
 
   panel.textContent = "Loading agent details...";
 
   try {
     const data = await ownerRequest(
-      "/owner/agents/" + encodeURIComponent(id) + "/details"
+      "/owner/agents/" +
+      encodeURIComponent(id) +
+      "/details"
     );
+
+    if (!data.success) {
+      throw new Error("Could not load agent details.");
+    }
 
     const agent = data.agent || {};
     const stats = data.stats || {};
-
     const orders = data.orders || [];
     const withdrawals = data.withdrawals || [];
 
@@ -432,6 +501,8 @@ async function loadAgentDetails(id) {
 
       <p>Name: ${escapeHTML(agent.full_name)}</p>
       <p>Agent code: ${escapeHTML(agent.agent_code)}</p>
+      <p>Email: ${escapeHTML(agent.email)}</p>
+      <p>Phone: ${escapeHTML(agent.phone)}</p>
       <p>Status: ${escapeHTML(agent.status)}</p>
 
       <p>Total orders: ${escapeHTML(stats.totalOrders)}</p>
@@ -449,6 +520,7 @@ async function loadAgentDetails(id) {
           <thead>
             <tr>
               <th>Reference</th>
+              <th>Phone</th>
               <th>Network</th>
               <th>Bundle</th>
               <th>Amount</th>
@@ -460,6 +532,7 @@ async function loadAgentDetails(id) {
             ${orders.length ? orders.map(order => `
               <tr>
                 <td>${escapeHTML(order.reference)}</td>
+                <td>${escapeHTML(order.phone)}</td>
                 <td>${escapeHTML(order.network)}</td>
                 <td>${escapeHTML(order.bundle)}</td>
                 <td>${money(order.amount)}</td>
@@ -467,7 +540,7 @@ async function loadAgentDetails(id) {
                 <td>${escapeHTML(order.delivery_status)}</td>
               </tr>
             `).join("") : `
-              <tr><td colspan="6">No orders found.</td></tr>
+              <tr><td colspan="7">No orders found.</td></tr>
             `}
           </tbody>
         </table>
@@ -507,14 +580,16 @@ async function loadAgentDetails(id) {
 }
 
 /* =========================================
-   WITHDRAWAL MANAGEMENT
-   Endpoint: GET /owner/withdrawals
+   WITHDRAWALS
+   GET /owner/withdrawals
 ========================================= */
 
 async function loadWithdrawals() {
   const tbody = byId("withdrawalsTableBody");
 
-  if (!tbody) return;
+  if (!tbody) {
+    return;
+  }
 
   tbody.innerHTML =
     '<tr><td colspan="7">Loading withdrawals...</td></tr>';
@@ -522,6 +597,331 @@ async function loadWithdrawals() {
   try {
     const data = await ownerRequest("/owner/withdrawals");
 
+    if (!data.success) {
+      throw new Error("Could not retrieve withdrawals.");
+    }
+
     const withdrawals = data.withdrawals || [];
 
-    if (!withdrawals.length)
+    if (!withdrawals.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="7">No withdrawal requests found.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = withdrawals.map(item => {
+      const isPending =
+        String(item.status).toLowerCase() === "pending";
+
+      return `
+        <tr>
+          <td>${escapeHTML(item.id)}</td>
+          <td>${escapeHTML(item.business_name || item.agent_code)}</td>
+          <td>${money(item.amount)}</td>
+          <td>${escapeHTML(item.phone)}</td>
+          <td>${escapeHTML(item.provider)}</td>
+          <td>${escapeHTML(item.status)}</td>
+          <td>
+            ${isPending ? `
+              <button
+                type="button"
+                data-withdrawal-paid="${escapeHTML(item.id)}"
+              >
+                Mark Paid
+              </button>
+
+              <button
+                type="button"
+                data-withdrawal-reject="${escapeHTML(item.id)}"
+              >
+                Reject
+              </button>
+            ` : escapeHTML(item.status)}
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+  } catch (error) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7">${escapeHTML(error.message)}</td>
+      </tr>
+    `;
+
+    throw error;
+  }
+}
+
+/* =========================================
+   UPDATE WITHDRAWAL STATUS
+
+   PATCH /owner/withdrawals/:id/status
+
+   IMPORTANT:
+   This does NOT send Mobile Money.
+========================================= */
+
+async function updateWithdrawalStatus(id, status) {
+  if (status === "paid") {
+    const confirmed = window.confirm(
+      "Have you already sent the money successfully through Mobile Money? Only continue if the transfer succeeded."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+  }
+
+  if (status === "rejected") {
+    const confirmed = window.confirm(
+      "Are you sure you want to reject this withdrawal request?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+  }
+
+  try {
+    const data = await ownerRequest(
+      "/owner/withdrawals/" +
+      encodeURIComponent(id) +
+      "/status",
+      {
+        method: "PATCH",
+        body: JSON.stringify({ status })
+      }
+    );
+
+    showMessage(
+      data.message || "Withdrawal status updated."
+    );
+
+    await Promise.all([
+      loadStatistics(),
+      loadWithdrawals()
+    ]);
+
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+/* =========================================
+   DASHBOARD REFRESH
+========================================= */
+
+async function loadDashboard() {
+  if (!ownerToken) {
+    showLogin();
+    return;
+  }
+
+  if (dashboardLoading) {
+    return;
+  }
+
+  dashboardLoading = true;
+
+  showMessage("Refreshing dashboard...");
+
+  try {
+    const results = await Promise.allSettled([
+      loadStatistics(),
+      loadOrders(),
+      loadAgents(),
+      loadWithdrawals()
+    ]);
+
+    const failed = results.filter(
+      result => result.status === "rejected"
+    );
+
+    if (failed.length) {
+      showMessage(
+        "Some sections could not load. Check the error shown in each section."
+      );
+    } else {
+      showMessage("Dashboard updated successfully.");
+    }
+
+    const authenticationError = failed.some(
+      result =>
+        result.reason &&
+        /owner login required|please log in again/i.test(
+          result.reason.message || ""
+        )
+    );
+
+    if (!ownerToken || authenticationError) {
+      showLogin();
+    }
+
+  } finally {
+    dashboardLoading = false;
+  }
+}
+
+/* =========================================
+   START DASHBOARD
+========================================= */
+
+async function startDashboard() {
+  await loadDashboard();
+
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+  }
+
+  if (ownerToken) {
+    refreshTimer = setInterval(() => {
+      loadDashboard().catch(error => {
+        showMessage(error.message);
+      });
+    }, 60000);
+  }
+}
+
+/* =========================================
+   OWNER LOGOUT
+   POST /owner/logout
+========================================= */
+
+async function logoutOwner() {
+  try {
+    if (ownerToken) {
+      await ownerRequest("/owner/logout", {
+        method: "POST"
+      });
+    }
+  } catch (_error) {
+    // Clear the local session even if the server is unavailable.
+  }
+
+  ownerToken = null;
+
+  sessionStorage.removeItem(TOKEN_KEY);
+
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+
+  showLogin();
+}
+
+/* =========================================
+   EVENT LISTENERS
+========================================= */
+
+function initializeOwnerDashboard() {
+  byId("ownerLogoutButton")?.addEventListener(
+    "click",
+    logoutOwner
+  );
+
+  byId("refreshDashboard")?.addEventListener(
+    "click",
+    () => {
+      loadDashboard().catch(error => {
+        showMessage(error.message);
+      });
+    }
+  );
+
+  byId("searchOrders")?.addEventListener(
+    "click",
+    () => {
+      loadOrders().catch(error => {
+        showMessage(error.message);
+      });
+    }
+  );
+
+  byId("orderSearch")?.addEventListener(
+    "keydown",
+    event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+
+        loadOrders().catch(error => {
+          showMessage(error.message);
+        });
+      }
+    }
+  );
+
+  byId("agentSearch")?.addEventListener(
+    "input",
+    () => {
+      loadAgents().catch(error => {
+        showMessage(error.message);
+      });
+    }
+  );
+
+  byId("agentsTableBody")?.addEventListener(
+    "click",
+    event => {
+      const button = event.target.closest(
+        "[data-agent-details]"
+      );
+
+      if (button) {
+        loadAgentDetails(
+          button.dataset.agentDetails
+        );
+      }
+    }
+  );
+
+  byId("withdrawalsTableBody")?.addEventListener(
+    "click",
+    event => {
+      const paidButton = event.target.closest(
+        "[data-withdrawal-paid]"
+      );
+
+      const rejectButton = event.target.closest(
+        "[data-withdrawal-reject]"
+      );
+
+      if (paidButton) {
+        updateWithdrawalStatus(
+          paidButton.dataset.withdrawalPaid,
+          "paid"
+        );
+      }
+
+      if (rejectButton) {
+        updateWithdrawalStatus(
+          rejectButton.dataset.withdrawalReject,
+          "rejected"
+        );
+      }
+    }
+  );
+
+  if (!ownerToken) {
+    showLogin();
+    return;
+  }
+
+  startDashboard().catch(error => {
+    showMessage(error.message);
+  });
+}
+
+/* =========================================
+   INITIALIZE
+========================================= */
+
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeOwnerDashboard
+  );
+} else {
+  initializeOwnerDashboard();
+}
