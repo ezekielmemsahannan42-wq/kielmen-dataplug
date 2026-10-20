@@ -571,10 +571,11 @@
   </div>
 
   <nav id="menuPanel" class="menu-panel">
-    <a href="#home">🏠 Home</a>
-    <a href="#buy">🛒 Buy Data Bundles</a>
-    <a href="#checkout">💳 Checkout</a>
-    <a href="#help">💬 Contact Support</a>
+  <a href="#home">🏠 Home</a>
+  <a href="#buy">🛒 Buy Data Bundles</a>
+  <a href="#checkout">💳 Checkout</a>
+  <a href="#trackOrder">📦 Track Order</a>
+  <a href="#help">💬 Contact Support</a>
   </nav>
 </header>
 
@@ -710,6 +711,35 @@
 
     <p id="checkoutMessage" class="message" aria-live="polite"></p>
   </section>
+  <section id="trackOrder" class="card">
+  <h2 class="section-title">📦 Track Your Order</h2>
+
+  <p class="muted">
+    Enter the phone number you used when placing your order
+    to check your recent orders from this agent.
+  </p>
+
+  <div class="field">
+    <label for="trackingPhone">Order Phone Number</label>
+
+    <input
+      type="tel"
+      id="trackingPhone"
+      inputmode="tel"
+      maxlength="15"
+      placeholder="0241234567"
+      autocomplete="tel"
+    >
+  </div>
+
+  <button id="trackOrderButton" class="btn" type="button">
+    Check My Orders
+  </button>
+
+  <p id="trackingMessage" class="message" aria-live="polite"></p>
+
+  <div id="trackingResults"></div>
+  </section>
 
   <section id="help" class="card">
     <h2 class="section-title">💬 Need Help?</h2>
@@ -744,6 +774,11 @@
   <button class="nav-btn" type="button" data-target="checkout">
     <span class="icon">💳</span>
     <span>Checkout</span>
+  </button>
+
+  <button class="nav-btn" type="button" data-target="trackOrder">
+    <span class="icon">📦</span>
+    <span>Track Order</span>
   </button>
 
   <button class="nav-btn" type="button" data-target="help">
@@ -941,8 +976,7 @@ async function loadStore() {
       return;
     }
 
-    bundleMessage.textContent =
-      "Choose a network to view available bundles.";
+    selectFirstAvailableNetwork();
 
     bundleCount.textContent = "Choose a network";
 
@@ -1287,6 +1321,205 @@ async function startPayment() {
   }
 }
 
+  /* =========================================
+   AGENT STORE ORDER TRACKING
+========================================= */
+
+const trackOrderButton =
+  document.getElementById("trackOrderButton");
+
+const trackingPhone =
+  document.getElementById("trackingPhone");
+
+const trackingMessage =
+  document.getElementById("trackingMessage");
+
+const trackingResults =
+  document.getElementById("trackingResults");
+
+function displayOrderStatus(order) {
+  const payment = String(
+    order.payment_status || "pending"
+  ).toLowerCase();
+
+  const delivery = String(
+    order.delivery_status || "not_started"
+  ).toLowerCase();
+
+  if (payment === "pending") {
+    return "Awaiting payment";
+  }
+
+  if (payment !== "paid") {
+    return "Payment: " + payment.replace(/_/g, " ");
+  }
+
+  if (delivery === "delivered") {
+    return "Delivered successfully";
+  }
+
+  if (delivery === "processing") {
+    return "Data delivery processing";
+  }
+
+  if (delivery === "failed") {
+    return "Delivery needs attention — contact support";
+  }
+
+  if (delivery === "not_started") {
+    return "Payment received; delivery not started";
+  }
+
+  return "Delivery status: " + delivery.replace(/_/g, " ");
+}
+
+function addOrderRow(container, label, value) {
+  const row = document.createElement("div");
+  row.className = "summary-row";
+
+  const labelElement = document.createElement("span");
+  labelElement.className = "summary-label";
+  labelElement.textContent = label;
+
+  const valueElement = document.createElement("span");
+  valueElement.className = "summary-value";
+  valueElement.textContent = value;
+
+  row.append(labelElement, valueElement);
+  container.appendChild(row);
+}
+
+async function trackAgentOrders() {
+  const phone = normalizePhone(trackingPhone.value);
+
+  trackingResults.replaceChildren();
+  trackingMessage.textContent = "";
+
+  if (!agentCode) {
+    trackingMessage.textContent =
+      "The agent code is missing from this store link.";
+
+    return;
+  }
+
+  if (!/^0\d{9}$/.test(phone)) {
+    trackingMessage.textContent =
+      "Enter a valid Ghana phone number, for example 0241234567.";
+
+    return;
+  }
+
+  trackOrderButton.disabled = true;
+  trackOrderButton.textContent = "Checking Orders...";
+  trackingMessage.textContent =
+    "Checking your recent orders...";
+
+  try {
+    const response = await fetch(
+      `${API}/agents/store/${encodeURIComponent(agentCode)}` +
+      `/orders-by-phone/${encodeURIComponent(phone)}`
+    );
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok || !data.success) {
+      throw new Error(
+        data.message || "Could not retrieve your orders."
+      );
+    }
+
+    const orders = Array.isArray(data.orders)
+      ? data.orders
+      : [];
+
+    if (!orders.length) {
+      trackingMessage.textContent =
+        "No orders were found for this phone number in this agent's store.";
+
+      return;
+    }
+
+    trackingMessage.textContent =
+      `Found ${orders.length} recent order(s).`;
+
+    orders.forEach(order => {
+      const card = document.createElement("div");
+      card.className = "summary";
+      card.style.marginTop = "14px";
+
+      const title = document.createElement("h3");
+      title.textContent = "Order Details";
+      title.style.marginTop = "0";
+
+      card.appendChild(title);
+
+      addOrderRow(
+        card,
+        "Reference",
+        order.reference || "Unavailable"
+      );
+
+      addOrderRow(
+        card,
+        "Network",
+        networkName(normalizeNetwork(order.network))
+      );
+
+      addOrderRow(
+        card,
+        "Bundle",
+        order.bundle || "Unavailable"
+      );
+
+      addOrderRow(
+        card,
+        "Amount",
+        money(order.amount)
+      );
+
+      addOrderRow(
+        card,
+        "Payment",
+        String(order.payment_status || "pending")
+          .replace(/_/g, " ")
+      );
+
+      addOrderRow(
+        card,
+        "Order Status",
+        displayOrderStatus(order)
+      );
+
+      if (order.created_at) {
+        addOrderRow(
+          card,
+          "Order Date",
+          new Date(order.created_at).toLocaleString()
+        );
+      }
+
+      trackingResults.appendChild(card);
+    });
+
+  } catch (error) {
+    trackingMessage.textContent =
+      error.message || "Could not check your orders. Try again.";
+  } finally {
+    trackOrderButton.disabled = false;
+    trackOrderButton.textContent = "Check My Orders";
+  }
+}
+
+trackOrderButton.addEventListener(
+  "click",
+  trackAgentOrders
+);
+
+trackingPhone.addEventListener("keydown", event => {
+  if (event.key === "Enter") {
+    trackAgentOrders();
+  }
+});
 payButton.addEventListener("click", startPayment);
 
 /* =========================================
