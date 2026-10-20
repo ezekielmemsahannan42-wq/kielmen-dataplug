@@ -1401,6 +1401,14 @@ app.get(
       );
 
       const row = result.rows[0];
+      console.log("WITHDRAWAL DIAGNOSTICS:", {
+  agentId: req.agentId,
+  previousEligibleOrders: row.previous_orders,
+  todaysEligibleOrders: row.todays_orders,
+  previousEarnings: row.previous_earnings,
+  todaysEarnings: row.todays_earnings,
+  reservedWithdrawals: row.reserved_amount
+});
 
       const previousEarnings =
         Number(row.previous_earnings || 0);
