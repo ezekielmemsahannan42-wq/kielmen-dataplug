@@ -1232,12 +1232,9 @@ app.get(
             )::numeric(12,2) AS total_sales,
 
             COALESCE(
-  SUM(
-    amount - agent_base_price
-  ) FILTER (
+  SUM(amount - agent_base_price) FILTER (
     WHERE status = 'paid'
       AND delivery_status = 'delivered'
-      AND delivered_at IS NOT NULL
       AND agent_base_price IS NOT NULL
       AND amount > agent_base_price
   ),
