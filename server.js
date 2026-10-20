@@ -2585,7 +2585,7 @@ app.post("/initialize-payment", async (req, res) => {
           reference,
 
           callback_url:
-            `${FRONTEND_BASE_URL}/success.html`,
+  `${FRONTEND_BASE_URL}/success.html?agentCode=${encodeURIComponent(agentCode)}`,
 
           metadata: {
             order_reference: reference,
