@@ -1,66 +1,57 @@
-"use strict";
-
-/**
- * Kielmen 636 Dataplug
- * Agent Total Profit Calculator
- *
- * Profit = Customer Selling Price - Agent Base Price
- *
- * Only paid and delivered orders are counted.
- */
-
 async function calculateAgentTotalProfit(pool, agentId) {
-  const result = await pool.query(
-    `
-      SELECT
-        COUNT(*)::int AS total_orders,
+  try {
+    if (!agentId) {
+      throw new Error("Agent ID is required to calculate profit.");
+    }
 
-        COALESCE(
-          SUM(amount) FILTER (
-            WHERE status = 'paid'
-          ),
-          0
-        )::numeric(12,2) AS total_sales,
+    const result = await pool.query(
+      `
+      SELECT
+        COUNT(*) FILTER (
+          WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+            AND LOWER(TRIM(COALESCE(delivery_status, ''))) = 'delivered'
+            AND agent_base_price IS NOT NULL
+        )::int AS eligible_orders,
 
         COALESCE(
           SUM(
             GREATEST(
-              amount - agent_base_price,
+              amount::numeric - agent_base_price::numeric,
               0
             )
           ) FILTER (
-            WHERE status = 'paid'
-              AND delivery_status = 'delivered'
+            WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+              AND LOWER(TRIM(COALESCE(delivery_status, ''))) = 'delivered'
               AND agent_base_price IS NOT NULL
           ),
           0
-        )::numeric(12,2) AS total_profit,
+        )::numeric(12, 2) AS total_profit,
 
-        COUNT(*) FILTER (
-          WHERE status = 'paid'
-            AND delivery_status = 'delivered'
-            AND agent_base_price IS NOT NULL
-        )::int AS profit_orders
+        COALESCE(
+          SUM(amount::numeric) FILTER (
+            WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+              AND LOWER(TRIM(COALESCE(delivery_status, ''))) = 'delivered'
+          ),
+          0
+        )::numeric(12, 2) AS total_sales
 
       FROM orders
-
       WHERE agent_id = $1
-    `,
-    [agentId]
-  );
+      `,
+      [agentId]
+    );
 
-  const row = result.rows[0];
+    const row = result.rows[0];
 
-  return {
-    totalOrders: Number(row.total_orders || 0),
-    totalSales: Number(
-      Number(row.total_sales || 0).toFixed(2)
-    ),
-    totalProfit: Number(
-      Number(row.total_profit || 0).toFixed(2)
-    ),
-    profitOrders: Number(row.profit_orders || 0)
-  };
+    return {
+      eligibleOrders: Number(row.eligible_orders || 0),
+      totalProfit: Number(row.total_profit || 0),
+      totalSales: Number(row.total_sales || 0)
+    };
+  } catch (error) {
+    console.error("Agent profit calculation failed:", error.message);
+    throw error;
+  }
 }
 
 module.exports = calculateAgentTotalProfit;
