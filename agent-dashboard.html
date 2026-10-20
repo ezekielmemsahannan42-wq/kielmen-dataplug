@@ -1617,47 +1617,64 @@ function renderRecentOrders() {
 }
 
 async function loadStats() {
+  const profitElement = document.getElementById("profitStat");
+  const ordersElement = document.getElementById("ordersStat");
+  const salesElement = document.getElementById("salesStat");
+  const customersElement = document.getElementById("customersStat");
+
   try {
     const data = await apiRequest("/agents/stats");
 
-    if (
-      !data.response.ok ||
-      !data.result ||
-      !data.result.success
-    ) {
-      setStatsUnavailable();
-      return;
+    if (!data.response.ok || !data.result || !data.result.success) {
+      throw new Error(
+        data.result?.message || "Unable to load agent statistics."
+      );
     }
 
-    dashboardStats = data.result;
+    const responseData = data.result;
+    const stats = responseData.stats || responseData;
 
-    const stats = dashboardStats.stats || dashboardStats;
-
-    document.getElementById("ordersStat").textContent =
+    // Display total orders.
+    ordersElement.textContent =
       stats.totalOrders ?? stats.total_orders ?? "—";
 
-    document.getElementById("salesStat").textContent =
-      money(stats.totalSales ?? stats.total_sales ?? 0);
+    // Display total sales.
+    salesElement.textContent = money(
+      stats.totalSales ?? stats.total_sales ?? 0
+    );
 
-    const totalProfit =
-  stats.estimatedMargin ??
-  stats.estimated_margin ??
-  stats.totalProfit ??
-  stats.total_profit ??
-  0;
+    // Read profit returned by the backend.
+    const profit =
+      stats.estimatedMargin ??
+      stats.estimated_margin ??
+      stats.totalProfit ??
+      stats.total_profit ??
+      responseData.estimatedMargin ??
+      responseData.totalProfit;
 
-document.getElementById("profitStat").textContent =
-  money(Number(totalProfit));
+    if (profit === undefined || profit === null || profit === "") {
+      profitElement.textContent = "Unavailable";
+      console.error("No profit field returned by /agents/stats:", responseData);
+    } else {
+      profitElement.textContent = money(profit);
+    }
 
-    document.getElementById("customersStat").textContent =
+    // Display customers.
+    customersElement.textContent =
       stats.customers ??
       stats.totalCustomers ??
       stats.total_customers ??
       "—";
 
+    dashboardStats = responseData;
+
   } catch (error) {
-    console.error("Load stats error:", error);
-    setStatsUnavailable();
+    console.error("Agent statistics error:", error);
+
+    ordersElement.textContent = "—";
+    salesElement.textContent = "—";
+    profitElement.textContent = "Unavailable";
+    customersElement.textContent = "—";
   }
 }
 
