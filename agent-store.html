@@ -1002,6 +1002,46 @@ networkButtons.forEach(button => {
     });
   });
 });
+  function selectFirstAvailableNetwork() {
+  const availableNetworks = [
+    ...new Set(
+      prices
+        .map(item => normalizeNetwork(item.network))
+        .filter(Boolean)
+    )
+  ];
+
+  const preferredOrder = [
+    "MTN",
+    "TELECEL",
+    "AIRTELTIGO"
+  ];
+
+  const firstNetwork = preferredOrder.find(network =>
+    availableNetworks.includes(network)
+  );
+
+  if (!firstNetwork) {
+    bundleMessage.textContent =
+      "No data bundles are available yet.";
+
+    bundleCount.textContent = "0 bundles";
+    return;
+  }
+
+  selectedNetwork = firstNetwork;
+
+  networkButtons.forEach(button => {
+    button.classList.toggle(
+      "active",
+      button.dataset.network === firstNetwork
+    );
+  });
+
+  setText("summaryNetwork", networkName(firstNetwork));
+
+  renderBundles();
+  }
 
 /* =========================================
    SEARCHABLE BUNDLE CARDS
@@ -1011,10 +1051,7 @@ function renderBundles() {
   bundlesElement.replaceChildren();
 
   if (!selectedNetwork) {
-    bundleMessage.textContent =
-      "Choose MTN, Telecel or AirtelTigo to see bundles.";
-
-    bundleCount.textContent = "Choose a network";
+    selectFirstAvailableNetwork();
     return;
   }
 
