@@ -1634,7 +1634,122 @@ function renderRecentOrders() {
     `;
   }).join("");
 }
+async function loadStats() {
+  const ordersElement = document.getElementById("ordersStat");
+  const profitElement = document.getElementById("profitStat");
+  const salesElement = document.getElementById("salesStat");
+  const customersElement = document.getElementById("customersStat");
+  const confirmedElement = document.getElementById("confirmedProfitStat");
+  const pendingProfitElement = document.getElementById("pendingDeliveryProfitStat");
+  const pendingNoteElement = document.getElementById("pendingDeliveryNote");
 
+  try {
+    console.log("Loading agent statistics...");
+
+    const data = await apiRequest("/agents/stats");
+
+    console.log("Statistics HTTP status:", data.response.status);
+    console.log("Statistics response:", data.result);
+
+    if (!data.response.ok) {
+      throw new Error(
+        data.result?.message ||
+        "Statistics request failed with HTTP " + data.response.status
+      );
+    }
+
+    if (!data.result || data.result.success !== true) {
+      throw new Error(
+        data.result?.message ||
+        "The server did not return successful statistics."
+      );
+    }
+
+    const stats = data.result.stats || data.result;
+
+    const totalOrders = Number(
+      stats.totalOrders ?? stats.total_orders
+    );
+
+    const totalSales = Number(
+      stats.totalSales ?? stats.total_sales
+    );
+
+    const estimatedProfit = Number(
+      stats.estimatedProfit ??
+      stats.estimatedMargin ??
+      stats.estimated_margin ??
+      stats.totalProfit ??
+      stats.total_profit
+    );
+
+    const confirmedProfit = Number(
+      stats.confirmedProfit ?? stats.confirmed_profit
+    );
+
+    const pendingProfit = Number(
+      stats.pendingDeliveryProfit ??
+      stats.pending_delivery_profit
+    );
+
+    const customers = Number(
+      stats.customers ??
+      stats.totalCustomers ??
+      stats.total_customers
+    );
+
+    const pendingOrders = Number(
+      stats.pendingDeliveryOrders ??
+      stats.pending_delivery_orders
+    );
+
+    // Validate the required statistics.
+    const requiredValues = [
+      totalOrders,
+      totalSales,
+      estimatedProfit,
+      confirmedProfit,
+      pendingProfit,
+      customers,
+      pendingOrders
+    ];
+
+    if (!requiredValues.every(Number.isFinite)) {
+      throw new Error(
+        "The server response is missing one or more required statistics. " +
+        "Check the /agents/stats route in server.js."
+      );
+    }
+
+    // Update the dashboard.
+    ordersElement.textContent = totalOrders;
+    salesElement.textContent = money(totalSales);
+    profitElement.textContent = money(estimatedProfit);
+    confirmedElement.textContent = money(confirmedProfit);
+    pendingProfitElement.textContent = money(pendingProfit);
+    customersElement.textContent = customers;
+
+    pendingNoteElement.textContent =
+      pendingOrders + " orders awaiting delivery.";
+
+    dashboardStats = stats;
+
+    console.log("Agent statistics loaded successfully.");
+
+  } catch (error) {
+    console.error("Agent statistics error:", error);
+
+    ordersElement.textContent = "Error";
+    salesElement.textContent = "Error";
+    profitElement.textContent = "Unavailable";
+    confirmedElement.textContent = "Unavailable";
+    pendingProfitElement.textContent = "Unavailable";
+    customersElement.textContent = "Error";
+
+    pendingNoteElement.textContent =
+      error.message || "Unable to retrieve statistics.";
+  }
+  }
 
 
   // ============================================================
