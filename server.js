@@ -602,6 +602,15 @@ async function getOrderByReference(reference) {
 
   return result.rows[0] || null;
 }
+async function getOrderByReference(reference) {
+  // Existing code remains unchanged
+}
+
+// INSERT THE NEW refreshSupplierOrderStatus FUNCTION HERE
+
+// ============================================================
+// 7. AGENT AUTHENTICATION
+// ============================================================
 
 // ============================================================
 // 7. AGENT AUTHENTICATION
