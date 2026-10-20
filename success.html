@@ -233,8 +233,11 @@
                 heading.textContent = "Payment verified!";
 
                 message.textContent =
-                    result.message ||
-                    "Your payment has been verified. Check your order status for delivery updates.";
+    result.delivery_status === "delivered"
+        ? "Payment verified! Kielmen 636 Dataplug has successfully delivered your data."
+        : result.delivery_status === "failed"
+            ? "Payment verified! Your order has been received, but delivery needs attention. Please contact Kielmen 636 Dataplug support. Do not pay again."
+            : "Payment verified! Kielmen 636 Dataplug has accepted your order. Your data is being processed. Please allow some time for delivery.";
 
             } catch (error) {
                 console.error(
