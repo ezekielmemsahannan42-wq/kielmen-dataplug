@@ -1200,6 +1200,10 @@ app.put(
 // 12. AGENT STATISTICS AND ORDERS
 // ============================================================
 
+// ============================================================
+// AGENT STATISTICS AND PROFIT
+// ============================================================
+
 app.get(
   "/agents/stats",
   requireAgent,
@@ -1208,77 +1212,85 @@ app.get(
     try {
       const result = await pool.query(
         `
-          SELECT
-            COUNT(*)::int AS total_orders,
+        SELECT
+          COUNT(*)::int AS total_orders,
 
-            COUNT(*) FILTER (
-              WHERE status = 'paid'
-            )::int AS paid_orders,
+          COUNT(*) FILTER (
+            WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+          )::int AS paid_orders,
 
-            COUNT(*) FILTER (
-              WHERE delivery_status = 'delivered'
-            )::int AS delivered_orders,
+          COUNT(*) FILTER (
+            WHERE LOWER(TRIM(COALESCE(delivery_status, ''))) = 'delivered'
+          )::int AS delivered_orders,
 
-            COUNT(*) FILTER (
-              WHERE delivery_status = 'processing'
-            )::int AS processing_orders,
+          COUNT(*) FILTER (
+            WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+              AND LOWER(TRIM(COALESCE(delivery_status, ''))) = 'delivered'
+              AND agent_base_price IS NOT NULL
+              AND amount > agent_base_price
+          )::int AS eligible_profit_orders,
 
-            COUNT(*) FILTER (
-              WHERE delivery_status = 'failed'
-            )::int AS failed_orders,
+          COALESCE(
+            SUM(amount) FILTER (
+              WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+            ),
+            0
+          )::numeric(12,2) AS total_sales,
 
-            COALESCE(
-              SUM(amount) FILTER (WHERE status = 'paid'),
-              0
-            )::numeric(12,2) AS total_sales,
+          COALESCE(
+            SUM(GREATEST(amount - agent_base_price, 0))
+              FILTER (
+                WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+                  AND LOWER(TRIM(COALESCE(delivery_status, ''))) = 'delivered'
+                  AND agent_base_price IS NOT NULL
+              ),
+            0
+          )::numeric(12,2) AS total_profit,
 
-            COALESCE(
-  SUM(amount - agent_base_price) FILTER (
-    WHERE status = 'paid'
-      AND delivery_status = 'delivered'
-      AND agent_base_price IS NOT NULL
-      AND amount > agent_base_price
-  ),
-  0
-)::numeric(12,2) AS estimated_margin,
+          COUNT(DISTINCT phone)::int AS customers
 
-            COUNT(DISTINCT phone)::int AS customers
-
-          FROM orders
-          WHERE agent_id = $1
+        FROM orders
+        WHERE agent_id = $1
         `,
         [req.agentId]
       );
 
       const stats = result.rows[0];
-      const profitData = await calculateAgentTotalProfit(
-  pool,
-  req.agentId
-);
+      const totalProfit = Number(stats.total_profit || 0);
 
-      res.json({
+      console.log("AGENT PROFIT DIAGNOSTICS:", {
+        agentId: req.agentId,
+        totalOrders: Number(stats.total_orders),
+        paidOrders: Number(stats.paid_orders),
+        deliveredOrders: Number(stats.delivered_orders),
+        eligibleProfitOrders: Number(stats.eligible_profit_orders),
+        totalSales: Number(stats.total_sales),
+        totalProfit
+      });
+
+      return res.json({
         success: true,
-
         stats: {
-          totalOrders: stats.total_orders,
-          paidOrders: stats.paid_orders,
-          deliveredOrders: stats.delivered_orders,
-          processingOrders: stats.processing_orders,
-          failedOrders: stats.failed_orders,
+          totalOrders: Number(stats.total_orders),
+          paidOrders: Number(stats.paid_orders),
+          deliveredOrders: Number(stats.delivered_orders),
+          eligibleProfitOrders: Number(stats.eligible_profit_orders),
           totalSales: Number(stats.total_sales),
-          estimatedMargin: profitData.totalProfit,
-          customers: stats.customers,
+          totalProfit,
+          estimatedMargin: totalProfit,
+          customers: Number(stats.customers),
 
           marginNote:
-            "Estimated sales margin before supplier costs, fees and refunds."
+            "Profit includes only paid and delivered agent orders with a recorded base price."
         }
       });
-    } catch (error) {
-      console.error("Agent stats:", error.message);
 
-      res.status(500).json({
+    } catch (error) {
+      console.error("Agent stats error:", error.message);
+
+      return res.status(500).json({
         success: false,
-        message: "Could not load statistics."
+        message: "Could not load agent statistics."
       });
     }
   }
