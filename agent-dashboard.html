@@ -1639,14 +1639,15 @@ async function loadStats() {
     document.getElementById("salesStat").textContent =
       money(stats.totalSales ?? stats.total_sales ?? 0);
 
-    document.getElementById("profitStat").textContent =
-      money(
-        stats.estimatedMargin ??
-        stats.estimated_margin ??
-        stats.totalProfit ??
-        stats.total_profit ??
-        0
-      );
+    const totalProfit =
+  stats.estimatedMargin ??
+  stats.estimated_margin ??
+  stats.totalProfit ??
+  stats.total_profit ??
+  0;
+
+document.getElementById("profitStat").textContent =
+  money(Number(totalProfit));
 
     document.getElementById("customersStat").textContent =
       stats.customers ??
