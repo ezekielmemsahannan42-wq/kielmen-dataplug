@@ -730,6 +730,16 @@ function requireOwner(req, res, next) {
   next();
 }
 
+function requireWithdrawalsEnabled(req, res, next) {
+  if (!WITHDRAWALS_ENABLED) {
+    return res.status(503).json({
+      success: false,
+      message: "Withdrawals are temporarily disabled."
+    });
+  }
+
+  next();
+        }
 // ============================================================
 // ============================================================
 // 8. AGENT REGISTRATION — AUTOMATIC APPROVAL
@@ -1402,16 +1412,7 @@ app.get(
         `,
         [req.agentId]
       );
-function requireWithdrawalsEnabled(req, res, next) {
-  if (!WITHDRAWALS_ENABLED) {
-    return res.status(503).json({
-      success: false,
-      message: "Withdrawals are temporarily disabled."
-    });
-  }
 
-  next();
-}
       const row = result.rows[0];
       console.log("WITHDRAWAL DIAGNOSTICS:", {
   agentId: req.agentId,
@@ -1503,6 +1504,7 @@ app.post(
   "/agents/withdrawals",
   requireAgent,
   requireApprovedAgent,
+  requireWithdrawalsEnabled,
   async (req, res) => {
     const amount = Number(req.body?.amount);
     const phone = normalizePhone(req.body?.phone);
@@ -1672,6 +1674,7 @@ app.get(
   "/agents/withdrawals/history",
   requireAgent,
   requireApprovedAgent,
+  requireWithdrawalsEnabled,
   async (req, res) => {
     try {
       const result = await pool.query(
