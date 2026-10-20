@@ -425,9 +425,31 @@
       </div>
 
       <div class="card">
-        <div class="stat-label">Total Profit</div>
-        <div class="stat-value green" id="profitStat">—</div>
-        <div class="stat-note">Estimated profit</div>
+        <div class="stat-label">Estimated Profit</div>
+<div class="stat-value green" id="profitStat">—</div>
+<div class="stat-note">
+  Estimated margin from paid orders.
+  Delivery may still be pending.
+</div>
+        <div class="card">
+  <div class="stat-label">Confirmed Profit</div>
+  <div class="stat-value green" id="confirmedProfitStat">
+    —
+  </div>
+  <div class="stat-note">
+    Profit from successfully delivered orders.
+  </div>
+</div>
+
+<div class="card">
+  <div class="stat-label">Pending Delivery Profit</div>
+  <div class="stat-value" id="pendingDeliveryProfitStat">
+    —
+  </div>
+  <div class="stat-note" id="pendingDeliveryNote">
+    Calculating orders awaiting delivery...
+  </div>
+</div>
       </div>
 
       <div class="card">
@@ -1617,20 +1639,94 @@ function renderRecentOrders() {
 }
 
 async function loadStats() {
-  const profitElement = document.getElementById("profitStat");
   const ordersElement = document.getElementById("ordersStat");
+  const profitElement = document.getElementById("profitStat");
   const salesElement = document.getElementById("salesStat");
   const customersElement = document.getElementById("customersStat");
+
+  const confirmedElement =
+    document.getElementById("confirmedProfitStat");
+
+  const pendingProfitElement =
+    document.getElementById("pendingDeliveryProfitStat");
+
+  const pendingNoteElement =
+    document.getElementById("pendingDeliveryNote");
 
   try {
     const data = await apiRequest("/agents/stats");
 
-    if (!data.response.ok || !data.result || !data.result.success) {
+    if (
+      !data.response.ok ||
+      !data.result ||
+      !data.result.success
+    ) {
       throw new Error(
-        data.result?.message || "Unable to load agent statistics."
+        data.result?.message ||
+        "Unable to load agent statistics."
       );
     }
 
+    const responseData = data.result;
+    const stats = responseData.stats || responseData;
+
+    ordersElement.textContent =
+      stats.totalOrders ?? stats.total_orders ?? "—";
+
+    salesElement.textContent = money(
+      stats.totalSales ?? stats.total_sales ?? 0
+    );
+
+    const estimatedProfit =
+      stats.estimatedProfit ??
+      stats.estimatedMargin ??
+      stats.estimated_margin ??
+      stats.totalProfit ??
+      stats.total_profit;
+
+    profitElement.textContent =
+      estimatedProfit == null
+        ? "Unavailable"
+        : money(estimatedProfit);
+
+    confirmedElement.textContent =
+      stats.confirmedProfit == null
+        ? "Unavailable"
+        : money(stats.confirmedProfit);
+
+    pendingProfitElement.textContent =
+      stats.pendingDeliveryProfit == null
+        ? "Unavailable"
+        : money(stats.pendingDeliveryProfit);
+
+    pendingNoteElement.textContent =
+      stats.pendingDeliveryOrders == null
+        ? "Order count unavailable."
+        : Number(stats.pendingDeliveryOrders) +
+          " orders awaiting delivery.";
+
+    customersElement.textContent =
+      stats.customers ??
+      stats.totalCustomers ??
+      stats.total_customers ??
+      "—";
+
+    dashboardStats = stats;
+
+  } catch (error) {
+    console.error("Agent statistics error:", error);
+
+    ordersElement.textContent = "—";
+    salesElement.textContent = "—";
+    profitElement.textContent = "Unavailable";
+    customersElement.textContent = "—";
+    confirmedElement.textContent = "Unavailable";
+    pendingProfitElement.textContent = "Unavailable";
+
+    pendingNoteElement.textContent =
+      "Unable to retrieve delivery information.";
+  }
+}
     const responseData = data.result;
     const stats = responseData.stats || responseData;
 
