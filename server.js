@@ -19,6 +19,7 @@ const express = require("express");
 const cors = require("cors");
 const { Pool } = require("pg");
 const crypto = require("crypto");
+const calculateAgentTotalProfit = require("./agent-profit");
 
 const app = express();
 
@@ -1250,6 +1251,10 @@ app.get(
       );
 
       const stats = result.rows[0];
+      const profitData = await calculateAgentTotalProfit(
+  pool,
+  req.agentId
+);
 
       res.json({
         success: true,
@@ -1261,7 +1266,7 @@ app.get(
           processingOrders: stats.processing_orders,
           failedOrders: stats.failed_orders,
           totalSales: Number(stats.total_sales),
-          estimatedMargin: Number(stats.estimated_margin),
+          estimatedMargin: profitData.totalProfit,
           customers: stats.customers,
 
           marginNote:
