@@ -218,7 +218,7 @@
     <div class="subtitle">Owner Dashboard</div>
   </header>
 
-  <main class="container">
+  <main class="container" id="ownerDashboardContent">
 
     <div class="toolbar">
       <h2>Business Overview</h2>
@@ -431,15 +431,7 @@
 
   <script src="./owner.js" defer></script>
 
-  <script>
-    document
-      .getElementById("refreshDashboard")
-      .addEventListener("click", function () {
-        if (typeof loadStatistics === "function") {
-          loadStatistics();
-        }
-      });
-  </script>
+  
 
 </body>
 </html>
