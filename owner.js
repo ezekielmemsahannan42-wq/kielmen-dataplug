@@ -11,7 +11,9 @@ const OWNER_API =
 
 const TOKEN_KEY = "kielmen_owner_token";
 
-let ownerToken = sessionStorage.getItem(TOKEN_KEY);
+sessionStorage.removeItem(TOKEN_KEY);
+
+let ownerToken = null;
 let refreshTimer = null;
 let dashboardLoading = false;
 
@@ -57,21 +59,38 @@ function setText(id, value) {
   }
 }
 
+function showDashboard() {
+  const content = byId("ownerDashboardContent");
+
+  if (content) {
+    content.style.display = "block";
+  }
+}
+
+function hideDashboard() {
+  const content = byId("ownerDashboardContent");
+
+  if (content) {
+    content.style.display = "none";
+  }
+}
+
 /* =========================================
    API REQUESTS
 ========================================= */
 
 async function ownerRequest(path, options = {}) {
+  if (!ownerToken) {
+    throw new Error("Please log in to your owner account.");
+  }
+
   const headers = {
-    ...(options.headers || {})
+    ...(options.headers || {}),
+    Authorization: "Bearer " + ownerToken
   };
 
   if (options.body && !headers["Content-Type"]) {
     headers["Content-Type"] = "application/json";
-  }
-
-  if (ownerToken) {
-    headers.Authorization = "Bearer " + ownerToken;
   }
 
   let response;
@@ -83,15 +102,22 @@ async function ownerRequest(path, options = {}) {
     });
   } catch (_error) {
     throw new Error(
-      "Cannot connect to the server. Check your internet connection and Render service."
+      "Cannot connect to the server. Check your internet connection."
     );
   }
 
   const data = await response.json().catch(() => ({}));
 
-  if (response.status === 401) {
+  if (response.status === 401 || response.status === 403) {
     ownerToken = null;
     sessionStorage.removeItem(TOKEN_KEY);
+
+    hideDashboard();
+    showLogin();
+
+    throw new Error(
+      "Your owner session is invalid or expired. Please log in again."
+    );
   }
 
   if (!response.ok) {
@@ -115,11 +141,12 @@ function showLogin() {
     refreshTimer = null;
   }
 
+  hideDashboard();
+
   let overlay = byId("ownerLoginOverlay");
 
   if (!overlay) {
     overlay = document.createElement("div");
-
     overlay.id = "ownerLoginOverlay";
 
     overlay.style.cssText = `
@@ -133,6 +160,7 @@ function showLogin() {
       justify-content:center;
       padding:20px;
       font-family:Arial,sans-serif;
+      overflow-y:auto;
     `;
 
     overlay.innerHTML = `
@@ -145,7 +173,7 @@ function showLogin() {
         border-radius:16px;
         box-sizing:border-box;
       ">
-        <h1 style="color:#eab308">
+        <h1 style="color:#eab308;font-size:25px">
           KIELMEN 636 DATAPLUG
         </h1>
 
@@ -189,7 +217,12 @@ function showLogin() {
           Log In
         </button>
 
-        <p id="ownerLoginMessage" role="status"></p>
+        <p
+          id="ownerLoginMessage"
+          role="status"
+          aria-live="polite"
+          style="overflow-wrap:anywhere"
+        ></p>
       </form>
     `;
 
@@ -202,6 +235,13 @@ function showLogin() {
   }
 
   overlay.style.display = "flex";
+
+  const passwordInput = byId("ownerPassword");
+
+  if (passwordInput) {
+    passwordInput.value = "";
+    passwordInput.focus();
+  }
 }
 
 async function handleLogin(event) {
@@ -210,6 +250,17 @@ async function handleLogin(event) {
   const passwordInput = byId("ownerPassword");
   const message = byId("ownerLoginMessage");
   const button = byId("ownerLoginButton");
+
+  if (!passwordInput || !message || !button) {
+    return;
+  }
+
+  const password = passwordInput.value;
+
+  if (!password) {
+    message.textContent = "Please enter your password.";
+    return;
+  }
 
   button.disabled = true;
   button.textContent = "Signing in...";
@@ -223,9 +274,7 @@ async function handleLogin(event) {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          password: passwordInput.value
-        })
+        body: JSON.stringify({ password })
       }
     );
 
@@ -233,23 +282,37 @@ async function handleLogin(event) {
 
     if (!response.ok || !data.success || !data.token) {
       throw new Error(
-        data.message || "Owner login failed."
+        data.message || "Login failed. Check your password."
       );
     }
 
+    // Save the newly issued token for this page session.
     ownerToken = data.token;
-
     sessionStorage.setItem(TOKEN_KEY, ownerToken);
 
     passwordInput.value = "";
 
+    // Hide login and display the dashboard only after
+    // the server has accepted the password.
     byId("ownerLoginOverlay").style.display = "none";
+
+    showDashboard();
+
+    showMessage("Login successful. Loading dashboard...");
 
     await startDashboard();
 
   } catch (error) {
+    ownerToken = null;
+    sessionStorage.removeItem(TOKEN_KEY);
+
+    hideDashboard();
+
     message.textContent =
-      error.message || "Unable to sign in.";
+      error.message || "Unable to sign in. Please try again.";
+
+    byId("ownerLoginOverlay").style.display = "flex";
+
   } finally {
     button.disabled = false;
     button.textContent = "Log In";
@@ -277,7 +340,10 @@ async function loadStatistics() {
 
   setText(
     "totalProfit",
-    money(stats.totalProfit ?? stats.totalAgentProfit)
+    stats.totalProfit != null ||
+    stats.totalAgentProfit != null
+      ? money(stats.totalProfit ?? stats.totalAgentProfit)
+      : "Not available"
   );
 
   setText("totalOrders", stats.totalOrders);
@@ -316,32 +382,21 @@ async function loadStatistics() {
 async function loadOrders() {
   const tbody = byId("ordersTableBody");
 
-  if (!tbody) {
-    return;
-  }
+  if (!tbody) return;
 
   tbody.innerHTML =
     '<tr><td colspan="7">Loading orders...</td></tr>';
 
   const params = new URLSearchParams();
 
-  const search =
-    byId("orderSearch")?.value.trim() || "";
-
+  const search = byId("orderSearch")?.value.trim() || "";
   const paymentStatus =
     byId("orderPaymentFilter")?.value || "";
-
   const deliveryStatus =
     byId("orderDeliveryFilter")?.value || "";
 
-  if (search) {
-    params.set("search", search);
-  }
-
-  if (paymentStatus) {
-    params.set("status", paymentStatus);
-  }
-
+  if (search) params.set("search", search);
+  if (paymentStatus) params.set("status", paymentStatus);
   if (deliveryStatus) {
     params.set("delivery_status", deliveryStatus);
   }
@@ -379,9 +434,7 @@ async function loadOrders() {
 
   } catch (error) {
     tbody.innerHTML = `
-      <tr>
-        <td colspan="7">${escapeHTML(error.message)}</td>
-      </tr>
+      <tr><td colspan="7">${escapeHTML(error.message)}</td></tr>
     `;
 
     throw error;
@@ -396,9 +449,7 @@ async function loadOrders() {
 async function loadAgents() {
   const tbody = byId("agentsTableBody");
 
-  if (!tbody) {
-    return;
-  }
+  if (!tbody) return;
 
   tbody.innerHTML =
     '<tr><td colspan="7">Loading agents...</td></tr>';
@@ -457,9 +508,7 @@ async function loadAgents() {
 
   } catch (error) {
     tbody.innerHTML = `
-      <tr>
-        <td colspan="7">${escapeHTML(error.message)}</td>
-      </tr>
+      <tr><td colspan="7">${escapeHTML(error.message)}</td></tr>
     `;
 
     throw error;
@@ -474,9 +523,7 @@ async function loadAgents() {
 async function loadAgentDetails(id) {
   const panel = byId("agentDetails");
 
-  if (!panel) {
-    return;
-  }
+  if (!panel) return;
 
   panel.textContent = "Loading agent details...";
 
@@ -498,7 +545,6 @@ async function loadAgentDetails(id) {
 
     panel.innerHTML = `
       <h3>${escapeHTML(agent.business_name)}</h3>
-
       <p>Name: ${escapeHTML(agent.full_name)}</p>
       <p>Agent code: ${escapeHTML(agent.agent_code)}</p>
       <p>Email: ${escapeHTML(agent.email)}</p>
@@ -587,9 +633,7 @@ async function loadAgentDetails(id) {
 async function loadWithdrawals() {
   const tbody = byId("withdrawalsTableBody");
 
-  if (!tbody) {
-    return;
-  }
+  if (!tbody) return;
 
   tbody.innerHTML =
     '<tr><td colspan="7">Loading withdrawals...</td></tr>';
@@ -616,7 +660,9 @@ async function loadWithdrawals() {
       return `
         <tr>
           <td>${escapeHTML(item.id)}</td>
-          <td>${escapeHTML(item.business_name || item.agent_code)}</td>
+          <td>${escapeHTML(
+            item.business_name || item.agent_code
+          )}</td>
           <td>${money(item.amount)}</td>
           <td>${escapeHTML(item.phone)}</td>
           <td>${escapeHTML(item.provider)}</td>
@@ -626,16 +672,12 @@ async function loadWithdrawals() {
               <button
                 type="button"
                 data-withdrawal-paid="${escapeHTML(item.id)}"
-              >
-                Mark Paid
-              </button>
+              >Mark Paid</button>
 
               <button
                 type="button"
                 data-withdrawal-reject="${escapeHTML(item.id)}"
-              >
-                Reject
-              </button>
+              >Reject</button>
             ` : escapeHTML(item.status)}
           </td>
         </tr>
@@ -644,9 +686,7 @@ async function loadWithdrawals() {
 
   } catch (error) {
     tbody.innerHTML = `
-      <tr>
-        <td colspan="7">${escapeHTML(error.message)}</td>
-      </tr>
+      <tr><td colspan="7">${escapeHTML(error.message)}</td></tr>
     `;
 
     throw error;
@@ -655,33 +695,15 @@ async function loadWithdrawals() {
 
 /* =========================================
    UPDATE WITHDRAWAL STATUS
-
-   PATCH /owner/withdrawals/:id/status
-
-   IMPORTANT:
-   This does NOT send Mobile Money.
+   This does not transfer Mobile Money.
 ========================================= */
 
 async function updateWithdrawalStatus(id, status) {
-  if (status === "paid") {
-    const confirmed = window.confirm(
-      "Have you already sent the money successfully through Mobile Money? Only continue if the transfer succeeded."
-    );
+  const promptMessage = status === "paid"
+    ? "Have you already sent the money successfully through Mobile Money?"
+    : "Are you sure you want to reject this withdrawal?";
 
-    if (!confirmed) {
-      return;
-    }
-  }
-
-  if (status === "rejected") {
-    const confirmed = window.confirm(
-      "Are you sure you want to reject this withdrawal request?"
-    );
-
-    if (!confirmed) {
-      return;
-    }
-  }
+  if (!window.confirm(promptMessage)) return;
 
   try {
     const data = await ownerRequest(
@@ -718,12 +740,9 @@ async function loadDashboard() {
     return;
   }
 
-  if (dashboardLoading) {
-    return;
-  }
+  if (dashboardLoading) return;
 
   dashboardLoading = true;
-
   showMessage("Refreshing dashboard...");
 
   try {
@@ -740,21 +759,13 @@ async function loadDashboard() {
 
     if (failed.length) {
       showMessage(
-        "Some sections could not load. Check the error shown in each section."
+        "Some sections could not load. Check the messages in each section."
       );
     } else {
       showMessage("Dashboard updated successfully.");
     }
 
-    const authenticationError = failed.some(
-      result =>
-        result.reason &&
-        /owner login required|please log in again/i.test(
-          result.reason.message || ""
-        )
-    );
-
-    if (!ownerToken || authenticationError) {
+    if (!ownerToken) {
       showLogin();
     }
 
@@ -768,6 +779,13 @@ async function loadDashboard() {
 ========================================= */
 
 async function startDashboard() {
+  if (!ownerToken) {
+    showLogin();
+    return;
+  }
+
+  showDashboard();
+
   await loadDashboard();
 
   if (refreshTimer) {
@@ -785,22 +803,12 @@ async function startDashboard() {
 
 /* =========================================
    OWNER LOGOUT
-   POST /owner/logout
 ========================================= */
 
 async function logoutOwner() {
-  try {
-    if (ownerToken) {
-      await ownerRequest("/owner/logout", {
-        method: "POST"
-      });
-    }
-  } catch (_error) {
-    // Clear the local session even if the server is unavailable.
-  }
+  const oldToken = ownerToken;
 
   ownerToken = null;
-
   sessionStorage.removeItem(TOKEN_KEY);
 
   if (refreshTimer) {
@@ -808,7 +816,21 @@ async function logoutOwner() {
     refreshTimer = null;
   }
 
+  hideDashboard();
   showLogin();
+
+  if (oldToken) {
+    try {
+      await fetch(OWNER_API + "/owner/logout", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + oldToken
+        }
+      });
+    } catch (_error) {
+      // The local dashboard is already logged out.
+    }
+  }
 }
 
 /* =========================================
@@ -816,6 +838,9 @@ async function logoutOwner() {
 ========================================= */
 
 function initializeOwnerDashboard() {
+  // Always start with the private dashboard hidden.
+  hideDashboard();
+
   byId("ownerLogoutButton")?.addEventListener(
     "click",
     logoutOwner
@@ -869,9 +894,7 @@ function initializeOwnerDashboard() {
       );
 
       if (button) {
-        loadAgentDetails(
-          button.dataset.agentDetails
-        );
+        loadAgentDetails(button.dataset.agentDetails);
       }
     }
   );
@@ -903,14 +926,11 @@ function initializeOwnerDashboard() {
     }
   );
 
-  if (!ownerToken) {
-    showLogin();
-    return;
-  }
+  // Never trust an old token on page load.
+  ownerToken = null;
+  sessionStorage.removeItem(TOKEN_KEY);
 
-  startDashboard().catch(error => {
-    showMessage(error.message);
-  });
+  showLogin();
 }
 
 /* =========================================
