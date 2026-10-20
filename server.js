@@ -2517,6 +2517,10 @@ app.get("/order-status/:reference", async (req, res) => {
         );
 
         supplier_status = supplierResult;
+        console.log(
+  "DATAMART STATUS RESPONSE:",
+  JSON.stringify(supplierResult)
+);
 
         const normalizedStatus = String(
           supplierResult.status ||
