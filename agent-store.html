@@ -1020,7 +1020,8 @@ function renderBundles() {
 
   const query = searchInput.value.trim().toLowerCase();
 
-  const available = prices.filter(item => {
+  const available = prices
+  .filter(item => {
     const network = normalizeNetwork(item.network);
     const price = Number(item.sellingPrice);
 
@@ -1035,6 +1036,19 @@ function renderBundles() {
       String(price).includes(query) ||
       money(price).toLowerCase().includes(query)
     );
+  })
+  .sort((a, b) => {
+    // Extract the numeric gig size from each bundle.
+    const sizeA = parseFloat(
+      String(a.bundle).replace(/[^0-9.]/g, "")
+    );
+
+    const sizeB = parseFloat(
+      String(b.bundle).replace(/[^0-9.]/g, "")
+    );
+
+    // Arrange bundles from smallest to largest.
+    return sizeA - sizeB;
   });
 
   bundleCount.textContent =
