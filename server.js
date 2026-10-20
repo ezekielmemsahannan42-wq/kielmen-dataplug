@@ -739,7 +739,7 @@ function requireWithdrawalsEnabled(req, res, next) {
   }
 
   next();
-        }
+}
 // ============================================================
 // ============================================================
 // 8. AGENT REGISTRATION — AUTOMATIC APPROVAL
@@ -1232,13 +1232,17 @@ app.get(
             )::numeric(12,2) AS total_sales,
 
             COALESCE(
-              SUM(amount - agent_base_price) FILTER (
-                WHERE status = 'paid'
-                  AND delivery_status = 'delivered'
-                  AND agent_base_price IS NOT NULL
-              ),
-              0
-            )::numeric(12,2) AS estimated_margin,
+  SUM(
+    amount - agent_base_price
+  ) FILTER (
+    WHERE status = 'paid'
+      AND delivery_status = 'delivered'
+      AND delivered_at IS NOT NULL
+      AND agent_base_price IS NOT NULL
+      AND amount > agent_base_price
+  ),
+  0
+)::numeric(12,2) AS estimated_margin,
 
             COUNT(DISTINCT phone)::int AS customers
 
@@ -1287,15 +1291,17 @@ app.get(
       const result = await pool.query(
         `
           SELECT
-            reference,
-            phone,
-            network,
-            bundle,
-            amount,
-            status,
-            delivery_status,
-            created_at
-          FROM orders
+  reference,
+  phone,
+  network,
+  bundle,
+  amount,
+  agent_base_price,
+  status,
+  delivery_status,
+  delivered_at,
+  created_at
+FROM orders
           WHERE agent_id = $1
           ORDER BY created_at DESC
           LIMIT 100
