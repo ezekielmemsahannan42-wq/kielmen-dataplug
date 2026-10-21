@@ -1916,13 +1916,14 @@ app.get(
       const result = await pool.query(
         `
           SELECT
-            w.*,
-            a.agent_code,
-            a.business_name
-          FROM agent_withdrawals w
-          JOIN agents a ON a.id = w.agent_id
-          ORDER BY w.created_at DESC
-          LIMIT 200
+  w.*,
+  a.agent_code,
+  a.full_name,
+  a.business_name
+FROM agent_withdrawals w
+JOIN agents a ON a.id = w.agent_id
+ORDER BY w.created_at DESC
+LIMIT 200
         `
       );
 
