@@ -1621,17 +1621,16 @@ app.post(
 
     if (
   !Number.isFinite(amount) ||
-  Math.round(amount * 100) !== amount * 100 ||
+  Math.abs(amount * 100 - Math.round(amount * 100)) > 0.000001 ||
   amount < 0.10 ||
   amount <= 0
 ) {
   return res.status(400).json({
     success: false,
     message:
-      "The minimum withdrawal is GH₵0.10. There is no maximum limit, but you cannot withdraw more than your available balance."
+      "Enter a valid withdrawal amount of at least GH₵0.10."
   });
     }
-
     if (!validGhanaPhone(phone)) {
       return res.status(400).json({
         success: false,
