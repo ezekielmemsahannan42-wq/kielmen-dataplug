@@ -945,3 +945,118 @@ if (document.readyState === "loading") {
 } else {
   initializeOwnerDashboard();
 }
+
+<!-- AGENT WITHDRAWAL MANAGEMENT -->
+<section id="withdrawalManagement" class="owner-section">
+
+  <h2>Agent Withdrawal Requests</h2>
+
+  <div class="withdrawal-summary">
+    <div class="withdrawal-card">
+      <h3>Pending Requests</h3>
+      <p id="ownerPendingCount">0</p>
+    </div>
+
+    <div class="withdrawal-card">
+      <h3>Pending Amount</h3>
+      <p id="ownerPendingAmount">GH₵0.00</p>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    id="refreshWithdrawalsBtn"
+    onclick="loadOwnerWithdrawals()">
+    Refresh Requests
+  </button>
+
+  <p id="ownerWithdrawalMessage" role="status"></p>
+
+  <div id="ownerWithdrawalList">
+    Loading withdrawal requests...
+  </div>
+
+</section>
+
+<style>
+  .withdrawal-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin: 15px 0;
+  }
+
+  .withdrawal-card {
+    padding: 16px;
+    border: 1px solid #454744;
+    border-radius: 12px;
+    background: #202120;
+    color: #e8ecee;
+  }
+
+  .withdrawal-card h3 {
+    font-size: 14px;
+  }
+
+  .withdrawal-card p {
+    color: #48c6a3;
+    font-size: 23px;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+  }
+
+  .withdrawal-item {
+    margin: 14px 0;
+    padding: 16px;
+    border: 1px solid #454744;
+    border-radius: 12px;
+    background: #202120;
+    color: #e8ecee;
+    overflow-wrap: anywhere;
+  }
+
+  .withdrawal-item p {
+    line-height: 1.6;
+  }
+
+  .withdrawal-status {
+    font-weight: bold;
+  }
+
+  .withdrawal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 15px;
+  }
+
+  .withdrawal-actions button,
+  #refreshWithdrawalsBtn {
+    padding: 11px 15px;
+    border: 0;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  #refreshWithdrawalsBtn {
+    background: #08754e;
+    color: white;
+  }
+
+  .mark-sent-btn {
+    background: #08754e;
+    color: white;
+  }
+
+  .reject-withdrawal-btn {
+    background: #9c2929;
+    color: white;
+  }
+
+  .withdrawal-actions button:disabled,
+  #refreshWithdrawalsBtn:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+</style>
