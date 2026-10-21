@@ -1999,14 +1999,14 @@ async function submitWithdrawal() {
 
   // Minimum withdrawal: GH₵0.10. No maximum limit.
   if (
-    amountInput.value.trim() === "" ||
-    !Number.isFinite(amount) ||
-    Math.round(amount * 100) !== amount * 100 ||
-    amount < 0.10
-  ) {
-    message.textContent =
-      "Enter a valid withdrawal amount of at least GH₵0.10.";
-    return;
+  amountInput.value.trim() === "" ||
+  !Number.isFinite(amount) ||
+  Math.round(amount * 100) !== Math.round(amount * 100) ||
+  amount < 0.10
+) {
+  message.textContent =
+    "Enter a valid withdrawal amount of at least GH₵0.10.";
+  return;
   }
 
   if (!phone) {
