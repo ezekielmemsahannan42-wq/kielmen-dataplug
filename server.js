@@ -1544,10 +1544,7 @@ app.get(
 
       // Previous earnings minus withdrawals already reserved
       // or completed. A paid withdrawal must not be counted twice.
-      const previousEarnings = Number(balance.previous_earnings || 0);
-const reservedAmount = Number(balance.reserved_amount || 0);
-
-const availableBalance = Math.max(
+      const availableBalance = Math.max(
   0,
   previousEarnings - reservedAmount
 );
@@ -1763,11 +1760,18 @@ CROSS JOIN withdrawals
 
       const balance = balanceResult.rows[0];
 
-      const availableBalance = Math.max(
-        0,
-        Number(balance.total_earnings) -
-        Number(balance.used_amount)
-      );
+const previousEarnings = Number(
+  balance.previous_earnings || 0
+);
+
+const reservedAmount = Number(
+  balance.reserved_amount || 0
+);
+
+const availableBalance = Math.max(
+  0,
+  previousEarnings - reservedAmount
+);
 
       if (amount > availableBalance + 0.000001) {
         return res.status(400).json({
