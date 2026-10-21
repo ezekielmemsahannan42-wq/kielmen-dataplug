@@ -11,8 +11,6 @@ const OWNER_API =
 
 const TOKEN_KEY = "kielmen_owner_token";
 
-sessionStorage.removeItem(TOKEN_KEY);
-
 let ownerToken = null;
 let refreshTimer = null;
 let dashboardLoading = false;
@@ -27,7 +25,6 @@ function byId(id) {
 
 function money(value) {
   const amount = Number(value);
-
   return "GH₵" + (
     Number.isFinite(amount) ? amount : 0
   ).toFixed(2);
@@ -45,34 +42,22 @@ function escapeHTML(value) {
 
 function showMessage(message) {
   const element = byId("ownerMessage");
-
-  if (element) {
-    element.textContent = message;
-  }
+  if (element) element.textContent = message;
 }
 
 function setText(id, value) {
   const element = byId(id);
-
-  if (element) {
-    element.textContent = String(value ?? 0);
-  }
+  if (element) element.textContent = String(value ?? 0);
 }
 
 function showDashboard() {
   const content = byId("ownerDashboardContent");
-
-  if (content) {
-    content.style.display = "block";
-  }
+  if (content) content.style.display = "block";
 }
 
 function hideDashboard() {
   const content = byId("ownerDashboardContent");
-
-  if (content) {
-    content.style.display = "none";
-  }
+  if (content) content.style.display = "none";
 }
 
 /* =========================================
@@ -111,19 +96,16 @@ async function ownerRequest(path, options = {}) {
   if (response.status === 401 || response.status === 403) {
     ownerToken = null;
     sessionStorage.removeItem(TOKEN_KEY);
-
     hideDashboard();
-    showLogin();
 
     throw new Error(
-      "Your owner session is invalid or expired. Please log in again."
+      "Your owner session has expired. Please log in again."
     );
   }
 
   if (!response.ok) {
     throw new Error(
-      data.message ||
-      `Request failed with HTTP ${response.status}.`
+      data.message || `Request failed with HTTP ${response.status}.`
     );
   }
 
@@ -161,6 +143,7 @@ function showLogin() {
       padding:20px;
       font-family:Arial,sans-serif;
       overflow-y:auto;
+      box-sizing:border-box;
     `;
 
     overlay.innerHTML = `
@@ -178,12 +161,9 @@ function showLogin() {
         </h1>
 
         <h2>Owner Login</h2>
-
         <p>Sign in to manage your business.</p>
 
-        <label for="ownerPassword">
-          Owner password
-        </label>
+        <label for="ownerPassword">Owner password</label>
 
         <input
           id="ownerPassword"
@@ -251,9 +231,7 @@ async function handleLogin(event) {
   const message = byId("ownerLoginMessage");
   const button = byId("ownerLoginButton");
 
-  if (!passwordInput || !message || !button) {
-    return;
-  }
+  if (!passwordInput || !message || !button) return;
 
   const password = passwordInput.value;
 
@@ -267,16 +245,13 @@ async function handleLogin(event) {
   message.textContent = "";
 
   try {
-    const response = await fetch(
-      OWNER_API + "/owner/login",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ password })
-      }
-    );
+    const response = await fetch(OWNER_API + "/owner/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ password })
+    });
 
     const data = await response.json().catch(() => ({}));
 
@@ -286,18 +261,12 @@ async function handleLogin(event) {
       );
     }
 
-    // Save the newly issued token for this page session.
     ownerToken = data.token;
     sessionStorage.setItem(TOKEN_KEY, ownerToken);
-
     passwordInput.value = "";
 
-    // Hide login and display the dashboard only after
-    // the server has accepted the password.
     byId("ownerLoginOverlay").style.display = "none";
-
     showDashboard();
-
     showMessage("Login successful. Loading dashboard...");
 
     await startDashboard();
@@ -305,7 +274,6 @@ async function handleLogin(event) {
   } catch (error) {
     ownerToken = null;
     sessionStorage.removeItem(TOKEN_KEY);
-
     hideDashboard();
 
     message.textContent =
@@ -321,7 +289,6 @@ async function handleLogin(event) {
 
 /* =========================================
    STATISTICS
-   GET /owner/stats
 ========================================= */
 
 async function loadStatistics() {
@@ -376,12 +343,10 @@ async function loadStatistics() {
 
 /* =========================================
    CUSTOMER ORDERS
-   GET /owner/orders
 ========================================= */
 
 async function loadOrders() {
   const tbody = byId("ordersTableBody");
-
   if (!tbody) return;
 
   tbody.innerHTML =
@@ -390,13 +355,12 @@ async function loadOrders() {
   const params = new URLSearchParams();
 
   const search = byId("orderSearch")?.value.trim() || "";
-  const paymentStatus =
-    byId("orderPaymentFilter")?.value || "";
-  const deliveryStatus =
-    byId("orderDeliveryFilter")?.value || "";
+  const paymentStatus = byId("orderPaymentFilter")?.value || "";
+  const deliveryStatus = byId("orderDeliveryFilter")?.value || "";
 
   if (search) params.set("search", search);
   if (paymentStatus) params.set("status", paymentStatus);
+
   if (deliveryStatus) {
     params.set("delivery_status", deliveryStatus);
   }
@@ -436,19 +400,16 @@ async function loadOrders() {
     tbody.innerHTML = `
       <tr><td colspan="7">${escapeHTML(error.message)}</td></tr>
     `;
-
     throw error;
   }
 }
 
 /* =========================================
    AGENT MANAGEMENT
-   GET /owner/agents
 ========================================= */
 
 async function loadAgents() {
   const tbody = byId("agentsTableBody");
-
   if (!tbody) return;
 
   tbody.innerHTML =
@@ -510,28 +471,23 @@ async function loadAgents() {
     tbody.innerHTML = `
       <tr><td colspan="7">${escapeHTML(error.message)}</td></tr>
     `;
-
     throw error;
   }
 }
 
 /* =========================================
    INDIVIDUAL AGENT DETAILS
-   GET /owner/agents/:id/details
 ========================================= */
 
 async function loadAgentDetails(id) {
   const panel = byId("agentDetails");
-
   if (!panel) return;
 
   panel.textContent = "Loading agent details...";
 
   try {
     const data = await ownerRequest(
-      "/owner/agents/" +
-      encodeURIComponent(id) +
-      "/details"
+      "/owner/agents/" + encodeURIComponent(id) + "/details"
     );
 
     if (!data.success) {
@@ -626,13 +582,11 @@ async function loadAgentDetails(id) {
 }
 
 /* =========================================
-   WITHDRAWALS
-   GET /owner/withdrawals
+   OWNER WITHDRAWAL MANAGEMENT
 ========================================= */
 
 async function loadWithdrawals() {
   const tbody = byId("withdrawalsTableBody");
-
   if (!tbody) return;
 
   tbody.innerHTML =
@@ -646,6 +600,20 @@ async function loadWithdrawals() {
     }
 
     const withdrawals = data.withdrawals || [];
+
+    const pending = withdrawals.filter(item =>
+      String(item.status).toLowerCase() === "pending"
+    );
+
+    setText("ownerPendingCount", pending.length);
+
+    setText(
+      "ownerPendingAmount",
+      money(pending.reduce(
+        (total, item) => total + Number(item.amount || 0),
+        0
+      ))
+    );
 
     if (!withdrawals.length) {
       tbody.innerHTML =
@@ -661,7 +629,9 @@ async function loadWithdrawals() {
         <tr>
           <td>${escapeHTML(item.id)}</td>
           <td>${escapeHTML(
-            item.business_name || item.agent_code
+            item.business_name ||
+            item.full_name ||
+            item.agent_code
           )}</td>
           <td>${money(item.amount)}</td>
           <td>${escapeHTML(item.phone)}</td>
@@ -688,14 +658,13 @@ async function loadWithdrawals() {
     tbody.innerHTML = `
       <tr><td colspan="7">${escapeHTML(error.message)}</td></tr>
     `;
-
     throw error;
   }
 }
 
 /* =========================================
    UPDATE WITHDRAWAL STATUS
-   This does not transfer Mobile Money.
+   This does not send Mobile Money.
 ========================================= */
 
 async function updateWithdrawalStatus(id, status) {
@@ -716,9 +685,7 @@ async function updateWithdrawalStatus(id, status) {
       }
     );
 
-    showMessage(
-      data.message || "Withdrawal status updated."
-    );
+    showMessage(data.message || "Withdrawal status updated.");
 
     await Promise.all([
       loadStatistics(),
@@ -759,14 +726,10 @@ async function loadDashboard() {
 
     if (failed.length) {
       showMessage(
-        "Some sections could not load. Check the messages in each section."
+        "Some sections could not load. Check the affected section."
       );
     } else {
       showMessage("Dashboard updated successfully.");
-    }
-
-    if (!ownerToken) {
-      showLogin();
     }
 
   } finally {
@@ -828,7 +791,7 @@ async function logoutOwner() {
         }
       });
     } catch (_error) {
-      // The local dashboard is already logged out.
+      // Local logout is already complete.
     }
   }
 }
@@ -838,7 +801,6 @@ async function logoutOwner() {
 ========================================= */
 
 function initializeOwnerDashboard() {
-  // Always start with the private dashboard hidden.
   hideDashboard();
 
   byId("ownerLogoutButton")?.addEventListener(
@@ -848,20 +810,12 @@ function initializeOwnerDashboard() {
 
   byId("refreshDashboard")?.addEventListener(
     "click",
-    () => {
-      loadDashboard().catch(error => {
-        showMessage(error.message);
-      });
-    }
+    () => loadDashboard().catch(error => showMessage(error.message))
   );
 
   byId("searchOrders")?.addEventListener(
     "click",
-    () => {
-      loadOrders().catch(error => {
-        showMessage(error.message);
-      });
-    }
+    () => loadOrders().catch(error => showMessage(error.message))
   );
 
   byId("orderSearch")?.addEventListener(
@@ -869,29 +823,20 @@ function initializeOwnerDashboard() {
     event => {
       if (event.key === "Enter") {
         event.preventDefault();
-
-        loadOrders().catch(error => {
-          showMessage(error.message);
-        });
+        loadOrders().catch(error => showMessage(error.message));
       }
     }
   );
 
   byId("agentSearch")?.addEventListener(
     "input",
-    () => {
-      loadAgents().catch(error => {
-        showMessage(error.message);
-      });
-    }
+    () => loadAgents().catch(error => showMessage(error.message))
   );
 
   byId("agentsTableBody")?.addEventListener(
     "click",
     event => {
-      const button = event.target.closest(
-        "[data-agent-details]"
-      );
+      const button = event.target.closest("[data-agent-details]");
 
       if (button) {
         loadAgentDetails(button.dataset.agentDetails);
@@ -926,11 +871,16 @@ function initializeOwnerDashboard() {
     }
   );
 
-  // Never trust an old token on page load.
-  ownerToken = null;
-  sessionStorage.removeItem(TOKEN_KEY);
+  // Restore a saved token if one exists.
+  ownerToken = sessionStorage.getItem(TOKEN_KEY);
 
-  showLogin();
+  if (ownerToken) {
+    startDashboard().catch(error => {
+      showMessage(error.message);
+    });
+  } else {
+    showLogin();
+  }
 }
 
 /* =========================================
@@ -944,119 +894,4 @@ if (document.readyState === "loading") {
   );
 } else {
   initializeOwnerDashboard();
-}
-
-<!-- AGENT WITHDRAWAL MANAGEMENT -->
-<section id="withdrawalManagement" class="owner-section">
-
-  <h2>Agent Withdrawal Requests</h2>
-
-  <div class="withdrawal-summary">
-    <div class="withdrawal-card">
-      <h3>Pending Requests</h3>
-      <p id="ownerPendingCount">0</p>
-    </div>
-
-    <div class="withdrawal-card">
-      <h3>Pending Amount</h3>
-      <p id="ownerPendingAmount">GH₵0.00</p>
-    </div>
-  </div>
-
-  <button
-    type="button"
-    id="refreshWithdrawalsBtn"
-    onclick="loadOwnerWithdrawals()">
-    Refresh Requests
-  </button>
-
-  <p id="ownerWithdrawalMessage" role="status"></p>
-
-  <div id="ownerWithdrawalList">
-    Loading withdrawal requests...
-  </div>
-
-</section>
-
-<style>
-  .withdrawal-summary {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    margin: 15px 0;
-  }
-
-  .withdrawal-card {
-    padding: 16px;
-    border: 1px solid #454744;
-    border-radius: 12px;
-    background: #202120;
-    color: #e8ecee;
-  }
-
-  .withdrawal-card h3 {
-    font-size: 14px;
-  }
-
-  .withdrawal-card p {
-    color: #48c6a3;
-    font-size: 23px;
-    font-weight: bold;
-    overflow-wrap: anywhere;
-  }
-
-  .withdrawal-item {
-    margin: 14px 0;
-    padding: 16px;
-    border: 1px solid #454744;
-    border-radius: 12px;
-    background: #202120;
-    color: #e8ecee;
-    overflow-wrap: anywhere;
-  }
-
-  .withdrawal-item p {
-    line-height: 1.6;
-  }
-
-  .withdrawal-status {
-    font-weight: bold;
-  }
-
-  .withdrawal-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 15px;
-  }
-
-  .withdrawal-actions button,
-  #refreshWithdrawalsBtn {
-    padding: 11px 15px;
-    border: 0;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-
-  #refreshWithdrawalsBtn {
-    background: #08754e;
-    color: white;
-  }
-
-  .mark-sent-btn {
-    background: #08754e;
-    color: white;
-  }
-
-  .reject-withdrawal-btn {
-    background: #9c2929;
-    color: white;
-  }
-
-  .withdrawal-actions button:disabled,
-  #refreshWithdrawalsBtn:disabled {
-    opacity: 0.6;
-    cursor: wait;
-  }
-</style>
+   }
