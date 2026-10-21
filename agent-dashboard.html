@@ -2131,7 +2131,7 @@ async function submitWithdrawal() {
   if (
   amountInput.value.trim() === "" ||
   !Number.isFinite(amount) ||
-  Math.round(amount * 100) !== Math.round(amount * 100) ||
+  Math.round(amount * 100) !== amount * 100 ||
   amount < 0.10
 ) {
   message.textContent =
