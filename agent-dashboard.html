@@ -1917,43 +1917,61 @@ async function loadWithdrawals() {
         historyElement.textContent =
           "No withdrawal requests have been recorded yet.";
       } else {
-        historyElement.innerHTML =
-          withdrawals.map(function(item) {
-            const amount = money(item.amount);
+        historyElement.innerHTML = withdrawals.map(function(item) {
+  const amount = money(item.amount);
 
-            const provider =
-              escapeHTML(item.provider || "Not provided");
+  const provider = escapeHTML(item.provider || "Not provided");
+  const phone = escapeHTML(item.phone || "Not provided");
 
-            const phone =
-              escapeHTML(item.phone || "Not provided");
+  const rawStatus = String(item.status || "pending").toLowerCase();
 
-            const status =
-              escapeHTML(item.status || "unknown");
+  let displayStatus = "PENDING";
 
-            const date = escapeHTML(
-              item.created_at
-                ? new Date(item.created_at).toLocaleString()
-                : "Not available"
-            );
+  if (["sent", "paid"].includes(rawStatus)) {
+    displayStatus = "SENT";
+  } else if (rawStatus === "rejected") {
+    displayStatus = "REJECTED";
+  }
 
-            return `
-              <div class="card">
-                <strong>${amount}</strong>
-                <p class="stat-note">
-                  Provider: ${provider}
-                </p>
-                <p class="stat-note">
-                  Mobile Money: ${phone}
-                </p>
-                <p class="stat-note">
-                  Status: ${status}
-                </p>
-                <p class="stat-note">
-                  Date: ${date}
-                </p>
-              </div>
-            `;
-          }).join("");
+  const date = escapeHTML(
+    item.created_at
+      ? new Date(item.created_at).toLocaleString()
+      : "Not available"
+  );
+
+  const statusColor =
+    displayStatus === "SENT"
+      ? "#48c6a3"
+      : displayStatus === "REJECTED"
+        ? "#ff7777"
+        : "#d8a72c";
+
+  return `
+    <div class="card">
+      <strong>${amount}</strong>
+
+      <p class="stat-note">
+        Provider: ${provider}
+      </p>
+
+      <p class="stat-note">
+        Mobile Money: ${phone}
+      </p>
+
+      <p>
+        Status:
+        <strong style="color:${statusColor}">
+          ${displayStatus === "PENDING" ? "🟡" : displayStatus === "SENT" ? "🟢" : "🔴"}
+          ${displayStatus}
+        </strong>
+      </p>
+
+      <p class="stat-note">
+        Date: ${date}
+      </p>
+    </div>
+  `;
+}).join("");
       }
 
     } catch (historyError) {
@@ -2047,12 +2065,12 @@ async function submitWithdrawal() {
     }
 
     message.textContent =
-      data.result.message ||
-      "Your withdrawal request has been submitted successfully. It is awaiting review.";
+  "✅ Withdrawal request submitted successfully. Status: PENDING. " +
+  "Your request is awaiting payment by the administrator.";
 
-    amountInput.value = "";
+amountInput.value = "";
 
-    await loadWithdrawals();
+await loadWithdrawals();
 
   } catch (error) {
     message.textContent =
