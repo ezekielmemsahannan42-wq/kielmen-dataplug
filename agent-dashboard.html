@@ -1586,6 +1586,8 @@ async function loadOrders() {
 function renderOrders() {
   const target = document.getElementById("ordersList");
 
+  if (!target) return;
+
   if (!orders.length) {
     target.textContent =
       "No server orders were returned for this account.";
@@ -1596,14 +1598,48 @@ function renderOrders() {
     const network = order.network || "Network";
     const bundle = order.bundle || "Bundle";
     const status = order.status || "unknown";
-    const amount = order.amount || order.total || 0;
-    const phone = order.phone || order.customer_phone || "Not provided";
+    const amount = order.amount ?? order.total ?? 0;
+    const phone =
+      order.phone || order.customer_phone || "Not provided";
+
+    const reference =
+      order.reference ||
+      order.reference_code ||
+      order.transaction_reference ||
+      "Not available";
+
+    const orderDate = order.created_at
+      ? new Date(order.created_at).toLocaleString("en-GB", {
+          timeZone: "Africa/Accra",
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true
+        })
+      : "Date unavailable";
 
     return `
       <div class="card">
-        <strong>${escapeHTML(network)} · ${escapeHTML(bundle)}</strong>
-        <p class="stat-note">Phone: ${escapeHTML(phone)}</p>
-        <p class="stat-note">Status: ${escapeHTML(status)}</p>
+        <h3>${escapeHTML(network)} · ${escapeHTML(bundle)}</h3>
+
+        <p class="stat-note">
+          Reference: ${escapeHTML(reference)}
+        </p>
+
+        <p class="stat-note">
+          Order Date: ${escapeHTML(orderDate)}
+        </p>
+
+        <p class="stat-note">
+          Phone: ${escapeHTML(phone)}
+        </p>
+
+        <p class="stat-note">
+          Status: ${escapeHTML(status)}
+        </p>
+
         <strong>${money(amount)}</strong>
       </div>
     `;
@@ -1613,6 +1649,8 @@ function renderOrders() {
 function renderRecentOrders() {
   const target = document.getElementById("recentOrders");
 
+  if (!target) return;
+
   if (!orders.length) {
     target.textContent =
       "No server orders have been returned yet.";
@@ -1620,16 +1658,46 @@ function renderRecentOrders() {
   }
 
   target.innerHTML = orders.slice(0, 3).map(function (order) {
+    const reference =
+      order.reference ||
+      order.reference_code ||
+      order.transaction_reference ||
+      "Not available";
+
+    const orderDate = order.created_at
+      ? new Date(order.created_at).toLocaleString("en-GB", {
+          timeZone: "Africa/Accra",
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true
+        })
+      : "Date unavailable";
+
     return `
       <div class="message">
         <strong>
           ${escapeHTML(order.network || "Network")}
           · ${escapeHTML(order.bundle || "Bundle")}
         </strong>
-        <br>
-        Status: ${escapeHTML(order.status || "unknown")}
-        <br>
-        ${money(order.amount || order.total || 0)}
+
+        <p>
+          Reference: ${escapeHTML(reference)}
+        </p>
+
+        <p>
+          Date: ${escapeHTML(orderDate)}
+        </p>
+
+        <p>
+          Status: ${escapeHTML(order.status || "unknown")}
+        </p>
+
+        <strong>
+          ${money(order.amount ?? order.total ?? 0)}
+        </strong>
       </div>
     `;
   }).join("");
