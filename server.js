@@ -1676,40 +1676,84 @@ app.post(
 
       const balanceResult = await client.query(
         `
-          WITH earnings AS (
-            SELECT
-              COALESCE(
-                SUM(amount - agent_base_price),
-                0
-              ) AS total_earnings
-            FROM orders
-            WHERE agent_id = $1
-              AND status = 'paid'
-              AND delivery_status = 'delivered'
-              AND delivered_at IS NOT NULL
-              AND delivered_at <
-                date_trunc(
-                  'day',
-                  NOW() AT TIME ZONE 'Africa/Accra'
-                ) AT TIME ZONE 'Africa/Accra'
-              AND agent_base_price IS NOT NULL
-              AND amount > agent_base_price
-          ),
-          withdrawals AS (
-            SELECT
-              COALESCE(
-                SUM(amount) FILTER (
-                  WHERE status IN ('pending', 'approved', 'paid')
-                ),
-                0
-              ) AS used_amount
-            FROM agent_withdrawals
-            WHERE agent_id = $1
-          )
-          SELECT
-            earnings.total_earnings,
-            withdrawals.used_amount
-          FROM earnings, withdrawals
+          WITH time_boundary AS (
+  SELECT
+    date_trunc(
+      'day',
+      NOW() AT TIME ZONE 'Africa/Accra'
+    ) AT TIME ZONE 'Africa/Accra' AS today_start
+),
+
+earnings AS (
+  SELECT
+    COALESCE(
+      SUM(o.amount - o.agent_base_price) FILTER (
+        WHERE o.delivered_at < t.today_start
+      ),
+      0
+    ) AS previous_earnings,
+
+    COALESCE(
+      SUM(o.amount - o.agent_base_price) FILTER (
+        WHERE o.delivered_at >= t.today_start
+      ),
+      0
+    ) AS todays_earnings,
+
+    COUNT(*) FILTER (
+      WHERE o.delivered_at < t.today_start
+    ) AS previous_orders,
+
+    COUNT(*) FILTER (
+      WHERE o.delivered_at >= t.today_start
+    ) AS todays_orders
+
+  FROM orders o
+  CROSS JOIN time_boundary t
+
+  WHERE o.agent_id = $1
+    AND LOWER(o.status) = 'paid'
+    AND LOWER(o.delivery_status) IN (
+      'delivered',
+      'completed',
+      'success',
+      'successful'
+    )
+    AND o.delivered_at IS NOT NULL
+    AND o.agent_base_price IS NOT NULL
+    AND o.amount > o.agent_base_price
+),
+
+withdrawals AS (
+  SELECT
+    COALESCE(
+      SUM(amount) FILTER (
+        WHERE LOWER(status) IN ('pending', 'approved', 'paid')
+      ),
+      0
+    ) AS reserved_amount,
+
+    COALESCE(
+      SUM(amount) FILTER (
+        WHERE LOWER(status) IN ('pending', 'approved')
+      ),
+      0
+    ) AS pending_amount
+
+  FROM agent_withdrawals
+  WHERE agent_id = $1
+)
+
+SELECT
+  earnings.previous_earnings,
+  earnings.todays_earnings,
+  earnings.previous_orders,
+  earnings.todays_orders,
+  withdrawals.reserved_amount,
+  withdrawals.pending_amount
+
+FROM earnings
+CROSS JOIN withdrawals
         `,
         [req.agentId]
       );
