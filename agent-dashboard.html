@@ -2153,15 +2153,19 @@ async function submitWithdrawal() {
   const phone = phoneInput.value.trim();
 
   // Minimum withdrawal: GH₵0.10. No maximum limit.
+   // Validate withdrawal amount accurately to two decimal places.
+  const amountInPesewas = Math.round(amount * 100);
+
   if (
-  amountInput.value.trim() === "" ||
-  !Number.isFinite(amount) ||
-  Math.round(amount * 100) !== amount * 100 ||
-  amount < 0.10
-) {
-  message.textContent =
-    "Enter a valid withdrawal amount of at least GH₵0.10.";
-  return;
+    amountInput.value.trim() === "" ||
+    !Number.isFinite(amount) ||
+    !Number.isSafeInteger(amountInPesewas) ||
+    amountInPesewas < 10 ||
+    Math.abs(amount * 100 - amountInPesewas) > 0.000001
+  ) {
+    message.textContent =
+      "Enter a valid withdrawal amount of at least GH₵0.10, using no more than two decimal places.";
+    return;
   }
 
   if (!phone) {
