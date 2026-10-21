@@ -1750,7 +1750,51 @@ async function loadStats() {
       error.message || "Unable to retrieve statistics.";
   }
   }
+async function loadAgentProfit() {
+  try {
+    const token =
+      localStorage.getItem("agentToken") ||
+      sessionStorage.getItem("agentToken");
 
+    if (!token) {
+      console.log("Please log in to your agent account.");
+      return;
+    }
+
+    const response = await fetch(
+      "https://kielmen-dataplug-payment-api.onrender.com/agents/stats",
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || data.success === false) {
+      throw new Error(data.message || "Unable to load agent statistics.");
+    }
+
+    const stats = data.stats || data;
+
+    const pendingProfit = Number(
+      stats.pendingDeliveryProfit || 0
+    );
+
+    const pendingElement = document.getElementById("pendingProfit");
+
+    if (pendingElement) {
+      pendingElement.textContent =
+        `GH₵ ${pendingProfit.toFixed(2)}`;
+    }
+
+  } catch (error) {
+    console.error("Error loading pending profit:", error);
+  }
+}
+
+loadAgentProfit();
 
   // ============================================================
 // AGENT WITHDRAWALS
