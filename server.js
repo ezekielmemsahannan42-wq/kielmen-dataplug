@@ -1544,10 +1544,13 @@ app.get(
 
       // Previous earnings minus withdrawals already reserved
       // or completed. A paid withdrawal must not be counted twice.
-      const availableBalance = Math.max(
-        0,
-        previousEarnings - reservedAmount
-      );
+      const previousEarnings = Number(balance.previous_earnings || 0);
+const reservedAmount = Number(balance.reserved_amount || 0);
+
+const availableBalance = Math.max(
+  0,
+  previousEarnings - reservedAmount
+);
 
       res.json({
         success: true,
@@ -1767,8 +1770,6 @@ CROSS JOIN withdrawals
       );
 
       if (amount > availableBalance + 0.000001) {
-        await client.query("ROLLBACK");
-
         return res.status(400).json({
           success: false,
           message:
