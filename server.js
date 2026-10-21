@@ -1376,6 +1376,60 @@ app.get(
   }
 );
 // ============================================================
+// AGENT ORDERS — FIX MISSING ORDERS IN DASHBOARD
+// GET /agents/orders
+// ============================================================
+
+app.get(
+  "/agents/orders",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `
+          SELECT
+            id,
+            reference,
+            phone,
+            network,
+            bundle,
+            amount,
+            status,
+            delivery_status,
+            created_at,
+            updated_at,
+            delivered_at
+          FROM orders
+          WHERE agent_id = $1
+          ORDER BY created_at DESC
+          LIMIT 100
+        `,
+        [req.agentId]
+      );
+
+      return res.json({
+        success: true,
+        orders: result.rows.map(order => ({
+          ...order,
+          amount: Number(order.amount)
+        }))
+      });
+
+    } catch (error) {
+      console.error(
+        "Agent orders error:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not load your orders."
+      });
+    }
+  }
+);
+// ============================================================
 // ============================================================
 // 12A. AGENT WITHDRAWAL BALANCE
 // ============================================================
