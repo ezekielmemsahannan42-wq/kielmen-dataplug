@@ -1931,6 +1931,32 @@ async function loadWithdrawals() {
     }
 
     const balance = balanceData.result;
+    // Retrieve pending delivery profit for the Today's Profit card.
+const statsData = await apiRequest("/agents/stats");
+
+if (
+  !statsData.response.ok ||
+  !statsData.result ||
+  statsData.result.success !== true
+) {
+  throw new Error(
+    statsData.result?.message ||
+    "Could not retrieve pending delivery profit."
+  );
+}
+
+const stats = statsData.result.stats || statsData.result;
+
+const pendingDeliveryProfit = Number(
+  stats.pendingDeliveryProfit ??
+  stats.pending_delivery_profit
+);
+
+if (!Number.isFinite(pendingDeliveryProfit)) {
+  throw new Error(
+    "Pending delivery profit is missing from the server response."
+  );
+}
 
     // Step 3: Check the actual values returned by Render.
     // Do not silently convert missing values into zero.
@@ -1963,7 +1989,7 @@ async function loadWithdrawals() {
       money(balance.availableBalance);
 
     todayElement.textContent =
-      money(balance.todaysProfit);
+  money(pendingDeliveryProfit);
 
     pendingElement.textContent =
       money(balance.pendingWithdrawals);
@@ -1974,8 +2000,7 @@ async function loadWithdrawals() {
       const available =
         Number(balance.availableBalance);
 
-      const today =
-        Number(balance.todaysProfit);
+      const today = pendingDeliveryProfit;
 
       const pending =
         Number(balance.pendingWithdrawals);
