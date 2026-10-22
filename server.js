@@ -1479,11 +1479,16 @@ app.get(
           CROSS JOIN time_boundary t
 
           WHERE o.agent_id = $1
-            AND o.status = 'paid'
-            AND o.delivery_status = 'delivered'
-            AND o.delivered_at IS NOT NULL
-            AND o.agent_base_price IS NOT NULL
-            AND o.amount > o.agent_base_price
+  AND LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
+  AND LOWER(TRIM(COALESCE(o.delivery_status, ''))) IN (
+    'delivered',
+    'completed',
+    'success',
+    'successful'
+  )
+  AND o.delivered_at IS NOT NULL
+  AND o.agent_base_price IS NOT NULL
+  AND o.amount > o.agent_base_price
         ),
 
         withdrawals AS (
@@ -1711,16 +1716,16 @@ earnings AS (
   CROSS JOIN time_boundary t
 
   WHERE o.agent_id = $1
-    AND LOWER(o.status) = 'paid'
-    AND LOWER(o.delivery_status) IN (
-      'delivered',
-      'completed',
-      'success',
-      'successful'
-    )
-    AND o.delivered_at IS NOT NULL
-    AND o.agent_base_price IS NOT NULL
-    AND o.amount > o.agent_base_price
+  AND LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
+  AND LOWER(TRIM(COALESCE(o.delivery_status, ''))) IN (
+    'delivered',
+    'completed',
+    'success',
+    'successful'
+  )
+  AND o.delivered_at IS NOT NULL
+  AND o.agent_base_price IS NOT NULL
+  AND o.amount > o.agent_base_price
 ),
 
 withdrawals AS (
