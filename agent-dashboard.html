@@ -1989,7 +1989,7 @@ if (!Number.isFinite(pendingDeliveryProfit)) {
       money(balance.availableBalance);
 
     todayElement.textContent =
-  money(pendingDeliveryProfit);
+    money(balance.todaysProfit);
 
     pendingElement.textContent =
       money(balance.pendingWithdrawals);
@@ -2000,7 +2000,7 @@ if (!Number.isFinite(pendingDeliveryProfit)) {
       const available =
         Number(balance.availableBalance);
 
-      const today = pendingDeliveryProfit;
+      const today = Number(balance.todaysProfit);
 
       const pending =
         Number(balance.pendingWithdrawals);
