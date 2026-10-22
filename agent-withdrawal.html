@@ -304,7 +304,11 @@ async function loadWithdrawals() {
 
     try {
         const data = await apiRequest("/agents/withdrawals");
+const amountInput = document.getElementById("withdrawAmount");
 
+if (data.minimumWithdrawal != null) {
+    amountInput.min = data.minimumWithdrawal;
+}
         document.getElementById("availableBalance").textContent =
             money(data.availableBalance);
 
