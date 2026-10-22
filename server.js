@@ -1555,10 +1555,7 @@ console.log("WITHDRAWAL DIAGNOSTICS:", {
   ).toFixed(2)
 });
 
-console.log("AGENT EARNINGS DEBUG:", {
-agentId: req.agentId,
-...debugResult.rows[0]
-});
+
 
       const previousEarnings =
         Number(row.previous_earnings || 0);
