@@ -433,7 +433,13 @@ function goBack() {
     window.location.href = "agent-dashboard.html";
 }
 
+// Load balances when the page opens.
 loadWithdrawals();
+
+// Refresh balances every 60 seconds.
+setInterval(() => {
+    loadWithdrawals();
+}, 60000);
 </script>
 
 </body>
