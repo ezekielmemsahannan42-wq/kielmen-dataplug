@@ -152,20 +152,24 @@ footer {
         <h3>My Earnings</h3>
 
         <div class="balances">
-            <div class="balance">
-                <p>Available Balance</p>
-                <h2 id="availableBalance">GH₵0.00</h2>
-            </div>
+    <div class="balance">
+        <p>Available Balance</p>
+        <h2 id="availableBalance">GH₵0.00</h2>
+    </div><div class="balance">
+    <p>Today's Profit</p>
+    <h2 id="todayProfit">GH₵0.00</h2>
+</div>
 
-            <div class="balance">
-                <p>Today's Profit</p>
-                <h2 id="todayProfit">GH₵0.00</h2>
-            </div>
+<div class="balance">
+    <p>Pending-Delivery Profit</p>
+    <h2 id="pendingDeliveryProfit">GH₵0.00</h2>
+</div>
 
-            <div class="balance">
-                <p>Pending Withdrawals</p>
-                <h2 id="pendingWithdrawals">GH₵0.00</h2>
-            </div>
+<div class="balance">
+    <p>Pending Withdrawals</p>
+    <h2 id="pendingWithdrawals">GH₵0.00</h2>
+</div>
+
         </div>
 
         <button class="secondary" id="refreshButton"
@@ -309,14 +313,18 @@ const amountInput = document.getElementById("withdrawAmount");
 if (data.minimumWithdrawal != null) {
     amountInput.min = data.minimumWithdrawal;
 }
+
         document.getElementById("availableBalance").textContent =
-            money(data.availableBalance);
+money(data.availableBalance);
 
-        document.getElementById("todayProfit").textContent =
-            money(data.todaysProfit);
+document.getElementById("todayProfit").textContent =
+money(data.todaysProfit);
 
-        document.getElementById("pendingWithdrawals").textContent =
-            money(data.pendingWithdrawals);
+document.getElementById("pendingDeliveryProfit").textContent =
+money(data.pendingDeliveryProfit);
+
+document.getElementById("pendingWithdrawals").textContent =
+money(data.pendingWithdrawals);
 
         showMessage("Balances refreshed successfully.");
 
