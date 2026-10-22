@@ -1716,30 +1716,37 @@ earnings AS (
   CROSS JOIN time_boundary t
 
   WHERE o.agent_id = $1
-  AND LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
-  AND LOWER(TRIM(COALESCE(o.delivery_status, ''))) IN (
-    'delivered',
-    'completed',
-    'success',
-    'successful'
-  )
-  AND o.delivered_at IS NOT NULL
-  AND o.agent_base_price IS NOT NULL
-  AND o.amount > o.agent_base_price
+    AND LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
+    AND LOWER(TRIM(COALESCE(o.delivery_status, ''))) IN (
+      'delivered',
+      'completed',
+      'success',
+      'successful'
+    )
+    AND o.delivered_at IS NOT NULL
+    AND o.agent_base_price IS NOT NULL
+    AND o.amount > o.agent_base_price
 ),
 
 withdrawals AS (
   SELECT
     COALESCE(
       SUM(amount) FILTER (
-        WHERE LOWER(status) IN ('pending', 'approved', 'paid')
+        WHERE LOWER(TRIM(status)) IN (
+          'pending',
+          'approved',
+          'paid'
+        )
       ),
       0
     ) AS reserved_amount,
 
     COALESCE(
       SUM(amount) FILTER (
-        WHERE LOWER(status) IN ('pending', 'approved')
+        WHERE LOWER(TRIM(status)) IN (
+          'pending',
+          'approved'
+        )
       ),
       0
     ) AS pending_amount
