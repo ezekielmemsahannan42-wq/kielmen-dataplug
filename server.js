@@ -1441,16 +1441,15 @@ app.get(
   requireWithdrawalsEnabled,
   async (req, res) => {
     try {
-      const result = await pool.query(
-        `
-        `
-WITH time_boundary AS (
-    SELECT
-        date_trunc(
-            'day',
-            NOW() AT TIME ZONE 'Africa/Accra'
-        ) AT TIME ZONE 'Africa/Accra' AS today_start
-),
+     const result = await pool.query(
+  `
+  WITH time_boundary AS (
+      SELECT
+          date_trunc(
+              'day',
+              NOW() AT TIME ZONE 'Africa/Accra'
+          ) AT TIME ZONE 'Africa/Accra' AS today_start
+  ), 
 
 eligible_orders AS (
     SELECT
