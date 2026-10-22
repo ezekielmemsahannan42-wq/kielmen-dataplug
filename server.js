@@ -1469,6 +1469,25 @@ eligible_orders AS (
       AND o.amount > o.agent_base_price
 ),
 
+pending_orders AS (
+    SELECT
+        GREATEST(o.amount - o.agent_base_price, 0) AS profit
+    FROM orders o
+    WHERE o.agent_id = $1
+      AND LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
+      AND LOWER(TRIM(COALESCE(o.delivery_status, ''))) NOT IN (
+          'delivered',
+          'completed',
+          'success',
+          'successful',
+          'failed',
+          'rejected',
+          'cancelled',
+          'canceled'
+      )
+      AND o.agent_base_price IS NOT NULL
+),
+
 earnings AS (
     SELECT
         COALESCE(
@@ -1491,11 +1510,16 @@ earnings AS (
 
         COUNT(*) FILTER (
             WHERE e.delivered_at >= t.today_start
-        ) AS todays_orders
+        ) AS todays_orders,
+
+        (
+            SELECT COALESCE(SUM(p.profit), 0)
+            FROM pending_orders p
+        ) AS pending_delivery_profit
 
     FROM eligible_orders e
     CROSS JOIN time_boundary t
-),
+)
 
 withdrawals AS (
     SELECT
@@ -1529,6 +1553,7 @@ SELECT
     earnings.todays_earnings,
     earnings.previous_orders,
     earnings.todays_orders,
+    earnings.pending_delivery_profit,
     withdrawals.reserved_amount,
     withdrawals.pending_amount
 
@@ -1576,6 +1601,9 @@ console.log("WITHDRAWAL DIAGNOSTICS:", {
       const todaysProfit =
         Number(row.todays_earnings || 0);
 
+      const pendingDeliveryProfit =
+    Number(row.pending_delivery_profit || 0);
+
       const reservedAmount =
         Number(row.reserved_amount || 0);
 
@@ -1602,6 +1630,10 @@ console.log("WITHDRAWAL DIAGNOSTICS:", {
         todaysProfit: Number(
           todaysProfit.toFixed(2)
         ),
+        
+        pendingDeliveryProfit: Number(
+    pendingDeliveryProfit.toFixed(2)
+),
 
         pendingWithdrawals: Number(
           pendingAmount.toFixed(2)
