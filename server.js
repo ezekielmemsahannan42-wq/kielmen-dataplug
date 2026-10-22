@@ -1526,50 +1526,34 @@ app.get(
       );
 
       const row = result.rows[0];
-      const debugResult = await pool.query(
-`
-SELECT
-COUNT(*) AS total_agent_orders,
 
-COUNT(*) FILTER (
-  WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-) AS paid_orders,
+console.log("WITHDRAWAL DIAGNOSTICS:", {
+  agentId: req.agentId,
 
-COUNT(*) FILTER (
-  WHERE LOWER(TRIM(COALESCE(delivery_status, ''))) IN (
-    'delivered',
-    'completed',
-    'success',
-    'successful'
-  )
-) AS successful_delivery_orders,
+  previousEligibleOrders:
+    String(row.previous_orders || 0),
 
-COUNT(*) FILTER (
-  WHERE delivered_at IS NOT NULL
-) AS orders_with_delivered_at,
+  todaysEligibleOrders:
+    String(row.todays_orders || 0),
 
-COUNT(*) FILTER (
-  WHERE agent_base_price IS NOT NULL
-) AS orders_with_base_price,
+  previousEarnings:
+    Number(row.previous_earnings || 0).toFixed(2),
 
-COUNT(*) FILTER (
-  WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-    AND LOWER(TRIM(COALESCE(delivery_status, ''))) IN (
-      'delivered',
-      'completed',
-      'success',
-      'successful'
-    )
-    AND delivered_at IS NOT NULL
-    AND agent_base_price IS NOT NULL
-    AND amount > agent_base_price
-) AS eligible_orders
+  todaysEarnings:
+    Number(row.todays_earnings || 0).toFixed(2),
 
-FROM orders
-WHERE agent_id = $1
-`,
-[req.agentId]
-);
+  reservedWithdrawals:
+    Number(row.reserved_amount || 0).toFixed(2),
+
+  pendingWithdrawals:
+    Number(row.pending_amount || 0).toFixed(2),
+
+  availableBalance: Math.max(
+    0,
+    Number(row.previous_earnings || 0) -
+    Number(row.reserved_amount || 0)
+  ).toFixed(2)
+});
 
 console.log("AGENT EARNINGS DEBUG:", {
 agentId: req.agentId,
