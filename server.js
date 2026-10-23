@@ -41,10 +41,10 @@ const DATAMART_PURCHASES_ENABLED =
 
 const FRONTEND_ORIGIN =
   process.env.FRONTEND_ORIGIN ||
-  "https://ezekielmemsahannan42-wq.github.io";
+  "https://kielmen.com";
 
 const FRONTEND_BASE_URL =
-  "https://ezekielmemsahannan42-wq.github.io/kielmen-dataplug";
+  "https://kielmen.com";
 
 const AGENT_TOKEN_SECRET = process.env.AGENT_TOKEN_SECRET || "";
 const OWNER_SECRET = process.env.OWNER_SECRET || "";
