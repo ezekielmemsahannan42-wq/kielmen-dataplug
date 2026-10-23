@@ -1517,9 +1517,9 @@ earnings AS (
             FROM pending_orders p
         ) AS pending_delivery_profit
 
-    FROM eligible_orders e
+        FROM eligible_orders e
     CROSS JOIN time_boundary t
-)
+),
 
 withdrawals AS (
     SELECT
