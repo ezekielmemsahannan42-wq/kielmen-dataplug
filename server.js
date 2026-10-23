@@ -309,6 +309,7 @@ async function createOrdersTable() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
+  await pool.query("ALTER TABLE agents ADD COLUMN IF NOT EXISTS store_slug VARCHAR(100)");
 
     // Record the time an order's data delivery is completed.
   await pool.query(`
@@ -352,6 +353,50 @@ async function createOrdersTable() {
     CREATE INDEX IF NOT EXISTS orders_created_at_idx
     ON orders (created_at DESC)
   `);
+    const agentsWithoutSlugs = await pool.query(`
+    SELECT id, business_name
+    FROM agents
+    WHERE store_slug IS NULL OR store_slug = ''
+    ORDER BY id ASC
+  `);
+
+  for (const agent of agentsWithoutSlugs.rows) {
+    const baseSlug =
+      createStoreSlug(agent.business_name) || `agent_${agent.id}`;
+
+    let storeSlug = baseSlug;
+    let suffix = 2;
+
+    while (true) {
+      const existingSlug = await pool.query(
+        `
+          SELECT id
+          FROM agents
+          WHERE store_slug = $1
+            AND id <> $2
+          LIMIT 1
+        `,
+        [storeSlug, agent.id]
+      );
+
+      if (!existingSlug.rowCount) {
+        break;
+      }
+
+      storeSlug = `${baseSlug}_${suffix}`;
+      suffix++;
+    }
+
+    await pool.query(
+      `
+        UPDATE agents
+        SET store_slug = $1,
+            updated_at = NOW()
+        WHERE id = $2
+      `,
+      [storeSlug, agent.id]
+    );
+  }
 
   await pool.query(`
     CREATE INDEX IF NOT EXISTS orders_status_idx
@@ -836,20 +881,47 @@ app.post("/agents/register", async (req, res) => {
 
     const code =
       "K636-" +
+      const baseSlug =
+  createStoreSlug(businessName) || `agent_${Date.now()}`;
+
+let storeSlug = baseSlug;
+let suffix = 2;
+
+while (true) {
+  const existingSlug = await pool.query(
+    `
+      SELECT id
+      FROM agents
+      WHERE store_slug = $1
+      LIMIT 1
+    `,
+    [storeSlug]
+  );
+
+  if (!existingSlug.rowCount) {
+    break;
+  }
+
+  storeSlug = `${baseSlug}_${suffix}`;
+  suffix++;
+}
       crypto.randomBytes(6).toString("hex").toUpperCase();
 
     const result = await pool.query(
       `
-        INSERT INTO agents (
-          agent_code,
-          full_name,
-          business_name,
-          email,
-          phone,
-          password_hash,
-          store_description,
-          status
-        )
+        const result = await pool.query(
+"INSERT INTO agents ( agent_code, full_name, business_name, store_slug, email, phone, password_hash, store_description, status ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'approved') RETURNING id, agent_code, full_name, business_name, store_slug, email, phone, status, created_at",
+[
+code,
+fullName,
+businessName,
+storeSlug,
+email,
+phone,
+hash,
+storeDescription
+]
+);
         VALUES ($1, $2, $3, $4, $5, $6, $7, 'approved')
         RETURNING
           id,
@@ -1105,6 +1177,85 @@ app.get("/agents/store/:code", async (req, res) => {
       message: "Could not load agent store."
     });
   }
+});
+app.get("/agents/store-by-slug/:slug", async (req, res) => {
+try {
+const slug = String(req.params.slug || "")
+.trim()
+.toLowerCase();
+
+if (!/^[a-z0-9_]{1,100}$/.test(slug)) {
+  return res.status(400).json({
+    success: false,
+    message: "Invalid store link."
+  });
+}
+
+const result = await pool.query(
+  `
+    SELECT
+      id,
+      agent_code,
+      business_name,
+      store_slug,
+      store_description,
+      phone,
+      status
+    FROM agents
+    WHERE store_slug = $1
+      AND status = 'approved'
+    LIMIT 1
+  `,
+  [slug]
+);
+
+if (!result.rowCount) {
+  return res.status(404).json({
+    success: false,
+    message: "Store not found or not active."
+  });
+}
+
+const agent = result.rows[0];
+
+const prices = await pool.query(
+  `
+    SELECT network, bundle, selling_price
+    FROM agent_prices
+    WHERE agent_id = $1
+    ORDER BY network, bundle
+  `,
+  [agent.id]
+);
+
+return res.json({
+  success: true,
+  store: {
+    agentCode: agent.agent_code,
+    businessName: agent.business_name,
+    storeSlug: agent.store_slug,
+    description: agent.store_description,
+    phone: agent.phone,
+    whatsapp:
+      "https://wa.me/233" +
+      agent.phone.replace(/^0/, "").replace(/\D/g, "")
+  },
+  prices: prices.rows.map(item => ({
+    network: item.network,
+    bundle: item.bundle,
+    sellingPrice: Number(item.selling_price)
+  }))
+});
+
+} catch (error) {
+console.error("Agent store lookup by slug:", error.message);
+
+return res.status(500).json({
+  success: false,
+  message: "Could not load agent store."
+});
+
+}
 });
 
 // ============================================================
