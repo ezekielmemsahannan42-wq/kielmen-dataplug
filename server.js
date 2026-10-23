@@ -190,15 +190,31 @@ const SUPPLIER_NETWORKS = {
 // ============================================================
 
 function normalizeNetwork(value) {
-  const raw = String(value || "")
-    .trim()
-    .toUpperCase()
-    .replace(/[\s_-]/g, "");
+const raw = String(value || "")
+.trim()
+.toUpperCase()
+.replace(/[\s_-]/g, "");
 
-  if (raw === "MTN" || raw === "YELLO") {
-    return "MTN";
-  }
-  function createStoreSlug(value) {
+if (raw === "MTN" || raw === "YELLO") {
+return "MTN";
+}
+
+if (raw === "TELECEL" || raw === "VODAFONE") {
+return "TELECEL";
+}
+
+if (
+raw === "AIRTELTIGO" ||
+raw === "ATPREMIUM" ||
+raw === "AIRTEL"
+) {
+return "AIRTELTIGO";
+}
+
+return "";
+}
+
+function createStoreSlug(value) {
 return String(value || "")
 .normalize("NFKD")
 .replace(/[\u0300-\u036f]/g, "")
@@ -207,7 +223,7 @@ return String(value || "")
 .replace(/[^a-z0-9]+/g, "")
 .replace(/^+|_+$/g, "")
 .slice(0, 80);
-  }
+}
 
   if (raw === "TELECEL" || raw === "VODAFONE") {
     return "TELECEL";
