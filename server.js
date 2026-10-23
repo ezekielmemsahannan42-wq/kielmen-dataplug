@@ -214,32 +214,6 @@ return "AIRTELTIGO";
 return "";
 }
 
-function createStoreSlug(value) {
-return String(value || "")
-.normalize("NFKD")
-.replace(/[\u0300-\u036f]/g, "")
-.toLowerCase()
-.trim()
-.replace(/[^a-z0-9]+/g, "")
-.replace(/^+|_+$/g, "")
-.slice(0, 80);
-}
-
-  if (raw === "TELECEL" || raw === "VODAFONE") {
-    return "TELECEL";
-  }
-
-  if (
-    raw === "AIRTELTIGO" ||
-    raw === "ATPREMIUM" ||
-    raw === "AIRTEL"
-  ) {
-    return "AIRTELTIGO";
-  }
-
-  return "";
-}
-
 function normalizeBundle(value) {
   const raw = String(value || "")
     .trim()
@@ -309,9 +283,8 @@ async function createOrdersTable() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
-  await pool.query("ALTER TABLE agents ADD COLUMN IF NOT EXISTS store_slug VARCHAR(100)");
-
-    // Record the time an order's data delivery is completed.
+  
+// Record the time an order's data delivery is completed.
   await pool.query(`
     ALTER TABLE orders
     ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ
@@ -353,7 +326,8 @@ async function createOrdersTable() {
     CREATE INDEX IF NOT EXISTS orders_created_at_idx
     ON orders (created_at DESC)
   `);
-    const agentsWithoutSlugs = await pool.query(`
+      // Generate unique store slugs for existing agents.
+  const agentsWithoutSlugs = await pool.query(`
     SELECT id, business_name
     FROM agents
     WHERE store_slug IS NULL OR store_slug = ''
@@ -398,9 +372,11 @@ async function createOrdersTable() {
     );
   }
 
+  // Enforce uniqueness for future agent registrations.
   await pool.query(`
-    CREATE INDEX IF NOT EXISTS orders_status_idx
-    ON orders (status, delivery_status)
+    CREATE UNIQUE INDEX IF NOT EXISTS agents_store_slug_unique_idx
+    ON agents(store_slug)
+    WHERE store_slug IS NOT NULL
   `);
 }
 
@@ -427,6 +403,11 @@ async function createAgentTables() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
+  `);
+    // Add the store slug column to existing databases.
+  await pool.query(`
+    ALTER TABLE agents
+    ADD COLUMN IF NOT EXISTS store_slug VARCHAR(100)
   `);
 
   await pool.query(`
@@ -877,57 +858,57 @@ app.post("/agents/register", async (req, res) => {
       });
     }
 
-    const hash = await hashAgentPassword(password);
+        const hash = await hashAgentPassword(password);
 
     const code =
       "K636-" +
-      const baseSlug =
-  createStoreSlug(businessName) || `agent_${Date.now()}`;
-
-let storeSlug = baseSlug;
-let suffix = 2;
-
-while (true) {
-  const existingSlug = await pool.query(
-    `
-      SELECT id
-      FROM agents
-      WHERE store_slug = $1
-      LIMIT 1
-    `,
-    [storeSlug]
-  );
-
-  if (!existingSlug.rowCount) {
-    break;
-  }
-
-  storeSlug = `${baseSlug}_${suffix}`;
-  suffix++;
-}
       crypto.randomBytes(6).toString("hex").toUpperCase();
+
+    const baseSlug =
+      createStoreSlug(businessName) || `agent_${Date.now()}`;
+
+    let storeSlug = baseSlug;
+    let suffix = 2;
+
+    while (true) {
+      const existingSlug = await pool.query(
+        `
+          SELECT id
+          FROM agents
+          WHERE store_slug = $1
+          LIMIT 1
+        `,
+        [storeSlug]
+      );
+
+      if (!existingSlug.rowCount) {
+        break;
+      }
+
+      storeSlug = `${baseSlug}_${suffix}`;
+      suffix++;
+    }
 
     const result = await pool.query(
       `
-        const result = await pool.query(
-"INSERT INTO agents ( agent_code, full_name, business_name, store_slug, email, phone, password_hash, store_description, status ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'approved') RETURNING id, agent_code, full_name, business_name, store_slug, email, phone, status, created_at",
-[
-code,
-fullName,
-businessName,
-storeSlug,
-email,
-phone,
-hash,
-storeDescription
-]
-);
-        VALUES ($1, $2, $3, $4, $5, $6, $7, 'approved')
+        INSERT INTO agents (
+          agent_code,
+          full_name,
+          business_name,
+          store_slug,
+          email,
+          phone,
+          password_hash,
+          store_description,
+          status
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'approved')
         RETURNING
           id,
           agent_code,
           full_name,
           business_name,
+          store_slug,
           email,
           phone,
           status,
@@ -937,6 +918,7 @@ storeDescription
         code,
         fullName,
         businessName,
+        storeSlug,
         email,
         phone,
         hash,
@@ -944,11 +926,24 @@ storeDescription
       ]
     );
 
+        const registeredAgent = result.rows[0];
+
     return res.status(201).json({
       success: true,
       message:
         "Registration successful! Your account is ready. You can log in now.",
-      agent: result.rows[0]
+
+      agent: {
+        id: registeredAgent.id,
+        agentCode: registeredAgent.agent_code,
+        fullName: registeredAgent.full_name,
+        businessName: registeredAgent.business_name,
+        storeSlug: registeredAgent.store_slug,
+        email: registeredAgent.email,
+        phone: registeredAgent.phone,
+        status: registeredAgent.status,
+        createdAt: registeredAgent.created_at
+      }
     });
 
   } catch (error) {
@@ -1036,15 +1031,16 @@ app.post("/agents/login", async (req, res) => {
       token,
       expiresIn: 14400,
 
-      agent: {
+            agent: {
         id: agent.id,
         agentCode: agent.agent_code,
         fullName: agent.full_name,
         businessName: agent.business_name,
+        storeSlug: agent.store_slug || "",
         email: agent.email,
         phone: agent.phone,
         status: agent.status
-      }
+            }
     });
   } catch (error) {
     console.error("Agent login:", error.message);
