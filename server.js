@@ -20,7 +20,9 @@ const cors = require("cors");
 const { Pool } = require("pg");
 const crypto = require("crypto");
 const calculateAgentTotalProfit = require("./agent-profit");
-
+const {
+  calculateNextPayout
+} = require("./next-payout");
 const app = express();
 
 app.disable("x-powered-by");
@@ -1835,6 +1837,15 @@ CROSS JOIN withdrawals
         `,
         [req.agentId]
       );
+      const payout = await calculateNextPayout(
+  pool,
+  req.agent.id
+);
+
+res.json({
+  success: true,
+  ...payout
+});
 
       const balance = balanceResult.rows[0];
 
