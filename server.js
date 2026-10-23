@@ -198,6 +198,16 @@ function normalizeNetwork(value) {
   if (raw === "MTN" || raw === "YELLO") {
     return "MTN";
   }
+  function createStoreSlug(value) {
+return String(value || "")
+.normalize("NFKD")
+.replace(/[\u0300-\u036f]/g, "")
+.toLowerCase()
+.trim()
+.replace(/[^a-z0-9]+/g, "")
+.replace(/^+|_+$/g, "")
+.slice(0, 80);
+  }
 
   if (raw === "TELECEL" || raw === "VODAFONE") {
     return "TELECEL";
