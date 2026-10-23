@@ -1435,6 +1435,42 @@ app.get(
 // ============================================================
 // 12A. AGENT WITHDRAWAL BALANCE
 // ============================================================
+// ============================================================
+// AGENT NEXT PAYOUT
+// GET /agents/next-payout
+// ============================================================
+
+app.get(
+  "/agents/next-payout",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const payout = await calculateNextPayout(
+        pool,
+        req.agentId
+      );
+
+      return res.json({
+        success: true,
+        currency: "GHS",
+        ...payout
+      });
+
+    } catch (error) {
+      console.error(
+        "Agent next payout error:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Could not calculate your next payout."
+      });
+    }
+  }
+);
 
 app.get(
   "/agents/withdrawals",
@@ -1446,12 +1482,21 @@ app.get(
      const result = await pool.query(
   `
   WITH time_boundary AS (
-      SELECT
-          date_trunc(
-              'day',
-              NOW() AT TIME ZONE 'Africa/Accra'
-          ) AT TIME ZONE 'Africa/Accra' AS today_start
-  ), 
+    SELECT
+        date_trunc(
+            'day',
+            NOW() AT TIME ZONE 'Africa/Accra'
+        ) AT TIME ZONE 'Africa/Accra'
+            AS today_start,
+
+        (
+            date_trunc(
+                'day',
+                NOW() AT TIME ZONE 'Africa/Accra'
+            ) + INTERVAL '1 day'
+        ) AT TIME ZONE 'Africa/Accra'
+            AS next_day_start
+), 
 
 eligible_orders AS (
     SELECT
@@ -1500,11 +1545,12 @@ earnings AS (
         ) AS previous_earnings,
 
         COALESCE(
-            SUM(e.profit) FILTER (
-                WHERE e.delivered_at >= t.today_start
-            ),
-            0
-        ) AS todays_earnings,
+    SUM(e.profit) FILTER (
+        WHERE e.delivered_at >= t.today_start
+          AND e.delivered_at < t.next_day_start
+    ),
+    0
+) AS todays_earnings,
 
         COUNT(*) FILTER (
             WHERE e.delivered_at < t.today_start
@@ -1837,16 +1883,6 @@ CROSS JOIN withdrawals
         `,
         [req.agentId]
       );
-      const payout = await calculateNextPayout(
-  pool,
-  req.agent.id
-);
-
-res.json({
-  success: true,
-  ...payout
-});
-
       const balance = balanceResult.rows[0];
 
 const previousEarnings = Number(
