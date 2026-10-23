@@ -1,15 +1,16 @@
 async function calculateAgentTotalProfit(pool, agentId) {
-  try {
-    if (!agentId) {
-      throw new Error("Agent ID is required to calculate profit.");
-    }
+  if (!agentId) {
+    throw new Error("Agent ID is required to calculate profit.");
+  }
 
+  try {
     const result = await pool.query(
       `
       SELECT
         COUNT(*) FILTER (
           WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-            AND LOWER(TRIM(COALESCE(delivery_status, ''))) = 'delivered'
+            AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                IN ('delivered', 'completed', 'success', 'successful')
             AND agent_base_price IS NOT NULL
         )::int AS eligible_orders,
 
@@ -21,7 +22,8 @@ async function calculateAgentTotalProfit(pool, agentId) {
             )
           ) FILTER (
             WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-              AND LOWER(TRIM(COALESCE(delivery_status, ''))) = 'delivered'
+              AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                  IN ('delivered', 'completed', 'success', 'successful')
               AND agent_base_price IS NOT NULL
           ),
           0
@@ -30,7 +32,8 @@ async function calculateAgentTotalProfit(pool, agentId) {
         COALESCE(
           SUM(amount::numeric) FILTER (
             WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-              AND LOWER(TRIM(COALESCE(delivery_status, ''))) = 'delivered'
+              AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                  IN ('delivered', 'completed', 'success', 'successful')
           ),
           0
         )::numeric(12, 2) AS total_sales
@@ -49,7 +52,11 @@ async function calculateAgentTotalProfit(pool, agentId) {
       totalSales: Number(row.total_sales || 0)
     };
   } catch (error) {
-    console.error("Agent profit calculation failed:", error.message);
+    console.error(
+      "Agent profit calculation failed:",
+      error.message
+    );
+
     throw error;
   }
 }
