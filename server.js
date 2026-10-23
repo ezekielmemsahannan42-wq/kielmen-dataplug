@@ -1482,21 +1482,19 @@ app.get(
      const result = await pool.query(
   `
   WITH time_boundary AS (
-    SELECT
-        date_trunc(
-            'day',
-            NOW() AT TIME ZONE 'Africa/Accra'
-        ) AT TIME ZONE 'Africa/Accra'
-            AS today_start,
+  SELECT
+    date_trunc(
+      'day',
+      NOW() AT TIME ZONE 'Africa/Accra'
+    ) AT TIME ZONE 'Africa/Accra' AS today_start,
 
-        (
-            date_trunc(
-                'day',
-                NOW() AT TIME ZONE 'Africa/Accra'
-            ) + INTERVAL '1 day'
-        ) AT TIME ZONE 'Africa/Accra'
-            AS next_day_start
-), 
+    (
+      date_trunc(
+        'day',
+        NOW() AT TIME ZONE 'Africa/Accra'
+      ) + INTERVAL '1 day'
+    ) AT TIME ZONE 'Africa/Accra' AS next_day_start
+),
 
 eligible_orders AS (
     SELECT
@@ -1557,8 +1555,9 @@ earnings AS (
         ) AS previous_orders,
 
         COUNT(*) FILTER (
-            WHERE e.delivered_at >= t.today_start
-        ) AS todays_orders,
+    WHERE e.delivered_at >= t.today_start
+      AND e.delivered_at < t.next_day_start
+) AS todays_orders,
 
         (
             SELECT COALESCE(SUM(p.profit), 0)
@@ -1800,7 +1799,14 @@ app.post(
     date_trunc(
       'day',
       NOW() AT TIME ZONE 'Africa/Accra'
-    ) AT TIME ZONE 'Africa/Accra' AS today_start
+    ) AT TIME ZONE 'Africa/Accra' AS today_start,
+
+    (
+      date_trunc(
+        'day',
+        NOW() AT TIME ZONE 'Africa/Accra'
+      ) + INTERVAL '1 day'
+    ) AT TIME ZONE 'Africa/Accra' AS next_day_start
 ),
 
 earnings AS (
@@ -1813,19 +1819,21 @@ earnings AS (
     ) AS previous_earnings,
 
     COALESCE(
-      SUM(o.amount - o.agent_base_price) FILTER (
-        WHERE o.delivered_at >= t.today_start
-      ),
-      0
-    ) AS todays_earnings,
+  SUM(o.amount - o.agent_base_price) FILTER (
+    WHERE o.delivered_at >= t.today_start
+      AND o.delivered_at < t.next_day_start
+  ),
+  0
+) AS todays_earnings,
 
     COUNT(*) FILTER (
       WHERE o.delivered_at < t.today_start
     ) AS previous_orders,
 
     COUNT(*) FILTER (
-      WHERE o.delivered_at >= t.today_start
-    ) AS todays_orders
+  WHERE o.delivered_at >= t.today_start
+    AND o.delivered_at < t.next_day_start
+) AS todays_orders
 
   FROM orders o
   CROSS JOIN time_boundary t
