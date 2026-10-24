@@ -344,7 +344,7 @@ async function calculateNextPayout(pool, agentId) {
           0
         ) AS pending_withdrawals
 
-      FROM withdrawals w
+      FROM agent_withdrawals w
       WHERE w.agent_id = $1
     )
 
