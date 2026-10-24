@@ -1419,45 +1419,6 @@ app.put(
         `
         WITH earnings AS (
           SELECT
-            COALESCE(
-              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
-                WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
-                    IN ('delivered', 'completed', 'success', 'successful')
-                  AND agent_base_price IS NOT NULL
-                  AND delivered_at IS NOT NULL
-                  AND (delivered_at AT TIME ZONE 'Africa/Accra')::date
-                      < (NOW() AT TIME ZONE 'Africa/Accra')::date
-              ),
-              0
-            ) AS previous_profit,
-
-            COALESCE(
-              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
-                WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
-                    IN ('delivered', 'completed', 'success', 'successful')
-                  AND agent_base_price IS NOT NULL
-                  AND delivered_at IS NOT NULL
-                  AND (delivered_at AT TIME ZONE 'Africa/Accra')::date
-                      = (NOW() AT TIME ZONE 'Africa/Accra')::date
-              ),
-              0
-            ) AS today_profit,
-
-            COALESCE(
-              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
-                WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-                  AND agent_base_price IS NOT NULL
-                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
-                    NOT IN (
-                      'delivered', 'completed', 'success', 'successful',
-                      'failed', 'rejected', 'cancelled', 'canceled'
-                    )
-              ),
-              0
-            ) AS pending_delivery_profit,
-
             COUNT(*) AS total_orders,
 
             COUNT(*) FILTER (
@@ -1477,6 +1438,17 @@ app.put(
               WHERE LOWER(TRIM(COALESCE(delivery_status, ''))) = 'failed'
             ) AS failed_orders,
 
+            COUNT(*) FILTER (
+              WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+                AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                  NOT IN (
+                    'delivered', 'completed', 'success', 'successful',
+                    'failed', 'rejected', 'cancelled', 'canceled'
+                  )
+            ) AS pending_delivery_orders,
+
+            COUNT(DISTINCT phone) AS customers,
+
             COALESCE(
               SUM(amount) FILTER (
                 WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
@@ -1484,14 +1456,69 @@ app.put(
               0
             ) AS total_sales,
 
-            COUNT(DISTINCT phone) AS customers
+            COALESCE(
+              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
+                WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+                  AND agent_base_price IS NOT NULL
+              ),
+              0
+            ) AS estimated_profit,
+
+            COALESCE(
+              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
+                WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                    IN ('delivered', 'completed', 'success', 'successful')
+                  AND agent_base_price IS NOT NULL
+                  AND delivered_at IS NOT NULL
+                  AND (delivered_at AT TIME ZONE 'Africa/Accra')::date
+                    < (NOW() AT TIME ZONE 'Africa/Accra')::date
+              ),
+              0
+            ) AS previous_profit,
+
+            COALESCE(
+              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
+                WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                    IN ('delivered', 'completed', 'success', 'successful')
+                  AND agent_base_price IS NOT NULL
+                  AND delivered_at IS NOT NULL
+                  AND (delivered_at AT TIME ZONE 'Africa/Accra')::date
+                    = (NOW() AT TIME ZONE 'Africa/Accra')::date
+              ),
+              0
+            ) AS today_profit,
+
+            COALESCE(
+              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
+                WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+                  AND agent_base_price IS NOT NULL
+                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                    NOT IN (
+                      'delivered', 'completed', 'success', 'successful',
+                      'failed', 'rejected', 'cancelled', 'canceled'
+                    )
+              ),
+              0
+            ) AS pending_delivery_profit
 
           FROM orders
           WHERE agent_id = $1
         ),
 
         reserved AS (
-          SELECT COALESCE(SUM(amount), 0) AS reserved_amount
+          SELECT
+            COALESCE(SUM(amount), 0) AS reserved_amount,
+
+            COALESCE(
+              SUM(amount) FILTER (
+                WHERE LOWER(TRIM(COALESCE(status, '')))
+                  IN ('pending', 'approved')
+              ),
+              0
+            ) AS pending_amount
+
           FROM agent_withdrawals
           WHERE agent_id = $1
             AND LOWER(TRIM(COALESCE(status, '')))
@@ -1501,10 +1528,13 @@ app.put(
         SELECT
           earnings.*,
           reserved.reserved_amount,
+          reserved.pending_amount,
+
           GREATEST(
             earnings.previous_profit - reserved.reserved_amount,
             0
           ) AS available_balance
+
         FROM earnings
         CROSS JOIN reserved
         `,
@@ -1513,26 +1543,32 @@ app.put(
 
       const row = result.rows[0];
 
+      const estimatedProfit = Number(row.estimated_profit);
+      const previousProfit = Number(row.previous_profit);
+      const todayProfit = Number(row.today_profit);
+
       res.json({
         success: true,
+
         stats: {
           totalOrders: Number(row.total_orders),
           paidOrders: Number(row.paid_orders),
           deliveredOrders: Number(row.delivered_orders),
           processingOrders: Number(row.processing_orders),
           failedOrders: Number(row.failed_orders),
+          pendingDeliveryOrders: Number(row.pending_delivery_orders),
           totalSales: Number(row.total_sales),
           customers: Number(row.customers),
 
-          todayProfit: Number(row.today_profit),
+          estimatedProfit,
+          estimatedMargin: estimatedProfit,
+
+          confirmedProfit: previousProfit + todayProfit,
+          todayProfit,
           pendingDeliveryProfit: Number(row.pending_delivery_profit),
+
           availableBalance: Number(row.available_balance),
-
-          estimatedMargin:
-            Number(row.previous_profit) +
-            Number(row.today_profit),
-
-          pendingWithdrawals: Number(row.reserved_amount),
+          pendingWithdrawals: Number(row.pending_amount),
 
           currency: "GHS",
           timezone: "Africa/Accra"
