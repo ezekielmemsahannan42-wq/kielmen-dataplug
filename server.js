@@ -241,6 +241,17 @@ function normalizePhone(value) {
 
   return phone;
 }
+function createStoreSlug(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 100)
+    .replace(/_+$/g, "");
+}
 
 function validGhanaPhone(value) {
   return /^0\d{9}$/.test(normalizePhone(value));
@@ -3649,14 +3660,14 @@ async function startServer() {
   }
 
   try {
-    await createOrdersTable();
     await createAgentTables();
+await createOrdersTable();
 
-    app.listen(PORT, () => {
-      console.log(
-        `Kielmen 636 Dataplug API listening on port ${PORT}`
-      );
-    });
+app.listen(PORT, () => {
+  console.log(
+    `Kielmen 636 Dataplug API listening on port ${PORT}`
+  );
+});
   } catch (error) {
     console.error(
       "Database initialization failed:",
