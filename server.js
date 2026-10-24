@@ -1625,7 +1625,7 @@ app.get(
         [req.agentId]
       );
 
-      return res.json({
+      return res.status(200).json({
         success: true,
         orders: result.rows.map(order => ({
           ...order,
@@ -1633,11 +1633,16 @@ app.get(
         }))
       });
     } catch (error) {
-      console.error("Agent orders error:", error);
+      console.error("Agent orders error:", {
+        message: error.message,
+        code: error.code,
+        detail: error.detail
+      });
 
       return res.status(500).json({
         success: false,
-        message: "Could not load your orders."
+        message: "Could not load your orders.",
+        errorCode: error.code || "UNKNOWN"
       });
     }
   }
