@@ -221,7 +221,7 @@ async function calculateAgentMargin(pool, agentId) {
           0
         ) AS pending_amount
 
-      FROM withdrawals w
+      FROM agent_withdrawals w
       WHERE w.agent_id = $1
     )
 
