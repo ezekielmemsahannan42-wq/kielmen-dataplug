@@ -1539,7 +1539,7 @@ app.put(
         }
       });
     } catch (error) {
-      console.error("Agent stats error:", error.message);
+      console.error("Agent stats error:", error);
 
       res.status(500).json({
         success: false,
