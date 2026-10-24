@@ -427,10 +427,30 @@ async function createAgentTables() {
     )
   `);
     // Add the store slug column to existing databases.
-  await pool.query(`
-    ALTER TABLE agents
-    ADD COLUMN IF NOT EXISTS store_slug VARCHAR(100)
-  `);
+await pool.query(`
+  ALTER TABLE agents
+  ADD COLUMN IF NOT EXISTS store_slug VARCHAR(100)
+`);
+
+// Agent profile contact and social links
+await pool.query(`
+  ALTER TABLE agents
+  ADD COLUMN IF NOT EXISTS whatsapp_number
+  VARCHAR(25) NOT NULL DEFAULT ''
+`);
+
+await pool.query(`
+  ALTER TABLE agents
+  ADD COLUMN IF NOT EXISTS whatsapp_channel
+  VARCHAR(500) NOT NULL DEFAULT ''
+`);
+
+await pool.query(`
+  ALTER TABLE agents
+  ADD COLUMN IF NOT EXISTS social_link
+  VARCHAR(500) NOT NULL DEFAULT ''
+`);
+  
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS agent_prices (
@@ -1116,6 +1136,338 @@ app.get(
       res.status(500).json({
         success: false,
         message: "Could not load agent profile."
+      });
+    }
+  }
+);
+// ============================================================
+// AGENT PROFILE: LOAD, UPDATE AND CHANGE PASSWORD
+// ============================================================
+
+// Load the logged-in agent's profile
+app.get(
+  "/agents/profile",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `
+          SELECT
+            id,
+            agent_code,
+            full_name,
+            business_name,
+            email,
+            phone,
+            store_slug,
+            store_description,
+            whatsapp_number,
+            whatsapp_channel,
+            social_link
+          FROM agents
+          WHERE id = $1
+        `,
+        [req.agentId]
+      );
+
+      if (!result.rowCount) {
+        return res.status(404).json({
+          success: false,
+          message: "Agent profile not found."
+        });
+      }
+
+      const a = result.rows[0];
+
+      return res.json({
+        success: true,
+        profile: {
+          fullName: a.full_name,
+          businessName: a.business_name,
+          email: a.email,
+          phone: a.phone,
+          storeSlug: a.store_slug,
+          description: a.store_description,
+          whatsappNumber: a.whatsapp_number,
+          whatsappChannel: a.whatsapp_channel,
+          socialLink: a.social_link,
+          agentCode: a.agent_code
+        }
+      });
+    } catch (error) {
+      console.error("Load agent profile:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not load your profile."
+      });
+    }
+  }
+);
+
+
+// Save changes to the logged-in agent's profile
+app.put(
+  "/agents/profile",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const fullName = String(
+        req.body?.fullName || ""
+      ).trim();
+
+      const businessName = String(
+        req.body?.businessName || ""
+      ).trim();
+
+      const email = String(
+        req.body?.email || ""
+      ).trim().toLowerCase();
+
+      const phone = normalizePhone(req.body?.phone);
+
+      const whatsappNumber = String(
+        req.body?.whatsappNumber || ""
+      ).trim();
+
+      const whatsappChannel = String(
+        req.body?.whatsappChannel || ""
+      ).trim();
+
+      const socialLink = String(
+        req.body?.socialLink || ""
+      ).trim();
+
+      const description = String(
+        req.body?.description || ""
+      ).trim();
+
+      if (
+        fullName.length < 2 ||
+        fullName.length > 100 ||
+        businessName.length < 2 ||
+        businessName.length > 100 ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+        email.length > 255 ||
+        !validGhanaPhone(phone) ||
+        whatsappNumber.length > 25 ||
+        whatsappChannel.length > 500 ||
+        socialLink.length > 500 ||
+        description.length > 200
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Please check your details and try again."
+        });
+      }
+
+      if (
+        whatsappChannel &&
+        !/^https?:\/\/\S+$/i.test(whatsappChannel)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Enter a valid WhatsApp Channel URL."
+        });
+      }
+
+      if (
+        socialLink &&
+        !/^https?:\/\/\S+$/i.test(socialLink)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Enter a valid social media URL."
+        });
+      }
+
+      const result = await pool.query(
+        `
+          UPDATE agents
+          SET
+            full_name = $1,
+            business_name = $2,
+            email = $3,
+            phone = $4,
+            whatsapp_number = $5,
+            whatsapp_channel = $6,
+            social_link = $7,
+            store_description = $8,
+            updated_at = NOW()
+          WHERE id = $9
+          RETURNING
+            id,
+            agent_code,
+            full_name,
+            business_name,
+            email,
+            phone,
+            store_slug,
+            store_description,
+            whatsapp_number,
+            whatsapp_channel,
+            social_link
+        `,
+        [
+          fullName,
+          businessName,
+          email,
+          phone,
+          whatsappNumber,
+          whatsappChannel,
+          socialLink,
+          description,
+          req.agentId
+        ]
+      );
+
+      if (!result.rowCount) {
+        return res.status(404).json({
+          success: false,
+          message: "Agent account not found."
+        });
+      }
+
+      const a = result.rows[0];
+
+      return res.json({
+        success: true,
+        message: "Your profile has been updated successfully.",
+        profile: {
+          fullName: a.full_name,
+          businessName: a.business_name,
+          email: a.email,
+          phone: a.phone,
+          storeSlug: a.store_slug,
+          description: a.store_description,
+          whatsappNumber: a.whatsapp_number,
+          whatsappChannel: a.whatsapp_channel,
+          socialLink: a.social_link,
+          agentCode: a.agent_code
+        }
+      });
+    } catch (error) {
+      if (error.code === "23505") {
+        return res.status(409).json({
+          success: false,
+          message:
+            "That email address or phone number is already registered to another account."
+        });
+      }
+
+      console.error("Update agent profile:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not save your profile."
+      });
+    }
+  }
+);
+
+
+// Change the logged-in agent's password
+app.post(
+  "/agents/change-password",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const currentPassword = String(
+        req.body?.currentPassword || ""
+      );
+
+      const newPassword = String(
+        req.body?.newPassword || ""
+      );
+
+      if (
+        currentPassword.length === 0 ||
+        newPassword.length < 12 ||
+        newPassword.length > 128
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Enter your current password and a new password of at least 12 characters."
+        });
+      }
+
+      const result = await pool.query(
+        `
+          SELECT id, password_hash
+          FROM agents
+          WHERE id = $1
+        `,
+        [req.agentId]
+      );
+
+      if (!result.rowCount) {
+        return res.status(404).json({
+          success: false,
+          message: "Agent account not found."
+        });
+      }
+
+      const agent = result.rows[0];
+
+      const matches = await verifyAgentPassword(
+        currentPassword,
+        agent.password_hash
+      );
+
+      if (!matches) {
+        return res.status(400).json({
+          success: false,
+          message: "Your current password is incorrect."
+        });
+      }
+
+      if (
+        await verifyAgentPassword(
+          newPassword,
+          agent.password_hash
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Your new password must be different from your current password."
+        });
+      }
+
+      const newHash = await hashAgentPassword(newPassword);
+
+      await pool.query(
+        `
+          UPDATE agents
+          SET password_hash = $1,
+              updated_at = NOW()
+          WHERE id = $2
+        `,
+        [newHash, req.agentId]
+      );
+
+      // Invalidate existing sessions after a password change.
+      for (const [token, session] of agentSessions) {
+        if (String(session.agentId) === String(req.agentId)) {
+          agentSessions.delete(token);
+        }
+      }
+
+      return res.json({
+        success: true,
+        message:
+          "Password changed successfully. Please log in again with your new password."
+      });
+    } catch (error) {
+      console.error("Change agent password:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not change your password."
       });
     }
   }
