@@ -908,11 +908,11 @@
           document.getElementById("confirmPassword").value;
 
         if (newPassword.length < 12) {
-          showStatus(
-            "passwordStatus",
-            "Your new password must be at least 8 characters long."
-          );
-          return;
+  showStatus(
+    "passwordStatus",
+    "Your new password must be at least 12 characters long."
+  );
+  return;
         }
 
         if (newPassword !== confirmPassword) {
