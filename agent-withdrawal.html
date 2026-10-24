@@ -303,35 +303,69 @@ function showMessage(message, isError = false) {
 
 async function loadWithdrawals() {
     const refresh = document.getElementById("refreshButton");
+
     refresh.disabled = true;
-    showMessage("Loading your withdrawal information...");
+    showMessage("Calculating your earnings...");
 
     try {
-        const data = await apiRequest("/agents/withdrawals");
-const amountInput = document.getElementById("withdrawAmount");
+        // Read the balances from the existing backend statistics route.
+        const response = await apiRequest("/agents/stats");
 
-if (data.minimumWithdrawal != null) {
-    amountInput.min = data.minimumWithdrawal;
-}
+        const stats = response.stats || response;
 
+        const availableBalance = Number(stats.availableBalance);
+        const todayProfit = Number(
+            stats.todayProfit ?? stats.todaysProfit
+        );
+        const pendingDeliveryProfit = Number(
+            stats.pendingDeliveryProfit
+        );
+        const pendingWithdrawals = Number(
+            stats.pendingWithdrawals
+        );
+
+        // Do not display misleading zero balances if a field is missing.
+        const values = [
+            availableBalance,
+            todayProfit,
+            pendingDeliveryProfit,
+            pendingWithdrawals
+        ];
+
+        if (!response.success || !values.every(Number.isFinite)) {
+            throw new Error(
+                "The server did not return all four balance figures. " +
+                "Check the /agents/stats route in server.js."
+            );
+        }
+
+        // Display the values calculated by the backend.
         document.getElementById("availableBalance").textContent =
-money(data.availableBalance);
+            money(availableBalance);
 
-document.getElementById("todayProfit").textContent =
-money(data.todaysProfit);
+        document.getElementById("todayProfit").textContent =
+            money(todayProfit);
 
-document.getElementById("pendingDeliveryProfit").textContent =
-money(data.pendingDeliveryProfit);
+        document.getElementById("pendingDeliveryProfit").textContent =
+            money(pendingDeliveryProfit);
 
-document.getElementById("pendingWithdrawals").textContent =
-money(data.pendingWithdrawals);
+        document.getElementById("pendingWithdrawals").textContent =
+            money(pendingWithdrawals);
 
-        showMessage("Balances refreshed successfully.");
+        const amountInput = document.getElementById("withdrawAmount");
 
+        amountInput.min = "0.10";
+
+        showMessage("Your earnings have been refreshed successfully.");
+
+        // Refresh withdrawal history separately.
         await loadHistory();
 
     } catch (error) {
-        showMessage(error.message, true);
+        showMessage(
+            "Could not load your balances: " + error.message,
+            true
+        );
     } finally {
         refresh.disabled = false;
     }
