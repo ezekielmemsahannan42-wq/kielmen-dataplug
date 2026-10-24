@@ -476,6 +476,14 @@ const API_BASE =
 const $ = id => document.getElementById(id);
 
 function getAuthToken() {
+  // Your existing agent login saves the token here.
+  const sessionToken = sessionStorage.getItem("k636_agent_token");
+
+  if (sessionToken) {
+    return sessionToken;
+  }
+
+  // Check other existing storage keys as fallbacks.
   const keys = [
     "agentToken",
     "agent_token",
@@ -486,7 +494,10 @@ function getAuthToken() {
 
   for (const key of keys) {
     const token = localStorage.getItem(key);
-    if (token) return token;
+
+    if (token) {
+      return token;
+    }
   }
 
   return "";
