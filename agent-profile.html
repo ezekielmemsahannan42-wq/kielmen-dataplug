@@ -596,7 +596,7 @@
             id="confirmPassword"
             type="password"
             autocomplete="new-password"
-            minlength="8"
+            minlength="12"
             required
             placeholder="Confirm new password"
           >
@@ -907,7 +907,7 @@
         const confirmPassword =
           document.getElementById("confirmPassword").value;
 
-        if (newPassword.length < 8) {
+        if (newPassword.length < 12) {
           showStatus(
             "passwordStatus",
             "Your new password must be at least 8 characters long."
