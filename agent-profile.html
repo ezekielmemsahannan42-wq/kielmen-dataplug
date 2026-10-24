@@ -1,1114 +1,749 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#050505">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050505">
+<title>My Profile | Kielmen 636</title>
 
-  <title>My Profile | Kielmen 636</title>
+<style>
+:root {
+  --bg:#050505;
+  --card:#0b0c0d;
+  --field:#111213;
+  --border:#383c3e;
+  --text:#f4f5f6;
+  --muted:#9299a1;
+  --green:#00a85a;
+  --mint:#42cda5;
+}
 
-  <style>
-    :root {
-      --bg: #050505;
-      --card: #0b0c0d;
-      --field: #111213;
-      --border: #383c3e;
-      --text: #f4f5f6;
-      --muted: #9299a1;
-      --green: #00a85a;
-      --mint: #42cda5;
-      --danger: #ff8585;
-    }
+* { box-sizing:border-box; }
 
-    * {
-      box-sizing: border-box;
-    }
+html {
+  color-scheme:dark;
+  scroll-behavior:smooth;
+}
 
-    html {
-      color-scheme: dark;
-      scroll-behavior: smooth;
-    }
+body {
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,Helvetica,sans-serif;
+  font-size:15px;
+  line-height:1.5;
+}
 
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 15px;
-      line-height: 1.5;
-    }
+button,input,textarea { font:inherit; }
 
-    button,
-    input,
-    textarea {
-      font: inherit;
-    }
+.topbar {
+  min-height:82px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  border-bottom:1px solid #292b2d;
+  background:#050505;
+  position:sticky;
+  top:0;
+  z-index:5;
+}
 
-    .topbar {
-      min-height: 82px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px 16px;
-      border-bottom: 1px solid #292b2d;
-      background: #050505;
-      position: sticky;
-      top: 0;
-      z-index: 5;
-    }
+.logo {
+  width:54px;
+  height:54px;
+  flex-shrink:0;
+  display:grid;
+  place-items:center;
+  border-radius:16px;
+  background:#020617;
+  color:var(--mint);
+  font-size:21px;
+  font-weight:800;
+}
 
-    .logo {
-      width: 56px;
-      height: 56px;
-      flex-shrink: 0;
-      display: grid;
-      place-items: center;
-      border-radius: 16px;
-      background: #020617;
-      color: var(--mint);
-      font-size: 21px;
-      font-weight: 800;
-    }
+.brand {
+  font-size:19px;
+  font-weight:750;
+  line-height:1.25;
+}
 
-    .brand {
-      font-size: 19px;
-      font-weight: 750;
-      line-height: 1.25;
-    }
+.subtitle {
+  color:var(--muted);
+  font-size:13px;
+  margin-top:3px;
+}
 
-    .subtitle {
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 3px;
-    }
+.dashboard-link {
+  margin-left:auto;
+  color:var(--mint);
+  text-decoration:none;
+  white-space:nowrap;
+  font-size:12px;
+}
 
-    .dashboard-link {
-      margin-left: auto;
-      color: var(--mint);
-      text-decoration: none;
-      white-space: nowrap;
-      font-size: 13px;
-    }
+main {
+  max-width:900px;
+  margin:auto;
+  padding:20px 18px 115px;
+}
 
-    main {
-      max-width: 900px;
-      margin: auto;
-      padding: 20px 18px 115px;
-    }
+h1 {
+  font-size:clamp(28px,5vw,36px);
+  margin:0 0 4px;
+}
 
-    h1 {
-      font-size: clamp(28px, 5vw, 36px);
-      margin: 0 0 4px;
-    }
+.intro {
+  color:var(--muted);
+  margin:0 0 22px;
+}
 
-    .intro {
-      margin: 0 0 22px;
-      color: var(--muted);
-    }
+.card {
+  padding:21px;
+  margin-bottom:17px;
+  border:1px solid var(--border);
+  border-radius:20px;
+  background:linear-gradient(145deg,#0b0c0d,#060606);
+}
 
-    .card {
-      padding: 21px;
-      margin-bottom: 17px;
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      background: linear-gradient(145deg, #0b0c0d, #060606);
-    }
+h2 {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:20px;
+  margin:0 0 12px;
+}
 
-    h2 {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 20px;
-      margin: 0 0 12px;
-    }
+.icon { font-size:22px; }
 
-    .icon {
-      font-size: 22px;
-    }
+.help {
+  color:var(--muted);
+  margin:0 0 16px;
+}
 
-    .help {
-      color: var(--muted);
-      margin: 0 0 16px;
-    }
+.grid {
+  display:grid;
+  grid-template-columns:165px minmax(0,1fr);
+  gap:10px 12px;
+  align-items:center;
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: 165px minmax(0, 1fr);
-      gap: 10px 12px;
-      align-items: center;
-    }
+label {
+  font-size:13px;
+  font-weight:700;
+}
 
-    label {
-      font-size: 13px;
-      font-weight: 700;
-    }
+.input-wrap {
+  position:relative;
+  min-width:0;
+}
 
-    .input-wrap {
-      position: relative;
-      min-width: 0;
-    }
+.prefix {
+  position:absolute;
+  left:13px;
+  top:50%;
+  transform:translateY(-50%);
+  pointer-events:none;
+  font-size:17px;
+  color:var(--mint);
+}
 
-    .prefix {
-      position: absolute;
-      left: 13px;
-      top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none;
-      font-size: 17px;
-      color: var(--mint);
-    }
+input,textarea {
+  width:100%;
+  min-height:48px;
+  background:var(--field);
+  color:var(--text);
+  border:1px solid #45494c;
+  border-radius:12px;
+  padding:12px 13px;
+  outline:none;
+}
 
-    input,
-    textarea {
-      width: 100%;
-      min-height: 48px;
-      background: var(--field);
-      color: var(--text);
-      border: 1px solid #45494c;
-      border-radius: 12px;
-      padding: 12px 13px;
-      outline: none;
-    }
+.input-wrap input { padding-left:42px; }
 
-    .input-wrap input {
-      padding-left: 42px;
-    }
+textarea {
+  min-height:95px;
+  resize:vertical;
+}
 
-    textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
+input:focus,textarea:focus {
+  border-color:var(--mint);
+  box-shadow:0 0 0 2px #00a85a25;
+}
 
-    input:focus,
-    textarea:focus {
-      border-color: var(--mint);
-      box-shadow: 0 0 0 2px #00a85a25;
-    }
+.hint {
+  grid-column:2;
+  margin:-5px 0 3px;
+  color:var(--muted);
+  font-size:12px;
+}
 
-    .hint {
-      grid-column: 2;
-      margin: -5px 0 3px;
-      color: var(--muted);
-      font-size: 12px;
-    }
+.btn {
+  width:100%;
+  min-height:52px;
+  margin-top:18px;
+  padding:12px;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(100deg,#008a49,#00a95c);
+  color:white;
+  font-weight:750;
+  cursor:pointer;
+}
 
-    .btn {
-      width: 100%;
-      min-height: 52px;
-      margin-top: 18px;
-      padding: 12px;
-      border: 0;
-      border-radius: 13px;
-      background: linear-gradient(100deg, #008a49, #00a95c);
-      color: #fff;
-      font-weight: 750;
-      cursor: pointer;
-    }
+.btn:disabled {
+  opacity:.6;
+  cursor:wait;
+}
 
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: wait;
-    }
+.status {
+  display:none;
+  padding:12px;
+  margin-top:13px;
+  border-radius:10px;
+  font-size:13px;
+  overflow-wrap:anywhere;
+}
 
-    .status {
-      display: none;
-      padding: 12px;
-      margin-top: 13px;
-      border-radius: 10px;
-      font-size: 13px;
-      overflow-wrap: anywhere;
-    }
+.status.show { display:block; }
 
-    .status.show {
-      display: block;
-    }
+.status.error {
+  color:#ffc0c0;
+  background:#421818;
+  border:1px solid #773131;
+}
 
-    .status.error {
-      color: #ffc0c0;
-      background: #421818;
-      border: 1px solid #773131;
-    }
+.status.success {
+  color:#a8ffd4;
+  background:#0c3020;
+  border:1px solid #176b43;
+}
 
-    .status.success {
-      color: #a8ffd4;
-      background: #0c3020;
-      border: 1px solid #176b43;
-    }
+.password { padding-right:48px !important; }
 
-    .password {
-      padding-right: 48px !important;
-    }
+.toggle {
+  position:absolute;
+  right:5px;
+  top:50%;
+  transform:translateY(-50%);
+  border:0;
+  background:transparent;
+  color:#b8bdc2;
+  padding:8px;
+  cursor:pointer;
+}
 
-    .toggle {
-      position: absolute;
-      right: 5px;
-      top: 50%;
-      transform: translateY(-50%);
-      border: 0;
-      background: transparent;
-      color: #b8bdc2;
-      padding: 8px;
-      cursor: pointer;
-    }
+.security-note {
+  color:var(--muted);
+  font-size:13px;
+  margin-top:12px;
+}
 
-    .security-note {
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 12px;
-    }
+.nav {
+  position:fixed;
+  z-index:10;
+  bottom:0;
+  left:0;
+  right:0;
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  padding:8px 3px calc(8px + env(safe-area-inset-bottom));
+  background:#020303;
+  border-top:1px solid #333638;
+}
 
-    .nav {
-      position: fixed;
-      z-index: 10;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      display: grid;
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-      padding: 8px 3px calc(8px + env(safe-area-inset-bottom));
-      background: #020303;
-      border-top: 1px solid #333638;
-    }
+.nav a {
+  color:#899098;
+  text-decoration:none;
+  text-align:center;
+  font-size:11px;
+  padding:4px 1px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  min-width:0;
+}
 
-    .nav a {
-      color: #899098;
-      text-decoration: none;
-      text-align: center;
-      font-size: 12px;
-      padding: 4px 1px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2px;
-      min-width: 0;
-    }
+.nav .ni {
+  font-size:21px;
+  line-height:1.3;
+}
 
-    .nav .ni {
-      font-size: 22px;
-      line-height: 1.3;
-    }
+.nav a.active { color:var(--mint); }
 
-    .nav a.active {
-      color: var(--mint);
-    }
-
-    @media (max-width: 600px) {
-      .topbar {
-        padding: 11px 14px;
-        gap: 9px;
-      }
-
-      .logo {
-        width: 50px;
-        height: 50px;
-        flex-basis: 50px;
-      }
-
-      .brand {
-        font-size: 17px;
-      }
-
-      .subtitle {
-        font-size: 12px;
-      }
-
-      .dashboard-link {
-        font-size: 11px;
-      }
-
-      main {
-        padding: 17px 16px 115px;
-      }
-
-      .card {
-        padding: 17px;
-        border-radius: 18px;
-      }
-
-      h2 {
-        font-size: 18px;
-      }
-
-      .grid {
-        grid-template-columns: 1fr;
-        gap: 6px;
-      }
-
-      label {
-        margin-top: 7px;
-      }
-
-      .hint {
-        grid-column: 1;
-        margin: 0 0 6px;
-      }
-
-      .nav a {
-        font-size: 10px;
-      }
-
-      .nav .ni {
-        font-size: 20px;
-      }
-    }
-  </style>
+@media(max-width:600px) {
+  .topbar { padding:11px 14px; gap:9px; }
+  .logo { width:50px; height:50px; flex-basis:50px; }
+  .brand { font-size:17px; }
+  .subtitle { font-size:12px; }
+  .dashboard-link { font-size:11px; }
+  main { padding:17px 16px 115px; }
+  .card { padding:17px; border-radius:18px; }
+  h2 { font-size:18px; }
+  .grid { grid-template-columns:1fr; gap:6px; }
+  label { margin-top:7px; }
+  .hint { grid-column:1; margin:0 0 6px; }
+}
+</style>
 </head>
 
 <body>
 
-  <header class="topbar">
-    <div class="logo">K636</div>
+<header class="topbar">
+  <div class="logo">K636</div>
+  <div>
+    <div class="brand">Kielmen 636</div>
+    <div class="subtitle">AGENT STORE</div>
+  </div>
+  <a class="dashboard-link" href="agent-dashboard.html">
+    ● Agent Dashboard
+  </a>
+</header>
 
-    <div>
-      <div class="brand">Kielmen 636</div>
-      <div class="subtitle">AGENT PROFILE</div>
-    </div>
+<main>
+  <h1>My Profile</h1>
+  <p class="intro">
+    Manage your account, business and contact information.
+  </p>
 
-    <a class="dashboard-link" href="agent-dashboard.html">
-      ● Agent Dashboard
-    </a>
-  </header>
+  <form id="profileForm">
+    <section class="card">
+      <h2><span class="icon">♟</span>Personal Information</h2>
 
-  <main>
-
-    <h1>My Profile</h1>
-
-    <p class="intro">
-      Manage your account, store details and contact information.
-    </p>
-
-    <!-- PERSONAL INFORMATION -->
-
-    <form id="profileForm">
-
-      <section class="card">
-
-        <h2>
-          <span class="icon">♟</span>
-          Personal Information
-        </h2>
-
-        <div class="grid">
-
-          <label for="fullName">Full Name</label>
-
-          <div class="input-wrap">
-            <span class="prefix">♟</span>
-            <input
-              id="fullName"
-              name="fullName"
-              autocomplete="name"
-              required
-              minlength="2"
-              maxlength="100"
-              placeholder="Enter your full name"
-            >
-          </div>
-
-          <label for="businessName">Business Name</label>
-
-          <div class="input-wrap">
-            <span class="prefix">▣</span>
-            <input
-              id="businessName"
-              name="businessName"
-              autocomplete="organization"
-              required
-              minlength="2"
-              maxlength="100"
-              placeholder="Enter your business name"
-            >
-          </div>
-
-          <label for="phone">Phone Number</label>
-
-          <div class="input-wrap">
-            <span class="prefix">☎</span>
-            <input
-              id="phone"
-              name="phone"
-              type="tel"
-              autocomplete="tel"
-              required
-              maxlength="25"
-              placeholder="0241234567"
-            >
-          </div>
-
-          <label for="email">Email Address</label>
-
-          <div class="input-wrap">
-            <span class="prefix">✉</span>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autocomplete="email"
-              required
-              maxlength="255"
-              placeholder="you@example.com"
-            >
-          </div>
-
+      <div class="grid">
+        <label for="fullName">Full Name</label>
+        <div class="input-wrap">
+          <span class="prefix">♟</span>
+          <input id="fullName" name="fullName"
+            autocomplete="name" required minlength="2"
+            maxlength="100" placeholder="Enter your full name">
         </div>
 
-        <div
-          id="profileStatus"
-          class="status"
-          role="status"
-          aria-live="polite"
-        ></div>
-
-      </section>
-
-      <!-- STORE CONTACT INFORMATION -->
-
-      <section class="card">
-
-        <h2>
-          <span class="icon">↗</span>
-          Contact &amp; Social Links
-        </h2>
-
-        <p class="help">
-          Give customers more ways to contact your business.
-        </p>
-
-        <div class="grid">
-
-          <label for="whatsappNumber">
-            WhatsApp Number
-          </label>
-
-          <div class="input-wrap">
-            <span class="prefix">☎</span>
-            <input
-              id="whatsappNumber"
-              name="whatsappNumber"
-              type="tel"
-              maxlength="25"
-              placeholder="0241234567"
-            >
-          </div>
-
-          <div></div>
-
-          <p class="hint">
-            Enter the number customers should message.
-          </p>
-
-          <label for="whatsappChannel">
-            WhatsApp Channel Link
-          </label>
-
-          <div class="input-wrap">
-            <span class="prefix">↗</span>
-            <input
-              id="whatsappChannel"
-              name="whatsappChannel"
-              type="url"
-              maxlength="500"
-              placeholder="https://whatsapp.com/channel/..."
-            >
-          </div>
-
-          <div></div>
-
-          <p class="hint">
-            Optional. Paste your WhatsApp Channel link.
-          </p>
-
-          <label for="socialLink">
-            Other Social Media Link
-          </label>
-
-          <div class="input-wrap">
-            <span class="prefix">↗</span>
-            <input
-              id="socialLink"
-              name="socialLink"
-              type="url"
-              maxlength="500"
-              placeholder="https://..."
-            >
-          </div>
-
-          <div></div>
-
-          <p class="hint">
-            Facebook, Instagram, TikTok or another page.
-          </p>
-
-          <label for="description">
-            Store Description
-          </label>
-
-          <textarea
-            id="description"
-            name="description"
-            maxlength="200"
-            placeholder="Describe your business and services"
-          ></textarea>
-
-          <div></div>
-
-          <p class="hint">
-            Maximum 200 characters.
-          </p>
-
+        <label for="businessName">Business Name</label>
+        <div class="input-wrap">
+          <span class="prefix">▣</span>
+          <input id="businessName" name="businessName"
+            autocomplete="organization" required minlength="2"
+            maxlength="100" placeholder="Enter your business name">
         </div>
 
-        <button
-          class="btn"
-          id="saveProfileBtn"
-          type="submit"
-        >
-          Save Profile Changes
-        </button>
+        <label for="phone">Phone Number</label>
+        <div class="input-wrap">
+          <span class="prefix">☎</span>
+          <input id="phone" name="phone" type="tel"
+            autocomplete="tel" required maxlength="25"
+            placeholder="0241234567">
+        </div>
 
-      </section>
+        <label for="email">Email Address</label>
+        <div class="input-wrap">
+          <span class="prefix">✉</span>
+          <input id="email" name="email" type="email"
+            autocomplete="email" required maxlength="255"
+            placeholder="you@example.com">
+        </div>
+      </div>
 
-    </form>
+      <div id="profileStatus" class="status"
+        role="status" aria-live="polite"></div>
+    </section>
 
-    <!-- CHANGE PASSWORD -->
-
-    <form id="passwordForm" class="card">
-
-      <h2>
-        <span class="icon">🔒</span>
-        Change Password
-      </h2>
-
+    <section class="card">
+      <h2><span class="icon">↗</span>Contact &amp; Social Links</h2>
       <p class="help">
-        Protect your account by choosing a strong password.
+        Give customers more ways to contact your business.
       </p>
 
       <div class="grid">
-
-        <label for="currentPassword">
-          Current Password
-        </label>
-
+        <label for="whatsappNumber">WhatsApp Number</label>
         <div class="input-wrap">
-          <span class="prefix">▣</span>
-
-          <input
-            class="password"
-            id="currentPassword"
-            type="password"
-            autocomplete="current-password"
-            required
-            placeholder="Enter current password"
-          >
-
-          <button
-            class="toggle"
-            type="button"
-            data-target="currentPassword"
-            aria-label="Show or hide current password"
-          >◉</button>
+          <span class="prefix">☎</span>
+          <input id="whatsappNumber" name="whatsappNumber"
+            type="tel" maxlength="25" placeholder="0241234567">
         </div>
 
-        <label for="newPassword">
-          New Password
-        </label>
+        <div></div>
+        <p class="hint">The number customers should message.</p>
 
+        <label for="whatsappChannel">WhatsApp Channel Link</label>
         <div class="input-wrap">
-          <span class="prefix">▣</span>
-
-          <input
-            class="password"
-            id="newPassword"
-            type="password"
-            autocomplete="new-password"
-            minlength="12"
-            maxlength="128"
-            required
-            placeholder="At least 12 characters"
-          >
-
-          <button
-            class="toggle"
-            type="button"
-            data-target="newPassword"
-            aria-label="Show or hide new password"
-          >◉</button>
+          <span class="prefix">↗</span>
+          <input id="whatsappChannel" name="whatsappChannel"
+            type="url" maxlength="500"
+            placeholder="https://whatsapp.com/channel/...">
         </div>
 
-        <label for="confirmPassword">
-          Confirm New Password
-        </label>
+        <div></div>
+        <p class="hint">Optional. Paste your channel link.</p>
 
+        <label for="socialLink">Other Social Media Link</label>
         <div class="input-wrap">
-          <span class="prefix">▣</span>
-
-          <input
-            class="password"
-            id="confirmPassword"
-            type="password"
-            autocomplete="new-password"
-            minlength="12"
-            maxlength="128"
-            required
-            placeholder="Confirm new password"
-          >
-
-          <button
-            class="toggle"
-            type="button"
-            data-target="confirmPassword"
-            aria-label="Show or hide confirmation password"
-          >◉</button>
+          <span class="prefix">↗</span>
+          <input id="socialLink" name="socialLink"
+            type="url" maxlength="500"
+            placeholder="https://...">
         </div>
 
+        <div></div>
+        <p class="hint">Facebook, Instagram, TikTok or another page.</p>
+
+        <label for="description">Store Description</label>
+        <textarea id="description" name="description"
+          maxlength="200"
+          placeholder="Describe your business and services"></textarea>
+
+        <div></div>
+        <p class="hint">Maximum 200 characters.</p>
       </div>
 
-      <p class="security-note">
-        Your new password must contain at least 12 characters.
-        Your current password is required to make this change.
-      </p>
-
-      <div
-        id="passwordStatus"
-        class="status"
-        role="status"
-        aria-live="polite"
-      ></div>
-
-      <button
-        class="btn"
-        id="changePasswordBtn"
-        type="submit"
-      >
-        Update Password
+      <button class="btn" id="saveProfileBtn" type="submit">
+        ▣ &nbsp; Save Profile Changes
       </button>
+    </section>
+  </form>
 
-    </form>
+  <form id="passwordForm" class="card">
+    <h2><span class="icon">🔒</span>Change Password</h2>
+    <p class="help">Update your password to keep your account secure.</p>
 
-  </main>
+    <div class="grid">
+      <label for="currentPassword">Current Password</label>
+      <div class="input-wrap">
+        <span class="prefix">▣</span>
+        <input class="password" id="currentPassword"
+          type="password" autocomplete="current-password"
+          required placeholder="Enter current password">
+        <button class="toggle" type="button"
+          data-target="currentPassword"
+          aria-label="Show or hide current password">◉</button>
+      </div>
 
-  <!-- BOTTOM NAVIGATION -->
+      <label for="newPassword">New Password</label>
+      <div class="input-wrap">
+        <span class="prefix">▣</span>
+        <input class="password" id="newPassword"
+          type="password" autocomplete="new-password"
+          minlength="12" maxlength="128" required
+          placeholder="At least 12 characters">
+        <button class="toggle" type="button"
+          data-target="newPassword"
+          aria-label="Show or hide new password">◉</button>
+      </div>
 
-  <nav class="nav" aria-label="Agent navigation">
+      <label for="confirmPassword">Confirm New Password</label>
+      <div class="input-wrap">
+        <span class="prefix">▣</span>
+        <input class="password" id="confirmPassword"
+          type="password" autocomplete="new-password"
+          minlength="12" maxlength="128" required
+          placeholder="Confirm new password">
+        <button class="toggle" type="button"
+          data-target="confirmPassword"
+          aria-label="Show or hide confirmation password">◉</button>
+      </div>
+    </div>
 
-    <a href="agent-dashboard.html">
-      <span class="ni">⌂</span>
-      Home
-    </a>
+    <p class="security-note">
+      Your new password must contain at least 12 characters.
+    </p>
 
-    <a href="agent-store.html">
-      <span class="ni">□</span>
-      Store
-    </a>
+    <div id="passwordStatus" class="status"
+      role="status" aria-live="polite"></div>
 
-    <a href="agent-prices.html">
-      <span class="ni">₵</span>
-      My Prices
-    </a>
+    <button class="btn" id="changePasswordBtn" type="submit">
+      ⚿ &nbsp; Update Password
+    </button>
+  </form>
+</main>
 
-    <a href="agent-orders.html">
-      <span class="ni">▤</span>
-      Orders
-    </a>
+<nav class="nav" aria-label="Agent navigation">
+  <a href="agent-dashboard.html"><span class="ni">⌂</span>Home</a>
+  <a href="agent-store.html"><span class="ni">□</span>Store</a>
+  <a href="agent-prices.html"><span class="ni">₵</span>My Prices</a>
+  <a href="agent-orders.html"><span class="ni">▤</span>Orders</a>
+  <a class="active" href="agent-profile.html"
+    aria-current="page"><span class="ni">◎</span>Profile</a>
+  <a href="agent-withdraw.html"><span class="ni">💰</span>Withdraw</a>
+</nav>
 
-    <a
-      class="active"
-      href="agent-profile.html"
-      aria-current="page"
-    >
-      <span class="ni">◎</span>
-      Profile
-    </a>
+<script>
+"use strict";
 
-    <a href="agent-withdraw.html">
-      <span class="ni">💰</span>
-      Withdraw
-    </a>
+const API_BASE =
+  "https://kielmen-dataplug-payment-api.onrender.com";
 
-  </nav>
+const $ = id => document.getElementById(id);
 
-  <script>
-    "use strict";
+function getAuthToken() {
+  const keys = [
+    "agentToken",
+    "agent_token",
+    "token",
+    "authToken",
+    "accessToken"
+  ];
 
-    const API_BASE =
-      "https://kielmen-dataplug-payment-api.onrender.com";
+  for (const key of keys) {
+    const token = localStorage.getItem(key);
+    if (token) return token;
+  }
 
-    const $ = id => document.getElementById(id);
+  return "";
+}
 
-    // Find the login token saved by the agent login page.
-    function getAuthToken() {
-      const keys = [
-        "agentToken",
-        "agent_token",
-        "token",
-        "authToken",
-        "accessToken"
-      ];
+function getHeaders(json = true) {
+  const headers = {};
 
-      for (const key of keys) {
-        const value = localStorage.getItem(key);
+  if (json) {
+    headers["Content-Type"] = "application/json";
+  }
 
-        if (value) {
-          return value;
-        }
-      }
+  const token = getAuthToken();
 
-      return "";
-    }
+  if (token) {
+    headers["Authorization"] = "Bearer " + token;
+  }
 
-    function getHeaders(json = true) {
-      const headers = {};
+  return headers;
+}
 
-      if (json) {
-        headers["Content-Type"] = "application/json";
-      }
+function showStatus(id, message, type = "error") {
+  const element = $(id);
+  element.textContent = message;
+  element.className = "status show " + type;
+}
 
-      const token = getAuthToken();
+function clearStatus(id) {
+  $(id).textContent = "";
+  $(id).className = "status";
+}
 
-      if (token) {
-        headers["Authorization"] = "Bearer " + token;
-      }
+async function readResponse(response) {
+  return response.json().catch(() => ({}));
+}
 
-      return headers;
-    }
-
-    function showStatus(id, message, type = "error") {
-      const element = $(id);
-
-      element.textContent = message;
-      element.className = "status show " + type;
-    }
-
-    function clearStatus(id) {
-      const element = $(id);
-
-      element.textContent = "";
-      element.className = "status";
-    }
-
-    async function readResponse(response) {
-      return response.json().catch(() => ({}));
-    }
-
-    // Load profile information from the backend.
-    async function loadProfile() {
-      clearStatus("profileStatus");
-
-      if (!getAuthToken()) {
-        showStatus(
-          "profileStatus",
-          "Your login token was not found. Please sign in again. If the problem continues, the login page may be saving the token under a different name."
-        );
-        return;
-      }
-
-      try {
-        const response = await fetch(
-          API_BASE + "/agents/profile",
-          {
-            method: "GET",
-            headers: getHeaders(false)
-          }
-        );
-
-        const data = await readResponse(response);
-
-        if (!response.ok || data.success === false) {
-          showStatus(
-            "profileStatus",
-            data.message ||
-              "Could not load your profile. Please sign in again."
-          );
-          return;
-        }
-
-        const profile =
-          data.profile ||
-          data.agent ||
-          data.data ||
-          data;
-
-        const values = {
-          fullName:
-            profile.fullName ??
-            profile.full_name ??
-            profile.name,
-
-          businessName:
-            profile.businessName ??
-            profile.business_name,
-
-          phone:
-            profile.phone ??
-            profile.phoneNumber ??
-            profile.phone_number,
-
-          email:
-            profile.email,
-
-          whatsappNumber:
-            profile.whatsappNumber ??
-            profile.whatsapp_number ??
-            profile.whatsapp,
-
-          whatsappChannel:
-            profile.whatsappChannel ??
-            profile.whatsapp_channel,
-
-          socialLink:
-            profile.socialLink ??
-            profile.social_link,
-
-          description:
-            profile.description ??
-            profile.storeDescription ??
-            profile.store_description
-        };
-
-        for (const [id, value] of Object.entries(values)) {
-          if (value !== undefined && value !== null) {
-            $(id).value = value;
-          }
-        }
-
-      } catch (error) {
-        console.error("Profile loading error:", error);
-
-        showStatus(
-          "profileStatus",
-          "Cannot connect to the server. Check that the Render API is online and allows requests from https://kielmen.com. Your profile has not been changed."
-        );
-      }
-    }
-
-    // Save profile changes.
-    $("profileForm").addEventListener(
-      "submit",
-      async function(event) {
-        event.preventDefault();
-
-        clearStatus("profileStatus");
-
-        if (!getAuthToken()) {
-          showStatus(
-            "profileStatus",
-            "Your login token is missing. Please sign in again."
-          );
-          return;
-        }
-
-        const payload = {
-          fullName: $("fullName").value.trim(),
-          businessName: $("businessName").value.trim(),
-          phone: $("phone").value.trim(),
-          email: $("email").value.trim(),
-          whatsappNumber: $("whatsappNumber").value.trim(),
-          whatsappChannel: $("whatsappChannel").value.trim(),
-          socialLink: $("socialLink").value.trim(),
-          description: $("description").value.trim()
-        };
-
-        for (const key of ["whatsappChannel", "socialLink"]) {
-          if (
-            payload[key] &&
-            !/^https?:\/\/\S+$/i.test(payload[key])
-          ) {
-            showStatus(
-              "profileStatus",
-              "Please enter a valid link beginning with https:// or http://."
-            );
-            return;
-          }
-        }
-
-        const button = $("saveProfileBtn");
-
-        button.disabled = true;
-        button.textContent = "Saving profile...";
-
-        try {
-          const response = await fetch(
-            API_BASE + "/agents/profile",
-            {
-              method: "PUT",
-              headers: getHeaders(true),
-              body: JSON.stringify(payload)
-            }
-          );
-
-          const data = await readResponse(response);
-
-          if (!response.ok || data.success === false) {
-            showStatus(
-              "profileStatus",
-              data.message ||
-                "Your profile could not be saved."
-            );
-            return;
-          }
-
-          showStatus(
-            "profileStatus",
-            data.message ||
-              "Your profile has been updated successfully.",
-            "success"
-          );
-
-        } catch (error) {
-          console.error("Profile save error:", error);
-
-          showStatus(
-            "profileStatus",
-            "Cannot connect to the server. Your changes have not been confirmed as saved."
-          );
-        } finally {
-          button.disabled = false;
-          button.textContent = "Save Profile Changes";
-        }
-      }
+async function loadProfile() {
+  if (!getAuthToken()) {
+    showStatus(
+      "profileStatus",
+      "Your login token was not found. Please sign in again."
     );
+    return;
+  }
 
-    // Change password. The backend also enforces the
-    // minimum length, so frontend validation is not enough alone.
-    $("passwordForm").addEventListener(
-      "submit",
-      async function(event) {
-        event.preventDefault();
-
-        clearStatus("passwordStatus");
-
-        if (!getAuthToken()) {
-          showStatus(
-            "passwordStatus",
-            "Your login token is missing. Please sign in again."
-          );
-          return;
-        }
-
-        const currentPassword =
-          $("currentPassword").value;
-
-        const newPassword =
-          $("newPassword").value;
-
-        const confirmPassword =
-          $("confirmPassword").value;
-
-        if (newPassword.length < 12) {
-          showStatus(
-            "passwordStatus",
-            "Your new password must contain at least 12 characters."
-          );
-          return;
-        }
-
-        if (newPassword.length > 128) {
-          showStatus(
-            "passwordStatus",
-            "Your new password cannot exceed 128 characters."
-          );
-          return;
-        }
-
-        if (newPassword !== confirmPassword) {
-          showStatus(
-            "passwordStatus",
-            "Your new password and confirmation do not match."
-          );
-          return;
-        }
-
-        if (newPassword === currentPassword) {
-          showStatus(
-            "passwordStatus",
-            "Choose a new password different from your current password."
-          );
-          return;
-        }
-
-        const button = $("changePasswordBtn");
-
-        button.disabled = true;
-        button.textContent = "Updating password...";
-
-        try {
-          const response = await fetch(
-            API_BASE + "/agents/change-password",
-            {
-              method: "POST",
-              headers: getHeaders(true),
-              body: JSON.stringify({
-                currentPassword: currentPassword,
-                newPassword: newPassword
-              })
-            }
-          );
-
-          const data = await readResponse(response);
-
-          if (!response.ok || data.success === false) {
-            showStatus(
-              "passwordStatus",
-              data.message ||
-                "Your password could not be changed."
-            );
-            return;
-          }
-
-          $("passwordForm").reset();
-
-          showStatus(
-            "passwordStatus",
-            data.message ||
-              "Password changed successfully. Please sign in again.",
-            "success"
-          );
-
-          // The backend invalidates all agent sessions
-          // after a successful password change.
-          localStorage.removeItem("agentToken");
-          localStorage.removeItem("agent_token");
-          localStorage.removeItem("token");
-          localStorage.removeItem("authToken");
-          localStorage.removeItem("accessToken");
-
-          button.textContent = "Sign in again to continue";
-
-        } catch (error) {
-          console.error("Password change error:", error);
-
-          showStatus(
-            "passwordStatus",
-            "Cannot connect to the server. The password change has not been confirmed."
-          );
-        } finally {
-          button.disabled = false;
-
-          if (button.textContent !== "Sign in again to continue") {
-            button.textContent = "Update Password";
-          }
-        }
-      }
-    );
-
-    // Show or hide password fields.
-    document.querySelectorAll(".toggle").forEach(function(button) {
-      button.addEventListener("click", function() {
-        const input = $(button.dataset.target);
-
-        if (input.type === "password") {
-          input.type = "text";
-          button.textContent = "◌";
-        } else {
-          input.type = "password";
-          button.textContent = "◉";
-        }
-      });
+  try {
+    const response = await fetch(API_BASE + "/agents/profile", {
+      method: "GET",
+      headers: getHeaders(false)
     });
 
-    // Start loading the agent's profile.
-    loadProfile();
-  </script>
+    const data = await readResponse(response);
+
+    if (!response.ok || data.success === false) {
+      showStatus(
+        "profileStatus",
+        data.message || "Could not load your profile."
+      );
+      return;
+    }
+
+    const profile = data.profile || data.agent || data.data || data;
+
+    const fields = {
+      fullName: profile.fullName ?? profile.full_name ?? profile.name,
+      businessName: profile.businessName ?? profile.business_name,
+      phone: profile.phone ?? profile.phoneNumber ?? profile.phone_number,
+      email: profile.email,
+      whatsappNumber:
+        profile.whatsappNumber ?? profile.whatsapp_number ?? profile.whatsapp,
+      whatsappChannel:
+        profile.whatsappChannel ?? profile.whatsapp_channel,
+      socialLink: profile.socialLink ?? profile.social_link,
+      description:
+        profile.description ?? profile.storeDescription ?? profile.store_description
+    };
+
+    for (const [id, value] of Object.entries(fields)) {
+      if (value !== undefined && value !== null) {
+        $(id).value = value;
+      }
+    }
+  } catch (error) {
+    console.error("Profile loading error:", error);
+    showStatus(
+      "profileStatus",
+      "Cannot connect to the server. Check the Render API and its CORS settings."
+    );
+  }
+}
+
+$("profileForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  clearStatus("profileStatus");
+
+  if (!getAuthToken()) {
+    showStatus("profileStatus", "Please sign in again. Your login token is missing.");
+    return;
+  }
+
+  const payload = {
+    fullName: $("fullName").value.trim(),
+    businessName: $("businessName").value.trim(),
+    phone: $("phone").value.trim(),
+    email: $("email").value.trim(),
+    whatsappNumber: $("whatsappNumber").value.trim(),
+    whatsappChannel: $("whatsappChannel").value.trim(),
+    socialLink: $("socialLink").value.trim(),
+    description: $("description").value.trim()
+  };
+
+  for (const key of ["whatsappChannel", "socialLink"]) {
+    if (payload[key] && !/^https?:\/\/\S+$/i.test(payload[key])) {
+      showStatus("profileStatus", "Links must begin with https:// or http://.");
+      return;
+    }
+  }
+
+  const button = $("saveProfileBtn");
+  button.disabled = true;
+  button.textContent = "Saving profile...";
+
+  try {
+    const response = await fetch(API_BASE + "/agents/profile", {
+      method: "PUT",
+      headers: getHeaders(true),
+      body: JSON.stringify(payload)
+    });
+
+    const data = await readResponse(response);
+
+    if (!response.ok || data.success === false) {
+      showStatus("profileStatus", data.message || "Could not save your profile.");
+      return;
+    }
+
+    showStatus(
+      "profileStatus",
+      data.message || "Profile updated successfully.",
+      "success"
+    );
+  } catch (error) {
+    console.error("Profile save error:", error);
+    showStatus(
+      "profileStatus",
+      "Cannot connect to the server. Your changes have not been confirmed as saved."
+    );
+  } finally {
+    button.disabled = false;
+    button.textContent = "▣   Save Profile Changes";
+  }
+});
+
+$("passwordForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  clearStatus("passwordStatus");
+
+  if (!getAuthToken()) {
+    showStatus("passwordStatus", "Your login token is missing. Please sign in again.");
+    return;
+  }
+
+  const currentPassword = $("currentPassword").value;
+  const newPassword = $("newPassword").value;
+  const confirmPassword = $("confirmPassword").value;
+
+  if (newPassword.length < 12) {
+    showStatus(
+      "passwordStatus",
+      "Your new password must contain at least 12 characters."
+    );
+    return;
+  }
+
+  if (newPassword.length > 128) {
+    showStatus("passwordStatus", "Your password cannot exceed 128 characters.");
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    showStatus("passwordStatus", "The new passwords do not match.");
+    return;
+  }
+
+  if (newPassword === currentPassword) {
+    showStatus(
+      "passwordStatus",
+      "Your new password must be different from your current password."
+    );
+    return;
+  }
+
+  const button = $("changePasswordBtn");
+  button.disabled = true;
+  button.textContent = "Updating password...";
+
+  try {
+    const response = await fetch(API_BASE + "/agents/change-password", {
+      method: "POST",
+      headers: getHeaders(true),
+      body: JSON.stringify({ currentPassword, newPassword })
+    });
+
+    const data = await readResponse(response);
+
+    if (!response.ok || data.success === false) {
+      showStatus(
+        "passwordStatus",
+        data.message || "Could not change your password."
+      );
+      return;
+    }
+
+    $("passwordForm").reset();
+
+    showStatus(
+      "passwordStatus",
+      data.message || "Password changed. Please log in again.",
+      "success"
+    );
+
+    for (const key of [
+      "agentToken",
+      "agent_token",
+      "token",
+      "authToken",
+      "accessToken"
+    ]) {
+      localStorage.removeItem(key);
+    }
+
+    button.textContent = "Sign in again to continue";
+  } catch (error) {
+    console.error("Password change error:", error);
+    showStatus(
+      "passwordStatus",
+      "Cannot connect to the server. The password change has not been confirmed."
+    );
+  } finally {
+    button.disabled = false;
+
+    if (button.textContent !== "Sign in again to continue") {
+      button.textContent = "⚿   Update Password";
+    }
+  }
+});
+
+document.querySelectorAll(".toggle").forEach(button => {
+  button.addEventListener("click", () => {
+    const input = $(button.dataset.target);
+    input.type = input.type === "password" ? "text" : "password";
+    button.textContent = input.type === "password" ? "◉" : "◌";
+  });
+});
+
+loadProfile();
+</script>
 
 </body>
-</html>
+  </html>
