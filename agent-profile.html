@@ -502,6 +502,7 @@ function getAuthToken() {
 
   return "";
 }
+  
 
 function getHeaders(json = true) {
   const headers = {};
@@ -719,15 +720,17 @@ $("passwordForm").addEventListener("submit", async event => {
       "success"
     );
 
-    for (const key of [
-      "agentToken",
-      "agent_token",
-      "token",
-      "authToken",
-      "accessToken"
-    ]) {
-      localStorage.removeItem(key);
-    }
+    sessionStorage.removeItem("k636_agent_token");
+
+for (const key of [
+  "agentToken",
+  "agent_token",
+  "token",
+  "authToken",
+  "accessToken"
+]) {
+  localStorage.removeItem(key);
+}
 
     button.textContent = "Sign in again to continue";
   } catch (error) {
@@ -754,7 +757,7 @@ document.querySelectorAll(".toggle").forEach(button => {
 });
 
 loadProfile();
-</script>
+  </script>
 
 </body>
   </html>
