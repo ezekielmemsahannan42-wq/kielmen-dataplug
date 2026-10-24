@@ -1439,6 +1439,26 @@ app.get(
                       = (NOW() AT TIME ZONE 'Africa/Accra')::date
               ),
               0
+                          COALESCE(
+              SUM(
+                GREATEST(amount - agent_base_price, 0)
+              ) FILTER (
+                WHERE status = 'paid'
+                  AND agent_base_price IS NOT NULL
+                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                    NOT IN (
+                      'delivered',
+                      'completed',
+                      'success',
+                      'successful',
+                      'failed',
+                      'rejected',
+                      'cancelled',
+                      'canceled'
+                    )
+              ),
+              0
+            ) AS pending_delivery_profit,
             ) AS today_profit,
 
             COUNT(*) AS total_orders,
@@ -1504,6 +1524,7 @@ app.get(
           customers: Number(row.customers),
 
           // Profit earned on delivered orders today.
+          pendingDeliveryProfit: Number(row.pending_delivery_profit),
           todayProfit: Number(row.today_profit),
 
           // Profit from earlier days, minus reserved withdrawals.
