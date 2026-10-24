@@ -1409,21 +1409,21 @@ app.put(
 // AGENT STATISTICS AND PROFIT
 // ============================================================
 
+        app.get(
+  "/agents/stats",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `
         WITH earnings AS (
           SELECT
-            -- Profit from orders delivered before today in Ghana.
             COALESCE(
-              SUM(
-                GREATEST(amount - agent_base_price, 0)
-              ) FILTER (
+              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
                 WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
                   AND LOWER(TRIM(COALESCE(delivery_status, '')))
-                    IN (
-                      'delivered',
-                      'completed',
-                      'success',
-                      'successful'
-                    )
+                    IN ('delivered', 'completed', 'success', 'successful')
                   AND agent_base_price IS NOT NULL
                   AND delivered_at IS NOT NULL
                   AND (delivered_at AT TIME ZONE 'Africa/Accra')::date
@@ -1432,19 +1432,11 @@ app.put(
               0
             ) AS previous_profit,
 
-            -- Profit from orders delivered today in Ghana.
             COALESCE(
-              SUM(
-                GREATEST(amount - agent_base_price, 0)
-              ) FILTER (
+              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
                 WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
                   AND LOWER(TRIM(COALESCE(delivery_status, '')))
-                    IN (
-                      'delivered',
-                      'completed',
-                      'success',
-                      'successful'
-                    )
+                    IN ('delivered', 'completed', 'success', 'successful')
                   AND agent_base_price IS NOT NULL
                   AND delivered_at IS NOT NULL
                   AND (delivered_at AT TIME ZONE 'Africa/Accra')::date
@@ -1453,23 +1445,14 @@ app.put(
               0
             ) AS today_profit,
 
-            -- Informational profit from paid orders not yet delivered.
             COALESCE(
-              SUM(
-                GREATEST(amount - agent_base_price, 0)
-              ) FILTER (
+              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
                 WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
                   AND agent_base_price IS NOT NULL
                   AND LOWER(TRIM(COALESCE(delivery_status, '')))
                     NOT IN (
-                      'delivered',
-                      'completed',
-                      'success',
-                      'successful',
-                      'failed',
-                      'rejected',
-                      'cancelled',
-                      'canceled'
+                      'delivered', 'completed', 'success', 'successful',
+                      'failed', 'rejected', 'cancelled', 'canceled'
                     )
               ),
               0
@@ -1483,22 +1466,15 @@ app.put(
 
             COUNT(*) FILTER (
               WHERE LOWER(TRIM(COALESCE(delivery_status, '')))
-                IN (
-                  'delivered',
-                  'completed',
-                  'success',
-                  'successful'
-                )
+                IN ('delivered', 'completed', 'success', 'successful')
             ) AS delivered_orders,
 
             COUNT(*) FILTER (
-              WHERE LOWER(TRIM(COALESCE(delivery_status, '')))
-                = 'processing'
+              WHERE LOWER(TRIM(COALESCE(delivery_status, ''))) = 'processing'
             ) AS processing_orders,
 
             COUNT(*) FILTER (
-              WHERE LOWER(TRIM(COALESCE(delivery_status, '')))
-                = 'failed'
+              WHERE LOWER(TRIM(COALESCE(delivery_status, ''))) = 'failed'
             ) AS failed_orders,
 
             COALESCE(
@@ -1515,8 +1491,7 @@ app.put(
         ),
 
         reserved AS (
-          SELECT
-            COALESCE(SUM(amount), 0) AS reserved_amount
+          SELECT COALESCE(SUM(amount), 0) AS reserved_amount
           FROM agent_withdrawals
           WHERE agent_id = $1
             AND LOWER(TRIM(COALESCE(status, '')))
@@ -1526,19 +1501,15 @@ app.put(
         SELECT
           earnings.*,
           reserved.reserved_amount,
-
           GREATEST(
             earnings.previous_profit - reserved.reserved_amount,
             0
           ) AS available_balance
-
         FROM earnings
         CROSS JOIN reserved
         `,
         [req.agentId]
       );
-
-      const row = result.rows[0];
 
       const row = result.rows[0];
 
@@ -1553,16 +1524,13 @@ app.put(
           totalSales: Number(row.total_sales),
           customers: Number(row.customers),
 
-          // Profit earned on delivered orders today.
-          pendingDeliveryProfit: Number(row.pending_delivery_profit),
           todayProfit: Number(row.today_profit),
-
-          // Profit from earlier days, minus reserved withdrawals.
+          pendingDeliveryProfit: Number(row.pending_delivery_profit),
           availableBalance: Number(row.available_balance),
 
-          // Keep the existing field for compatibility.
-          estimatedMargin: Number(row.previous_profit) +
-                           Number(row.today_profit),
+          estimatedMargin:
+            Number(row.previous_profit) +
+            Number(row.today_profit),
 
           pendingWithdrawals: Number(row.reserved_amount),
 
@@ -1570,7 +1538,6 @@ app.put(
           timezone: "Africa/Accra"
         }
       });
-
     } catch (error) {
       console.error("Agent stats error:", error.message);
 
