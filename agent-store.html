@@ -1146,7 +1146,10 @@
       const params = new URLSearchParams(window.location.search);
 
       const queryCode = params.get("code") || "";
-      const querySlug = params.get("slug") || "";
+const querySlug =
+  params.get("slug") ||
+  params.get("store") ||
+  "";
 
       agentCode = queryCode.trim().toUpperCase();
       storeSlug = querySlug.trim().toLowerCase();
