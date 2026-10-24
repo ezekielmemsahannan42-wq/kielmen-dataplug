@@ -1419,18 +1419,7 @@ app.get(
         `
         WITH earnings AS (
           SELECT
-            COALESCE(
-              SUM(amount - agent_base_price) FILTER (
-                WHERE status = 'paid'
-                  AND delivery_status = 'delivered'
-                  AND agent_base_price IS NOT NULL
-                  AND (delivered_at AT TIME ZONE 'Africa/Accra')::date
-                      < (NOW() AT TIME ZONE 'Africa/Accra')::date
-              ),
-              0
-            ) AS previous_profit,
-
-            COALESCE(
+                        COALESCE(
               SUM(amount - agent_base_price) FILTER (
                 WHERE status = 'paid'
                   AND delivery_status = 'delivered'
@@ -1439,7 +1428,9 @@ app.get(
                       = (NOW() AT TIME ZONE 'Africa/Accra')::date
               ),
               0
-                          COALESCE(
+            ) AS today_profit,
+
+            COALESCE(
               SUM(
                 GREATEST(amount - agent_base_price, 0)
               ) FILTER (
