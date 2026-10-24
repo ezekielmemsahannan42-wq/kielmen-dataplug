@@ -327,6 +327,17 @@ async function createOrdersTable() {
     ALTER TABLE orders
     ADD COLUMN IF NOT EXISTS agent_base_price NUMERIC(10,2)
   `);
+  await pool.query(`
+  ALTER TABLE orders
+  ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ
+`);
+
+await pool.query(`
+  UPDATE orders
+  SET delivered_at = updated_at
+  WHERE delivery_status = 'delivered'
+    AND delivered_at IS NULL
+`);
 
   await pool.query(`
     ALTER TABLE orders
@@ -1406,504 +1417,115 @@ app.get(
     try {
       const result = await pool.query(
         `
-        SELECT
-          COUNT(*) AS total_orders,
-
-          COUNT(*) FILTER (
-            WHERE LOWER(COALESCE(status, '')) = 'paid'
-          ) AS paid_orders,
-
-          COUNT(*) FILTER (
-            WHERE LOWER(COALESCE(status, '')) = 'paid'
-              AND LOWER(COALESCE(delivery_status, ''))
-                IN (
-                  'delivered',
-                  'completed',
-                  'success',
-                  'successful'
-                )
-          ) AS delivered_orders,
-
-          COUNT(*) FILTER (
-            WHERE LOWER(COALESCE(status, '')) = 'paid'
-              AND agent_base_price IS NULL
-          ) AS missing_base_price_orders,
-
-          COUNT(*) FILTER (
-            WHERE LOWER(COALESCE(status, '')) = 'paid'
-              AND LOWER(COALESCE(delivery_status, ''))
-                NOT IN (
-                  'delivered',
-                  'completed',
-                  'success',
-                  'successful',
-                  'failed',
-                  'rejected',
-                  'cancelled',
-                  'canceled'
-                )
-              AND agent_base_price IS NOT NULL
-          ) AS pending_delivery_orders,
-
-          COALESCE(
-            SUM(amount) FILTER (
-              WHERE LOWER(COALESCE(status, '')) = 'paid'
-            ),
-            0
-          ) AS total_sales,
-
-          COALESCE(
-            SUM(
-              GREATEST(amount - agent_base_price, 0)
-            ) FILTER (
-              WHERE LOWER(COALESCE(status, '')) = 'paid'
-                AND agent_base_price IS NOT NULL
-            ),
-            0
-          ) AS estimated_profit,
-
-          COALESCE(
-            SUM(
-              GREATEST(amount - agent_base_price, 0)
-            ) FILTER (
-              WHERE LOWER(COALESCE(status, '')) = 'paid'
-                AND LOWER(COALESCE(delivery_status, ''))
-                  IN (
-                    'delivered',
-                    'completed',
-                    'success',
-                    'successful'
-                  )
-                AND agent_base_price IS NOT NULL
-            ),
-            0
-          ) AS confirmed_profit,
-
-          COALESCE(
-            SUM(
-              GREATEST(amount - agent_base_price, 0)
-            ) FILTER (
-              WHERE LOWER(COALESCE(status, '')) = 'paid'
-                AND LOWER(COALESCE(delivery_status, ''))
-                  NOT IN (
-                    'delivered',
-                    'completed',
-                    'success',
-                    'successful',
-                    'failed',
-                    'rejected',
-                    'cancelled',
-                    'canceled'
-                  )
-                AND agent_base_price IS NOT NULL
-            ),
-            0
-          ) AS pending_delivery_profit,
-
-          COUNT(DISTINCT phone) AS customers
-
-        FROM orders
-        WHERE agent_id = $1
-        `,
-        [req.agentId]
-      );
-
-      const row = result.rows[0];
-
-      const stats = {
-        totalOrders: Number(row.total_orders || 0),
-        paidOrders: Number(row.paid_orders || 0),
-        deliveredOrders: Number(row.delivered_orders || 0),
-
-        totalSales: Number(row.total_sales || 0),
-
-        estimatedProfit: Number(row.estimated_profit || 0),
-
-        confirmedProfit: Number(row.confirmed_profit || 0),
-
-        pendingDeliveryProfit: Number(
-          row.pending_delivery_profit || 0
-        ),
-
-        pendingDeliveryOrders: Number(
-          row.pending_delivery_orders || 0
-        ),
-
-        missingBasePriceOrders: Number(
-          row.missing_base_price_orders || 0
-        ),
-
-        customers: Number(row.customers || 0),
-
-        // Keep compatibility with older dashboard code.
-        totalProfit: Number(row.estimated_profit || 0),
-        estimatedMargin: Number(row.estimated_profit || 0),
-
-        marginNote:
-          "Estimated profit is based on paid agent orders with recorded base prices. Confirmed profit is based on delivered orders."
-      };
-
-      return res.json({
-        success: true,
-        stats
-      });
-
-    } catch (error) {
-      console.error(
-        "Agent statistics error:",
-        error.message
-      );
-
-      return res.status(500).json({
-        success: false,
-        message: "Unable to load agent statistics."
-      });
-    }
-  }
-);
-// ============================================================
-// AGENT ORDERS — FIX MISSING ORDERS IN DASHBOARD
-// GET /agents/orders
-// ============================================================
-
-app.get(
-  "/agents/orders",
-  requireAgent,
-  requireApprovedAgent,
-  async (req, res) => {
-    try {
-      const result = await pool.query(
-        `
+        WITH earnings AS (
           SELECT
-            id,
-            reference,
-            phone,
-            network,
-            bundle,
-            amount,
-            status,
-            delivery_status,
-            created_at,
-            updated_at,
-            delivered_at
+            COALESCE(
+              SUM(amount - agent_base_price) FILTER (
+                WHERE status = 'paid'
+                  AND delivery_status = 'delivered'
+                  AND agent_base_price IS NOT NULL
+                  AND (delivered_at AT TIME ZONE 'Africa/Accra')::date
+                      < (NOW() AT TIME ZONE 'Africa/Accra')::date
+              ),
+              0
+            ) AS previous_profit,
+
+            COALESCE(
+              SUM(amount - agent_base_price) FILTER (
+                WHERE status = 'paid'
+                  AND delivery_status = 'delivered'
+                  AND agent_base_price IS NOT NULL
+                  AND (delivered_at AT TIME ZONE 'Africa/Accra')::date
+                      = (NOW() AT TIME ZONE 'Africa/Accra')::date
+              ),
+              0
+            ) AS today_profit,
+
+            COUNT(*) AS total_orders,
+
+            COUNT(*) FILTER (
+              WHERE status = 'paid'
+            ) AS paid_orders,
+
+            COUNT(*) FILTER (
+              WHERE delivery_status = 'delivered'
+            ) AS delivered_orders,
+
+            COUNT(*) FILTER (
+              WHERE delivery_status = 'processing'
+            ) AS processing_orders,
+
+            COUNT(*) FILTER (
+              WHERE delivery_status = 'failed'
+            ) AS failed_orders,
+
+            COALESCE(
+              SUM(amount) FILTER (WHERE status = 'paid'),
+              0
+            ) AS total_sales,
+
+            COUNT(DISTINCT phone) AS customers
+
           FROM orders
           WHERE agent_id = $1
-          ORDER BY created_at DESC
-          LIMIT 100
+        ),
+
+        reserved AS (
+          SELECT COALESCE(SUM(amount), 0) AS reserved_amount
+          FROM agent_withdrawals
+          WHERE agent_id = $1
+            AND status IN ('pending', 'approved', 'paid')
+        )
+
+        SELECT
+          earnings.*,
+          reserved.reserved_amount,
+          GREATEST(
+            earnings.previous_profit - reserved.reserved_amount,
+            0
+          ) AS available_balance
+        FROM earnings
+        CROSS JOIN reserved
         `,
         [req.agentId]
       );
 
-      return res.json({
-        success: true,
-        orders: result.rows.map(order => ({
-          ...order,
-          amount: Number(order.amount)
-        }))
-      });
-
-    } catch (error) {
-      console.error(
-        "Agent orders error:",
-        error.message
-      );
-
-      return res.status(500).json({
-        success: false,
-        message: "Could not load your orders."
-      });
-    }
-  }
-);
-// ============================================================
-// ============================================================
-// 12A. AGENT WITHDRAWAL BALANCE
-// ============================================================
-// ============================================================
-// AGENT NEXT PAYOUT
-// GET /agents/next-payout
-// ============================================================
-
-app.get(
-  "/agents/next-payout",
-  requireAgent,
-  requireApprovedAgent,
-  async (req, res) => {
-    try {
-      const payout = await calculateNextPayout(
-        pool,
-        req.agentId
-      );
-
-      return res.json({
-        success: true,
-        currency: "GHS",
-        ...payout
-      });
-
-    } catch (error) {
-      console.error(
-        "Agent next payout error:",
-        error.message
-      );
-
-      return res.status(500).json({
-        success: false,
-        message:
-          "Could not calculate your next payout."
-      });
-    }
-  }
-);
-
-app.get(
-  "/agents/withdrawals",
-  requireAgent,
-  requireApprovedAgent,
-  requireWithdrawalsEnabled,
-  async (req, res) => {
-    try {
-     const result = await pool.query(
-  `
-  WITH time_boundary AS (
-  SELECT
-    date_trunc(
-      'day',
-      NOW() AT TIME ZONE 'Africa/Accra'
-    ) AT TIME ZONE 'Africa/Accra' AS today_start,
-
-    (
-      date_trunc(
-        'day',
-        NOW() AT TIME ZONE 'Africa/Accra'
-      ) + INTERVAL '1 day'
-    ) AT TIME ZONE 'Africa/Accra' AS next_day_start
-),
-
-eligible_orders AS (
-    SELECT
-        o.amount - o.agent_base_price AS profit,
-        o.delivered_at
-    FROM orders o
-    WHERE o.agent_id = $1
-      AND LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
-      AND LOWER(TRIM(COALESCE(o.delivery_status, ''))) IN (
-          'delivered',
-          'completed',
-          'success',
-          'successful'
-      )
-      AND o.delivered_at IS NOT NULL
-      AND o.agent_base_price IS NOT NULL
-      AND o.amount > o.agent_base_price
-),
-
-pending_orders AS (
-    SELECT
-        GREATEST(o.amount - o.agent_base_price, 0) AS profit
-    FROM orders o
-    WHERE o.agent_id = $1
-      AND LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
-      AND LOWER(TRIM(COALESCE(o.delivery_status, ''))) NOT IN (
-          'delivered',
-          'completed',
-          'success',
-          'successful',
-          'failed',
-          'rejected',
-          'cancelled',
-          'canceled'
-      )
-      AND o.agent_base_price IS NOT NULL
-),
-
-earnings AS (
-    SELECT
-        COALESCE(
-            SUM(e.profit) FILTER (
-                WHERE e.delivered_at < t.today_start
-            ),
-            0
-        ) AS previous_earnings,
-
-        COALESCE(
-    SUM(e.profit) FILTER (
-        WHERE e.delivered_at >= t.today_start
-          AND e.delivered_at < t.next_day_start
-    ),
-    0
-) AS todays_earnings,
-
-        COUNT(*) FILTER (
-            WHERE e.delivered_at < t.today_start
-        ) AS previous_orders,
-
-        COUNT(*) FILTER (
-    WHERE e.delivered_at >= t.today_start
-      AND e.delivered_at < t.next_day_start
-) AS todays_orders,
-
-        (
-            SELECT COALESCE(SUM(p.profit), 0)
-            FROM pending_orders p
-        ) AS pending_delivery_profit
-
-        FROM eligible_orders e
-    CROSS JOIN time_boundary t
-),
-
-withdrawals AS (
-    SELECT
-        COALESCE(
-            SUM(amount) FILTER (
-                WHERE LOWER(TRIM(status)) IN (
-                    'pending',
-                    'approved',
-                    'paid'
-                )
-            ),
-            0
-        ) AS reserved_amount,
-
-        COALESCE(
-            SUM(amount) FILTER (
-                WHERE LOWER(TRIM(status)) IN (
-                    'pending',
-                    'approved'
-                )
-            ),
-            0
-        ) AS pending_amount
-
-    FROM agent_withdrawals
-    WHERE agent_id = $1
-)
-
-SELECT
-    earnings.previous_earnings,
-    earnings.todays_earnings,
-    earnings.previous_orders,
-    earnings.todays_orders,
-    earnings.pending_delivery_profit,
-    withdrawals.reserved_amount,
-    withdrawals.pending_amount
-
-FROM earnings
-CROSS JOIN withdrawals
-`,
-[req.agentId]
-      );
-
       const row = result.rows[0];
-
-console.log("WITHDRAWAL DIAGNOSTICS:", {
-  agentId: req.agentId,
-
-  previousEligibleOrders:
-    String(row.previous_orders || 0),
-
-  todaysEligibleOrders:
-    String(row.todays_orders || 0),
-
-  previousEarnings:
-    Number(row.previous_earnings || 0).toFixed(2),
-
-  todaysEarnings:
-    Number(row.todays_earnings || 0).toFixed(2),
-
-  reservedWithdrawals:
-    Number(row.reserved_amount || 0).toFixed(2),
-
-  pendingWithdrawals:
-    Number(row.pending_amount || 0).toFixed(2),
-
-  availableBalance: Math.max(
-    0,
-    Number(row.previous_earnings || 0) -
-    Number(row.reserved_amount || 0)
-  ).toFixed(2)
-});
-
-
-
-      const previousEarnings =
-        Number(row.previous_earnings || 0);
-
-      const todaysProfit =
-        Number(row.todays_earnings || 0);
-
-      const pendingDeliveryProfit =
-    Number(row.pending_delivery_profit || 0);
-
-      const reservedAmount =
-        Number(row.reserved_amount || 0);
-
-      const pendingAmount =
-        Number(row.pending_amount || 0);
-
-      // Previous earnings minus withdrawals already reserved
-      // or completed. A paid withdrawal must not be counted twice.
-      const availableBalance = Math.max(
-  0,
-  previousEarnings - reservedAmount
-);
 
       res.json({
         success: true,
-        currency: "GHS",
-        minimumWithdrawal: 0.10,
-        maximumWithdrawal: null,
+        stats: {
+          totalOrders: Number(row.total_orders),
+          paidOrders: Number(row.paid_orders),
+          deliveredOrders: Number(row.delivered_orders),
+          processingOrders: Number(row.processing_orders),
+          failedOrders: Number(row.failed_orders),
+          totalSales: Number(row.total_sales),
+          customers: Number(row.customers),
 
-        totalEarnings: Number(
-          previousEarnings.toFixed(2)
-        ),
+          // Profit earned on delivered orders today.
+          todayProfit: Number(row.today_profit),
 
-        todaysProfit: Number(
-          todaysProfit.toFixed(2)
-        ),
-        
-        pendingDeliveryProfit: Number(
-    pendingDeliveryProfit.toFixed(2)
-),
+          // Profit from earlier days, minus reserved withdrawals.
+          availableBalance: Number(row.available_balance),
 
-        pendingWithdrawals: Number(
-          pendingAmount.toFixed(2)
-        ),
+          // Keep the existing field for compatibility.
+          estimatedMargin: Number(row.previous_profit) +
+                           Number(row.today_profit),
 
-        availableBalance: Number(
-          availableBalance.toFixed(2)
-        ),
+          pendingWithdrawals: Number(row.reserved_amount),
 
-        diagnostics: {
-          previousEligibleOrders:
-            Number(row.previous_orders || 0),
-
-          todaysEligibleOrders:
-            Number(row.todays_orders || 0),
-
-          previousEarnings: Number(
-            previousEarnings.toFixed(2)
-          ),
-
-          todaysProfit: Number(
-            todaysProfit.toFixed(2)
-          ),
-
-          reservedWithdrawals: Number(
-            reservedAmount.toFixed(2)
-          )
+          currency: "GHS",
+          timezone: "Africa/Accra"
         }
       });
 
     } catch (error) {
-      console.error(
-        "Withdrawal balance error:",
-        error.message
-      );
+      console.error("Agent stats error:", error.message);
 
       res.status(500).json({
         success: false,
-        message: "Could not load your withdrawal balance."
+        message: "Could not calculate agent profits."
       });
     }
   }
