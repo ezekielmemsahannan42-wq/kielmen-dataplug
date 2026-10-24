@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#050505">
+  <title>My Profile | Kielmen 636</title>
+
+  <style>
+    :root {
+      --bg: #050505;
+      --card: #0a0b0c;
+      --field: #111213;
+      --border: #3b3e40;
+      --text: #f4f5f6;
+      --muted: #9299a1;
+      --green: #00a85a;
+      --mint: #42cda5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    .topbar {
+      min-height: 82px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 17px;
+      border-bottom: 1px solid #292b2d;
+      background: #050505;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .logo {
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: #020617;
+      color: var(--mint);
+      font-size: 21px;
+      font-weight: 800;
+    }
+
+    .brand {
+      font-size: 19px;
+      font-weight: 750;
+      line-height: 1.25;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .dashboard-link {
+      margin-left: auto;
+      color: var(--mint);
+      text-decoration: none;
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    main {
+      max-width: 900px;
+      margin: auto;
+      padding: 20px 18px 115px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 5vw, 38px);
+      margin: 0;
+    }
+
+    .intro {
+      margin: 0 0 22px;
+      color: var(--muted);
+    }
+
+    .card {
+      padding: 21px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+      border-radius: 21px;
+      background: linear-gradient(145deg, #0b0c0d, #060606);
+    }
+
+    h2 {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-size: 20px;
+      margin: 0 0 13px;
+    }
+
+    .icon {
+      font-size: 22px;
+    }
+
+    .help {
+      color: var(--muted);
+      margin: 0 0 16px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 165px minmax(0, 1fr);
+      gap: 10px 12px;
+      align-items: center;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .input-wrap {
+      position: relative;
+      min-width: 0;
+    }
+
+    .prefix {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      font-size: 17px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      min-height: 48px;
+      background: var(--field);
+      color: var(--text);
+      border: 1px solid #4a4d50;
+      border-radius: 13px;
+      padding: 13px;
+      outline: none;
+    }
+
+    .input-wrap input {
+      padding-left: 43px;
+    }
+
+    textarea {
+      min-height: 85px;
+      resize: vertical;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: var(--mint);
+      box-shadow: 0 0 0 2px #00a85a25;
+    }
+
+    .hint {
+      grid-column: 2;
+      margin: -5px 0 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .btn {
+      width: 100%;
+      min-height: 52px;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 13px;
+      background: linear-gradient(100deg, #008a49, #00a95c);
+      color: white;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .btn:disabled {
+      opacity: 0.65;
+      cursor: wait;
+    }
+
+    .status {
+      display: none;
+      padding: 11px 13px;
+      margin-top: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.error {
+      color: #ffc0c0;
+      background: #421818;
+      border: 1px solid #773131;
+    }
+
+    .status.success {
+      color: #a8ffd4;
+      background: #0c3020;
+      border: 1px solid #176b43;
+    }
+
+    .password {
+      padding-right: 48px !important;
+    }
+
+    .toggle {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: 0;
+      background: transparent;
+      color: #b8bdc2;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    /* Bottom navigation */
+    .nav {
+      position: fixed;
+      z-index: 10;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      padding: 8px 3px calc(8px + env(safe-area-inset-bottom));
+      background: #020303;
+      border-top: 1px solid #333638;
+    }
+
+    .nav a {
+      color: #899098;
+      text-decoration: none;
+      text-align: center;
+      font-size: 12px;
+      padding: 4px 1px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .nav .ni {
+      font-size: 22px;
+      line-height: 1.3;
+    }
+
+    .nav a.active {
+      color: var(--mint);
+    }
+
+    @media (max-width: 600px) {
+      .topbar {
+        padding: 11px 14px;
+        gap: 9px;
+      }
+
+      .logo {
+        width: 53px;
+        height: 53px;
+        flex-basis: 53px;
+      }
+
+      .brand {
+        font-size: 17px;
+      }
+
+      .subtitle {
+        font-size: 12px;
+      }
+
+      .dashboard-link {
+        font-size: 12px;
+      }
+
+      main {
+        padding: 16px 17px 110px;
+      }
+
+      .card {
+        padding: 17px;
+        border-radius: 19px;
+      }
+
+      h2 {
+        font-size: 18px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 6px;
+      }
+
+      label {
+        margin-top: 7px;
+      }
+
+      .hint {
+        grid-column: 1;
+        margin: 0 0 5px;
+      }
+
+      .nav a {
+        font-size: 11px;
+      }
+
+      .nav .ni {
+        font-size: 21px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="logo">K636</div>
+
+    <div>
+      <div class="brand">Kielmen 636</div>
+      <div class="subtitle">AGENT STORE</div>
+    </div>
+
+    <a class="dashboard-link" href="agent-dashboard.html">
+      ● Agent Dashboard
+    </a>
+  </header>
+
+  <main>
+
+    <h1>My Profile</h1>
+    <p class="intro">
+      View and update your account information.
+    </p>
+
+    <!-- PERSONAL INFORMATION AND CONTACT LINKS -->
+    <form id="profileForm">
+
+      <section class="card">
+
+        <h2>
+          <span class="icon">♟</span>
+          Personal Information
+        </h2>
+
+        <div class="grid">
+
+          <label for="fullName">Full Name</label>
+          <div class="input-wrap">
+            <span class="prefix">♟</span>
+            <input
+              id="fullName"
+              name="fullName"
+              autocomplete="name"
+              required
+              maxlength="100"
+              placeholder="Enter your full name"
+            >
+          </div>
+
+          <label for="businessName">Business Name</label>
+          <div class="input-wrap">
+            <span class="prefix">▣</span>
+            <input
+              id="businessName"
+              name="businessName"
+              autocomplete="organization"
+              required
+              maxlength="100"
+              placeholder="Enter your business name"
+            >
+          </div>
+
+          <label for="phone">Phone Number</label>
+          <div class="input-wrap">
+            <span class="prefix">☎</span>
+            <input
+              id="phone"
+              name="phone"
+              type="tel"
+              autocomplete="tel"
+              required
+              maxlength="25"
+              placeholder="e.g. 0241234567"
+            >
+          </div>
+
+          <label for="email">Email Address</label>
+          <div class="input-wrap">
+            <span class="prefix">✉</span>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              maxlength="150"
+              placeholder="you@example.com"
+            >
+          </div>
+
+        </div>
+
+        <div
+          id="profileStatus"
+          class="status"
+          role="status"
+          aria-live="polite"
+        ></div>
+
+      </section>
+
+      <!-- CONTACT AND SOCIAL LINKS -->
+      <section class="card">
+
+        <h2>
+          <span class="icon">↗</span>
+          Contact &amp; Social Links
+        </h2>
+
+        <p class="help">
+          Add contact channels that customers can use to reach you
+          from your agent store.
+        </p>
+
+        <div class="grid">
+
+          <label for="whatsappNumber">WhatsApp Number</label>
+          <div class="input-wrap">
+            <span class="prefix">☎</span>
+            <input
+              id="whatsappNumber"
+              name="whatsappNumber"
+              type="tel"
+              maxlength="25"
+              placeholder="e.g. 0241234567 or +233241234567"
+            >
+          </div>
+
+          <div></div>
+          <p class="hint">
+            Use the number customers should message.
+          </p>
+
+          <label for="whatsappChannel">
+            WhatsApp Channel Link (Optional)
+          </label>
+          <div class="input-wrap">
+            <span class="prefix">↗</span>
+            <input
+              id="whatsappChannel"
+              name="whatsappChannel"
+              type="url"
+              maxlength="500"
+              placeholder="https://whatsapp.com/channel/..."
+            >
+          </div>
+
+          <div></div>
+          <p class="hint">
+            Paste your WhatsApp Channel link if you have one.
+          </p>
+
+          <label for="socialLink">
+            Other Social Link (Optional)
+          </label>
+          <div class="input-wrap">
+            <span class="prefix">↗</span>
+            <input
+              id="socialLink"
+              name="socialLink"
+              type="url"
+              maxlength="500"
+              placeholder="https://..."
+            >
+          </div>
+
+          <div></div>
+          <p class="hint">
+            Facebook, TikTok, Instagram, Telegram, or another page.
+          </p>
+
+          <label for="description">
+            Store Description (Optional)
+          </label>
+          <textarea
+            id="description"
+            name="description"
+            maxlength="500"
+            placeholder="Describe your store and services"
+          ></textarea>
+
+          <div></div>
+          <p class="hint">
+            This can appear on your agent store page.
+          </p>
+
+        </div>
+
+        <button class="btn" id="saveProfileBtn" type="submit">
+          ▣ &nbsp; Save Profile Changes
+        </button>
+
+      </section>
+
+    </form>
+
+    <!-- CHANGE PASSWORD -->
+    <form id="passwordForm" class="card">
+
+      <h2>
+        <span class="icon">🔒</span>
+        Change Password
+      </h2>
+
+      <p class="help">
+        Update your password to keep your account secure.
+      </p>
+
+      <div class="grid">
+
+        <label for="currentPassword">Current Password</label>
+        <div class="input-wrap">
+          <span class="prefix">▣</span>
+          <input
+            class="password"
+            id="currentPassword"
+            type="password"
+            autocomplete="current-password"
+            required
+            placeholder="Enter current password"
+          >
+          <button
+            class="toggle"
+            type="button"
+            data-target="currentPassword"
+            aria-label="Show or hide password"
+          >◉</button>
+        </div>
+
+        <label for="newPassword">New Password</label>
+        <div class="input-wrap">
+          <span class="prefix">▣</span>
+          <input
+            class="password"
+            id="newPassword"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+            placeholder="At least 8 characters"
+          >
+          <button
+            class="toggle"
+            type="button"
+            data-target="newPassword"
+            aria-label="Show or hide password"
+          >◉</button>
+        </div>
+
+        <label for="confirmPassword">Confirm New Password</label>
+        <div class="input-wrap">
+          <span class="prefix">▣</span>
+          <input
+            class="password"
+            id="confirmPassword"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+            placeholder="Confirm new password"
+          >
+          <button
+            class="toggle"
+            type="button"
+            data-target="confirmPassword"
+            aria-label="Show or hide password"
+          >◉</button>
+        </div>
+
+      </div>
+
+      <div
+        id="passwordStatus"
+        class="status"
+        role="status"
+        aria-live="polite"
+      ></div>
+
+      <button
+        class="btn"
+        id="changePasswordBtn"
+        type="submit"
+      >
+        ⚿ &nbsp; Update Password
+      </button>
+
+    </form>
+
+  </main>
+
+  <!-- AGENT BOTTOM NAVIGATION -->
+  <nav class="nav" aria-label="Agent navigation">
+
+    <a href="agent-dashboard.html">
+      <span class="ni">⌂</span>
+      Home
+    </a>
+
+    <a href="agent-store.html">
+      <span class="ni">□</span>
+      Store
+    </a>
+
+    <a href="agent-prices.html">
+      <span class="ni">₵</span>
+      My Prices
+    </a>
+
+    <a href="agent-orders.html">
+      <span class="ni">▤</span>
+      Orders
+    </a>
+
+    <a
+      class="active"
+      href="agent-profile.html"
+      aria-current="page"
+    >
+      <span class="ni">◎</span>
+      Profile
+    </a>
+
+    <a href="agent-withdraw.html">
+      <span class="ni">💰</span>
+      Withdraw
+    </a>
+
+  </nav>
+
+  <script>
+    const API_BASE =
+      "https://kielmen-dataplug-payment-api.onrender.com";
+
+    /*
+      These frontend calls require matching authenticated
+      backend routes in server.js.
+    */
+
+    function getAuthToken() {
+      const keys = [
+        "agentToken",
+        "agent_token",
+        "token",
+        "authToken",
+        "accessToken"
+      ];
+
+      for (const key of keys) {
+        const value = localStorage.getItem(key);
+        if (value) return value;
+      }
+
+      return "";
+    }
+
+    function getHeaders(json = true) {
+      const headers = {};
+
+      if (json) {
+        headers["Content-Type"] = "application/json";
+      }
+
+      const token = getAuthToken();
+
+      if (token) {
+        headers["Authorization"] = "Bearer " + token;
+      }
+
+      return headers;
+    }
+
+    function showStatus(id, message, type = "error") {
+      const element = document.getElementById(id);
+
+      element.textContent = message;
+      element.className = "status show " + type;
+    }
+
+    function fillProfile(profile) {
+      const values = {
+        fullName:
+          profile.fullName ??
+          profile.full_name ??
+          profile.name,
+
+        businessName:
+          profile.businessName ??
+          profile.business_name,
+
+        phone:
+          profile.phone ??
+          profile.phoneNumber ??
+          profile.phone_number,
+
+        email:
+          profile.email,
+
+        whatsappNumber:
+          profile.whatsappNumber ??
+          profile.whatsapp_number ??
+          profile.whatsapp,
+
+        whatsappChannel:
+          profile.whatsappChannel ??
+          profile.whatsapp_channel,
+
+        socialLink:
+          profile.socialLink ??
+          profile.social_link,
+
+        description:
+          profile.description ??
+          profile.storeDescription ??
+          profile.store_description
+      };
+
+      for (const [id, value] of Object.entries(values)) {
+        if (value !== undefined && value !== null) {
+          document.getElementById(id).value = value;
+        }
+      }
+    }
+
+    // Load the signed-in agent's profile.
+    async function loadProfile() {
+      try {
+        const response = await fetch(
+          API_BASE + "/agents/profile",
+          {
+            method: "GET",
+            headers: getHeaders(false),
+            credentials: "include"
+          }
+        );
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || data.success === false) {
+          showStatus(
+            "profileStatus",
+            data.message ||
+            "Profile loading is not connected yet. Add GET /agents/profile to server.js."
+          );
+          return;
+        }
+
+        fillProfile(
+          data.profile ||
+          data.agent ||
+          data.data ||
+          data
+        );
+
+      } catch (error) {
+        showStatus(
+          "profileStatus",
+          "Could not connect to the server. Check your internet connection."
+        );
+      }
+    }
+
+    // Save the agent's profile details.
+    document
+      .getElementById("profileForm")
+      .addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        const button =
+          document.getElementById("saveProfileBtn");
+
+        const payload = {
+          fullName:
+            document.getElementById("fullName").value.trim(),
+
+          businessName:
+            document.getElementById("businessName").value.trim(),
+
+          phone:
+            document.getElementById("phone").value.trim(),
+
+          email:
+            document.getElementById("email").value.trim(),
+
+          whatsappNumber:
+            document.getElementById("whatsappNumber").value.trim(),
+
+          whatsappChannel:
+            document.getElementById("whatsappChannel").value.trim(),
+
+          socialLink:
+            document.getElementById("socialLink").value.trim(),
+
+          description:
+            document.getElementById("description").value.trim()
+        };
+
+        for (const key of ["whatsappChannel", "socialLink"]) {
+          if (
+            payload[key] &&
+            !/^https?:\/\//i.test(payload[key])
+          ) {
+            showStatus(
+              "profileStatus",
+              "Links must start with https:// or http://."
+            );
+            return;
+          }
+        }
+
+        button.disabled = true;
+        button.textContent = "Saving profile...";
+
+        try {
+          const response = await fetch(
+            API_BASE + "/agents/profile",
+            {
+              method: "PUT",
+              headers: getHeaders(true),
+              credentials: "include",
+              body: JSON.stringify(payload)
+            }
+          );
+
+          const data =
+            await response.json().catch(() => ({}));
+
+          if (!response.ok || data.success === false) {
+            showStatus(
+              "profileStatus",
+              data.message ||
+              "Saving is not connected yet. Add PUT /agents/profile to server.js."
+            );
+          } else {
+            showStatus(
+              "profileStatus",
+              data.message || "Profile updated successfully.",
+              "success"
+            );
+          }
+
+        } catch (error) {
+          showStatus(
+            "profileStatus",
+            "Could not connect. Your changes have not been confirmed as saved."
+          );
+        } finally {
+          button.disabled = false;
+          button.textContent = "▣   Save Profile Changes";
+        }
+      });
+
+    // Change the agent's password securely through the backend.
+    document
+      .getElementById("passwordForm")
+      .addEventListener("submit", async function(event) {
+
+        event.preventDefault();
+
+        const currentPassword =
+          document.getElementById("currentPassword").value;
+
+        const newPassword =
+          document.getElementById("newPassword").value;
+
+        const confirmPassword =
+          document.getElementById("confirmPassword").value;
+
+        if (newPassword.length < 8) {
+          showStatus(
+            "passwordStatus",
+            "Your new password must be at least 8 characters long."
+          );
+          return;
+        }
+
+        if (newPassword !== confirmPassword) {
+          showStatus(
+            "passwordStatus",
+            "The new password and confirmation do not match."
+          );
+          return;
+        }
+
+        if (newPassword === currentPassword) {
+          showStatus(
+            "passwordStatus",
+            "Choose a password different from your current password."
+          );
+          return;
+        }
+
+        const button =
+          document.getElementById("changePasswordBtn");
+
+        button.disabled = true;
+        button.textContent = "Updating password...";
+
+        try {
+          const response = await fetch(
+            API_BASE + "/agents/change-password",
+            {
+              method: "POST",
+              headers: getHeaders(true),
+              credentials: "include",
+              body: JSON.stringify({
+                currentPassword,
+                newPassword
+              })
+            }
+          );
+
+          const data =
+            await response.json().catch(() => ({}));
+
+          if (!response.ok || data.success === false) {
+            showStatus(
+              "passwordStatus",
+              data.message ||
+              "Password change is not connected yet. Add POST /agents/change-password to server.js."
+            );
+          } else {
+            event.target.reset();
+
+            showStatus(
+              "passwordStatus",
+              data.message || "Password updated successfully.",
+              "success"
+            );
+          }
+
+        } catch (error) {
+          showStatus(
+            "passwordStatus",
+            "Could not connect. The password has not been confirmed as changed."
+          );
+        } finally {
+          button.disabled = false;
+          button.textContent = "⚿   Update Password";
+        }
+      });
+
+    // Show or hide password fields.
+    document.querySelectorAll(".toggle").forEach(function(button) {
+      button.addEventListener("click", function() {
+        const input =
+          document.getElementById(button.dataset.target);
+
+        input.type =
+          input.type === "password" ? "text" : "password";
+      });
+    });
+
+    loadProfile();
+  </script>
+
+</body>
+            </html>
