@@ -1409,7 +1409,7 @@ app.put(
 // AGENT STATISTICS AND PROFIT
 // ============================================================
 
-        app.get(
+      app.get(
   "/agents/stats",
   requireAgent,
   requireApprovedAgent,
@@ -1435,16 +1435,21 @@ app.put(
             ) AS processing_orders,
 
             COUNT(*) FILTER (
-              WHERE LOWER(TRIM(COALESCE(delivery_status, ''))) = 'failed'
+              WHERE LOWER(TRIM(COALESCE(delivery_status, '')))
+                IN ('failed', 'rejected', 'cancelled', 'canceled')
             ) AS failed_orders,
 
             COUNT(*) FILTER (
               WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
                 AND LOWER(TRIM(COALESCE(delivery_status, '')))
-                  NOT IN (
-                    'delivered', 'completed', 'success', 'successful',
-                    'failed', 'rejected', 'cancelled', 'canceled'
-                  )
+                  IN ('processing', 'delivered', 'completed', 'success', 'successful')
+                AND supplier_reference IS NOT NULL
+            ) AS accepted_orders,
+
+            COUNT(*) FILTER (
+              WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+                AND LOWER(TRIM(COALESCE(delivery_status, ''))) = 'processing'
+                AND supplier_reference IS NOT NULL
             ) AS pending_delivery_orders,
 
             COUNT(DISTINCT phone) AS customers,
@@ -1452,55 +1457,58 @@ app.put(
             COALESCE(
               SUM(amount) FILTER (
                 WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-              ),
-              0
+              ), 0
             ) AS total_sales,
 
             COALESCE(
-              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
+              SUM(amount - agent_base_price) FILTER (
                 WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
                   AND agent_base_price IS NOT NULL
-              ),
-              0
+                  AND supplier_reference IS NOT NULL
+                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                    IN ('processing', 'delivered', 'completed', 'success', 'successful')
+              ), 0
             ) AS estimated_profit,
 
             COALESCE(
-              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
+              SUM(amount - agent_base_price) FILTER (
                 WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
-                    IN ('delivered', 'completed', 'success', 'successful')
                   AND agent_base_price IS NOT NULL
-                  AND delivered_at IS NOT NULL
-                  AND (delivered_at AT TIME ZONE 'Africa/Accra')::date
-                    < (NOW() AT TIME ZONE 'Africa/Accra')::date
-              ),
-              0
+                  AND supplier_reference IS NOT NULL
+                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                    IN ('processing', 'delivered', 'completed', 'success', 'successful')
+                  AND created_at < (
+                    date_trunc(
+                      'day',
+                      NOW() AT TIME ZONE 'Africa/Accra'
+                    ) AT TIME ZONE 'Africa/Accra'
+                  )
+              ), 0
             ) AS previous_profit,
 
             COALESCE(
-              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
+              SUM(amount - agent_base_price) FILTER (
                 WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
-                    IN ('delivered', 'completed', 'success', 'successful')
                   AND agent_base_price IS NOT NULL
-                  AND delivered_at IS NOT NULL
-                  AND (delivered_at AT TIME ZONE 'Africa/Accra')::date
-                    = (NOW() AT TIME ZONE 'Africa/Accra')::date
-              ),
-              0
+                  AND supplier_reference IS NOT NULL
+                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                    IN ('processing', 'delivered', 'completed', 'success', 'successful')
+                  AND created_at >= (
+                    date_trunc(
+                      'day',
+                      NOW() AT TIME ZONE 'Africa/Accra'
+                    ) AT TIME ZONE 'Africa/Accra'
+                  )
+              ), 0
             ) AS today_profit,
 
             COALESCE(
-              SUM(GREATEST(amount - agent_base_price, 0)) FILTER (
+              SUM(amount - agent_base_price) FILTER (
                 WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
                   AND agent_base_price IS NOT NULL
-                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
-                    NOT IN (
-                      'delivered', 'completed', 'success', 'successful',
-                      'failed', 'rejected', 'cancelled', 'canceled'
-                    )
-              ),
-              0
+                  AND supplier_reference IS NOT NULL
+                  AND LOWER(TRIM(COALESCE(delivery_status, ''))) = 'processing'
+              ), 0
             ) AS pending_delivery_profit
 
           FROM orders
@@ -1509,20 +1517,22 @@ app.put(
 
         reserved AS (
           SELECT
-            COALESCE(SUM(amount), 0) AS reserved_amount,
+            COALESCE(
+              SUM(amount) FILTER (
+                WHERE LOWER(TRIM(COALESCE(status, '')))
+                  IN ('pending', 'approved', 'paid')
+              ), 0
+            ) AS reserved_amount,
 
             COALESCE(
               SUM(amount) FILTER (
                 WHERE LOWER(TRIM(COALESCE(status, '')))
                   IN ('pending', 'approved')
-              ),
-              0
+              ), 0
             ) AS pending_amount
 
           FROM agent_withdrawals
           WHERE agent_id = $1
-            AND LOWER(TRIM(COALESCE(status, '')))
-              IN ('pending', 'approved', 'paid')
         )
 
         SELECT
@@ -1549,21 +1559,22 @@ app.put(
 
       res.json({
         success: true,
-
         stats: {
           totalOrders: Number(row.total_orders),
           paidOrders: Number(row.paid_orders),
           deliveredOrders: Number(row.delivered_orders),
           processingOrders: Number(row.processing_orders),
           failedOrders: Number(row.failed_orders),
+          acceptedOrders: Number(row.accepted_orders),
           pendingDeliveryOrders: Number(row.pending_delivery_orders),
           totalSales: Number(row.total_sales),
+
           customers: Number(row.customers),
 
           estimatedProfit,
           estimatedMargin: estimatedProfit,
 
-          confirmedProfit: previousProfit + todayProfit,
+          confirmedProfit: estimatedProfit,
           todayProfit,
           pendingDeliveryProfit: Number(row.pending_delivery_profit),
 
@@ -1659,80 +1670,45 @@ app.post(
     date_trunc(
       'day',
       NOW() AT TIME ZONE 'Africa/Accra'
-    ) AT TIME ZONE 'Africa/Accra' AS today_start,
-
-    (
-      date_trunc(
-        'day',
-        NOW() AT TIME ZONE 'Africa/Accra'
-      ) + INTERVAL '1 day'
-    ) AT TIME ZONE 'Africa/Accra' AS next_day_start
+    ) AT TIME ZONE 'Africa/Accra' AS today_start
 ),
 
 earnings AS (
   SELECT
     COALESCE(
       SUM(o.amount - o.agent_base_price) FILTER (
-        WHERE o.delivered_at < t.today_start
+        WHERE o.created_at < t.today_start
       ),
       0
     ) AS previous_earnings,
 
     COALESCE(
-  SUM(o.amount - o.agent_base_price) FILTER (
-    WHERE o.delivered_at >= t.today_start
-      AND o.delivered_at < t.next_day_start
-  ),
-  0
-) AS todays_earnings,
-
-    COUNT(*) FILTER (
-      WHERE o.delivered_at < t.today_start
-    ) AS previous_orders,
-
-    COUNT(*) FILTER (
-  WHERE o.delivered_at >= t.today_start
-    AND o.delivered_at < t.next_day_start
-) AS todays_orders
+      SUM(o.amount - o.agent_base_price) FILTER (
+        WHERE o.created_at >= t.today_start
+      ),
+      0
+    ) AS todays_earnings
 
   FROM orders o
   CROSS JOIN time_boundary t
 
   WHERE o.agent_id = $1
     AND LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
-    AND LOWER(TRIM(COALESCE(o.delivery_status, ''))) IN (
-      'delivered',
-      'completed',
-      'success',
-      'successful'
-    )
-    AND o.delivered_at IS NOT NULL
     AND o.agent_base_price IS NOT NULL
-    AND o.amount > o.agent_base_price
+    AND o.supplier_reference IS NOT NULL
+    AND LOWER(TRIM(COALESCE(o.delivery_status, '')))
+      IN ('processing', 'delivered', 'completed', 'success', 'successful')
 ),
 
 withdrawals AS (
   SELECT
     COALESCE(
       SUM(amount) FILTER (
-        WHERE LOWER(TRIM(status)) IN (
-          'pending',
-          'approved',
-          'paid'
-        )
+        WHERE LOWER(TRIM(COALESCE(status, '')))
+          IN ('pending', 'approved', 'paid')
       ),
       0
-    ) AS reserved_amount,
-
-    COALESCE(
-      SUM(amount) FILTER (
-        WHERE LOWER(TRIM(status)) IN (
-          'pending',
-          'approved'
-        )
-      ),
-      0
-    ) AS pending_amount
+    ) AS reserved_amount
 
   FROM agent_withdrawals
   WHERE agent_id = $1
@@ -1741,11 +1717,7 @@ withdrawals AS (
 SELECT
   earnings.previous_earnings,
   earnings.todays_earnings,
-  earnings.previous_orders,
-  earnings.todays_orders,
-  withdrawals.reserved_amount,
-  withdrawals.pending_amount
-
+  withdrawals.reserved_amount
 FROM earnings
 CROSS JOIN withdrawals
         `,
@@ -2196,10 +2168,12 @@ app.get("/owner/stats", requireOwner, async (_req, res) => {
           SUM(
             GREATEST(amount - agent_base_price, 0)
           ) FILTER (
-            WHERE LOWER(status) = 'paid'
-              AND LOWER(delivery_status) = 'delivered'
-              AND agent_id IS NOT NULL
-              AND agent_base_price IS NOT NULL
+            WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+  AND LOWER(TRIM(COALESCE(delivery_status, '')))
+    IN ('processing', 'delivered', 'completed', 'success', 'successful')
+  AND agent_id IS NOT NULL
+  AND agent_base_price IS NOT NULL
+  AND supplier_reference IS NOT NULL
           ), 0
         )::numeric(12,2) AS total_agent_profit
 
@@ -2312,12 +2286,14 @@ app.get("/owner/orders", requireOwner, async (req, res) => {
         a.business_name AS agent_business_name,
 
         CASE
-          WHEN o.status = 'paid'
-            AND o.delivery_status = 'delivered'
-            AND o.agent_base_price IS NOT NULL
-          THEN GREATEST(o.amount - o.agent_base_price, 0)
-          ELSE 0
-        END AS estimated_agent_margin
+  WHEN LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
+    AND LOWER(TRIM(COALESCE(o.delivery_status, '')))
+      IN ('processing', 'delivered', 'completed', 'success', 'successful')
+    AND o.agent_base_price IS NOT NULL
+    AND o.supplier_reference IS NOT NULL
+  THEN GREATEST(o.amount - o.agent_base_price, 0)
+  ELSE 0
+END AS estimated_agent_margin
 
       FROM orders o
 
