@@ -1,14 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#111211">
-
-  <title>Agent Sign In | Kielmen 636 Dataplug</title>
-
-  <style>
-    * { box-sizing: border-box; }
+  <meta name="theme-color" content="#111211">  <title>Agent Sign In | Kielmen 636 Dataplug</title>  <style>
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -18,7 +15,7 @@
       padding: 20px;
       background: #111211;
       color: #e8ecee;
-      font-family: Arial, sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
     .login-card {
@@ -28,33 +25,88 @@
       background: #202120;
       border: 1px solid #454744;
       border-radius: 20px;
+      box-shadow: 0 15px 40px #00000035;
     }
 
-    h1 { margin-top: 0; }
+    .logo {
+      width: 65px;
+      height: 65px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+      border-radius: 18px;
+      background: #020617;
+      color: #48c6a3;
+      font-size: 23px;
+      font-weight: 800;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 27px;
+    }
 
     .subtitle {
       color: #a6afb5;
       line-height: 1.6;
+      margin-bottom: 24px;
     }
 
     label {
       display: block;
       margin: 18px 0 8px;
       font-weight: bold;
+      font-size: 14px;
     }
 
     input {
       width: 100%;
+      min-height: 49px;
       padding: 14px;
       border: 1px solid #505351;
       border-radius: 10px;
       background: #292a29;
       color: white;
       font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #48c6a3;
+      box-shadow: 0 0 0 2px #48c6a325;
+    }
+
+    .password-wrap {
+      position: relative;
+    }
+
+    .password-wrap input {
+      padding-right: 65px;
+    }
+
+    .show-password {
+      position: absolute;
+      right: 5px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: auto;
+      margin: 0;
+      padding: 9px;
+      background: transparent;
+      color: #48c6a3;
+      font-size: 12px;
+    }
+
+    .hint {
+      color: #a6afb5;
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 8px 0 0;
     }
 
     button {
       width: 100%;
+      min-height: 49px;
       margin-top: 22px;
       padding: 14px;
       border: 0;
@@ -66,72 +118,143 @@
       cursor: pointer;
     }
 
-    button:disabled { opacity: .6; }
+    button:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
 
     #message {
-      margin-top: 16px;
+      margin-top: 17px;
+      padding: 12px;
+      border-radius: 10px;
       line-height: 1.5;
       overflow-wrap: anywhere;
+      font-size: 14px;
     }
 
-    a { color: #48c6a3; }
+    #message:empty {
+      display: none;
+    }
+
+    #message.error {
+      color: #ffc0c0;
+      background: #421818;
+      border: 1px solid #773131;
+    }
+
+    #message.success {
+      color: #a8ffd4;
+      background: #0c3020;
+      border: 1px solid #176b43;
+    }
+
+    a {
+      color: #48c6a3;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
 
     .links {
-      margin-top: 20px;
-      line-height: 2;
+      margin-top: 22px;
+      text-align: center;
+      line-height: 2.2;
+      font-size: 14px;
     }
-  </style>
-</head>
 
-<body>
-  <main class="login-card">
-    <h1>🔐 Agent Sign In</h1>
+    .divider {
+      height: 1px;
+      background: #454744;
+      margin: 22px 0;
+    }
 
-    <p class="subtitle">
-      Sign in to your Kielmen 636 Dataplug agent account.
-    </p>
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      color: #899098;
+      font-size: 12px;
+    }
+  </style></head><body>
+  <main class="login-card"><div class="logo">K636</div>
 
-    <form id="loginForm">
-      <label for="email">Email Address</label>
-      <input
-        id="email"
-        name="email"
-        type="email"
-        autocomplete="username"
-        placeholder="Enter your registered email"
-        maxlength="255"
-        required
-      >
+<h1>🔐 Agent Sign In</h1>
 
-      <label for="password">Password</label>
-      <input
-        id="password"
-        name="password"
-        type="password"
-        autocomplete="current-password"
-        placeholder="Enter your password"
-        minlength="12"
-        maxlength="128"
-        required
-      >
+<p class="subtitle">
+  Welcome back to Kielmen 636 Dataplug.
+  Sign in to manage your agent account, store and orders.
+</p>
 
-      <button id="loginButton" type="submit">
-        Sign In
-      </button>
-    </form>
+<form id="loginForm">
 
-    <p id="message" role="status" aria-live="polite">
-      Enter your registered email and password.
-    </p>
+  <label for="email">Email Address</label>
 
-    <div class="links">
-      <a href="agent-register.html">Become an Agent / Sign Up</a>
-      <br>
-      <a href="index.html">← Back to Home</a>
-    </div>
-  </main>
+  <input
+    id="email"
+    name="email"
+    type="email"
+    autocomplete="username"
+    placeholder="Enter your registered email"
+    maxlength="255"
+    required
+  >
 
-  <script>
+  <label for="password">Password</label>
+
+  <div class="password-wrap">
+    <input
+      id="password"
+      name="password"
+      type="password"
+      autocomplete="current-password"
+      placeholder="Enter your password"
+      minlength="12"
+      maxlength="128"
+      required
+    >
+
+    <button
+      class="show-password"
+      id="togglePassword"
+      type="button"
+      aria-label="Show password"
+    >
+      SHOW
+    </button>
+  </div>
+
+  <p class="hint">
+    Your password must contain at least 12 characters.
+  </p>
+
+  <button id="loginButton" type="submit">
+    Sign In
+  </button>
+
+</form>
+
+<p id="message" role="status" aria-live="polite"></p>
+
+<div class="divider"></div>
+
+<div class="links">
+  <a href="agent-register.html">
+    Become an Agent / Sign Up
+  </a>
+
+  <br>
+
+  <a href="index.html">
+    ← Back to Home
+  </a>
+</div>
+
+<p class="footer">
+  © Kielmen 636 Dataplug
+</p>
+
+  </main>  <script>
     "use strict";
 
     const API_BASE =
@@ -140,13 +263,59 @@
     const form = document.getElementById("loginForm");
     const button = document.getElementById("loginButton");
     const message = document.getElementById("message");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const togglePassword = document.getElementById("togglePassword");
+
+    function showMessage(text, type) {
+      message.textContent = text;
+      message.className = type || "";
+    }
+
+    togglePassword.addEventListener("click", function() {
+      const showing = passwordInput.type === "text";
+
+      passwordInput.type = showing ? "password" : "text";
+      togglePassword.textContent = showing ? "SHOW" : "HIDE";
+      togglePassword.setAttribute(
+        "aria-label",
+        showing ? "Show password" : "Hide password"
+      );
+    });
 
     form.addEventListener("submit", async function(event) {
       event.preventDefault();
 
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email) {
+        showMessage("Please enter your registered email address.", "error");
+        emailInput.focus();
+        return;
+      }
+
+      if (password.length < 12) {
+        showMessage(
+          "Your password must contain at least 12 characters.",
+          "error"
+        );
+        passwordInput.focus();
+        return;
+      }
+
+      if (password.length > 128) {
+        showMessage(
+          "Your password cannot exceed 128 characters.",
+          "error"
+        );
+        passwordInput.focus();
+        return;
+      }
+
       button.disabled = true;
       button.textContent = "Signing in...";
-      message.textContent = "Connecting to the server...";
+      showMessage("Connecting securely to the server...", "");
 
       try {
         const response = await fetch(API_BASE + "/agents/login", {
@@ -156,8 +325,8 @@
             "Accept": "application/json"
           },
           body: JSON.stringify({
-            email: document.getElementById("email").value.trim(),
-            password: document.getElementById("password").value
+            email: email,
+            password: password
           })
         });
 
@@ -167,46 +336,56 @@
           result = await response.json();
         } catch {
           throw new Error(
-            "The server did not return valid JSON. Please try again later."
+            "The server returned an invalid response. Please try again."
           );
         }
 
         if (!response.ok || !result.success) {
-          message.textContent =
-            result.message || "Login failed. Check your details.";
+          showMessage(
+            result.message || "Login failed. Check your email and password.",
+            "error"
+          );
           return;
         }
 
         if (!result.token || !result.agent) {
-          message.textContent =
-            "Login response is incomplete. Please contact the administrator.";
+          showMessage(
+            "The server response is missing your login information. Please contact the administrator.",
+            "error"
+          );
           return;
         }
 
-        sessionStorage.setItem(
-          "k636_agent_token",
-          result.token
-        );
+        // Use the same session-storage keys as the existing agent system.
+        sessionStorage.setItem("k636_agent_token", result.token);
 
         sessionStorage.setItem(
           "k636_agent",
           JSON.stringify(result.agent)
         );
 
-        message.textContent = "Login successful. Opening dashboard...";
+        showMessage(
+          "Login successful. Opening your dashboard...",
+          "success"
+        );
 
-        window.location.href =
-          "agent-dashboard.html?refresh=" + Date.now();
+        window.location.replace(
+          "agent-dashboard.html?refresh=" + Date.now()
+        );
 
       } catch (error) {
-        message.textContent =
+        console.error("Agent login error:", error);
+
+        showMessage(
           error.message ||
-          "Unable to connect. Check your internet and try again.";
+          "Unable to connect. Check your internet connection and try again.",
+          "error"
+        );
+
       } finally {
         button.disabled = false;
         button.textContent = "Sign In";
       }
     });
-  </script>
-</body>
+  </script></body>
 </html>
