@@ -344,9 +344,50 @@ input:focus,textarea:focus {
             placeholder="you@example.com">
         </div>
       </div>
-
-      <div id="profileStatus" class="status"
+      
+ <div id="profileStatus" class="status"
         role="status" aria-live="polite"></div>
+      <section class="card" id="storeLinkCard">
+  <h2><span class="icon">🔗</span>My Store Link</h2>
+
+  <p class="help">
+    Your customers can use this link to visit your personal store.
+    Changing your business name can update your store link.
+  </p>
+
+  <label for="storeSlug">Your store URL</label>
+
+  <div style="display:flex;gap:8px;margin-top:8px;align-items:stretch">
+    <input
+      id="storeSlug"
+      type="text"
+      readonly
+      placeholder="Your store link will appear here"
+      aria-label="Your personal store link"
+    >
+
+    <button
+      class="btn"
+      id="copyStoreLink"
+      type="button"
+      style="width:auto;min-width:95px;margin-top:0"
+    >
+      Copy Link
+    </button>
+  </div>
+
+  <p class="security-note">
+    Your store link must be unique. If another agent already uses a
+    name, the system will generate a different link.
+  </p>
+
+  <div
+    id="storeLinkStatus"
+    class="status"
+    role="status"
+    aria-live="polite"
+  ></div>
+      </section>
     </section>
 
     <section class="card">
@@ -561,20 +602,41 @@ async function loadProfile() {
     }
 
     const profile = data.profile || data.agent || data.data || data;
+    const storeSlug = profile.storeSlug || profile.store_slug || "";
+
+if (storeSlug) {
+  $("storeSlug").value =
+    "https://kielmen.com/" + storeSlug.replace(/^\/+/, "");
+  }
 
     const fields = {
-      fullName: profile.fullName ?? profile.full_name ?? profile.name,
-      businessName: profile.businessName ?? profile.business_name,
-      phone: profile.phone ?? profile.phoneNumber ?? profile.phone_number,
-      email: profile.email,
-      whatsappNumber:
-        profile.whatsappNumber ?? profile.whatsapp_number ?? profile.whatsapp,
-      whatsappChannel:
-        profile.whatsappChannel ?? profile.whatsapp_channel,
-      socialLink: profile.socialLink ?? profile.social_link,
-      description:
-        profile.description ?? profile.storeDescription ?? profile.store_description
-    };
+  fullName: profile.fullName ?? profile.full_name ?? profile.name,
+  businessName: profile.businessName ?? profile.business_name,
+  phone: profile.phone ?? profile.phoneNumber ?? profile.phone_number,
+  email: profile.email,
+  whatsappNumber:
+    profile.whatsappNumber ?? profile.whatsapp_number ?? profile.whatsapp,
+  whatsappChannel:
+    profile.whatsappChannel ?? profile.whatsapp_channel,
+  socialLink: profile.socialLink ?? profile.social_link,
+  description:
+    profile.description ?? profile.storeDescription ?? profile.store_description
+};
+
+for (const [id, value] of Object.entries(fields)) {
+  if (value !== undefined && value !== null) {
+    $(id).value = value;
+  }
+}
+
+const slug =
+  profile.storeSlug ??
+  profile.store_slug ??
+  "";
+
+$("storeSlug").value = slug
+  ? `${window.location.origin}/${slug}`
+  : "Save your profile to create your store link";
 
     for (const [id, value] of Object.entries(fields)) {
       if (value !== undefined && value !== null) {
@@ -754,6 +816,35 @@ document.querySelectorAll(".toggle").forEach(button => {
     input.type = input.type === "password" ? "text" : "password";
     button.textContent = input.type === "password" ? "◉" : "◌";
   });
+});
+  $("copyStoreLink").addEventListener("click", async () => {
+  const link = $("storeSlug").value;
+
+  if (!link.startsWith("https://")) {
+    showStatus(
+      "storeLinkStatus",
+      "Your store link is not ready yet. Save your profile first."
+    );
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(link);
+
+    showStatus(
+      "storeLinkStatus",
+      "Store link copied successfully!",
+      "success"
+    );
+  } catch (_error) {
+    $("storeSlug").focus();
+    $("storeSlug").select();
+
+    showStatus(
+      "storeLinkStatus",
+      "Automatic copying failed. Select and copy the link manually."
+    );
+  }
 });
 
 loadProfile();
