@@ -904,3 +904,86 @@ if (document.readyState === "loading") {
 } else {
   initializeOwnerDashboard();
    }
+// ========================================
+// SMS CUSTOMER FILE UPLOAD
+// ========================================
+
+document.addEventListener("DOMContentLoaded", () => {
+  const fileInput = document.getElementById("smsContactFile");
+  const recipientsBox = document.getElementById("smsRecipients");
+  const recipientCount = document.getElementById("smsRecipientCount");
+
+  if (!fileInput || !recipientsBox) return;
+
+  fileInput.addEventListener("change", async () => {
+    const file = fileInput.files[0];
+
+    if (!file) return;
+
+    const allowedExtensions = /\.(txt|csv)$/i;
+
+    if (!allowedExtensions.test(file.name)) {
+      alert("Please select a TXT or CSV file.");
+      fileInput.value = "";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert("The file must be smaller than 2 MB.");
+      fileInput.value = "";
+      return;
+    }
+
+    try {
+      const content = await file.text();
+
+      // Extract Ghanaian phone numbers from the file.
+      const numbers = content.match(
+        /(?:\+233|00233|233|0)\s*[\d\s()-]{9,15}/g
+      ) || [];
+
+      const cleanedNumbers = numbers
+        .map(number => number.replace(/[\s()-]/g, ""))
+        .map(number => {
+          if (number.startsWith("00233")) {
+            return "+" + number.slice(2);
+          }
+
+          if (number.startsWith("233")) {
+            return "+" + number;
+          }
+
+          return number;
+        })
+        .filter(number => /^(?:0\d{9}|\+233\d{9})$/.test(number));
+
+      const existingNumbers = recipientsBox.value
+        .split(/\r?\n/)
+        .map(number => number.trim())
+        .filter(Boolean);
+
+      const combinedNumbers = [
+        ...new Set([...existingNumbers, ...cleanedNumbers])
+      ];
+
+      recipientsBox.value = combinedNumbers.join("\n");
+
+      if (recipientCount) {
+        recipientCount.textContent =
+          "Recipients: " + combinedNumbers.length;
+      }
+
+      alert(
+        cleanedNumbers.length +
+        " phone numbers found in the file.\n" +
+        combinedNumbers.length +
+        " unique numbers are now in your recipient list."
+      );
+
+    } catch (error) {
+      alert("Unable to read the file. Please try another TXT or CSV file.");
+    }
+
+    fileInput.value = "";
+  });
+});
