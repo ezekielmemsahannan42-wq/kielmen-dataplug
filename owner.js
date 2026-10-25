@@ -968,10 +968,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       recipientsBox.value = combinedNumbers.join("\n");
 
-      if (recipientCount) {
-        recipientCount.textContent =
-          "Recipients: " + combinedNumbers.length;
-      }
+      recipientsBox.dispatchEvent(new Event("input", {
+  bubbles: true
+}));
 
       alert(
         cleanedNumbers.length +
@@ -1049,7 +1048,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return result;
     };
 
-    recipientsBox.addEventListener("input", updateCount);
+    recipientsBox.addEventListener("input", () => {
+  updateCount();
+  statusBox.textContent = "";
+});
 
     // Update the estimate when the message changes.
     messageBox.addEventListener("input", () => {
@@ -1140,7 +1142,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!confirmed) return;
 
-      const ownerToken = localStorage.getItem("kielmen_owner_token");
+      const ownerToken = sessionStorage.getItem("kielmen_owner_token");
 
       if (!ownerToken) {
         statusBox.textContent =
