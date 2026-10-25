@@ -14,7 +14,6 @@
   --border:#383c3e;
   --text:#f4f5f6;
   --muted:#9299a1;
-  --green:#00a85a;
   --mint:#42cda5;
 }
 
@@ -196,6 +195,17 @@ input:focus,textarea:focus {
   cursor:wait;
 }
 
+.btn-secondary {
+  min-height:48px;
+  padding:10px 15px;
+  border:1px solid #45494c;
+  border-radius:12px;
+  background:#222526;
+  color:var(--text);
+  font-weight:700;
+  cursor:pointer;
+}
+
 .status {
   display:none;
   padding:12px;
@@ -237,6 +247,28 @@ input:focus,textarea:focus {
   color:var(--muted);
   font-size:13px;
   margin-top:12px;
+}
+
+.store-link-row {
+  display:flex;
+  gap:8px;
+  align-items:stretch;
+}
+
+.store-link-row input {
+  min-width:0;
+  flex:1;
+}
+
+.store-link-row button {
+  flex-shrink:0;
+}
+
+.store-preview {
+  color:var(--mint);
+  font-size:13px;
+  overflow-wrap:anywhere;
+  margin-top:8px;
 }
 
 .nav {
@@ -284,6 +316,8 @@ input:focus,textarea:focus {
   .grid { grid-template-columns:1fr; gap:6px; }
   label { margin-top:7px; }
   .hint { grid-column:1; margin:0 0 6px; }
+  .store-link-row { flex-direction:column; }
+  .store-link-row button { width:100%; }
 }
 </style>
 </head>
@@ -304,10 +338,11 @@ input:focus,textarea:focus {
 <main>
   <h1>My Profile</h1>
   <p class="intro">
-    Manage your account, business and contact information.
+    Manage your account, business details and personal store link.
   </p>
 
   <form id="profileForm">
+
     <section class="card">
       <h2><span class="icon">♟</span>Personal Information</h2>
 
@@ -344,50 +379,64 @@ input:focus,textarea:focus {
             placeholder="you@example.com">
         </div>
       </div>
-      
- <div id="profileStatus" class="status"
+
+      <div id="profileStatus" class="status"
         role="status" aria-live="polite"></div>
-      <section class="card" id="storeLinkCard">
-  <h2><span class="icon">🔗</span>My Store Link</h2>
+    </section>
 
-  <p class="help">
-    Your customers can use this link to visit your personal store.
-    Changing your business name can update your store link.
-  </p>
+    <section class="card" id="storeLinkCard">
+      <h2><span class="icon">🔗</span>My Store Link</h2>
 
-  <label for="storeSlug">Your store URL</label>
+      <p class="help">
+        Choose a unique name for your personal store.
+        Existing agents can update their store name too.
+      </p>
 
-  <div style="display:flex;gap:8px;margin-top:8px;align-items:stretch">
-    <input
-      id="storeSlug"
-      type="text"
-      readonly
-      placeholder="Your store link will appear here"
-      aria-label="Your personal store link"
-    >
+      <label for="storeName">Store Name / Link Name</label>
+      <input
+        id="storeName"
+        name="storeName"
+        type="text"
+        minlength="2"
+        maxlength="80"
+        autocomplete="off"
+        placeholder="Example: Kofi Data Plug"
+        required
+      >
 
-    <button
-      class="btn"
-      id="copyStoreLink"
-      type="button"
-      style="width:auto;min-width:95px;margin-top:0"
-    >
-      Copy Link
-    </button>
-  </div>
+      <p class="security-note">
+        Use letters, numbers, spaces or hyphens. Your link name will
+        be converted to a web-friendly format.
+      </p>
 
-  <p class="security-note">
-    Your store link must be unique. If another agent already uses a
-    name, the system will generate a different link.
-  </p>
+      <label for="storeSlug">Your Personal Store URL</label>
 
-  <div
-    id="storeLinkStatus"
-    class="status"
-    role="status"
-    aria-live="polite"
-  ></div>
-      </section>
+      <div class="store-link-row" style="margin-top:8px">
+        <input
+          id="storeSlug"
+          type="text"
+          readonly
+          placeholder="Your store link will appear here"
+          aria-label="Your personal store URL"
+        >
+
+        <button class="btn-secondary"
+          id="copyStoreLink" type="button">
+          Copy Link
+        </button>
+      </div>
+
+      <p class="store-preview" id="storeLinkPreview"></p>
+
+      <p class="security-note">
+        Store links must be unique. If another agent already uses a
+        name, the server will reject that name and ask you to choose
+        another. Existing links should not change unless you save
+        a new name.
+      </p>
+
+      <div id="storeLinkStatus" class="status"
+        role="status" aria-live="polite"></div>
     </section>
 
     <section class="card">
@@ -446,7 +495,9 @@ input:focus,textarea:focus {
 
   <form id="passwordForm" class="card">
     <h2><span class="icon">🔒</span>Change Password</h2>
-    <p class="help">Update your password to keep your account secure.</p>
+    <p class="help">
+      Update your password to keep your account secure.
+    </p>
 
     <div class="grid">
       <label for="currentPassword">Current Password</label>
@@ -517,33 +568,24 @@ const API_BASE =
 const $ = id => document.getElementById(id);
 
 function getAuthToken() {
-  // Your existing agent login saves the token here.
-  const sessionToken = sessionStorage.getItem("k636_agent_token");
+  const sessionToken =
+    sessionStorage.getItem("k636_agent_token");
 
-  if (sessionToken) {
-    return sessionToken;
-  }
+  if (sessionToken) return sessionToken;
 
-  // Check other existing storage keys as fallbacks.
-  const keys = [
+  for (const key of [
     "agentToken",
     "agent_token",
     "token",
     "authToken",
     "accessToken"
-  ];
-
-  for (const key of keys) {
+  ]) {
     const token = localStorage.getItem(key);
-
-    if (token) {
-      return token;
-    }
+    if (token) return token;
   }
 
   return "";
 }
-  
 
 function getHeaders(json = true) {
   const headers = {};
@@ -555,7 +597,7 @@ function getHeaders(json = true) {
   const token = getAuthToken();
 
   if (token) {
-    headers["Authorization"] = "Bearer " + token;
+    headers.Authorization = "Bearer " + token;
   }
 
   return headers;
@@ -575,6 +617,32 @@ function clearStatus(id) {
 async function readResponse(response) {
   return response.json().catch(() => ({}));
 }
+
+function slugifyStoreName(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 100)
+    .replace(/_+$/g, "");
+}
+
+function updateStorePreview() {
+  const slug = slugifyStoreName($("storeName").value);
+
+  $("storeSlug").value = slug
+    ? `${window.location.origin}/${slug}`
+    : "";
+
+  $("storeLinkPreview").textContent = slug
+    ? "Proposed link: " + $("storeSlug").value
+    : "Enter a store name to preview your link.";
+}
+
+$("storeName").addEventListener("input", updateStorePreview);
 
 async function loadProfile() {
   if (!getAuthToken()) {
@@ -602,62 +670,71 @@ async function loadProfile() {
     }
 
     const profile = data.profile || data.agent || data.data || data;
-    const storeSlug = profile.storeSlug || profile.store_slug || "";
-
-if (storeSlug) {
-  $("storeSlug").value =
-    "https://kielmen.com/" + storeSlug.replace(/^\/+/, "");
-  }
 
     const fields = {
-  fullName: profile.fullName ?? profile.full_name ?? profile.name,
-  businessName: profile.businessName ?? profile.business_name,
-  phone: profile.phone ?? profile.phoneNumber ?? profile.phone_number,
-  email: profile.email,
-  whatsappNumber:
-    profile.whatsappNumber ?? profile.whatsapp_number ?? profile.whatsapp,
-  whatsappChannel:
-    profile.whatsappChannel ?? profile.whatsapp_channel,
-  socialLink: profile.socialLink ?? profile.social_link,
-  description:
-    profile.description ?? profile.storeDescription ?? profile.store_description
-};
-
-for (const [id, value] of Object.entries(fields)) {
-  if (value !== undefined && value !== null) {
-    $(id).value = value;
-  }
-}
-
-const slug =
-  profile.storeSlug ??
-  profile.store_slug ??
-  "";
-
-$("storeSlug").value = slug
-  ? `${window.location.origin}/${slug}`
-  : "Save your profile to create your store link";
+      fullName: profile.fullName ?? profile.full_name ?? profile.name,
+      businessName: profile.businessName ?? profile.business_name,
+      phone: profile.phone ?? profile.phoneNumber ?? profile.phone_number,
+      email: profile.email,
+      whatsappNumber:
+        profile.whatsappNumber ?? profile.whatsapp_number ?? profile.whatsapp,
+      whatsappChannel:
+        profile.whatsappChannel ?? profile.whatsapp_channel,
+      socialLink: profile.socialLink ?? profile.social_link,
+      description:
+        profile.description ?? profile.storeDescription ?? profile.store_description
+    };
 
     for (const [id, value] of Object.entries(fields)) {
       if (value !== undefined && value !== null) {
         $(id).value = value;
       }
     }
+
+    const currentSlug =
+      profile.storeSlug || profile.store_slug || "";
+
+    $("storeName").value = currentSlug
+      ? currentSlug.replace(/_/g, " ")
+      : (profile.businessName || profile.business_name || "");
+
+    updateStorePreview();
+
+    if (currentSlug) {
+      $("storeSlug").value =
+        `${window.location.origin}/${currentSlug}`;
+    }
   } catch (error) {
     console.error("Profile loading error:", error);
+
     showStatus(
       "profileStatus",
-      "Cannot connect to the server. Check the Render API and its CORS settings."
+      "Cannot connect to the server. Check the Render API and CORS settings."
     );
   }
 }
 
 $("profileForm").addEventListener("submit", async event => {
   event.preventDefault();
+
   clearStatus("profileStatus");
+  clearStatus("storeLinkStatus");
 
   if (!getAuthToken()) {
-    showStatus("profileStatus", "Please sign in again. Your login token is missing.");
+    showStatus(
+      "profileStatus",
+      "Please sign in again. Your login token is missing."
+    );
+    return;
+  }
+
+  const proposedSlug = slugifyStoreName($("storeName").value);
+
+  if (!proposedSlug || proposedSlug.length < 2) {
+    showStatus(
+      "storeLinkStatus",
+      "Enter a valid store name containing at least two characters."
+    );
     return;
   }
 
@@ -669,12 +746,21 @@ $("profileForm").addEventListener("submit", async event => {
     whatsappNumber: $("whatsappNumber").value.trim(),
     whatsappChannel: $("whatsappChannel").value.trim(),
     socialLink: $("socialLink").value.trim(),
-    description: $("description").value.trim()
+    description: $("description").value.trim(),
+
+    // Requires the matching backend update described above.
+    storeSlug: proposedSlug
   };
 
   for (const key of ["whatsappChannel", "socialLink"]) {
-    if (payload[key] && !/^https?:\/\/\S+$/i.test(payload[key])) {
-      showStatus("profileStatus", "Links must begin with https:// or http://.");
+    if (
+      payload[key] &&
+      !/^https?:\/\/\S+$/i.test(payload[key])
+    ) {
+      showStatus(
+        "profileStatus",
+        "Links must begin with https:// or http://."
+      );
       return;
     }
   }
@@ -693,132 +779,55 @@ $("profileForm").addEventListener("submit", async event => {
     const data = await readResponse(response);
 
     if (!response.ok || data.success === false) {
-      showStatus("profileStatus", data.message || "Could not save your profile.");
+      showStatus(
+        "storeLinkStatus",
+        data.message || "The profile could not be saved."
+      );
       return;
     }
+
+    const savedProfile = data.profile || {};
+    const savedSlug =
+      savedProfile.storeSlug ||
+      savedProfile.store_slug ||
+      proposedSlug;
+
+    $("storeName").value = savedSlug.replace(/_/g, " ");
+    $("storeSlug").value =
+      `${window.location.origin}/${savedSlug}`;
+
+    updateStorePreview();
+
+    // Restore the exact saved URL after preview normalization.
+    $("storeSlug").value =
+      `${window.location.origin}/${savedSlug}`;
 
     showStatus(
       "profileStatus",
       data.message || "Profile updated successfully.",
       "success"
     );
+
+    showStatus(
+      "storeLinkStatus",
+      "Your profile was saved. Store link: " + $("storeSlug").value,
+      "success"
+    );
   } catch (error) {
     console.error("Profile save error:", error);
+
     showStatus(
       "profileStatus",
       "Cannot connect to the server. Your changes have not been confirmed as saved."
     );
   } finally {
     button.disabled = false;
-    button.textContent = "▣   Save Profile Changes";
+    button.textContent = "▣ Save Profile Changes";
   }
 });
 
-$("passwordForm").addEventListener("submit", async event => {
-  event.preventDefault();
-  clearStatus("passwordStatus");
-
-  if (!getAuthToken()) {
-    showStatus("passwordStatus", "Your login token is missing. Please sign in again.");
-    return;
-  }
-
-  const currentPassword = $("currentPassword").value;
-  const newPassword = $("newPassword").value;
-  const confirmPassword = $("confirmPassword").value;
-
-  if (newPassword.length < 12) {
-    showStatus(
-      "passwordStatus",
-      "Your new password must contain at least 12 characters."
-    );
-    return;
-  }
-
-  if (newPassword.length > 128) {
-    showStatus("passwordStatus", "Your password cannot exceed 128 characters.");
-    return;
-  }
-
-  if (newPassword !== confirmPassword) {
-    showStatus("passwordStatus", "The new passwords do not match.");
-    return;
-  }
-
-  if (newPassword === currentPassword) {
-    showStatus(
-      "passwordStatus",
-      "Your new password must be different from your current password."
-    );
-    return;
-  }
-
-  const button = $("changePasswordBtn");
-  button.disabled = true;
-  button.textContent = "Updating password...";
-
-  try {
-    const response = await fetch(API_BASE + "/agents/change-password", {
-      method: "POST",
-      headers: getHeaders(true),
-      body: JSON.stringify({ currentPassword, newPassword })
-    });
-
-    const data = await readResponse(response);
-
-    if (!response.ok || data.success === false) {
-      showStatus(
-        "passwordStatus",
-        data.message || "Could not change your password."
-      );
-      return;
-    }
-
-    $("passwordForm").reset();
-
-    showStatus(
-      "passwordStatus",
-      data.message || "Password changed. Please log in again.",
-      "success"
-    );
-
-    sessionStorage.removeItem("k636_agent_token");
-
-for (const key of [
-  "agentToken",
-  "agent_token",
-  "token",
-  "authToken",
-  "accessToken"
-]) {
-  localStorage.removeItem(key);
-}
-
-    button.textContent = "Sign in again to continue";
-  } catch (error) {
-    console.error("Password change error:", error);
-    showStatus(
-      "passwordStatus",
-      "Cannot connect to the server. The password change has not been confirmed."
-    );
-  } finally {
-    button.disabled = false;
-
-    if (button.textContent !== "Sign in again to continue") {
-      button.textContent = "⚿   Update Password";
-    }
-  }
-});
-
-document.querySelectorAll(".toggle").forEach(button => {
-  button.addEventListener("click", () => {
-    const input = $(button.dataset.target);
-    input.type = input.type === "password" ? "text" : "password";
-    button.textContent = input.type === "password" ? "◉" : "◌";
-  });
-});
-  $("copyStoreLink").addEventListener("click", async () => {
-  const link = $("storeSlug").value;
+$("copyStoreLink").addEventListener("click", async () => {
+  const link = $("storeSlug").value.trim();
 
   if (!link.startsWith("https://")) {
     showStatus(
@@ -847,8 +856,123 @@ document.querySelectorAll(".toggle").forEach(button => {
   }
 });
 
+$("passwordForm").addEventListener("submit", async event => {
+  event.preventDefault();
+  clearStatus("passwordStatus");
+
+  if (!getAuthToken()) {
+    showStatus(
+      "passwordStatus",
+      "Your login token is missing. Please sign in again."
+    );
+    return;
+  }
+
+  const currentPassword = $("currentPassword").value;
+  const newPassword = $("newPassword").value;
+  const confirmPassword = $("confirmPassword").value;
+
+  if (newPassword.length < 12 || newPassword.length > 128) {
+    showStatus(
+      "passwordStatus",
+      "Your new password must contain 12 to 128 characters."
+    );
+    return;
+  }
+
+  if (newPassword !== confirmPassword) {
+    showStatus(
+      "passwordStatus",
+      "The new passwords do not match."
+    );
+    return;
+  }
+
+  if (newPassword === currentPassword) {
+    showStatus(
+      "passwordStatus",
+      "Your new password must be different from your current password."
+    );
+    return;
+  }
+
+  const button = $("changePasswordBtn");
+  button.disabled = true;
+  button.textContent = "Updating password...";
+
+  try {
+    const response = await fetch(
+      API_BASE + "/agents/change-password",
+      {
+        method: "POST",
+        headers: getHeaders(true),
+        body: JSON.stringify({
+          currentPassword,
+          newPassword
+        })
+      }
+    );
+
+    const data = await readResponse(response);
+
+    if (!response.ok || data.success === false) {
+      showStatus(
+        "passwordStatus",
+        data.message || "Could not change your password."
+      );
+      return;
+    }
+
+    $("passwordForm").reset();
+
+    showStatus(
+      "passwordStatus",
+      data.message || "Password changed. Please log in again.",
+      "success"
+    );
+
+    sessionStorage.removeItem("k636_agent_token");
+
+    for (const key of [
+      "agentToken",
+      "agent_token",
+      "token",
+      "authToken",
+      "accessToken"
+    ]) {
+      localStorage.removeItem(key);
+    }
+
+    button.textContent = "Sign in again to continue";
+  } catch (error) {
+    console.error("Password change error:", error);
+
+    showStatus(
+      "passwordStatus",
+      "Cannot connect to the server. The password change has not been confirmed."
+    );
+  } finally {
+    button.disabled = false;
+
+    if (button.textContent !== "Sign in again to continue") {
+      button.textContent = "⚿ Update Password";
+    }
+  }
+});
+
+document.querySelectorAll(".toggle").forEach(button => {
+  button.addEventListener("click", () => {
+    const input = $(button.dataset.target);
+    input.type =
+      input.type === "password" ? "text" : "password";
+
+    button.textContent =
+      input.type === "password" ? "◉" : "◌";
+  });
+});
+
 loadProfile();
-  </script>
+</script>
 
 </body>
-  </html>
+</html>
