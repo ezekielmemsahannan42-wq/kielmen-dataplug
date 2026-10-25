@@ -103,7 +103,14 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "30kb" }));
+app.use(
+  express.json({
+    limit: "30kb",
+    verify: (req, res, buffer) => {
+      req.rawBody = Buffer.from(buffer);
+    }
+  })
+);
 
 // ============================================================
 // 1. PUBLIC CUSTOMER PRICES — GHS
@@ -697,6 +704,151 @@ async function getOrderByReference(reference) {
   );
 
   return result.rows[0] || null;
+}
+  // ============================================================
+// AUTOMATIC PAYSTACK PAYMENT VERIFICATION + DATA DELIVERY
+// ============================================================
+
+async function processSuccessfulPayment(reference) {
+  if (!reference || reference.length > 100) {
+    throw new Error("Invalid payment reference.");
+  }
+
+  // Find the order created before checkout.
+  const order = await getOrderByReference(reference);
+
+  if (!order) {
+    throw new Error(`Order not found: ${reference}`);
+  }
+
+  // Verify directly with Paystack. Never trust a browser
+  // redirect or webhook payload alone.
+  const payment = await paystackRequest(
+    `/transaction/verify/${encodeURIComponent(reference)}`
+  );
+
+  const expectedAmount = amountToPesewas(order.amount);
+
+  if (
+    payment.status !== "success" ||
+    String(payment.reference || "") !== reference ||
+    String(payment.currency || "").toUpperCase() !== "GHS" ||
+    Number(payment.amount) !== expectedAmount
+  ) {
+    throw new Error(
+      `Paystack verification failed for ${reference}`
+    );
+  }
+
+  // Atomically mark the order paid if it has not already
+  // been marked paid.
+  await pool.query(
+    `
+      UPDATE orders
+      SET status = 'paid',
+          updated_at = NOW()
+      WHERE reference = $1
+        AND status IN ('pending', 'initialization_failed')
+    `,
+    [reference]
+  );
+
+  // Atomically claim delivery. This prevents duplicate
+  // webhook notifications from initiating another purchase.
+  const claim = await pool.query(
+    `
+      UPDATE orders
+      SET delivery_status = 'processing',
+          updated_at = NOW()
+      WHERE reference = $1
+        AND status = 'paid'
+        AND delivery_status = 'not_started'
+      RETURNING
+        reference,
+        phone,
+        network,
+        bundle,
+        amount
+    `,
+    [reference]
+  );
+
+  if (!claim.rowCount) {
+    const latest = await getOrderByReference(reference);
+
+    return {
+      success: true,
+      paid: true,
+      reference,
+      delivery_status: latest?.delivery_status || "unknown",
+      message:
+        "Payment verified. Delivery has already been claimed or processed."
+    };
+  }
+
+  const paidOrder = claim.rows[0];
+
+  try {
+    // Automatically purchase the data bundle.
+    const purchase = await purchaseDataFromSupplier(paidOrder);
+
+    await pool.query(
+      `
+        UPDATE orders
+        SET supplier_reference = $1,
+            supplier_response = $2::jsonb,
+            delivery_status = 'processing',
+            updated_at = NOW()
+        WHERE reference = $3
+      `,
+      [
+        purchase.supplierReference,
+        JSON.stringify(purchase.raw),
+        reference
+      ]
+    );
+
+    return {
+      success: true,
+      paid: true,
+      reference,
+      delivery_status: "processing",
+      supplier_reference: purchase.supplierReference,
+      message:
+        "Payment verified and the data order was accepted for processing."
+    };
+  } catch (error) {
+    console.error(
+      "Automatic data delivery failed:",
+      reference,
+      error.message
+    );
+
+    await pool.query(
+      `
+        UPDATE orders
+        SET delivery_status = 'failed',
+            supplier_response = $1::jsonb,
+            updated_at = NOW()
+        WHERE reference = $2
+      `,
+      [
+        JSON.stringify({
+          message: error.message
+        }),
+        reference
+      ]
+    );
+
+    return {
+      success: true,
+      paid: true,
+      reference,
+      delivery_status: "failed",
+      message:
+        "Payment received, but data delivery needs investigation. Do not pay again."
+    };
+  }
 }
 
 
@@ -3133,213 +3285,26 @@ app.post("/initialize-payment", async (req, res) => {
 });
 
 // ============================================================
-// 16. VERIFY PAYMENT AND START DATA DELIVERY
+// VERIFY PAYMENT — ALSO USED BY THE SUCCESS PAGE
 // ============================================================
 
 app.post("/verify-payment", async (req, res) => {
-  const reference = String(
-    req.body?.reference || ""
-  ).trim();
-
-  if (!reference || reference.length > 100) {
-    return res.status(400).json({
-      success: false,
-      paid: false,
-      message: "A valid payment reference is required."
-    });
-  }
-
-  let client;
-
   try {
-    const order = await getOrderByReference(reference);
+    const reference = String(
+      req.body?.reference || ""
+    ).trim();
 
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        paid: false,
-        message: "Order not found."
-      });
-    }
-
-    if (order.status === "paid") {
-      return res.json({
-        success: true,
-        paid: true,
-        reference,
-        network: order.network,
-        bundle: order.bundle,
-        amount: Number(order.amount),
-        delivery_status: order.delivery_status,
-
-        message:
-          order.delivery_status === "delivered"
-            ? "Payment verified and data delivery confirmed."
-            : "Payment is verified. Check the delivery status for the latest update."
-      });
-    }
-
-    const payment = await paystackRequest(
-      `/transaction/verify/${encodeURIComponent(reference)}`
-    );
-
-    const paidAmount = Number(payment.amount);
-    const expectedAmount = amountToPesewas(order.amount);
-
-    if (
-      payment.status !== "success" ||
-      String(payment.currency || "").toUpperCase() !== "GHS" ||
-      paidAmount !== expectedAmount ||
-      String(payment.reference || "") !== reference
-    ) {
+    if (!reference || reference.length > 100) {
       return res.status(400).json({
         success: false,
         paid: false,
-        message:
-          "Payment could not be verified against this order."
+        message: "A valid payment reference is required."
       });
     }
 
-    client = await pool.connect();
+    const result = await processSuccessfulPayment(reference);
 
-    await client.query("BEGIN");
-
-    const claimed = await client.query(
-      `
-        UPDATE orders
-        SET status = 'paid',
-            updated_at = NOW()
-        WHERE reference = $1
-          AND status = 'pending'
-        RETURNING
-          reference,
-          phone,
-          network,
-          bundle,
-          amount,
-          delivery_status
-      `,
-      [reference]
-    );
-
-    await client.query("COMMIT");
-
-    if (claimed.rowCount === 0) {
-      const latest = await getOrderByReference(reference);
-
-      return res.json({
-        success: true,
-        paid: Boolean(
-          latest && latest.status === "paid"
-        ),
-        reference,
-        delivery_status: latest
-          ? latest.delivery_status
-          : "unknown",
-
-        message:
-          "This payment was already processed. No new purchase was started."
-      });
-    }
-
-    const paidOrder = claimed.rows[0];
-
-    // Claim delivery before contacting DataMart to reduce
-    // the chance of issuing duplicate purchases.
-    const deliveryClaim = await pool.query(
-      `
-        UPDATE orders
-        SET delivery_status = 'processing',
-            updated_at = NOW()
-        WHERE reference = $1
-          AND status = 'paid'
-          AND delivery_status = 'not_started'
-        RETURNING reference
-      `,
-      [reference]
-    );
-
-    if (deliveryClaim.rowCount === 0) {
-      return res.status(202).json({
-        success: true,
-        paid: true,
-        reference,
-        delivery_status: "processing",
-        message:
-          "Payment verified. Delivery is already being processed."
-      });
-    }
-
-    try {
-      const purchase =
-        await purchaseDataFromSupplier(paidOrder);
-
-      await pool.query(
-        `
-          UPDATE orders
-          SET delivery_status = 'processing',
-              supplier_reference = $1,
-              supplier_response = $2::jsonb,
-              updated_at = NOW()
-          WHERE reference = $3
-        `,
-        [
-          purchase.supplierReference,
-          JSON.stringify(purchase.raw),
-          reference
-        ]
-      );
-
-      return res.status(202).json({
-        success: true,
-        paid: true,
-        reference,
-        network: paidOrder.network,
-        bundle: paidOrder.bundle,
-        amount: Number(paidOrder.amount),
-        delivery_status: "processing",
-        supplier_reference: purchase.supplierReference,
-
-        message:
-          "Payment verified and DataMart accepted the order. Data delivery may take time."
-      });
-    } catch (deliveryError) {
-      console.error(
-        "DataMart delivery error for order",
-        reference,
-        ":",
-        deliveryError.message
-      );
-
-      await pool.query(
-        `
-          UPDATE orders
-          SET delivery_status = 'failed',
-              supplier_response = $1::jsonb,
-              updated_at = NOW()
-          WHERE reference = $2
-        `,
-        [
-          JSON.stringify({
-            message: deliveryError.message
-          }),
-          reference
-        ]
-      );
-
-      return res.status(202).json({
-        success: true,
-        paid: true,
-        reference,
-        network: paidOrder.network,
-        bundle: paidOrder.bundle,
-        amount: Number(paidOrder.amount),
-        delivery_status: "failed",
-
-        message:
-          "Payment received, but automatic data delivery needs attention. Please contact support. Do not pay again."
-      });
-    }
+    return res.status(200).json(result);
   } catch (error) {
     console.error(
       "Payment verification error:",
@@ -3348,16 +3313,12 @@ app.post("/verify-payment", async (req, res) => {
 
     return res.status(500).json({
       success: false,
-
+      paid: false,
       message:
-        "Unable to verify payment right now. Do not pay again; check your order status or contact support."
+        "Payment verification could not finish. Do not pay again; check your order status."
     });
-  } finally {
-    if (client) {
-      client.release();
-    }
   }
-});
+}); 
 
 // ============================================================
 // 17. ORDER STATUS
@@ -3652,27 +3613,73 @@ app.get("/orders-by-phone/:phone", async (req, res) => {
 });
 
 // ============================================================
-// 19. PAYSTACK WEBHOOK PLACEHOLDER
+// 19. PAYSTACK WEBHOOK — AUTOMATIC PAYMENT PROCESSING
 // ============================================================
 
 app.post("/paystack-webhook", async (req, res) => {
   try {
     const signature = req.get("x-paystack-signature");
 
-    if (!signature || !PAYSTACK_SECRET_KEY) {
+    if (!signature || !PAYSTACK_SECRET_KEY || !req.rawBody) {
       return res.sendStatus(401);
     }
 
-    // Webhook processing is intentionally disabled.
-    // Use /verify-payment for the verified checkout flow.
+    // Verify Paystack's HMAC-SHA512 signature.
+    const expectedSignature = crypto
+      .createHmac("sha512", PAYSTACK_SECRET_KEY)
+      .update(req.rawBody)
+      .digest("hex");
 
-    return res.status(501).json({
-      success: false,
-      message:
-        "Webhook processing is not enabled. Use the verified checkout flow."
-    });
-  } catch (_error) {
-    return res.sendStatus(400);
+    if (!safeEqualText(signature, expectedSignature)) {
+      console.warn("Rejected invalid Paystack webhook signature.");
+      return res.sendStatus(401);
+    }
+
+    const event = req.body;
+
+    // Acknowledge unrelated events without processing them.
+    if (event?.event !== "charge.success") {
+      return res.sendStatus(200);
+    }
+
+    const reference = String(
+      event?.data?.reference || ""
+    ).trim();
+
+    if (!reference || reference.length > 100) {
+      return res.sendStatus(400);
+    }
+
+    // Respond promptly to Paystack. Processing continues
+    // in the backend even if the customer has closed the page.
+    res.sendStatus(200);
+
+    // Verify payment against Paystack and trigger delivery.
+    try {
+      const result = await processSuccessfulPayment(reference);
+
+      console.log(
+        "Automatic Paystack processing:",
+        reference,
+        result.delivery_status,
+        result.message
+      );
+    } catch (error) {
+      console.error(
+        "Paystack webhook processing failed:",
+        reference,
+        error.message
+      );
+    }
+  } catch (error) {
+    console.error(
+      "Paystack webhook error:",
+      error.message
+    );
+
+    if (!res.headersSent) {
+      return res.sendStatus(400);
+    }
   }
 });
 
