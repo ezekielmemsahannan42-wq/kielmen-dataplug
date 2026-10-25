@@ -3,17 +3,22 @@
 /* =========================================
    KIELMEN 636 DATAPLUG
    OWNER DASHBOARD
-   Backend: Render
+   Login, Statistics, Orders, Agents,
+   Withdrawals and SMS Campaigns
 ========================================= */
 
 const OWNER_API =
   "https://kielmen-dataplug-payment-api.onrender.com";
 
 const TOKEN_KEY = "kielmen_owner_token";
+const SMS_BATCH_SIZE = 100;
+const SMS_MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 let ownerToken = null;
 let refreshTimer = null;
 let dashboardLoading = false;
+let smsCampaignRunning = false;
+let loginRunning = false;
 
 /* =========================================
    GENERAL HELPERS
@@ -24,10 +29,17 @@ function byId(id) {
 }
 
 function money(value) {
+  if (value === null || value === undefined || value === "") {
+    return "—";
+  }
+
   const amount = Number(value);
-  return "GH₵" + (
-    Number.isFinite(amount) ? amount : 0
-  ).toFixed(2);
+
+  if (!Number.isFinite(amount)) {
+    return "—";
+  }
+
+  return "GH₵" + amount.toFixed(2);
 }
 
 function escapeHTML(value) {
@@ -42,37 +54,84 @@ function escapeHTML(value) {
 
 function showMessage(message) {
   const element = byId("ownerMessage");
-  if (element) element.textContent = message;
+
+  if (element) {
+    element.textContent = String(message || "");
+  }
 }
 
 function setText(id, value) {
   const element = byId(id);
-  if (element) element.textContent = String(value ?? 0);
+
+  if (element) {
+    element.textContent =
+      value === null || value === undefined || value === ""
+        ? "—"
+        : String(value);
+  }
 }
 
 function showDashboard() {
-  const content = byId("ownerDashboardContent");
-  if (content) content.style.display = "block";
+  const element = byId("ownerDashboardContent");
+
+  if (element) {
+    element.style.display = "block";
+  }
 }
 
 function hideDashboard() {
-  const content = byId("ownerDashboardContent");
-  if (content) content.style.display = "none";
+  const element = byId("ownerDashboardContent");
+
+  if (element) {
+    element.style.display = "none";
+  }
+}
+
+function getSavedToken() {
+  try {
+    return sessionStorage.getItem(TOKEN_KEY) || "";
+  } catch (_error) {
+    return "";
+  }
+}
+
+function saveToken(token) {
+  try {
+    sessionStorage.setItem(TOKEN_KEY, token);
+  } catch (_error) {
+    throw new Error("Your browser could not save the login session.");
+  }
+}
+
+function clearToken() {
+  ownerToken = null;
+
+  try {
+    sessionStorage.removeItem(TOKEN_KEY);
+  } catch (_error) {
+    // The local session is still cleared.
+  }
+}
+
+function stopRefreshTimer() {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
 }
 
 /* =========================================
-   API REQUESTS
+   API REQUEST HELPER
 ========================================= */
 
-async function ownerRequest(path, options = {}) {
-  if (!ownerToken) {
-    throw new Error("Please log in to your owner account.");
-  }
-
+async function apiRequest(path, options = {}) {
   const headers = {
-    ...(options.headers || {}),
-    Authorization: "Bearer " + ownerToken
+    ...(options.headers || {})
   };
+
+  if (ownerToken) {
+    headers.Authorization = "Bearer " + ownerToken;
+  }
 
   if (options.body && !headers["Content-Type"]) {
     headers["Content-Type"] = "application/json";
@@ -87,15 +146,18 @@ async function ownerRequest(path, options = {}) {
     });
   } catch (_error) {
     throw new Error(
-      "Cannot connect to the server. Check your internet connection."
+      "Cannot connect to the backend. Check your internet connection or Render service."
     );
   }
 
   const data = await response.json().catch(() => ({}));
 
-  if (response.status === 401 || response.status === 403) {
-    ownerToken = null;
-    sessionStorage.removeItem(TOKEN_KEY);
+  if (
+    (response.status === 401 || response.status === 403) &&
+    path !== "/owner/login"
+  ) {
+    clearToken();
+    stopRefreshTimer();
     hideDashboard();
 
     throw new Error(
@@ -105,23 +167,30 @@ async function ownerRequest(path, options = {}) {
 
   if (!response.ok) {
     throw new Error(
-      data.message || `Request failed with HTTP ${response.status}.`
+      data.message ||
+      data.error ||
+      `Server request failed with HTTP ${response.status}.`
     );
   }
 
   return data;
 }
 
-/* =========================================
-   OWNER LOGIN
-========================================= */
-
-function showLogin() {
-  if (refreshTimer) {
-    clearInterval(refreshTimer);
-    refreshTimer = null;
+async function ownerRequest(path, options = {}) {
+  if (!ownerToken) {
+    throw new Error("Please log in to your owner account.");
   }
 
+  return apiRequest(path, options);
+}
+
+/* =========================================
+   OWNER LOGIN
+   POST /owner/login
+========================================= */
+
+function showLogin(messageText = "") {
+  stopRefreshTimer();
   hideDashboard();
 
   let overlay = byId("ownerLoginOverlay");
@@ -155,14 +224,18 @@ function showLogin() {
         border-radius:16px;
         box-sizing:border-box;
       ">
+
         <h1 style="color:#eab308;font-size:25px">
           KIELMEN 636 DATAPLUG
         </h1>
 
         <h2>Owner Login</h2>
+
         <p>Sign in to manage your business.</p>
 
-        <label for="ownerPassword">Owner password</label>
+        <label for="ownerPassword">
+          Owner password
+        </label>
 
         <input
           id="ownerPassword"
@@ -202,6 +275,7 @@ function showLogin() {
           aria-live="polite"
           style="overflow-wrap:anywhere"
         ></p>
+
       </form>
     `;
 
@@ -215,16 +289,23 @@ function showLogin() {
 
   overlay.style.display = "flex";
 
+  const message = byId("ownerLoginMessage");
+
+  if (message) {
+    message.textContent = messageText;
+  }
+
   const passwordInput = byId("ownerPassword");
 
   if (passwordInput) {
     passwordInput.value = "";
-    passwordInput.focus();
   }
 }
 
 async function handleLogin(event) {
   event.preventDefault();
+
+  if (loginRunning) return;
 
   const passwordInput = byId("ownerPassword");
   const message = byId("ownerLoginMessage");
@@ -235,10 +316,11 @@ async function handleLogin(event) {
   const password = passwordInput.value;
 
   if (!password) {
-    message.textContent = "Please enter your password.";
+    message.textContent = "Please enter your owner password.";
     return;
   }
 
+  loginRunning = true;
   button.disabled = true;
   button.textContent = "Signing in...";
   message.textContent = "";
@@ -254,98 +336,115 @@ async function handleLogin(event) {
 
     const data = await response.json().catch(() => ({}));
 
-    if (!response.ok || !data.success || !data.token) {
+    if (!response.ok) {
       throw new Error(
-        data.message || "Login failed. Check your password."
+        data.message ||
+        data.error ||
+        `Login failed with HTTP ${response.status}.`
       );
     }
 
+    if (!data.success || !data.token) {
+      throw new Error(
+        data.message ||
+        "The server did not return a valid login token. Check /owner/login in server.js."
+      );
+    }
+
+    saveToken(data.token);
     ownerToken = data.token;
-    sessionStorage.setItem(TOKEN_KEY, ownerToken);
+
     passwordInput.value = "";
 
     byId("ownerLoginOverlay").style.display = "none";
+
     showDashboard();
-    showMessage("Login successful. Loading dashboard...");
+    showMessage("Login successful. Loading your business data...");
 
     await startDashboard();
 
   } catch (error) {
-    ownerToken = null;
-    sessionStorage.removeItem(TOKEN_KEY);
+    clearToken();
     hideDashboard();
 
     message.textContent =
-      error.message || "Unable to sign in. Please try again.";
+      error.message || "Login failed. Please try again.";
 
     byId("ownerLoginOverlay").style.display = "flex";
 
   } finally {
+    loginRunning = false;
     button.disabled = false;
     button.textContent = "Log In";
   }
 }
 
 /* =========================================
-   STATISTICS
+   OWNER STATISTICS
+   GET /owner/stats
 ========================================= */
 
 async function loadStatistics() {
   const data = await ownerRequest("/owner/stats");
 
   if (!data.success || !data.stats) {
-    throw new Error("Statistics could not be loaded.");
+    throw new Error(
+      data.message ||
+      "The statistics endpoint did not return a valid stats object."
+    );
   }
 
   const stats = data.stats;
 
+  // Do not replace missing values with false zeroes.
   setText(
     "totalSales",
-    money(stats.totalSales ?? stats.totalRevenue)
+    stats.totalSales ?? stats.totalRevenue ?? "—"
   );
+
+  if (
+    stats.totalSales != null ||
+    stats.totalRevenue != null
+  ) {
+    setText(
+      "totalSales",
+      money(stats.totalSales ?? stats.totalRevenue)
+    );
+  }
+
+  const profit =
+    stats.totalProfit ?? stats.totalAgentProfit;
 
   setText(
     "totalProfit",
-    stats.totalProfit != null ||
-    stats.totalAgentProfit != null
-      ? money(stats.totalProfit ?? stats.totalAgentProfit)
-      : "Not available"
+    profit == null ? "Not available" : money(profit)
   );
 
   setText("totalOrders", stats.totalOrders);
-
   setText(
     "successfulDeliveries",
     stats.successfulDeliveries ?? stats.deliveredOrders
   );
-
   setText(
     "pendingOrders",
     stats.pendingOrders ?? stats.processingOrders
   );
-
   setText(
     "failedOrders",
     stats.failedOrders ?? stats.failedDeliveries
   );
-
-  setText(
-    "registeredAgents",
-    stats.registeredAgents ?? "Unavailable"
-  );
-
-  setText(
-    "pendingWithdrawals",
-    stats.pendingWithdrawals ?? "Unavailable"
-  );
+  setText("registeredAgents", stats.registeredAgents);
+  setText("pendingWithdrawals", stats.pendingWithdrawals);
 }
 
 /* =========================================
    CUSTOMER ORDERS
+   GET /owner/orders
 ========================================= */
 
 async function loadOrders() {
   const tbody = byId("ordersTableBody");
+
   if (!tbody) return;
 
   tbody.innerHTML =
@@ -353,12 +452,20 @@ async function loadOrders() {
 
   const params = new URLSearchParams();
 
-  const search = byId("orderSearch")?.value.trim() || "";
-  const paymentStatus = byId("orderPaymentFilter")?.value || "";
-  const deliveryStatus = byId("orderDeliveryFilter")?.value || "";
+  const search =
+    byId("orderSearch")?.value.trim() || "";
+
+  const paymentStatus =
+    byId("orderPaymentFilter")?.value || "";
+
+  const deliveryStatus =
+    byId("orderDeliveryFilter")?.value || "";
 
   if (search) params.set("search", search);
-  if (paymentStatus) params.set("status", paymentStatus);
+
+  if (paymentStatus) {
+    params.set("status", paymentStatus);
+  }
 
   if (deliveryStatus) {
     params.set("delivery_status", deliveryStatus);
@@ -372,7 +479,7 @@ async function loadOrders() {
     );
 
     if (!data.success) {
-      throw new Error("Could not retrieve orders.");
+      throw new Error(data.message || "Could not retrieve orders.");
     }
 
     const orders = data.orders || [];
@@ -397,18 +504,23 @@ async function loadOrders() {
 
   } catch (error) {
     tbody.innerHTML = `
-      <tr><td colspan="7">${escapeHTML(error.message)}</td></tr>
+      <tr>
+        <td colspan="7">${escapeHTML(error.message)}</td>
+      </tr>
     `;
+
     throw error;
   }
 }
 
 /* =========================================
    AGENT MANAGEMENT
+   GET /owner/agents
 ========================================= */
 
 async function loadAgents() {
   const tbody = byId("agentsTableBody");
+
   if (!tbody) return;
 
   tbody.innerHTML =
@@ -418,7 +530,7 @@ async function loadAgents() {
     const data = await ownerRequest("/owner/agents");
 
     if (!data.success) {
-      throw new Error("Could not retrieve agents.");
+      throw new Error(data.message || "Could not retrieve agents.");
     }
 
     let agents = data.agents || [];
@@ -468,8 +580,11 @@ async function loadAgents() {
 
   } catch (error) {
     tbody.innerHTML = `
-      <tr><td colspan="7">${escapeHTML(error.message)}</td></tr>
+      <tr>
+        <td colspan="7">${escapeHTML(error.message)}</td>
+      </tr>
     `;
+
     throw error;
   }
 }
@@ -480,17 +595,22 @@ async function loadAgents() {
 
 async function loadAgentDetails(id) {
   const panel = byId("agentDetails");
+
   if (!panel) return;
 
   panel.textContent = "Loading agent details...";
 
   try {
     const data = await ownerRequest(
-      "/owner/agents/" + encodeURIComponent(id) + "/details"
+      "/owner/agents/" +
+      encodeURIComponent(id) +
+      "/details"
     );
 
     if (!data.success) {
-      throw new Error("Could not load agent details.");
+      throw new Error(
+        data.message || "Could not load agent details."
+      );
     }
 
     const agent = data.agent || {};
@@ -500,6 +620,7 @@ async function loadAgentDetails(id) {
 
     panel.innerHTML = `
       <h3>${escapeHTML(agent.business_name)}</h3>
+
       <p>Name: ${escapeHTML(agent.full_name)}</p>
       <p>Agent code: ${escapeHTML(agent.agent_code)}</p>
       <p>Email: ${escapeHTML(agent.email)}</p>
@@ -529,6 +650,7 @@ async function loadAgentDetails(id) {
               <th>Delivery</th>
             </tr>
           </thead>
+
           <tbody>
             ${orders.length ? orders.map(order => `
               <tr>
@@ -559,6 +681,7 @@ async function loadAgentDetails(id) {
               <th>Status</th>
             </tr>
           </thead>
+
           <tbody>
             ${withdrawals.length ? withdrawals.map(item => `
               <tr>
@@ -581,11 +704,13 @@ async function loadAgentDetails(id) {
 }
 
 /* =========================================
-   OWNER WITHDRAWAL MANAGEMENT
+   WITHDRAWAL MANAGEMENT
+   GET /owner/withdrawals
 ========================================= */
 
 async function loadWithdrawals() {
   const tbody = byId("withdrawalsTableBody");
+
   if (!tbody) return;
 
   tbody.innerHTML =
@@ -595,7 +720,9 @@ async function loadWithdrawals() {
     const data = await ownerRequest("/owner/withdrawals");
 
     if (!data.success) {
-      throw new Error("Could not retrieve withdrawals.");
+      throw new Error(
+        data.message || "Could not retrieve withdrawals."
+      );
     }
 
     const withdrawals = data.withdrawals || [];
@@ -608,10 +735,12 @@ async function loadWithdrawals() {
 
     setText(
       "ownerPendingAmount",
-      money(pending.reduce(
-        (total, item) => total + Number(item.amount || 0),
-        0
-      ))
+      money(
+        pending.reduce(
+          (total, item) => total + Number(item.amount || 0),
+          0
+        )
+      )
     );
 
     if (!withdrawals.length) {
@@ -655,19 +784,23 @@ async function loadWithdrawals() {
 
   } catch (error) {
     tbody.innerHTML = `
-      <tr><td colspan="7">${escapeHTML(error.message)}</td></tr>
+      <tr>
+        <td colspan="7">${escapeHTML(error.message)}</td>
+      </tr>
     `;
+
     throw error;
   }
 }
 
 /* =========================================
    UPDATE WITHDRAWAL STATUS
+   This does NOT send Mobile Money.
 ========================================= */
 
 async function updateWithdrawalStatus(id, status) {
   const promptMessage = status === "paid"
-    ? "Have you already sent the money successfully through Mobile Money?"
+    ? "Have you already sent this money successfully through Mobile Money?"
     : "Are you sure you want to reject this withdrawal?";
 
   if (!window.confirm(promptMessage)) return;
@@ -683,7 +816,9 @@ async function updateWithdrawalStatus(id, status) {
       }
     );
 
-    showMessage(data.message || "Withdrawal status updated.");
+    showMessage(
+      data.message || "Withdrawal status updated."
+    );
 
     await Promise.all([
       loadStatistics(),
@@ -693,6 +828,428 @@ async function updateWithdrawalStatus(id, status) {
   } catch (error) {
     showMessage(error.message);
   }
+}
+
+/* =========================================
+   SMS PHONE NUMBER NORMALIZATION
+========================================= */
+
+function normalizeGhanaNumber(value) {
+  let number = String(value || "")
+    .trim()
+    .replace(/[\s()-]/g, "");
+
+  if (number.startsWith("00233")) {
+    number = "+" + number.slice(2);
+  } else if (number.startsWith("233")) {
+    number = "+" + number;
+  } else if (/^0\d{9}$/.test(number)) {
+    number = "+233" + number.slice(1);
+  }
+
+  return number;
+}
+
+function getSmsRecipients() {
+  const box = byId("smsRecipients");
+
+  if (!box) {
+    return { valid: [], invalid: [] };
+  }
+
+  const numbers = box.value
+    .split(/[\n,;]+/)
+    .map(normalizeGhanaNumber)
+    .filter(Boolean);
+
+  const unique = [...new Set(numbers)];
+
+  return {
+    valid: unique.filter(number => /^\+233\d{9}$/.test(number)),
+    invalid: unique.filter(number => !/^\+233\d{9}$/.test(number))
+  };
+}
+
+function updateSmsRecipientCount() {
+  const count = byId("smsRecipientCount");
+  const result = getSmsRecipients();
+
+  if (count) {
+    count.textContent =
+      `Recipients: ${result.valid.length}` +
+      (
+        result.invalid.length
+          ? ` | Invalid numbers: ${result.invalid.length}`
+          : ""
+      );
+  }
+
+  return result;
+}
+
+/* =========================================
+   SMS CONTACT FILE UPLOAD
+   Supports TXT and CSV files
+========================================= */
+
+async function handleSmsFileUpload(event) {
+  const input = event.target;
+  const file = input.files && input.files[0];
+
+  if (!file) return;
+
+  const recipientsBox = byId("smsRecipients");
+  const statusBox = byId("smsCampaignStatus");
+
+  if (!recipientsBox) {
+    input.value = "";
+    return;
+  }
+
+  if (!/\.(txt|csv)$/i.test(file.name)) {
+    alert("Please select a TXT or CSV file.");
+    input.value = "";
+    return;
+  }
+
+  if (file.size > SMS_MAX_FILE_SIZE) {
+    alert("The file must be smaller than 2 MB.");
+    input.value = "";
+    return;
+  }
+
+  try {
+    const content = await file.text();
+
+    // Find Ghanaian numbers without consuming a whole CSV row.
+    const matches = content.match(
+      /(?:\+233|00233|233|0)\s*[\d\s()-]{8,18}/g
+    ) || [];
+
+    const extracted = matches
+      .map(normalizeGhanaNumber)
+      .filter(number => /^\+233\d{9}$/.test(number));
+
+    const existing = getSmsRecipients().valid;
+
+    const combined = [
+      ...new Set([...existing, ...extracted])
+    ];
+
+    recipientsBox.value = combined.join("\n");
+
+    recipientsBox.dispatchEvent(
+      new Event("input", { bubbles: true })
+    );
+
+    updateSmsRecipientCount();
+
+    const resultMessage =
+      `${extracted.length} valid phone number(s) found. ` +
+      `${combined.length} unique number(s) are now in your list.`;
+
+    if (statusBox) {
+      statusBox.textContent = resultMessage;
+    }
+
+    alert(resultMessage);
+
+  } catch (_error) {
+    alert("Unable to read this file. Please try another TXT or CSV file.");
+  } finally {
+    input.value = "";
+  }
+}
+
+/* =========================================
+   SMS SEGMENT ESTIMATION
+   Estimate only; not Sailup's official price.
+========================================= */
+
+function estimateSmsSegments(message) {
+  const gsmCharacters =
+    "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ " +
+    "!\"#$%&'()*+,-./0123456789:;<=>?¡" +
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿" +
+    "abcdefghijklmnopqrstuvwxyzäöñüà";
+
+  const gsmExtensionCharacters = "^{}\\[~]|€";
+
+  let gsm7 = true;
+  let units = 0;
+
+  for (const char of message) {
+    if (gsmCharacters.includes(char)) {
+      units += 1;
+    } else if (gsmExtensionCharacters.includes(char)) {
+      units += 2;
+    } else {
+      gsm7 = false;
+      break;
+    }
+  }
+
+  if (!gsm7) {
+    return message.length <= 70
+      ? 1
+      : Math.ceil(message.length / 67);
+  }
+
+  return units <= 160
+    ? 1
+    : Math.ceil(units / 153);
+}
+
+/* =========================================
+   SMS COST ESTIMATION
+========================================= */
+
+function estimateSmsCampaign() {
+  const message = byId("smsMessage")?.value.trim() || "";
+  const status = byId("smsCampaignStatus");
+  const recipients = updateSmsRecipientCount();
+
+  if (!status) return null;
+
+  if (!message) {
+    status.textContent = "Please enter your SMS message.";
+    return null;
+  }
+
+  if (recipients.invalid.length) {
+    status.textContent =
+      `Please correct ${recipients.invalid.length} invalid number(s).`;
+    return null;
+  }
+
+  if (!recipients.valid.length) {
+    status.textContent =
+      "Please enter or upload customer phone numbers.";
+    return null;
+  }
+
+  const segments = estimateSmsSegments(message);
+
+  const batches = Math.ceil(
+    recipients.valid.length / SMS_BATCH_SIZE
+  );
+
+  /*
+   * Do not invent a price per SMS.
+   * The backend/provider must supply the actual rate
+   * before a reliable monetary estimate can be shown.
+   */
+
+  status.textContent =
+    `Recipients: ${recipients.valid.length}. ` +
+    `Estimated SMS segments per recipient: ${segments}. ` +
+    `Batches: ${batches}. ` +
+    "The actual cost must be confirmed using your Sailup account rate.";
+
+  return {
+    message,
+    recipients: recipients.valid,
+    segments,
+    batches
+  };
+}
+
+/* =========================================
+   SEND SMS CAMPAIGN
+   POST /owner/sms/send
+========================================= */
+
+async function sendSmsCampaign() {
+  if (smsCampaignRunning) {
+    return;
+  }
+
+  const status = byId("smsCampaignStatus");
+  const sendButton = byId("sendSmsCampaign");
+  const estimateButton = byId("estimateSmsCost");
+
+  if (!status || !sendButton) return;
+
+  if (!ownerToken) {
+    status.textContent =
+      "Please log in to your owner account before sending SMS.";
+    showLogin();
+    return;
+  }
+
+  const campaign = estimateSmsCampaign();
+
+  if (!campaign) return;
+
+  if (campaign.message.length > 1000) {
+    status.textContent =
+      "Your message cannot exceed 1,000 characters.";
+    return;
+  }
+
+  const consentConfirmed = window.confirm(
+    `Send this SMS campaign?\n\n` +
+    `Recipients: ${campaign.recipients.length}\n` +
+    `Batches: ${campaign.batches}\n\n` +
+    `Only send messages to people who agreed to receive them. ` +
+    `SMS charges may apply. Continue?`
+  );
+
+  if (!consentConfirmed) return;
+
+  smsCampaignRunning = true;
+  sendButton.disabled = true;
+
+  if (estimateButton) {
+    estimateButton.disabled = true;
+  }
+
+  let accepted = 0;
+  let failedBatch = 0;
+
+  const campaignId =
+    "sms-" + Date.now() + "-" +
+    Math.random().toString(36).slice(2, 8);
+
+  try {
+    for (
+      let start = 0;
+      start < campaign.recipients.length;
+      start += SMS_BATCH_SIZE
+    ) {
+      const batchNumber =
+        Math.floor(start / SMS_BATCH_SIZE) + 1;
+
+      const batch = campaign.recipients.slice(
+        start,
+        start + SMS_BATCH_SIZE
+      );
+
+      status.textContent =
+        `Submitting batch ${batchNumber} of ${campaign.batches}...`;
+
+      let data;
+
+      try {
+        data = await ownerRequest("/owner/sms/send", {
+          method: "POST",
+          headers: {
+            "Idempotency-Key":
+              `${campaignId}-${batchNumber}`
+          },
+          body: JSON.stringify({
+            message: campaign.message,
+            recipients: batch,
+            campaignId,
+            batchNumber
+          })
+        });
+      } catch (error) {
+        failedBatch = batchNumber;
+
+        status.textContent =
+          `Campaign stopped at batch ${batchNumber}. ` +
+          `${error.message} Previously accepted recipients: ${accepted}. ` +
+          "Check your Sailup records before retrying.";
+        break;
+      }
+
+      if (!data.success) {
+        failedBatch = batchNumber;
+
+        status.textContent =
+          `Batch ${batchNumber} was not confirmed. ` +
+          `${data.message || "The server did not confirm acceptance."} ` +
+          `Previously accepted recipients: ${accepted}.`;
+        break;
+      }
+
+      accepted += Number(
+        data.recipientCount ?? batch.length
+      );
+
+      status.textContent =
+        `Progress: ${batchNumber}/${campaign.batches} batches accepted. ` +
+        `${accepted} recipients accepted for processing.`;
+    }
+
+    if (!failedBatch) {
+      status.textContent =
+        `Campaign submission completed. ${accepted} recipients were ` +
+        "accepted for processing. This does not guarantee delivery.";
+    }
+
+  } finally {
+    smsCampaignRunning = false;
+    sendButton.disabled = false;
+
+    if (estimateButton) {
+      estimateButton.disabled = false;
+    }
+  }
+}
+
+/* =========================================
+   SMS INITIALIZATION
+========================================= */
+
+function initializeSmsCampaign() {
+  const fileInput = byId("smsContactFile");
+  const recipientsBox = byId("smsRecipients");
+  const messageBox = byId("smsMessage");
+  const estimateButton = byId("estimateSmsCost");
+  const sendButton = byId("sendSmsCampaign");
+
+  if (fileInput && !fileInput.dataset.ownerBound) {
+    fileInput.dataset.ownerBound = "true";
+
+    fileInput.addEventListener(
+      "change",
+      handleSmsFileUpload
+    );
+  }
+
+  if (recipientsBox && !recipientsBox.dataset.ownerBound) {
+    recipientsBox.dataset.ownerBound = "true";
+
+    recipientsBox.addEventListener("input", () => {
+      updateSmsRecipientCount();
+
+      const status = byId("smsCampaignStatus");
+
+      if (status) status.textContent = "";
+    });
+  }
+
+  if (messageBox && !messageBox.dataset.ownerBound) {
+    messageBox.dataset.ownerBound = "true";
+
+    messageBox.addEventListener("input", () => {
+      const status = byId("smsCampaignStatus");
+
+      if (status) status.textContent = "";
+    });
+  }
+
+  if (estimateButton && !estimateButton.dataset.ownerBound) {
+    estimateButton.dataset.ownerBound = "true";
+
+    estimateButton.addEventListener(
+      "click",
+      estimateSmsCampaign
+    );
+  }
+
+  if (sendButton && !sendButton.dataset.ownerBound) {
+    sendButton.dataset.ownerBound = "true";
+
+    sendButton.addEventListener(
+      "click",
+      sendSmsCampaign
+    );
+  }
+
+  updateSmsRecipientCount();
 }
 
 /* =========================================
@@ -718,13 +1275,26 @@ async function loadDashboard() {
       loadWithdrawals()
     ]);
 
-    const failed = results.filter(
-      result => result.status === "rejected"
-    );
+    const names = [
+      "Statistics",
+      "Orders",
+      "Agents",
+      "Withdrawals"
+    ];
 
-    if (failed.length) {
+    const failures = results
+      .map((result, index) => ({
+        result,
+        name: names[index]
+      }))
+      .filter(item => item.result.status === "rejected");
+
+    if (failures.length) {
       showMessage(
-        "Some sections could not load. Check the affected section."
+        "Some sections failed: " +
+        failures.map(item =>
+          `${item.name}: ${item.result.reason?.message || "Unknown error"}`
+        ).join(" | ")
       );
     } else {
       showMessage("Dashboard updated successfully.");
@@ -746,34 +1316,34 @@ async function startDashboard() {
   }
 
   showDashboard();
+
   await loadDashboard();
 
-  if (refreshTimer) clearInterval(refreshTimer);
+  stopRefreshTimer();
 
   if (ownerToken) {
     refreshTimer = setInterval(() => {
-      loadDashboard().catch(error => showMessage(error.message));
+      loadDashboard().catch(error => {
+        showMessage(error.message);
+      });
     }, 60000);
   }
 }
 
 /* =========================================
-   OWNER LOGOUT
+   LOGOUT
 ========================================= */
 
 async function logoutOwner() {
   const oldToken = ownerToken;
 
-  ownerToken = null;
-  sessionStorage.removeItem(TOKEN_KEY);
-
-  if (refreshTimer) {
-    clearInterval(refreshTimer);
-    refreshTimer = null;
-  }
+  clearToken();
+  stopRefreshTimer();
 
   hideDashboard();
-  showLogin();
+
+  // Immediately return to login.
+  showLogin("You have been logged out successfully.");
 
   if (oldToken) {
     try {
@@ -784,7 +1354,7 @@ async function logoutOwner() {
         }
       });
     } catch (_error) {
-      // Local logout is already complete.
+      // The local logout has already completed.
     }
   }
 }
@@ -802,7 +1372,10 @@ function initializeOwnerDashboard() {
 
   navLinks.forEach(link => {
     link.addEventListener("click", () => {
-      navLinks.forEach(item => item.classList.remove("active"));
+      navLinks.forEach(item =>
+        item.classList.remove("active")
+      );
+
       link.classList.add("active");
     });
   });
@@ -814,12 +1387,20 @@ function initializeOwnerDashboard() {
 
   byId("refreshDashboard")?.addEventListener(
     "click",
-    () => loadDashboard().catch(error => showMessage(error.message))
+    () => {
+      loadDashboard().catch(error => {
+        showMessage(error.message);
+      });
+    }
   );
 
   byId("searchOrders")?.addEventListener(
     "click",
-    () => loadOrders().catch(error => showMessage(error.message))
+    () => {
+      loadOrders().catch(error => {
+        showMessage(error.message);
+      });
+    }
   );
 
   byId("orderSearch")?.addEventListener(
@@ -827,20 +1408,29 @@ function initializeOwnerDashboard() {
     event => {
       if (event.key === "Enter") {
         event.preventDefault();
-        loadOrders().catch(error => showMessage(error.message));
+
+        loadOrders().catch(error => {
+          showMessage(error.message);
+        });
       }
     }
   );
 
   byId("agentSearch")?.addEventListener(
     "input",
-    () => loadAgents().catch(error => showMessage(error.message))
+    () => {
+      loadAgents().catch(error => {
+        showMessage(error.message);
+      });
+    }
   );
 
   byId("agentsTableBody")?.addEventListener(
     "click",
     event => {
-      const button = event.target.closest("[data-agent-details]");
+      const button = event.target.closest(
+        "[data-agent-details]"
+      );
 
       if (button) {
         loadAgentDetails(button.dataset.agentDetails);
@@ -851,8 +1441,13 @@ function initializeOwnerDashboard() {
   byId("withdrawalsTableBody")?.addEventListener(
     "click",
     event => {
-      const paidButton = event.target.closest("[data-withdrawal-paid]");
-      const rejectButton = event.target.closest("[data-withdrawal-reject]");
+      const paidButton = event.target.closest(
+        "[data-withdrawal-paid]"
+      );
+
+      const rejectButton = event.target.closest(
+        "[data-withdrawal-reject]"
+      );
 
       if (paidButton) {
         updateWithdrawalStatus(
@@ -870,454 +1465,30 @@ function initializeOwnerDashboard() {
     }
   );
 
-  ownerToken = sessionStorage.getItem(TOKEN_KEY);
-
-  if (ownerToken) {
-    startDashboard().catch(error => showMessage(error.message));
-  } else {
-    showLogin();
-  }
-}
-
-/* =========================================
-   SMS PHONE NUMBER HELPERS
-========================================= */
-
-function normalizeGhanaPhone(value) {
-  let phone = String(value || "").trim().replace(/[\s()-]/g, "");
-
-  if (/^00233\d{9}$/.test(phone)) {
-    phone = "+" + phone.slice(2);
-  } else if (/^233\d{9}$/.test(phone)) {
-    phone = "+" + phone;
-  } else if (/^0\d{9}$/.test(phone)) {
-    phone = "+233" + phone.slice(1);
-  }
-
-  return phone;
-}
-
-function parseSmsRecipients(value) {
-  const entries = String(value || "")
-    .split(/[\n,;]+/)
-    .map(item => item.trim())
-    .filter(Boolean);
-
-  const normalized = [...new Set(entries.map(normalizeGhanaPhone))];
-
-  return {
-    valid: normalized.filter(number => /^\+233\d{9}$/.test(number)),
-    invalid: normalized.filter(number => !/^\+233\d{9}$/.test(number))
-  };
-}
-
-/* =========================================
-   SMS FILE UPLOAD
-   Accepts TXT and CSV files.
-========================================= */
-
-function initializeSmsFileUpload() {
-  const fileInput = byId("smsContactFile");
-  const recipientsBox = byId("smsRecipients");
-
-  if (!fileInput || !recipientsBox) return;
-
-  fileInput.addEventListener("change", async () => {
-    const file = fileInput.files?.[0];
-
-    if (!file) return;
-
-    if (!/\.(txt|csv)$/i.test(file.name)) {
-      alert("Please select a TXT or CSV file.");
-      fileInput.value = "";
-      return;
-    }
-
-    if (file.size > 2 * 1024 * 1024) {
-      alert("The file must be smaller than 2 MB.");
-      fileInput.value = "";
-      return;
-    }
-
-    try {
-      const content = await file.text();
-
-      const found = content.match(
-        /(?:\+233|00233|233|0)\s*[\d\s()-]{9,15}/g
-      ) || [];
-
-      const imported = found
-        .map(normalizeGhanaPhone)
-        .filter(number => /^\+233\d{9}$/.test(number));
-
-      const existing = parseSmsRecipients(recipientsBox.value).valid;
-      const combined = [...new Set([...existing, ...imported])];
-
-      recipientsBox.value = combined.join("\n");
-
-      recipientsBox.dispatchEvent(
-        new Event("input", { bubbles: true })
-      );
-
-      alert(
-        `${imported.length} valid number(s) found in the file.\n` +
-        `${combined.length} unique valid recipient(s) are now in the list.`
-      );
-
-    } catch (_error) {
-      alert("Unable to read this file. Please try another TXT or CSV file.");
-    } finally {
-      fileInput.value = "";
-    }
-  });
-}
-
-/* =========================================
-   SMS COST ESTIMATION
-========================================= */
-
-// Conservative character-set estimate.
-// Actual encoding and charges depend on Sailup.
-function getSmsSegmentCount(message) {
-  const gsm7Characters =
-    /^[@£$¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#$%&'()*+,\-./:;<=>?¡A-ZÄÖÑÜ¿a-zäöñüà\r\n^{}\\[\]~|€]*$/;
-
-  const isGsm7 = gsm7Characters.test(message);
-
-  if (isGsm7) {
-    return message.length <= 160
-      ? 1
-      : Math.ceil(message.length / 153);
-  }
-
-  return message.length <= 70
-    ? 1
-    : Math.ceil(message.length / 67);
-}
-
-/* =========================================
-   SMS CAMPAIGN CONTROLS
-========================================= */
-
-function initializeSmsCampaign() {
-  const messageBox = byId("smsMessage");
-  const recipientsBox = byId("smsRecipients");
-  const recipientCount = byId("smsRecipientCount");
-  const estimateButton = byId("estimateSmsCost");
-  const sendButton = byId("sendSmsCampaign");
-  const statusBox = byId("smsCampaignStatus");
-
-  if (
-    !messageBox ||
-    !recipientsBox ||
-    !recipientCount ||
-    !estimateButton ||
-    !sendButton ||
-    !statusBox
-  ) {
-    return;
-  }
-
-  const BATCH_SIZE = 100;
-
-  // Provisional only. Verify the actual price in Sailup.
-  const PROVISIONAL_RATE_GHS = 0.02;
-
-  let campaignRunning = false;
-
-  function updateRecipientCount() {
-    const recipients = parseSmsRecipients(recipientsBox.value);
-
-    recipientCount.textContent =
-      `Recipients: ${recipients.valid.length}` +
-      (recipients.invalid.length
-        ? ` | Invalid numbers: ${recipients.invalid.length}`
-        : "");
-
-    return recipients;
-  }
-
-  function createEstimate() {
-    const message = messageBox.value.trim();
-    const recipients = updateRecipientCount();
-
-    if (!message) {
-      statusBox.textContent = "Please enter an SMS message.";
-      return null;
-    }
-
-    if (message.length > 1000) {
-      statusBox.textContent =
-        "Your message cannot exceed 1000 characters.";
-      return null;
-    }
-
-    if (recipients.invalid.length) {
-      statusBox.textContent =
-        `Correct ${recipients.invalid.length} invalid phone number(s) first.`;
-      return null;
-    }
-
-    if (!recipients.valid.length) {
-      statusBox.textContent =
-        "Please enter or upload customer phone numbers.";
-      return null;
-    }
-
-    const segments = getSmsSegmentCount(message);
-    const total = recipients.valid.length;
-    const batches = Math.ceil(total / BATCH_SIZE);
-    const estimatedCost =
-      total * segments * PROVISIONAL_RATE_GHS;
-
-    statusBox.textContent =
-      `Estimated cost: GH₵${estimatedCost.toFixed(2)}. ` +
-      `${total} recipients; ${segments} SMS segment(s) each; ` +
-      `${batches} batch(es). ` +
-      "This is a provisional estimate, not a confirmed Sailup quote.";
-
-    return {
-      message,
-      recipients: recipients.valid,
-      segments,
-      batches,
-      estimatedCost
-    };
-  }
-
-  recipientsBox.addEventListener("input", () => {
-    updateRecipientCount();
-    statusBox.textContent = "";
-  });
-
-  messageBox.addEventListener("input", () => {
-    statusBox.textContent = "";
-  });
-
-  estimateButton.addEventListener("click", createEstimate);
-
-  sendButton.addEventListener("click", async () => {
-    if (campaignRunning) {
-      statusBox.textContent = "A campaign is already running.";
-      return;
-    }
-
-    const estimate = createEstimate();
-
-    if (!estimate) return;
-
-    if (estimate.recipients.length > 1000) {
-      statusBox.textContent =
-        "This campaign exceeds 1,000 recipients. Split it into smaller campaigns and verify your provider limits first.";
-      return;
-    }
-
-    const token = sessionStorage.getItem(TOKEN_KEY);
-
-    if (!token) {
-      statusBox.textContent =
-        "Your owner session has expired. Log in again.";
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `Submit this SMS campaign?\n\n` +
-      `Recipients: ${estimate.recipients.length}\n` +
-      `Batches: ${estimate.batches}\n` +
-      `Estimated cost: GH₵${estimate.estimatedCost.toFixed(2)}\n\n` +
-      `This is an estimate only. Sending may incur charges. ` +
-      `Continue only if your sender ID is approved and all recipients consented.`
-    );
-
-    if (!confirmed) return;
-
-    campaignRunning = true;
-    sendButton.disabled = true;
-    estimateButton.disabled = true;
-
-    let acceptedRecipients = 0;
-    let completedBatches = 0;
-
-    const campaignId =
-      "sms-" + Date.now() + "-" +
-      Math.random().toString(36).slice(2, 8);
-
-    try {
-      for (
-        let start = 0;
-        start < estimate.recipients.length;
-        start += BATCH_SIZE
-      ) {
-        const batch = estimate.recipients.slice(
-          start,
-          start + BATCH_SIZE
-        );
-
-        const batchNumber = completedBatches + 1;
-
-        statusBox.textContent =
-          `Submitting batch ${batchNumber} of ${estimate.batches}. ` +
-          `Previously accepted: ${acceptedRecipients}.`;
-
-        const response = await fetch(
-          OWNER_API + "/owner/sms/send",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + token,
-              "Idempotency-Key": `${campaignId}-${batchNumber}`
-            },
-            body: JSON.stringify({
-              message: estimate.message,
-              recipients: batch,
-              campaignId,
-              batchNumber
-            })
-          }
-        );
-
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok || !data.success) {
-          statusBox.textContent =
-            `Stopped at batch ${batchNumber} of ${estimate.batches}. ` +
-            `${data.message || "The server did not confirm acceptance."} ` +
-            `Previously accepted: ${acceptedRecipients}. ` +
-            "Check provider records before retrying to avoid duplicates.";
-          return;
-        }
-
-        acceptedRecipients += batch.length;
-        completedBatches++;
-
-        statusBox.textContent =
-          `Progress: ${completedBatches}/${estimate.batches} batches accepted. ` +
-          `${acceptedRecipients}/${estimate.recipients.length} recipients accepted.`;
-      }
-
-      statusBox.textContent =
-        `All ${completedBatches} batches were accepted for processing. ` +
-        `${acceptedRecipients} recipients submitted. ` +
-        "Acceptance does not guarantee delivery.";
-
-    } catch (error) {
-      statusBox.textContent =
-        `Campaign interrupted after ${completedBatches} accepted batch(es). ` +
-        `${error.message} Check provider records before retrying.`;
-
-    } finally {
-      campaignRunning = false;
-      sendButton.disabled = false;
-      estimateButton.disabled = false;
-    }
-  });
-
-  updateRecipientCount();
-}
-
-/* =========================================
-   INITIALIZE
-========================================= */
-
-function initializeOwnerDashboard() {
-  hideDashboard();
-
-  const navLinks = document.querySelectorAll(
-    ".owner-nav .nav-link"
-  );
-
-  navLinks.forEach(link => {
-    link.addEventListener("click", () => {
-      navLinks.forEach(item => item.classList.remove("active"));
-      link.classList.add("active");
-    });
-  });
-
-  byId("ownerLogoutButton")?.addEventListener(
-    "click",
-    logoutOwner
-  );
-
-  byId("refreshDashboard")?.addEventListener(
-    "click",
-    () => loadDashboard().catch(error => showMessage(error.message))
-  );
-
-  byId("searchOrders")?.addEventListener(
-    "click",
-    () => loadOrders().catch(error => showMessage(error.message))
-  );
-
-  byId("orderSearch")?.addEventListener(
-    "keydown",
-    event => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-        loadOrders().catch(error => showMessage(error.message));
-      }
-    }
-  );
-
-  byId("agentSearch")?.addEventListener(
-    "input",
-    () => loadAgents().catch(error => showMessage(error.message))
-  );
-
-  byId("agentsTableBody")?.addEventListener(
-    "click",
-    event => {
-      const button = event.target.closest("[data-agent-details]");
-
-      if (button) {
-        loadAgentDetails(button.dataset.agentDetails);
-      }
-    }
-  );
-
-  byId("withdrawalsTableBody")?.addEventListener(
-    "click",
-    event => {
-      const paidButton = event.target.closest("[data-withdrawal-paid]");
-      const rejectButton = event.target.closest("[data-withdrawal-reject]");
-
-      if (paidButton) {
-        updateWithdrawalStatus(
-          paidButton.dataset.withdrawalPaid,
-          "paid"
-        );
-      }
-
-      if (rejectButton) {
-        updateWithdrawalStatus(
-          rejectButton.dataset.withdrawalReject,
-          "rejected"
-        );
-      }
-    }
-  );
-
-  ownerToken = sessionStorage.getItem(TOKEN_KEY);
-
-  if (ownerToken) {
-    startDashboard().catch(error => showMessage(error.message));
-  } else {
-    showLogin();
-  }
-}
-
-function initializeAllFeatures() {
-  initializeOwnerDashboard();
-  initializeSmsFileUpload();
   initializeSmsCampaign();
+
+  // Restore the owner session if available.
+  ownerToken = getSavedToken();
+
+  if (ownerToken) {
+    startDashboard().catch(error => {
+      showMessage(error.message);
+    });
+  } else {
+    showLogin();
+  }
 }
+
+/* =========================================
+   INITIALIZE ONCE
+========================================= */
 
 if (document.readyState === "loading") {
   document.addEventListener(
     "DOMContentLoaded",
-    initializeAllFeatures,
+    initializeOwnerDashboard,
     { once: true }
   );
 } else {
-  initializeAllFeatures();
-       }
+  initializeOwnerDashboard();
+     }
