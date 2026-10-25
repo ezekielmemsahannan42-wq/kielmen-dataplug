@@ -440,6 +440,7 @@ async function loadStatistics() {
 /* =========================================
    CUSTOMER ORDERS
    GET /owner/orders
+   Includes Retry Delivery for failed orders
 ========================================= */
 
 async function loadOrders() {
@@ -448,7 +449,7 @@ async function loadOrders() {
   if (!tbody) return;
 
   tbody.innerHTML =
-    '<tr><td colspan="7">Loading orders...</td></tr>';
+    '<tr><td colspan="8">Loading orders...</td></tr>';
 
   const params = new URLSearchParams();
 
@@ -479,39 +480,136 @@ async function loadOrders() {
     );
 
     if (!data.success) {
-      throw new Error(data.message || "Could not retrieve orders.");
+      throw new Error(
+        data.message || "Could not retrieve orders."
+      );
     }
 
     const orders = data.orders || [];
 
     if (!orders.length) {
       tbody.innerHTML =
-        '<tr><td colspan="7">No orders found.</td></tr>';
+        '<tr><td colspan="8">No orders found.</td></tr>';
       return;
     }
 
-    tbody.innerHTML = orders.map(order => `
-      <tr>
-        <td>${escapeHTML(order.reference)}</td>
-        <td>${escapeHTML(order.phone)}</td>
-        <td>${escapeHTML(order.network)}</td>
-        <td>${escapeHTML(order.bundle)}</td>
-        <td>${money(order.amount)}</td>
-        <td>${escapeHTML(order.status)}</td>
-        <td>${escapeHTML(order.delivery_status)}</td>
-      </tr>
-    `).join("");
+    tbody.innerHTML = orders.map(order => {
+      const payment = String(
+        order.status || ""
+      ).toLowerCase();
+
+      const delivery = String(
+        order.delivery_status || ""
+      ).toLowerCase();
+
+      const canRetry =
+        payment === "paid" &&
+        delivery === "failed";
+
+      return `
+        <tr>
+          <td>${escapeHTML(order.reference)}</td>
+          <td>${escapeHTML(order.phone)}</td>
+          <td>${escapeHTML(order.network)}</td>
+          <td>${escapeHTML(order.bundle)}</td>
+          <td>${money(order.amount)}</td>
+          <td>${escapeHTML(order.status)}</td>
+          <td>${escapeHTML(order.delivery_status)}</td>
+          <td>
+            ${
+              canRetry
+                ? `
+                  <button
+                    type="button"
+                    class="button"
+                    style="
+                      background:#ca8a04;
+                      color:#030712;
+                      padding:9px 12px;
+                    "
+                    data-retry-delivery="${escapeHTML(
+                      order.reference
+                    )}"
+                  >
+                    Retry Delivery
+                  </button>
+                `
+                : "—"
+            }
+          </td>
+        </tr>
+      `;
+    }).join("");
 
   } catch (error) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7">${escapeHTML(error.message)}</td>
+        <td colspan="8">${escapeHTML(error.message)}</td>
       </tr>
     `;
 
     throw error;
   }
 }
+
+/* =========================================
+   RETRY FAILED DATA DELIVERY
+========================================= */
+
+async function retryOrderDelivery(reference, button) {
+  if (!ownerToken) {
+    showLogin();
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "Retry delivery for this order?\n\n" +
+    "Reference: " + reference + "\n\n" +
+    "The customer has already paid. No new payment will be taken.\n\n" +
+    "Before continuing, ensure DataMart did not already accept " +
+    "the original purchase. A retry may risk duplicate delivery " +
+    "if the supplier processed it despite the earlier error.\n\n" +
+    "Do you want to continue?"
+  );
+
+  if (!confirmed) return;
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Retrying...";
+  }
+
+  showMessage(
+    "Retrying DataMart delivery for " + reference + "..."
+  );
+
+  try {
+    const data = await ownerRequest(
+      "/owner/orders/" +
+      encodeURIComponent(reference) +
+      "/retry-delivery",
+      {
+        method: "POST",
+        body: JSON.stringify({})
+      }
+    );
+
+    showMessage(
+      data.message ||
+      "Retry request processed. Refresh the order status."
+    );
+
+    await loadOrders();
+
+  } catch (error) {
+    showMessage(
+      "Retry result: " + error.message +
+      " Check the order and DataMart status before retrying again."
+    );
+
+    await loadOrders().catch(() => {});
+  }
+         }
 
 /* =========================================
    AGENT MANAGEMENT
@@ -1402,6 +1500,21 @@ function initializeOwnerDashboard() {
       });
     }
   );
+   byId("ordersTableBody")?.addEventListener(
+  "click",
+  event => {
+    const button = event.target.closest(
+      "[data-retry-delivery]"
+    );
+
+    if (!button || button.disabled) return;
+
+    retryOrderDelivery(
+      button.dataset.retryDelivery,
+      button
+    );
+  }
+);
 
   byId("orderSearch")?.addEventListener(
     "keydown",
