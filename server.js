@@ -3107,8 +3107,23 @@ app.post("/initialize-payment", async (req, res) => {
     }
 
     const phone = normalizePhone(req.body?.phone);
-    const network = normalizeNetwork(req.body?.network);
-    const bundle = normalizeBundle(req.body?.bundle);
+
+const email = String(req.body?.email || "")
+  .trim()
+  .toLowerCase();
+
+const network = normalizeNetwork(req.body?.network);
+const bundle = normalizeBundle(req.body?.bundle);
+
+if (
+  !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+  email.length > 255
+) {
+  return res.status(400).json({
+    success: false,
+    message: "Please enter a valid email address."
+  });
+}
 
     if (!validGhanaPhone(phone)) {
       return res.status(400).json({
@@ -3217,16 +3232,16 @@ app.post("/initialize-payment", async (req, res) => {
           $7,$8
         )
       `,
-      [
-        reference,
-        PAYSTACK_CUSTOMER_EMAIL,
-        phone,
-        network,
-        bundle,
-        amount,
-        agentId,
-        agentBasePrice
-      ]
+[
+  reference,
+  email,
+  phone,
+  network,
+  bundle,
+  amount,
+  agentId,
+  agentBasePrice
+]
     );
 
     try {
@@ -3234,7 +3249,7 @@ app.post("/initialize-payment", async (req, res) => {
         "/transaction/initialize",
         "POST",
         {
-          email: PAYSTACK_CUSTOMER_EMAIL,
+          email: email,
           amount: amountToPesewas(amount),
           currency: "GHS",
           reference,
