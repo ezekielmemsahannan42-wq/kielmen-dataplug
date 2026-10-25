@@ -485,9 +485,34 @@ padding: 10px 13px;
       style="display:block;width:100%;min-height:130px;padding:12px;margin:10px 0 16px;border-radius:8px;"
     ></textarea>
 
-    <label for="smsRecipients">
-      Recipient phone numbers (one per line)
-    </label>
+    <label for="smsContactFile">
+  📂 Upload Customer Numbers from Your Phone
+</label>
+
+<input
+  type="file"
+  id="smsContactFile"
+  accept=".txt,.csv,text/plain,text/csv"
+  style="
+    display:block;
+    width:100%;
+    padding:15px;
+    margin:12px 0 20px;
+    background:#222;
+    color:white;
+    border:2px solid #d4a017;
+    border-radius:10px;
+  "
+>
+
+<p style="font-size:14px;color:#aaa;">
+  Select a TXT or CSV file containing customer phone numbers.
+  The numbers will be added to the recipient box below.
+</p>
+
+<label for="smsRecipients">
+  Recipient phone numbers (one per line)
+</label>
     <textarea
       id="smsRecipients"
       placeholder="0241234567&#10;0201234567&#10;0551234567"
