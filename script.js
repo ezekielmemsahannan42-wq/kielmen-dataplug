@@ -269,6 +269,20 @@ if (!phoneInput) {
 }
 
 const phone = phoneInput.value.trim();
+   const emailInput = getElement("customerEmail");
+const email = emailInput ? emailInput.value.trim() : "";
+
+if (!emailInput || !email) {
+  showMessage("Please enter your email address.", "error");
+  if (emailInput) emailInput.focus();
+  return;
+}
+
+if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  showMessage("Please enter a valid email address.", "error");
+  emailInput.focus();
+  return;
+}
 
 if (!/^0\d{9}$/.test(phone)) {
   showMessage(
@@ -296,6 +310,7 @@ if (!/^0\d{9}$/.test(phone)) {
         },
         body: JSON.stringify({
   phone: phone,
+  email: email,
   network: selectedBundle.network,
   bundle: selectedBundle.size,
   amount: selectedBundle.price
