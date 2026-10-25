@@ -44,10 +44,74 @@
     }
 
     .topbar {
-      padding: 22px 18px;
-      border-bottom: 1px solid var(--border);
-      background: #030712;
-    }
+padding: 18px;
+border-bottom: 1px solid var(--border);
+background: #030712;
+}
+
+.topbar-inner {
+display: flex;
+align-items: center;
+justify-content: space-between;
+flex-wrap: wrap;
+gap: 18px;
+}
+
+.brand-area {
+min-width: 0;
+}
+
+.owner-nav {
+display: flex;
+align-items: center;
+justify-content: flex-end;
+flex-wrap: wrap;
+gap: 8px;
+}
+
+.nav-link {
+display: inline-block;
+padding: 11px 14px;
+border: 1px solid var(--border);
+border-radius: 9px;
+color: var(--white);
+text-decoration: none;
+font-size: 14px;
+font-weight: bold;
+white-space: nowrap;
+}
+
+.nav-link:hover,
+.nav-link:focus-visible,
+.nav-link.active {
+background: var(--gold);
+border-color: var(--gold);
+color: #030712;
+}
+
+html {
+scroll-behavior: smooth;
+scroll-padding-top: 20px;
+}
+
+@media (max-width: 600px) {
+.topbar-inner {
+align-items: flex-start;
+}
+
+.owner-nav {
+width: 100%;
+justify-content: flex-start;
+flex-wrap: nowrap;
+overflow-x: auto;
+padding-bottom: 4px;
+}
+
+.nav-link {
+flex-shrink: 0;
+padding: 10px 13px;
+}
+}
 
     .brand {
       margin: 0;
@@ -214,11 +278,21 @@
 <body>
 
   <header class="topbar">
-    <h1 class="brand">KIELMEN 636 DATAPLUG</h1>
-    <div class="subtitle">Owner Dashboard</div>
+  <div class="topbar-inner">
+    <div class="brand-area">
+      <h1 class="brand">KIELMEN 636 DATAPLUG</h1>
+      <div class="subtitle">Owner Dashboard</div>
+    </div><nav class="owner-nav" aria-label="Owner dashboard navigation">
+  <a href="#dashboardHome" class="nav-link active">Dashboard</a>
+  <a href="#agentManagement" class="nav-link">Agents</a>
+  <a href="#orderManagement" class="nav-link">Orders</a>
+</nav>
+
+  </div>
   </header>
 
   <main class="container" id="ownerDashboardContent">
+  <div id="dashboardHome"></div>
 
     <div class="toolbar">
       <h2>Business Overview</h2>
@@ -307,7 +381,7 @@
     </section>
 
     <!-- ORDER MANAGEMENT -->
-<section class="section">
+<section class="section" id="orderManagement">
   <h2>📦 Order Management</h2>
 
   <div class="info-panel">
@@ -357,7 +431,7 @@
 </section>
 
 <!-- AGENT MANAGEMENT -->
-<section class="section">
+<section class="section" id="agentManagement">
   <h2>👥 Agent Management</h2>
 
   <div class="info-panel">
