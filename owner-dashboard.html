@@ -286,6 +286,7 @@ padding: 10px 13px;
   <a href="#dashboardHome" class="nav-link active">Dashboard</a>
   <a href="#agentManagement" class="nav-link">Agents</a>
   <a href="#orderManagement" class="nav-link">Orders</a>
+      <a href="#smsManagement" class="nav-link">SMS Campaigns</a>
 </nav>
 
   </div>
@@ -466,6 +467,60 @@ padding: 10px 13px;
 </section>
 
 <!-- WITHDRAWAL MANAGEMENT -->
+    <!-- SMS CAMPAIGN MANAGEMENT -->
+<section class="section" id="smsManagement">
+  <h2>📩 SMS Campaign Management</h2>
+
+  <div class="info-panel">
+    <p>
+      Send promotional messages to customers using Sailup.
+      Make sure recipients have agreed to receive your messages.
+    </p>
+
+    <label for="smsMessage">Message</label>
+    <textarea
+      id="smsMessage"
+      maxlength="1000"
+      placeholder="Hello! Welcome to Kielmen 636 Dataplug. Get affordable data bundles at https://kielmen.com"
+      style="display:block;width:100%;min-height:130px;padding:12px;margin:10px 0 16px;border-radius:8px;"
+    ></textarea>
+
+    <label for="smsRecipients">
+      Recipient phone numbers (one per line)
+    </label>
+    <textarea
+      id="smsRecipients"
+      placeholder="0241234567&#10;0201234567&#10;0551234567"
+      style="display:block;width:100%;min-height:160px;padding:12px;margin:10px 0 16px;border-radius:8px;"
+    ></textarea>
+
+    <p id="smsRecipientCount">Recipients: 0</p>
+
+    <button
+      class="button refresh"
+      type="button"
+      id="estimateSmsCost"
+    >
+      Check Estimated Cost
+    </button>
+
+    <button
+      class="button"
+      type="button"
+      id="sendSmsCampaign"
+      style="background:#ca8a04;margin-left:8px;"
+    >
+      Send SMS
+    </button>
+
+    <div
+      id="smsCampaignStatus"
+      role="status"
+      aria-live="polite"
+      style="margin-top:18px;overflow-wrap:anywhere;"
+    ></div>
+  </div>
+</section>
 <section class="section">
   <h2>💸 Withdrawal Management</h2>
 
