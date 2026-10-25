@@ -987,3 +987,215 @@ document.addEventListener("DOMContentLoaded", () => {
     fileInput.value = "";
   });
 });
+// ============================================
+// KIELMEN 636 DATAPLUG - SMS CAMPAIGN CONTROLS
+// ============================================
+
+(() => {
+  const initSmsCampaign = () => {
+    const messageBox = document.getElementById("smsMessage");
+    const recipientsBox = document.getElementById("smsRecipients");
+    const recipientCount = document.getElementById("smsRecipientCount");
+    const estimateButton = document.getElementById("estimateSmsCost");
+    const sendButton = document.getElementById("sendSmsCampaign");
+    const statusBox = document.getElementById("smsCampaignStatus");
+
+    if (
+      !messageBox ||
+      !recipientsBox ||
+      !recipientCount ||
+      !estimateButton ||
+      !sendButton ||
+      !statusBox
+    ) {
+      return;
+    }
+
+    // Get unique, valid Ghanaian phone numbers.
+    const getRecipients = () => {
+      const numbers = recipientsBox.value
+        .split(/[\n,;]+/)
+        .map(number => number.trim().replace(/[\s()-]/g, ""))
+        .filter(Boolean)
+        .map(number => {
+          if (/^0\d{9}$/.test(number)) {
+            return "+233" + number.slice(1);
+          }
+
+          if (/^233\d{9}$/.test(number)) {
+            return "+" + number;
+          }
+
+          return number;
+        });
+
+      return {
+        all: [...new Set(numbers)],
+        valid: [...new Set(numbers.filter(number => /^\+233\d{9}$/.test(number)))],
+        invalid: [...new Set(numbers.filter(number => !/^\+233\d{9}$/.test(number)))]
+      };
+    };
+
+    // Count recipients whenever the list changes.
+    const updateCount = () => {
+      const result = getRecipients();
+
+      recipientCount.textContent =
+        `Recipients: ${result.valid.length}` +
+        (result.invalid.length
+          ? ` | Invalid numbers: ${result.invalid.length}`
+          : "");
+
+      return result;
+    };
+
+    recipientsBox.addEventListener("input", updateCount);
+
+    // Update the estimate when the message changes.
+    messageBox.addEventListener("input", () => {
+      statusBox.textContent = "";
+    });
+
+    // Calculate the estimated SMS cost.
+    estimateButton.addEventListener("click", () => {
+      const message = messageBox.value.trim();
+      const result = updateCount();
+
+      if (!message) {
+        statusBox.textContent = "Please enter your SMS message.";
+        return;
+      }
+
+      if (result.invalid.length) {
+        statusBox.textContent =
+          `Please correct ${result.invalid.length} invalid phone number(s) before estimating.`;
+        return;
+      }
+
+      if (!result.valid.length) {
+        statusBox.textContent = "Please enter or upload customer phone numbers.";
+        return;
+      }
+
+      // Conservative estimate: GSM-7 is normally 160 characters
+      // for one segment and 153 characters per segment thereafter.
+      // Unicode messages can have smaller segment limits.
+      const gsm7Pattern = /^[\x00-\x7F€£¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#$%&'()*+,\-./0-9:;<=>?@A-Z\[\\\]^_`a-z{|}~\r\n]*$/;
+      const isGsm7 = gsm7Pattern.test(message);
+
+      const segments = isGsm7
+        ? (message.length <= 160 ? 1 : Math.ceil(message.length / 153))
+        : (message.length <= 70 ? 1 : Math.ceil(message.length / 67));
+
+      const estimatedCost = result.valid.length * segments * 0.02;
+
+      statusBox.textContent =
+        `Estimated cost: GH₵${estimatedCost.toFixed(2)}. ` +
+        `${result.valid.length} recipient(s), ${segments} SMS segment(s) per recipient. ` +
+        "This is an estimate; Sailup's actual charge may differ.";
+
+    });
+
+    // Submit campaign to the authenticated backend.
+    sendButton.addEventListener("click", async () => {
+      const message = messageBox.value.trim();
+      const result = updateCount();
+
+      if (!message) {
+        statusBox.textContent = "Please enter your SMS message.";
+        return;
+      }
+
+      if (message.length > 1000) {
+        statusBox.textContent = "Your message cannot exceed 1000 characters.";
+        return;
+      }
+
+      if (result.invalid.length) {
+        statusBox.textContent =
+          `Please correct ${result.invalid.length} invalid phone number(s).`;
+        return;
+      }
+
+      if (!result.valid.length) {
+        statusBox.textContent = "Please enter or upload recipient numbers.";
+        return;
+      }
+
+      if (result.valid.length > 100) {
+        statusBox.textContent =
+          "Please send no more than 100 recipients per campaign request.";
+        return;
+      }
+
+      const estimatedSegments =
+        message.length <= 160 ? 1 : Math.ceil(message.length / 153);
+      const estimate = result.valid.length * estimatedSegments * 0.02;
+
+      const confirmed = confirm(
+        `Send this SMS campaign to ${result.valid.length} recipients?\n\n` +
+        `Estimated cost: GH₵${estimate.toFixed(2)}\n\n` +
+        "Only continue if these recipients consented to receive your messages."
+      );
+
+      if (!confirmed) return;
+
+      const ownerToken = localStorage.getItem("kielmen_owner_token");
+
+      if (!ownerToken) {
+        statusBox.textContent =
+          "Your owner session has expired. Please log in again.";
+        return;
+      }
+
+      sendButton.disabled = true;
+      estimateButton.disabled = true;
+      statusBox.textContent = "Submitting campaign to Sailup…";
+
+      try {
+        const response = await fetch(
+          "https://kielmen-dataplug-payment-api.onrender.com/owner/sms/send",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${ownerToken}`
+            },
+            body: JSON.stringify({
+              message,
+              recipients: result.valid
+            })
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message || "Sailup could not accept the campaign."
+          );
+        }
+
+        statusBox.textContent =
+          `✅ ${data.message} ` +
+          `Recipients: ${data.recipientCount}. ` +
+          `Estimated credits: ${data.estimatedCredits}.`;
+
+      } catch (error) {
+        statusBox.textContent = `❌ ${error.message}`;
+      } finally {
+        sendButton.disabled = false;
+        estimateButton.disabled = false;
+      }
+    });
+
+    // Show the initial count.
+    updateCount();
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initSmsCampaign);
+  } else {
+    initSmsCampaign();
+  }
+})();
