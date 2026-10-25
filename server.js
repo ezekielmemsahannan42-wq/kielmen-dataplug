@@ -3718,6 +3718,240 @@ async function startServer() {
   try {
     await createAgentTables();
 await createOrdersTable();
+    // ============================================
+// KIELMEN 636 DATAPLUG - SMS CAMPAIGN API
+// ============================================
+
+app.get("/owner/sms/credits", requireOwner, async (req, res) => {
+  try {
+    if (!process.env.SAILUP_API_KEY) {
+      return res.status(503).json({
+        success: false,
+        message: "Sailup API key is not configured."
+      });
+    }
+
+    const response = await fetch(
+      "https://api.sailup.io/v1/sms/credits/",
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${process.env.SAILUP_API_KEY}`,
+          Accept: "application/json"
+        }
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return res.status(response.status).json({
+        success: false,
+        message: "Unable to retrieve Sailup credits.",
+        details: data
+      });
+    }
+
+    return res.json({
+      success: true,
+      balance: data.balance,
+      autoTopup: data.auto_topup
+    });
+
+  } catch (error) {
+    console.error("Sailup credits error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not connect to Sailup."
+    });
+  }
+});
+
+
+app.post("/owner/sms/send", requireOwner, async (req, res) => {
+  try {
+    const apiKey = process.env.SAILUP_API_KEY;
+    const senderId = process.env.SAILUP_SENDER_ID;
+    const senderApproved =
+      process.env.SAILUP_SENDER_APPROVED === "true";
+
+    if (!apiKey || !senderId) {
+      return res.status(503).json({
+        success: false,
+        message: "Configure SAILUP_API_KEY and SAILUP_SENDER_ID in Render."
+      });
+    }
+
+    if (!senderApproved) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "SMS sending is disabled until your Sailup sender ID is approved. Confirm approval in Sailup, then set SAILUP_SENDER_APPROVED to true in Render."
+      });
+    }
+
+    const message =
+      typeof req.body.message === "string"
+        ? req.body.message.trim()
+        : "";
+
+    const inputRecipients = req.body.recipients;
+
+    if (!message) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter an SMS message."
+      });
+    }
+
+    if (!Array.isArray(inputRecipients)) {
+      return res.status(400).json({
+        success: false,
+        message: "Recipients must be a list of phone numbers."
+      });
+    }
+
+    if (
+      inputRecipients.length < 1 ||
+      inputRecipients.length > 100
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Send between 1 and 100 recipients per request."
+      });
+    }
+
+    // Normalize Ghanaian mobile numbers.
+    const recipients = [
+      ...new Set(
+        inputRecipients.map(number => {
+          let phone = String(number).trim().replace(/[\s()-]/g, "");
+
+          if (/^0\d{9}$/.test(phone)) {
+            phone = "+233" + phone.slice(1);
+          } else if (/^233\d{9}$/.test(phone)) {
+            phone = "+" + phone;
+          }
+
+          return phone;
+        })
+      )
+    ];
+
+    if (
+      recipients.some(
+        phone => !/^\+233\d{9}$/.test(phone)
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "One or more phone numbers are invalid. Use Ghanaian numbers, such as 0241234567 or +233241234567."
+      });
+    }
+
+    if (recipients.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "A maximum of 100 unique recipients is allowed per request."
+      });
+    }
+
+    if (message.length > 1000) {
+      return res.status(400).json({
+        success: false,
+        message: "The message cannot exceed 1000 characters."
+      });
+    }
+
+    // Check available credits before sending.
+    const creditResponse = await fetch(
+      "https://api.sailup.io/v1/sms/credits/",
+      {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          Accept: "application/json"
+        }
+      }
+    );
+
+    const credits = await creditResponse.json();
+
+    if (!creditResponse.ok) {
+      return res.status(502).json({
+        success: false,
+        message: "Could not verify your Sailup credit balance."
+      });
+    }
+
+    // Conservative estimate; exact segments depend on encoding.
+    const estimatedSegments =
+      message.length <= 160
+        ? 1
+        : Math.ceil(message.length / 153);
+
+    const estimatedCredits =
+      recipients.length * estimatedSegments;
+
+    if (
+      credits.balance < estimatedCredits &&
+      !credits.auto_topup?.enabled
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Insufficient Sailup credits.",
+        availableCredits: credits.balance,
+        estimatedCredits
+      });
+    }
+
+    const response = await fetch(
+      "https://api.sailup.io/v1/sms/",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+          Accept: "application/json"
+        },
+        body: JSON.stringify({
+          from: senderId,
+          to: recipients,
+          body: message
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error("Sailup send failed:", response.status, result);
+
+      return res.status(502).json({
+        success: false,
+        message: "Sailup could not accept the SMS campaign.",
+        details: result
+      });
+    }
+
+    return res.status(202).json({
+      success: true,
+      message: "Sailup accepted the SMS campaign for processing.",
+      campaign: result,
+      recipientCount: recipients.length,
+      estimatedCredits
+    });
+
+  } catch (error) {
+    console.error("SMS campaign error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "An unexpected error occurred while processing the SMS campaign."
+    });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(
