@@ -114,7 +114,6 @@ async function ownerRequest(path, options = {}) {
 
 /* =========================================
    OWNER LOGIN
-   POST /owner/login
 ========================================= */
 
 function showLogin() {
@@ -664,7 +663,6 @@ async function loadWithdrawals() {
 
 /* =========================================
    UPDATE WITHDRAWAL STATUS
-   This does not send Mobile Money.
 ========================================= */
 
 async function updateWithdrawalStatus(id, status) {
@@ -748,18 +746,13 @@ async function startDashboard() {
   }
 
   showDashboard();
-
   await loadDashboard();
 
-  if (refreshTimer) {
-    clearInterval(refreshTimer);
-  }
+  if (refreshTimer) clearInterval(refreshTimer);
 
   if (ownerToken) {
     refreshTimer = setInterval(() => {
-      loadDashboard().catch(error => {
-        showMessage(error.message);
-      });
+      loadDashboard().catch(error => showMessage(error.message));
     }, 60000);
   }
 }
@@ -802,8 +795,10 @@ async function logoutOwner() {
 
 function initializeOwnerDashboard() {
   hideDashboard();
-     // Owner dashboard navigation
-  const navLinks = document.querySelectorAll(".owner-nav .nav-link");
+
+  const navLinks = document.querySelectorAll(
+    ".owner-nav .nav-link"
+  );
 
   navLinks.forEach(link => {
     link.addEventListener("click", () => {
@@ -856,13 +851,8 @@ function initializeOwnerDashboard() {
   byId("withdrawalsTableBody")?.addEventListener(
     "click",
     event => {
-      const paidButton = event.target.closest(
-        "[data-withdrawal-paid]"
-      );
-
-      const rejectButton = event.target.closest(
-        "[data-withdrawal-reject]"
-      );
+      const paidButton = event.target.closest("[data-withdrawal-paid]");
+      const rejectButton = event.target.closest("[data-withdrawal-reject]");
 
       if (paidButton) {
         updateWithdrawalStatus(
@@ -880,49 +870,64 @@ function initializeOwnerDashboard() {
     }
   );
 
-  // Restore a saved token if one exists.
   ownerToken = sessionStorage.getItem(TOKEN_KEY);
 
   if (ownerToken) {
-    startDashboard().catch(error => {
-      showMessage(error.message);
-    });
+    startDashboard().catch(error => showMessage(error.message));
   } else {
     showLogin();
   }
 }
 
 /* =========================================
-   INITIALIZE
+   SMS PHONE NUMBER HELPERS
 ========================================= */
 
-if (document.readyState === "loading") {
-  document.addEventListener(
-    "DOMContentLoaded",
-    initializeOwnerDashboard
-  );
-} else {
-  initializeOwnerDashboard();
-   }
-// ========================================
-// SMS CUSTOMER FILE UPLOAD
-// ========================================
+function normalizeGhanaPhone(value) {
+  let phone = String(value || "").trim().replace(/[\s()-]/g, "");
 
-document.addEventListener("DOMContentLoaded", () => {
-  const fileInput = document.getElementById("smsContactFile");
-  const recipientsBox = document.getElementById("smsRecipients");
-  const recipientCount = document.getElementById("smsRecipientCount");
+  if (/^00233\d{9}$/.test(phone)) {
+    phone = "+" + phone.slice(2);
+  } else if (/^233\d{9}$/.test(phone)) {
+    phone = "+" + phone;
+  } else if (/^0\d{9}$/.test(phone)) {
+    phone = "+233" + phone.slice(1);
+  }
+
+  return phone;
+}
+
+function parseSmsRecipients(value) {
+  const entries = String(value || "")
+    .split(/[\n,;]+/)
+    .map(item => item.trim())
+    .filter(Boolean);
+
+  const normalized = [...new Set(entries.map(normalizeGhanaPhone))];
+
+  return {
+    valid: normalized.filter(number => /^\+233\d{9}$/.test(number)),
+    invalid: normalized.filter(number => !/^\+233\d{9}$/.test(number))
+  };
+}
+
+/* =========================================
+   SMS FILE UPLOAD
+   Accepts TXT and CSV files.
+========================================= */
+
+function initializeSmsFileUpload() {
+  const fileInput = byId("smsContactFile");
+  const recipientsBox = byId("smsRecipients");
 
   if (!fileInput || !recipientsBox) return;
 
   fileInput.addEventListener("change", async () => {
-    const file = fileInput.files[0];
+    const file = fileInput.files?.[0];
 
     if (!file) return;
 
-    const allowedExtensions = /\.(txt|csv)$/i;
-
-    if (!allowedExtensions.test(file.name)) {
+    if (!/\.(txt|csv)$/i.test(file.name)) {
       alert("Please select a TXT or CSV file.");
       fileInput.value = "";
       return;
@@ -937,332 +942,382 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const content = await file.text();
 
-      // Extract Ghanaian phone numbers from the file.
-      const numbers = content.match(
+      const found = content.match(
         /(?:\+233|00233|233|0)\s*[\d\s()-]{9,15}/g
       ) || [];
 
-      const cleanedNumbers = numbers
-        .map(number => number.replace(/[\s()-]/g, ""))
-        .map(number => {
-          if (number.startsWith("00233")) {
-            return "+" + number.slice(2);
-          }
+      const imported = found
+        .map(normalizeGhanaPhone)
+        .filter(number => /^\+233\d{9}$/.test(number));
 
-          if (number.startsWith("233")) {
-            return "+" + number;
-          }
+      const existing = parseSmsRecipients(recipientsBox.value).valid;
+      const combined = [...new Set([...existing, ...imported])];
 
-          return number;
-        })
-        .filter(number => /^(?:0\d{9}|\+233\d{9})$/.test(number));
+      recipientsBox.value = combined.join("\n");
 
-      const existingNumbers = recipientsBox.value
-        .split(/\r?\n/)
-        .map(number => number.trim())
-        .filter(Boolean);
-
-      const combinedNumbers = [
-        ...new Set([...existingNumbers, ...cleanedNumbers])
-      ];
-
-      recipientsBox.value = combinedNumbers.join("\n");
-
-      recipientsBox.dispatchEvent(new Event("input", {
-  bubbles: true
-}));
-
-      alert(
-        cleanedNumbers.length +
-        " phone numbers found in the file.\n" +
-        combinedNumbers.length +
-        " unique numbers are now in your recipient list."
+      recipientsBox.dispatchEvent(
+        new Event("input", { bubbles: true })
       );
 
-    } catch (error) {
-      alert("Unable to read the file. Please try another TXT or CSV file.");
+      alert(
+        `${imported.length} valid number(s) found in the file.\n` +
+        `${combined.length} unique valid recipient(s) are now in the list.`
+      );
+
+    } catch (_error) {
+      alert("Unable to read this file. Please try another TXT or CSV file.");
+    } finally {
+      fileInput.value = "";
+    }
+  });
+}
+
+/* =========================================
+   SMS COST ESTIMATION
+========================================= */
+
+// Conservative character-set estimate.
+// Actual encoding and charges depend on Sailup.
+function getSmsSegmentCount(message) {
+  const gsm7Characters =
+    /^[@£$¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#$%&'()*+,\-./:;<=>?¡A-ZÄÖÑÜ¿a-zäöñüà\r\n^{}\\[\]~|€]*$/;
+
+  const isGsm7 = gsm7Characters.test(message);
+
+  if (isGsm7) {
+    return message.length <= 160
+      ? 1
+      : Math.ceil(message.length / 153);
+  }
+
+  return message.length <= 70
+    ? 1
+    : Math.ceil(message.length / 67);
+}
+
+/* =========================================
+   SMS CAMPAIGN CONTROLS
+========================================= */
+
+function initializeSmsCampaign() {
+  const messageBox = byId("smsMessage");
+  const recipientsBox = byId("smsRecipients");
+  const recipientCount = byId("smsRecipientCount");
+  const estimateButton = byId("estimateSmsCost");
+  const sendButton = byId("sendSmsCampaign");
+  const statusBox = byId("smsCampaignStatus");
+
+  if (
+    !messageBox ||
+    !recipientsBox ||
+    !recipientCount ||
+    !estimateButton ||
+    !sendButton ||
+    !statusBox
+  ) {
+    return;
+  }
+
+  const BATCH_SIZE = 100;
+
+  // Provisional only. Verify the actual price in Sailup.
+  const PROVISIONAL_RATE_GHS = 0.02;
+
+  let campaignRunning = false;
+
+  function updateRecipientCount() {
+    const recipients = parseSmsRecipients(recipientsBox.value);
+
+    recipientCount.textContent =
+      `Recipients: ${recipients.valid.length}` +
+      (recipients.invalid.length
+        ? ` | Invalid numbers: ${recipients.invalid.length}`
+        : "");
+
+    return recipients;
+  }
+
+  function createEstimate() {
+    const message = messageBox.value.trim();
+    const recipients = updateRecipientCount();
+
+    if (!message) {
+      statusBox.textContent = "Please enter an SMS message.";
+      return null;
     }
 
-    fileInput.value = "";
+    if (message.length > 1000) {
+      statusBox.textContent =
+        "Your message cannot exceed 1000 characters.";
+      return null;
+    }
+
+    if (recipients.invalid.length) {
+      statusBox.textContent =
+        `Correct ${recipients.invalid.length} invalid phone number(s) first.`;
+      return null;
+    }
+
+    if (!recipients.valid.length) {
+      statusBox.textContent =
+        "Please enter or upload customer phone numbers.";
+      return null;
+    }
+
+    const segments = getSmsSegmentCount(message);
+    const total = recipients.valid.length;
+    const batches = Math.ceil(total / BATCH_SIZE);
+    const estimatedCost =
+      total * segments * PROVISIONAL_RATE_GHS;
+
+    statusBox.textContent =
+      `Estimated cost: GH₵${estimatedCost.toFixed(2)}. ` +
+      `${total} recipients; ${segments} SMS segment(s) each; ` +
+      `${batches} batch(es). ` +
+      "This is a provisional estimate, not a confirmed Sailup quote.";
+
+    return {
+      message,
+      recipients: recipients.valid,
+      segments,
+      batches,
+      estimatedCost
+    };
+  }
+
+  recipientsBox.addEventListener("input", () => {
+    updateRecipientCount();
+    statusBox.textContent = "";
   });
-});
 
-// ============================================
-// KIELMEN 636 DATAPLUG - SMS CAMPAIGN CONTROLS
-// Cost estimation and controlled batch sending
-// ============================================
+  messageBox.addEventListener("input", () => {
+    statusBox.textContent = "";
+  });
 
-(() => {
-  const initSmsCampaign = () => {
-    const messageBox = document.getElementById("smsMessage");
-    const recipientsBox = document.getElementById("smsRecipients");
-    const recipientCount = document.getElementById("smsRecipientCount");
-    const estimateButton = document.getElementById("estimateSmsCost");
-    const sendButton = document.getElementById("sendSmsCampaign");
-    const statusBox = document.getElementById("smsCampaignStatus");
+  estimateButton.addEventListener("click", createEstimate);
 
-    if (
-      !messageBox ||
-      !recipientsBox ||
-      !recipientCount ||
-      !estimateButton ||
-      !sendButton ||
-      !statusBox
-    ) {
+  sendButton.addEventListener("click", async () => {
+    if (campaignRunning) {
+      statusBox.textContent = "A campaign is already running.";
       return;
     }
 
-    const BATCH_SIZE = 100;
-    const SMS_RATE_GHS = 0.02;
-    let campaignRunning = false;
-    let lastEstimate = null;
+    const estimate = createEstimate();
 
-    function getRecipients() {
-      const numbers = recipientsBox.value
-        .split(/[\n,;]+/)
-        .map(number => number.trim().replace(/[\s()-]/g, ""))
-        .filter(Boolean)
-        .map(number => {
-          if (/^0\d{9}$/.test(number)) {
-            return "+233" + number.slice(1);
-          }
+    if (!estimate) return;
 
-          if (/^233\d{9}$/.test(number)) {
-            return "+" + number;
-          }
-
-          return number;
-        });
-
-      const unique = [...new Set(numbers)];
-
-      return {
-        valid: unique.filter(number => /^\+233\d{9}$/.test(number)),
-        invalid: unique.filter(number => !/^\+233\d{9}$/.test(number))
-      };
+    if (estimate.recipients.length > 1000) {
+      statusBox.textContent =
+        "This campaign exceeds 1,000 recipients. Split it into smaller campaigns and verify your provider limits first.";
+      return;
     }
 
-    function updateCount() {
-      const result = getRecipients();
+    const token = sessionStorage.getItem(TOKEN_KEY);
 
-      recipientCount.textContent =
-        `Recipients: ${result.valid.length}` +
-        (result.invalid.length
-          ? ` | Invalid numbers: ${result.invalid.length}`
-          : "");
-
-      return result;
+    if (!token) {
+      statusBox.textContent =
+        "Your owner session has expired. Log in again.";
+      return;
     }
 
-    // Estimate GSM-7 and Unicode SMS segments.
-    function getSmsSegments(message) {
-      const gsm7Basic =
-        /^[@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#$%&'()*+,\-./0-9:;<=>?¡A-ZÄÖÑÜ§¿a-zäöñüà^{}\\[~]|€)*$/;
+    const confirmed = window.confirm(
+      `Submit this SMS campaign?\n\n` +
+      `Recipients: ${estimate.recipients.length}\n` +
+      `Batches: ${estimate.batches}\n` +
+      `Estimated cost: GH₵${estimate.estimatedCost.toFixed(2)}\n\n` +
+      `This is an estimate only. Sending may incur charges. ` +
+      `Continue only if your sender ID is approved and all recipients consented.`
+    );
 
-      // Use a conservative estimate for Unicode messages.
-      if (!gsm7Basic.test(message)) {
-        return message.length <= 70
-          ? 1
-          : Math.ceil(message.length / 67);
-      }
+    if (!confirmed) return;
 
-      return message.length <= 160
-        ? 1
-        : Math.ceil(message.length / 153);
-    }
+    campaignRunning = true;
+    sendButton.disabled = true;
+    estimateButton.disabled = true;
 
-    function calculateEstimate(message, recipientTotal) {
-      const segments = getSmsSegments(message);
+    let acceptedRecipients = 0;
+    let completedBatches = 0;
 
-      return {
-        segments,
-        recipients: recipientTotal,
-        estimatedCost: segments * recipientTotal * SMS_RATE_GHS
-      };
-    }
+    const campaignId =
+      "sms-" + Date.now() + "-" +
+      Math.random().toString(36).slice(2, 8);
 
-    function renderEstimate() {
-      const message = messageBox.value.trim();
-      const recipients = updateCount();
+    try {
+      for (
+        let start = 0;
+        start < estimate.recipients.length;
+        start += BATCH_SIZE
+      ) {
+        const batch = estimate.recipients.slice(
+          start,
+          start + BATCH_SIZE
+        );
 
-      if (!message) {
-        statusBox.textContent = "Enter your SMS message first.";
-        return null;
-      }
+        const batchNumber = completedBatches + 1;
 
-      if (recipients.invalid.length) {
         statusBox.textContent =
-          `Correct ${recipients.invalid.length} invalid phone number(s) first.`;
-        return null;
+          `Submitting batch ${batchNumber} of ${estimate.batches}. ` +
+          `Previously accepted: ${acceptedRecipients}.`;
+
+        const response = await fetch(
+          OWNER_API + "/owner/sms/send",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + token,
+              "Idempotency-Key": `${campaignId}-${batchNumber}`
+            },
+            body: JSON.stringify({
+              message: estimate.message,
+              recipients: batch,
+              campaignId,
+              batchNumber
+            })
+          }
+        );
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.success) {
+          statusBox.textContent =
+            `Stopped at batch ${batchNumber} of ${estimate.batches}. ` +
+            `${data.message || "The server did not confirm acceptance."} ` +
+            `Previously accepted: ${acceptedRecipients}. ` +
+            "Check provider records before retrying to avoid duplicates.";
+          return;
+        }
+
+        acceptedRecipients += batch.length;
+        completedBatches++;
+
+        statusBox.textContent =
+          `Progress: ${completedBatches}/${estimate.batches} batches accepted. ` +
+          `${acceptedRecipients}/${estimate.recipients.length} recipients accepted.`;
       }
-
-      if (!recipients.valid.length) {
-        statusBox.textContent = "Enter or upload customer phone numbers.";
-        return null;
-      }
-
-      const estimate = calculateEstimate(
-        message,
-        recipients.valid.length
-      );
-
-      lastEstimate = {
-        message,
-        recipients: [...recipients.valid],
-        ...estimate
-      };
-
-      const batchCount = Math.ceil(
-        recipients.valid.length / BATCH_SIZE
-      );
 
       statusBox.textContent =
-        `Estimated cost: GH₵${estimate.estimatedCost.toFixed(2)}. ` +
-        `${estimate.recipients} recipients; ` +
-        `${estimate.segments} segment(s) per recipient; ` +
-        `${batchCount} batch(es). ` +
-        "Estimate only; confirm your actual Sailup rate before sending.";
+        `All ${completedBatches} batches were accepted for processing. ` +
+        `${acceptedRecipients} recipients submitted. ` +
+        "Acceptance does not guarantee delivery.";
 
-      return lastEstimate;
+    } catch (error) {
+      statusBox.textContent =
+        `Campaign interrupted after ${completedBatches} accepted batch(es). ` +
+        `${error.message} Check provider records before retrying.`;
+
+    } finally {
+      campaignRunning = false;
+      sendButton.disabled = false;
+      estimateButton.disabled = false;
     }
+  });
 
-    recipientsBox.addEventListener("input", () => {
-      updateCount();
-      statusBox.textContent = "";
-      lastEstimate = null;
+  updateRecipientCount();
+}
+
+/* =========================================
+   INITIALIZE
+========================================= */
+
+function initializeOwnerDashboard() {
+  hideDashboard();
+
+  const navLinks = document.querySelectorAll(
+    ".owner-nav .nav-link"
+  );
+
+  navLinks.forEach(link => {
+    link.addEventListener("click", () => {
+      navLinks.forEach(item => item.classList.remove("active"));
+      link.classList.add("active");
     });
+  });
 
-    messageBox.addEventListener("input", () => {
-      statusBox.textContent = "";
-      lastEstimate = null;
-    });
+  byId("ownerLogoutButton")?.addEventListener(
+    "click",
+    logoutOwner
+  );
 
-    estimateButton.addEventListener("click", renderEstimate);
+  byId("refreshDashboard")?.addEventListener(
+    "click",
+    () => loadDashboard().catch(error => showMessage(error.message))
+  );
 
-    sendButton.addEventListener("click", async () => {
-      if (campaignRunning) {
-        statusBox.textContent = "A campaign is already running.";
-        return;
+  byId("searchOrders")?.addEventListener(
+    "click",
+    () => loadOrders().catch(error => showMessage(error.message))
+  );
+
+  byId("orderSearch")?.addEventListener(
+    "keydown",
+    event => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        loadOrders().catch(error => showMessage(error.message));
+      }
+    }
+  );
+
+  byId("agentSearch")?.addEventListener(
+    "input",
+    () => loadAgents().catch(error => showMessage(error.message))
+  );
+
+  byId("agentsTableBody")?.addEventListener(
+    "click",
+    event => {
+      const button = event.target.closest("[data-agent-details]");
+
+      if (button) {
+        loadAgentDetails(button.dataset.agentDetails);
+      }
+    }
+  );
+
+  byId("withdrawalsTableBody")?.addEventListener(
+    "click",
+    event => {
+      const paidButton = event.target.closest("[data-withdrawal-paid]");
+      const rejectButton = event.target.closest("[data-withdrawal-reject]");
+
+      if (paidButton) {
+        updateWithdrawalStatus(
+          paidButton.dataset.withdrawalPaid,
+          "paid"
+        );
       }
 
-      const estimate = renderEstimate();
-      if (!estimate) return;
-
-      const batchCount = Math.ceil(
-        estimate.recipients.length / BATCH_SIZE
-      );
-
-      const confirmed = window.confirm(
-        `Send this SMS campaign?\n\n` +
-        `Recipients: ${estimate.recipients.length}\n` +
-        `Batches: ${batchCount}\n` +
-        `Estimated cost: GH₵${estimate.estimatedCost.toFixed(2)}\n\n` +
-        `This may incur charges. Only message people who consented. ` +
-        `Continue only if Sailup has approved your sender ID.`
-      );
-
-      if (!confirmed) return;
-
-      // Your login code stores the token in sessionStorage.
-      const token = sessionStorage.getItem("kielmen_owner_token");
-
-      if (!token) {
-        statusBox.textContent =
-          "Owner session missing. Log in again before sending.";
-        return;
+      if (rejectButton) {
+        updateWithdrawalStatus(
+          rejectButton.dataset.withdrawalReject,
+          "rejected"
+        );
       }
+    }
+  );
 
-      campaignRunning = true;
-      sendButton.disabled = true;
-      estimateButton.disabled = true;
+  ownerToken = sessionStorage.getItem(TOKEN_KEY);
 
-      let acceptedRecipients = 0;
-      let completedBatches = 0;
-      let failedBatch = null;
-      const campaignId =
-        "sms-" + Date.now() + "-" +
-        Math.random().toString(36).slice(2, 8);
-
-      try {
-        for (
-          let start = 0;
-          start < estimate.recipients.length;
-          start += BATCH_SIZE
-        ) {
-          const batch = estimate.recipients.slice(
-            start,
-            start + BATCH_SIZE
-          );
-
-          const currentBatch = completedBatches + 1;
-
-          statusBox.textContent =
-            `Submitting batch ${currentBatch} of ${batchCount}… ` +
-            `Accepted recipients so far: ${acceptedRecipients}.`;
-
-          const response = await fetch(
-            "https://kielmen-dataplug-payment-api.onrender.com/owner/sms/send",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`,
-                "Idempotency-Key": `${campaignId}-${currentBatch}`
-              },
-              body: JSON.stringify({
-                message: estimate.message,
-                recipients: batch,
-                campaignId,
-                batchNumber: currentBatch
-              })
-            }
-          );
-
-          const data = await response.json().catch(() => ({}));
-
-          if (!response.ok || !data.success) {
-            failedBatch = currentBatch;
-
-            statusBox.textContent =
-              `Stopped at batch ${currentBatch} of ${batchCount}. ` +
-              `${data.message || "The server did not confirm acceptance."} ` +
-              `Previously accepted recipients: ${acceptedRecipients}. ` +
-              `Do not restart the full campaign until you check Sailup's logs.`;
-
-            break;
-          }
-
-          acceptedRecipients += batch.length;
-          completedBatches++;
-
-          statusBox.textContent =
-            `Progress: ${completedBatches}/${batchCount} batches accepted. ` +
-            `${acceptedRecipients}/${estimate.recipients.length} recipients accepted.`;
-        }
-
-        if (failedBatch === null) {
-          statusBox.textContent =
-            `Campaign submission complete. ${completedBatches} batches ` +
-            `were accepted by the server for processing, covering ` +
-            `${acceptedRecipients} recipients. This does not guarantee delivery.`;
-        }
-      } catch (error) {
-        statusBox.textContent =
-          `Campaign interrupted after ${completedBatches} accepted batch(es). ` +
-          `${error.message} Check Sailup campaign records before retrying.`;
-      } finally {
-        campaignRunning = false;
-        sendButton.disabled = false;
-        estimateButton.disabled = false;
-      }
-    });
-
-    updateCount();
-  };
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", initSmsCampaign);
+  if (ownerToken) {
+    startDashboard().catch(error => showMessage(error.message));
   } else {
-    initSmsCampaign();
+    showLogin();
   }
-})();
+}
+
+function initializeAllFeatures() {
+  initializeOwnerDashboard();
+  initializeSmsFileUpload();
+  initializeSmsCampaign();
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    initializeAllFeatures,
+    { once: true }
+  );
+} else {
+  initializeAllFeatures();
+       }
