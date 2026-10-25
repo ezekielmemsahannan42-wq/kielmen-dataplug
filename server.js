@@ -852,7 +852,52 @@ async function processSuccessfulPayment(reference) {
 }
 
 
-// INSERT THE NEW refreshSupplierOrderStatus FUNCTION HERE
+async function refreshSupplierOrderStatus(supplierReference) {
+  if (!supplierReference || !DATAMART_API_KEY) {
+    throw new Error(
+      "A DataMart supplier reference and API key are required."
+    );
+  }
+
+  const path =
+    "/api/developer/order-status/" +
+    encodeURIComponent(supplierReference);
+
+  const result = await dataMartRequest(path, "GET");
+
+  const status = String(
+    result.data?.orderStatus ||
+    result.orderStatus ||
+    result.data?.delivery_status ||
+    result.delivery_status ||
+    result.data?.status ||
+    result.status ||
+    ""
+  ).trim().toLowerCase();
+
+  if (
+    ["delivered", "completed", "success", "successful"].includes(status)
+  ) {
+    return {
+      status: "delivered",
+      raw: result
+    };
+  }
+
+  if (
+    ["failed", "rejected", "cancelled", "canceled"].includes(status)
+  ) {
+    return {
+      status: "failed",
+      raw: result
+    };
+  }
+
+  return {
+    status: "processing",
+    raw: result
+  };
+}
 
 // ============================================================
 // 7. AGENT AUTHENTICATION
