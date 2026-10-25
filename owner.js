@@ -802,6 +802,15 @@ async function logoutOwner() {
 
 function initializeOwnerDashboard() {
   hideDashboard();
+     // Owner dashboard navigation
+  const navLinks = document.querySelectorAll(".owner-nav .nav-link");
+
+  navLinks.forEach(link => {
+    link.addEventListener("click", () => {
+      navLinks.forEach(item => item.classList.remove("active"));
+      link.classList.add("active");
+    });
+  });
 
   byId("ownerLogoutButton")?.addEventListener(
     "click",
