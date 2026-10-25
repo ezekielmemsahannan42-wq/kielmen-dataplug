@@ -804,6 +804,23 @@
           Enter a Ghanaian number, for example 0241234567 or +233241234567.
         </small>
       </div>
+      <div class="field">
+        <label for="customerEmail">Email Address</label>    <input
+      type="email"
+      id="customerEmail"
+      name="email"
+      inputmode="email"
+      autocomplete="email"
+      maxlength="254"
+      placeholder="Enter your email address"
+      aria-describedby="emailHelp"
+      required
+    >
+
+    <small id="emailHelp" class="muted">
+      Enter your email address to receive your Paystack payment receipt.
+    </small>
+      </div>
 
       <div class="summary" aria-label="Order summary">
         <div class="summary-row">
@@ -992,7 +1009,8 @@
       bundleMessage: $("bundleMessage"),
       bundles: $("bundles"),
       customerPhone: $("customerPhone"),
-      summaryNetwork: $("summaryNetwork"),
+customerEmail: $("customerEmail"),
+summaryNetwork: $("summaryNetwork"),
       summaryBundle: $("summaryBundle"),
       summaryAgent: $("summaryAgent"),
       selectedPrice: $("selectedPrice"),
@@ -1676,16 +1694,32 @@ const querySlug =
 
       const phone = normalizePhone(elements.customerPhone.value);
 
-      if (!isValidGhanaPhone(phone)) {
-        setMessage(
-          elements.checkoutMessage,
-          "Enter a valid Ghanaian phone number, such as 0241234567.",
-          "error"
-        );
+  if (!isValidGhanaPhone(phone)) {
+    setMessage(
+      elements.checkoutMessage,
+      "Enter a valid Ghanaian phone number, such as 0241234567.",
+      "error"
+    );
 
-        elements.customerPhone.focus();
-        return;
-      }
+    elements.customerPhone.focus();
+    return;
+  }
+
+  const email = elements.customerEmail.value.trim().toLowerCase();
+
+  if (
+    email.length > 254 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ) {
+    setMessage(
+      elements.checkoutMessage,
+      "Please enter a valid email address.",
+      "error"
+    );
+
+    elements.customerEmail.focus();
+    return;
+  }
 
       if (!agentCode) {
         setMessage(
@@ -1730,11 +1764,12 @@ const querySlug =
           {
             method: "POST",
             body: JSON.stringify({
-              phone: phone,
-              network: selectedBundle.network,
-              bundle: selectedBundle.bundle,
-              agentCode: agentCode
-            })
+phone: phone,
+email: email,
+network: selectedBundle.network,
+bundle: selectedBundle.bundle,
+agentCode: agentCode
+})
           }
         );
 
