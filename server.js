@@ -4151,30 +4151,15 @@ app.use((error, _req, res, _next) => {
     message: "Unexpected server error."
   });
 });
-
 // ============================================================
-// 21. START SERVER
+// 21. SMS CAMPAIGN API
 // ============================================================
-
-async function startServer() {
-  if (!DATABASE_URL) {
-    console.error(
-      "Server cannot start without DATABASE_URL."
-    );
-
-    process.exit(1);
-  }
-
-  try {
-    await createAgentTables();
-await createOrdersTable();
-    // ============================================
-// KIELMEN 636 DATAPLUG - SMS CAMPAIGN API
-// ============================================
 
 app.get("/owner/sms/credits", requireOwner, async (req, res) => {
   try {
-    if (!process.env.SAILUP_API_KEY) {
+    const apiKey = process.env.SAILUP_API_KEY;
+
+    if (!apiKey) {
       return res.status(503).json({
         success: false,
         message: "Sailup API key is not configured."
@@ -4186,7 +4171,7 @@ app.get("/owner/sms/credits", requireOwner, async (req, res) => {
       {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${process.env.SAILUP_API_KEY}`,
+          Authorization: `Bearer ${apiKey}`,
           Accept: "application/json"
         }
       }
@@ -4195,10 +4180,9 @@ app.get("/owner/sms/credits", requireOwner, async (req, res) => {
     const data = await response.json();
 
     if (!response.ok) {
-      return res.status(response.status).json({
+      return res.status(502).json({
         success: false,
-        message: "Unable to retrieve Sailup credits.",
-        details: data
+        message: "Unable to retrieve Sailup credits."
       });
     }
 
@@ -4207,7 +4191,6 @@ app.get("/owner/sms/credits", requireOwner, async (req, res) => {
       balance: data.balance,
       autoTopup: data.auto_topup
     });
-
   } catch (error) {
     console.error("Sailup credits error:", error.message);
 
@@ -4217,7 +4200,6 @@ app.get("/owner/sms/credits", requireOwner, async (req, res) => {
     });
   }
 });
-
 
 app.post("/owner/sms/send", requireOwner, async (req, res) => {
   try {
@@ -4236,47 +4218,41 @@ app.post("/owner/sms/send", requireOwner, async (req, res) => {
     if (!senderApproved) {
       return res.status(403).json({
         success: false,
-        message:
-          "SMS sending is disabled until your Sailup sender ID is approved. Confirm approval in Sailup, then set SAILUP_SENDER_APPROVED to true in Render."
+        message: "SMS sending requires an approved Sailup sender ID."
       });
     }
 
     const message =
-      typeof req.body.message === "string"
+      typeof req.body?.message === "string"
         ? req.body.message.trim()
         : "";
 
-    const inputRecipients = req.body.recipients;
+    const inputRecipients = req.body?.recipients;
 
-    if (!message) {
+    if (!message || message.length > 1000) {
       return res.status(400).json({
         success: false,
-        message: "Enter an SMS message."
-      });
-    }
-
-    if (!Array.isArray(inputRecipients)) {
-      return res.status(400).json({
-        success: false,
-        message: "Recipients must be a list of phone numbers."
+        message: "Enter a message of 1 to 1000 characters."
       });
     }
 
     if (
+      !Array.isArray(inputRecipients) ||
       inputRecipients.length < 1 ||
       inputRecipients.length > 100
     ) {
       return res.status(400).json({
         success: false,
-        message: "Send between 1 and 100 recipients per request."
+        message: "Provide between 1 and 100 recipients."
       });
     }
 
-    // Normalize Ghanaian mobile numbers.
     const recipients = [
       ...new Set(
-        inputRecipients.map(number => {
-          let phone = String(number).trim().replace(/[\s()-]/g, "");
+        inputRecipients.map(value => {
+          let phone = String(value)
+            .trim()
+            .replace(/[\s()-]/g, "");
 
           if (/^0\d{9}$/.test(phone)) {
             phone = "+233" + phone.slice(1);
@@ -4290,32 +4266,14 @@ app.post("/owner/sms/send", requireOwner, async (req, res) => {
     ];
 
     if (
-      recipients.some(
-        phone => !/^\+233\d{9}$/.test(phone)
-      )
+      recipients.some(phone => !/^\+233\d{9}$/.test(phone))
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "One or more phone numbers are invalid. Use Ghanaian numbers, such as 0241234567 or +233241234567."
+        message: "One or more Ghanaian phone numbers are invalid."
       });
     }
 
-    if (recipients.length > 100) {
-      return res.status(400).json({
-        success: false,
-        message: "A maximum of 100 unique recipients is allowed per request."
-      });
-    }
-
-    if (message.length > 1000) {
-      return res.status(400).json({
-        success: false,
-        message: "The message cannot exceed 1000 characters."
-      });
-    }
-
-    // Check available credits before sending.
     const creditResponse = await fetch(
       "https://api.sailup.io/v1/sms/credits/",
       {
@@ -4335,7 +4293,6 @@ app.post("/owner/sms/send", requireOwner, async (req, res) => {
       });
     }
 
-    // Conservative estimate; exact segments depend on encoding.
     const estimatedSegments =
       message.length <= 160
         ? 1
@@ -4345,7 +4302,7 @@ app.post("/owner/sms/send", requireOwner, async (req, res) => {
       recipients.length * estimatedSegments;
 
     if (
-      credits.balance < estimatedCredits &&
+      Number(credits.balance) < estimatedCredits &&
       !credits.auto_topup?.enabled
     ) {
       return res.status(400).json({
@@ -4380,8 +4337,7 @@ app.post("/owner/sms/send", requireOwner, async (req, res) => {
 
       return res.status(502).json({
         success: false,
-        message: "Sailup could not accept the SMS campaign.",
-        details: result
+        message: "Sailup could not accept the SMS campaign."
       });
     }
 
@@ -4392,22 +4348,35 @@ app.post("/owner/sms/send", requireOwner, async (req, res) => {
       recipientCount: recipients.length,
       estimatedCredits
     });
-
   } catch (error) {
     console.error("SMS campaign error:", error.message);
 
     return res.status(500).json({
       success: false,
-      message: "An unexpected error occurred while processing the SMS campaign."
+      message: "An unexpected error occurred while processing SMS."
     });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(
-    `Kielmen 636 Dataplug API listening on port ${PORT}`
-  );
-});
+// ============================================================
+// 22. START SERVER
+// ============================================================
+
+async function startServer() {
+  if (!DATABASE_URL) {
+    console.error("Server cannot start without DATABASE_URL.");
+    process.exit(1);
+  }
+
+  try {
+    await createAgentTables();
+    await createOrdersTable();
+
+    app.listen(PORT, () => {
+      console.log(
+        `Kielmen 636 Dataplug API listening on port ${PORT}`
+      );
+    });
   } catch (error) {
     console.error(
       "Database initialization failed:",
