@@ -3319,6 +3319,88 @@ app.post(
     }
   }
 );
+// ======================================================
+// OWNER DASHBOARD: TOP AGENTS RANKINGS
+// ======================================================
+
+app.get("/owner/agents/rankings", requireOwner, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        a.id,
+        a.agent_code,
+        a.full_name,
+        a.business_name,
+        a.status,
+
+        COUNT(o.id)::int AS total_orders,
+
+        COUNT(o.id) FILTER (
+          WHERE LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
+        )::int AS paid_orders,
+
+        COALESCE(
+          SUM(o.amount) FILTER (
+            WHERE LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
+          ),
+          0
+        ) AS paid_sales,
+
+        COALESCE(
+          SUM(
+            CASE
+              WHEN LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
+               AND o.agent_base_price IS NOT NULL
+               AND o.supplier_reference IS NOT NULL
+               AND LOWER(TRIM(COALESCE(o.delivery_status, '')))
+                   IN (
+                     'processing',
+                     'delivered',
+                     'completed',
+                     'success',
+                     'successful'
+                   )
+              THEN o.amount - o.agent_base_price
+              ELSE 0
+            END
+          ),
+          0
+        ) AS estimated_agent_margin
+
+      FROM agents a
+
+      LEFT JOIN orders o
+        ON o.agent_id = a.id
+
+      GROUP BY
+        a.id,
+        a.agent_code,
+        a.full_name,
+        a.business_name,
+        a.status
+
+      ORDER BY
+        estimated_agent_margin DESC,
+        paid_sales DESC,
+        total_orders DESC
+
+      LIMIT 20
+    `);
+
+    res.json({
+      success: true,
+      rankings: result.rows
+    });
+
+  } catch (error) {
+    console.error("Owner agent rankings error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Unable to load agent rankings."
+    });
+  }
+});
 // ============================================================
 // 14. BASIC API ROUTES
 // ============================================================
