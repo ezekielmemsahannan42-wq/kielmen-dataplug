@@ -1,565 +1,997 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#050505">
-<title>My Profile | Kielmen 636</title>
-
-<style>
+<meta name="description" content="Manage your Kielmen 636 Dataplug agent profile, professional business identity, store link, contact details and account security.">
+<title>My Profile | Kielmen 636 Dataplug</title><style>
 :root {
-  --bg:#050505;
-  --card:#0b0c0d;
-  --field:#111213;
-  --border:#383c3e;
-  --text:#f4f5f6;
-  --muted:#9299a1;
-  --mint:#42cda5;
+  --bg: #050505;
+  --card: #0b0c0d;
+  --field: #111315;
+  --border: #383c3e;
+  --text: #f4f5f6;
+  --muted: #9299a1;
+  --mint: #42cda5;
+  --green: #00a95c;
+  --danger: #ff8585;
+  --success: #a8ffd4;
 }
 
-* { box-sizing:border-box; }
+* {
+  box-sizing: border-box;
+}
 
 html {
-  color-scheme:dark;
-  scroll-behavior:smooth;
+  color-scheme: dark;
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
 }
 
 body {
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:Arial,Helvetica,sans-serif;
-  font-size:15px;
-  line-height:1.5;
+  margin: 0;
+  padding-bottom: 105px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
-button,input,textarea { font:inherit; }
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+a {
+  color: inherit;
+}
 
 .topbar {
-  min-height:82px;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:12px 16px;
-  border-bottom:1px solid #292b2d;
-  background:#050505;
-  position:sticky;
-  top:0;
-  z-index:5;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  min-height: 78px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  background: rgba(5, 5, 5, .97);
+  border-bottom: 1px solid #292b2d;
+  backdrop-filter: blur(12px);
 }
 
 .logo {
-  width:54px;
-  height:54px;
-  flex-shrink:0;
-  display:grid;
-  place-items:center;
-  border-radius:16px;
-  background:#020617;
-  color:var(--mint);
-  font-size:21px;
-  font-weight:800;
+  width: 51px;
+  height: 51px;
+  flex: 0 0 51px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #123a2a;
+  border-radius: 15px;
+  background: #020617;
+  color: var(--mint);
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.brand-area {
+  min-width: 0;
 }
 
 .brand {
-  font-size:19px;
-  font-weight:750;
-  line-height:1.25;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.25;
 }
 
 .subtitle {
-  color:var(--muted);
-  font-size:13px;
-  margin-top:3px;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: .6px;
 }
 
 .dashboard-link {
-  margin-left:auto;
-  color:var(--mint);
-  text-decoration:none;
-  white-space:nowrap;
-  font-size:12px;
+  margin-left: auto;
+  color: var(--mint);
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dashboard-link:hover {
+  text-decoration: underline;
+}
+
+.identity-preview {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  width: calc(100% - 32px);
+  max-width: 864px;
+  margin: 20px auto 0;
+  padding: 20px;
+  border: 1px solid #176b43;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #0c2118, #090b0c 75%);
+  box-shadow: 0 12px 30px #0005;
+}
+
+.identity-avatar {
+  width: 68px;
+  height: 68px;
+  flex: 0 0 68px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--mint);
+  border-radius: 19px;
+  background: #06140e;
+  color: var(--mint);
+  font-size: 27px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.identity-details {
+  min-width: 0;
+}
+
+.identity-label {
+  color: var(--mint);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.1px;
+}
+
+.identity-details h2 {
+  margin: 6px 0;
+  font-size: clamp(19px, 4vw, 25px);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.identity-details p {
+  margin: 4px 0 10px;
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.identity-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.identity-badge {
+  max-width: 100%;
+  padding: 5px 9px;
+  border: 1px solid #315c49;
+  border-radius: 999px;
+  background: #10271c;
+  color: #b5f5d3;
+  font-size: 10px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 main {
-  max-width:900px;
-  margin:auto;
-  padding:20px 18px 115px;
+  width: 100%;
+  max-width: 900px;
+  margin: auto;
+  padding: 22px 18px 25px;
+}
+
+.page-heading {
+  margin-bottom: 22px;
 }
 
 h1 {
-  font-size:clamp(28px,5vw,36px);
-  margin:0 0 4px;
+  margin: 0 0 5px;
+  font-size: clamp(27px, 5vw, 35px);
+  line-height: 1.25;
 }
 
 .intro {
-  color:var(--muted);
-  margin:0 0 22px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
 }
 
 .card {
-  padding:21px;
-  margin-bottom:17px;
-  border:1px solid var(--border);
-  border-radius:20px;
-  background:linear-gradient(145deg,#0b0c0d,#060606);
+  min-width: 0;
+  margin-bottom: 18px;
+  padding: 21px;
+  border: 1px solid var(--border);
+  border-radius: 19px;
+  background: linear-gradient(145deg, #0b0c0d, #060606);
 }
 
-h2 {
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-size:20px;
-  margin:0 0 12px;
+.card-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin: 0 0 12px;
+  font-size: 19px;
+  line-height: 1.4;
 }
 
-.icon { font-size:22px; }
+.card-icon {
+  width: 35px;
+  height: 35px;
+  flex: 0 0 35px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #244b3b;
+  border-radius: 11px;
+  background: #10251b;
+  color: var(--mint);
+  font-size: 18px;
+}
 
 .help {
-  color:var(--muted);
-  margin:0 0 16px;
+  margin: 0 0 18px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
 }
 
 .grid {
-  display:grid;
-  grid-template-columns:165px minmax(0,1fr);
-  gap:10px 12px;
-  align-items:center;
+  display: grid;
+  grid-template-columns: 155px minmax(0, 1fr);
+  gap: 12px 14px;
+  align-items: center;
 }
 
 label {
-  font-size:13px;
-  font-weight:700;
+  color: #e4e7eb;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .input-wrap {
-  position:relative;
-  min-width:0;
+  position: relative;
+  min-width: 0;
 }
 
 .prefix {
-  position:absolute;
-  left:13px;
-  top:50%;
-  transform:translateY(-50%);
-  pointer-events:none;
-  font-size:17px;
-  color:var(--mint);
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--mint);
+  font-size: 16px;
 }
 
-input,textarea {
-  width:100%;
-  min-height:48px;
-  background:var(--field);
-  color:var(--text);
-  border:1px solid #45494c;
-  border-radius:12px;
-  padding:12px 13px;
-  outline:none;
+input,
+textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 49px;
+  padding: 12px 13px;
+  border: 1px solid #45494c;
+  border-radius: 12px;
+  outline: none;
+  background: var(--field);
+  color: var(--text);
+  transition: border-color .15s, box-shadow .15s;
 }
 
-.input-wrap input { padding-left:42px; }
+.input-wrap input {
+  padding-left: 42px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #7e858c;
+  opacity: 1;
+}
+
+input:focus,
+textarea:focus {
+  border-color: var(--mint);
+  box-shadow: 0 0 0 3px #42cda51c;
+}
+
+input[readonly] {
+  color: #c5e8d9;
+  background: #0b1511;
+}
 
 textarea {
-  min-height:95px;
-  resize:vertical;
+  min-height: 95px;
+  resize: vertical;
 }
 
-input:focus,textarea:focus {
-  border-color:var(--mint);
-  box-shadow:0 0 0 2px #00a85a25;
-}
-
-.hint {
-  grid-column:2;
-  margin:-5px 0 3px;
-  color:var(--muted);
-  font-size:12px;
+.field-hint {
+  grid-column: 2;
+  margin: -7px 0 2px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.7;
 }
 
 .btn {
-  width:100%;
-  min-height:52px;
-  margin-top:18px;
-  padding:12px;
-  border:0;
-  border-radius:13px;
-  background:linear-gradient(100deg,#008a49,#00a95c);
-  color:white;
-  font-weight:750;
-  cursor:pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 52px;
+  margin-top: 19px;
+  padding: 13px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(100deg, #008a49, #00a95c);
+  color: white;
+  font-weight: 800;
+  text-align: center;
+  transition: filter .15s, transform .15s;
 }
 
-.btn:disabled {
-  opacity:.6;
-  cursor:wait;
+.btn:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(.99);
 }
 
 .btn-secondary {
-  min-height:48px;
-  padding:10px 15px;
-  border:1px solid #45494c;
-  border-radius:12px;
-  background:#222526;
-  color:var(--text);
-  font-weight:700;
-  cursor:pointer;
+  min-height: 48px;
+  padding: 10px 15px;
+  border: 1px solid #45494c;
+  border-radius: 12px;
+  background: #222526;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.btn-secondary:hover {
+  border-color: var(--mint);
 }
 
 .status {
-  display:none;
-  padding:12px;
-  margin-top:13px;
-  border-radius:10px;
-  font-size:13px;
-  overflow-wrap:anywhere;
+  display: none;
+  margin-top: 13px;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
 }
 
-.status.show { display:block; }
+.status.show {
+  display: block;
+}
 
 .status.error {
-  color:#ffc0c0;
-  background:#421818;
-  border:1px solid #773131;
+  border-color: #773131;
+  background: #421818;
+  color: #ffc0c0;
 }
 
 .status.success {
-  color:#a8ffd4;
-  background:#0c3020;
-  border:1px solid #176b43;
-}
-
-.password { padding-right:48px !important; }
-
-.toggle {
-  position:absolute;
-  right:5px;
-  top:50%;
-  transform:translateY(-50%);
-  border:0;
-  background:transparent;
-  color:#b8bdc2;
-  padding:8px;
-  cursor:pointer;
+  border-color: #176b43;
+  background: #0c3020;
+  color: var(--success);
 }
 
 .security-note {
-  color:var(--muted);
-  font-size:13px;
-  margin-top:12px;
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
 }
 
 .store-link-row {
-  display:flex;
-  gap:8px;
-  align-items:stretch;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  margin-top: 8px;
 }
 
 .store-link-row input {
-  min-width:0;
-  flex:1;
+  flex: 1;
 }
 
 .store-link-row button {
-  flex-shrink:0;
+  flex-shrink: 0;
 }
 
 .store-preview {
-  color:var(--mint);
-  font-size:13px;
-  overflow-wrap:anywhere;
-  margin-top:8px;
+  margin: 10px 0 0;
+  color: var(--mint);
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.store-name-label {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.section-divider {
+  height: 1px;
+  margin: 21px 0;
+  border: 0;
+  background: #25292b;
+}
+
+.password {
+  padding-right: 49px !important;
+}
+
+.toggle {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  transform: translateY(-50%);
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #c4c9ce;
+}
+
+.toggle:hover {
+  color: var(--mint);
+}
+
+.password-rules {
+  margin: 12px 0 0;
+  padding: 12px;
+  border: 1px solid #292d2f;
+  border-radius: 10px;
+  background: #090a0b;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
 }
 
 .nav {
-  position:fixed;
-  z-index:10;
-  bottom:0;
-  left:0;
-  right:0;
-  display:grid;
-  grid-template-columns:repeat(6,minmax(0,1fr));
-  padding:8px 3px calc(8px + env(safe-area-inset-bottom));
-  background:#020303;
-  border-top:1px solid #333638;
+  position: fixed;
+  z-index: 50;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  padding: 8px 3px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid #333638;
+  background: rgba(2, 3, 3, .98);
+  backdrop-filter: blur(12px);
 }
 
 .nav a {
-  color:#899098;
-  text-decoration:none;
-  text-align:center;
-  font-size:11px;
-  padding:4px 1px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:2px;
-  min-width:0;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 5px 1px;
+  color: #899098;
+  text-decoration: none;
+  text-align: center;
+  font-size: 10px;
 }
 
 .nav .ni {
-  font-size:21px;
-  line-height:1.3;
+  font-size: 21px;
+  line-height: 1.35;
 }
 
-.nav a.active { color:var(--mint); }
-
-@media(max-width:600px) {
-  .topbar { padding:11px 14px; gap:9px; }
-  .logo { width:50px; height:50px; flex-basis:50px; }
-  .brand { font-size:17px; }
-  .subtitle { font-size:12px; }
-  .dashboard-link { font-size:11px; }
-  main { padding:17px 16px 115px; }
-  .card { padding:17px; border-radius:18px; }
-  h2 { font-size:18px; }
-  .grid { grid-template-columns:1fr; gap:6px; }
-  label { margin-top:7px; }
-  .hint { grid-column:1; margin:0 0 6px; }
-  .store-link-row { flex-direction:column; }
-  .store-link-row button { width:100%; }
+.nav a.active {
+  color: var(--mint);
 }
-</style>
-</head>
 
-<body>
+.nav a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
 
-<header class="topbar">
-  <div class="logo">K636</div>
-  <div>
+@media (max-width: 600px) {
+  .topbar {
+    min-height: 72px;
+    gap: 9px;
+    padding: 10px 12px;
+  }
+
+  .logo {
+    width: 46px;
+    height: 46px;
+    flex-basis: 46px;
+    border-radius: 13px;
+  }
+
+  .brand {
+    font-size: 16px;
+  }
+
+  .subtitle {
+    font-size: 10px;
+  }
+
+  .dashboard-link {
+    font-size: 10px;
+  }
+
+  .identity-preview {
+    gap: 12px;
+    margin-top: 15px;
+    padding: 15px;
+  }
+
+  .identity-avatar {
+    width: 56px;
+    height: 56px;
+    flex-basis: 56px;
+    border-radius: 15px;
+    font-size: 23px;
+  }
+
+  .identity-label {
+    font-size: 9px;
+    letter-spacing: .7px;
+  }
+
+  main {
+    padding: 19px 14px 25px;
+  }
+
+  .card {
+    padding: 17px;
+    border-radius: 17px;
+  }
+
+  .card-heading {
+    font-size: 18px;
+  }
+
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
+  }
+
+  label {
+    margin-top: 7px;
+  }
+
+  .field-hint {
+    grid-column: 1;
+    margin: -2px 0 5px;
+  }
+
+  .store-link-row {
+    flex-direction: column;
+  }
+
+  .store-link-row button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .dashboard-link {
+    max-width: 95px;
+    white-space: normal;
+    text-align: right;
+  }
+
+  .identity-preview {
+    padding: 12px;
+  }
+
+  .identity-avatar {
+    width: 47px;
+    height: 47px;
+    flex-basis: 47px;
+  }
+
+  .nav a {
+    font-size: 9px;
+  }
+
+  .nav .ni {
+    font-size: 19px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style></head><body><header class="topbar">
+  <div class="logo" aria-label="Kielmen 636 logo">K636</div>  <div class="brand-area">
     <div class="brand">Kielmen 636</div>
-    <div class="subtitle">AGENT STORE</div>
-  </div>
-  <a class="dashboard-link" href="agent-dashboard.html">
+    <div class="subtitle">AGENT BUSINESS PROFILE</div>
+  </div>  <a class="dashboard-link" href="agent-dashboard.html">
     ● Agent Dashboard
   </a>
-</header>
+</header><section class="identity-preview" aria-label="Professional identity preview">
+  <div class="identity-avatar" id="identityAvatar">A</div>  <div class="identity-details">
+    <span class="identity-label">YOUR PROFESSIONAL IDENTITY</span><h2 id="identityBusinessName">Your Business Name</h2>
 
-<main>
-  <h1>My Profile</h1>
-  <p class="intro">
-    Manage your account, business details and personal store link.
+<p id="identityOwnerName">Managed by your registered name</p>
+
+<div class="identity-badges">
+  <span class="identity-badge" id="identityRegisteredName">
+    Agent Name
+  </span>
+
+  <span class="identity-badge" id="identityStatus">
+    Store Profile
+  </span>
+</div>
+
+  </div>
+</section><main>
+  <div class="page-heading">
+    <h1>My Profile</h1>
+    <p class="intro">
+      Manage your personal details, professional business identity,
+      store link and account security.
+    </p>
+  </div>  <form id="profileForm"><section class="card">
+  <h2 class="card-heading">
+    <span class="card-icon" aria-hidden="true">♟</span>
+    Personal Information
+  </h2>
+
+  <p class="help">
+    Keep your account information accurate so customers and support
+    can identify your business correctly.
   </p>
 
-  <form id="profileForm">
-
-    <section class="card">
-      <h2><span class="icon">♟</span>Personal Information</h2>
-
-      <div class="grid">
-        <label for="fullName">Full Name</label>
-        <div class="input-wrap">
-          <span class="prefix">♟</span>
-          <input id="fullName" name="fullName"
-            autocomplete="name" required minlength="2"
-            maxlength="100" placeholder="Enter your full name">
-        </div>
-
-        <label for="businessName">Business Name</label>
-        <div class="input-wrap">
-          <span class="prefix">▣</span>
-          <input id="businessName" name="businessName"
-            autocomplete="organization" required minlength="2"
-            maxlength="100" placeholder="Enter your business name">
-        </div>
-
-        <label for="phone">Phone Number</label>
-        <div class="input-wrap">
-          <span class="prefix">☎</span>
-          <input id="phone" name="phone" type="tel"
-            autocomplete="tel" required maxlength="25"
-            placeholder="0241234567">
-        </div>
-
-        <label for="email">Email Address</label>
-        <div class="input-wrap">
-          <span class="prefix">✉</span>
-          <input id="email" name="email" type="email"
-            autocomplete="email" required maxlength="255"
-            placeholder="you@example.com">
-        </div>
-      </div>
-
-      <div id="profileStatus" class="status"
-        role="status" aria-live="polite"></div>
-    </section>
-
-    <section class="card" id="storeLinkCard">
-      <h2><span class="icon">🔗</span>My Store Link</h2>
-
-      <p class="help">
-        Choose a unique name for your personal store.
-        Existing agents can update their store name too.
-      </p>
-
-      <label for="storeName">Store Name / Link Name</label>
+  <div class="grid">
+    <label for="fullName">Registered Full Name</label>
+    <div class="input-wrap">
+      <span class="prefix" aria-hidden="true">♟</span>
       <input
-        id="storeName"
-        name="storeName"
-        type="text"
-        minlength="2"
-        maxlength="80"
-        autocomplete="off"
-        placeholder="Example: Kofi Data Plug"
+        id="fullName"
+        name="fullName"
+        autocomplete="name"
         required
+        minlength="2"
+        maxlength="100"
+        placeholder="Enter your full name"
       >
-
-      <p class="security-note">
-        Use letters, numbers, spaces or hyphens. Your link name will
-        be converted to a web-friendly format.
-      </p>
-
-      <label for="storeSlug">Your Personal Store URL</label>
-
-      <div class="store-link-row" style="margin-top:8px">
-        <input
-          id="storeSlug"
-          type="text"
-          readonly
-          placeholder="Your store link will appear here"
-          aria-label="Your personal store URL"
-        >
-
-        <button class="btn-secondary"
-          id="copyStoreLink" type="button">
-          Copy Link
-        </button>
-      </div>
-
-      <p class="store-preview" id="storeLinkPreview"></p>
-
-      <p class="security-note">
-        Store links must be unique. If another agent already uses a
-        name, the server will reject that name and ask you to choose
-        another. Existing links should not change unless you save
-        a new name.
-      </p>
-
-      <div id="storeLinkStatus" class="status"
-        role="status" aria-live="polite"></div>
-    </section>
-
-    <section class="card">
-      <h2><span class="icon">↗</span>Contact &amp; Social Links</h2>
-      <p class="help">
-        Give customers more ways to contact your business.
-      </p>
-
-      <div class="grid">
-        <label for="whatsappNumber">WhatsApp Number</label>
-        <div class="input-wrap">
-          <span class="prefix">☎</span>
-          <input id="whatsappNumber" name="whatsappNumber"
-            type="tel" maxlength="25" placeholder="0241234567">
-        </div>
-
-        <div></div>
-        <p class="hint">The number customers should message.</p>
-
-        <label for="whatsappChannel">WhatsApp Channel Link</label>
-        <div class="input-wrap">
-          <span class="prefix">↗</span>
-          <input id="whatsappChannel" name="whatsappChannel"
-            type="url" maxlength="500"
-            placeholder="https://whatsapp.com/channel/...">
-        </div>
-
-        <div></div>
-        <p class="hint">Optional. Paste your channel link.</p>
-
-        <label for="socialLink">Other Social Media Link</label>
-        <div class="input-wrap">
-          <span class="prefix">↗</span>
-          <input id="socialLink" name="socialLink"
-            type="url" maxlength="500"
-            placeholder="https://...">
-        </div>
-
-        <div></div>
-        <p class="hint">Facebook, Instagram, TikTok or another page.</p>
-
-        <label for="description">Store Description</label>
-        <textarea id="description" name="description"
-          maxlength="200"
-          placeholder="Describe your business and services"></textarea>
-
-        <div></div>
-        <p class="hint">Maximum 200 characters.</p>
-      </div>
-
-      <button class="btn" id="saveProfileBtn" type="submit">
-        ▣ &nbsp; Save Profile Changes
-      </button>
-    </section>
-  </form>
-
-  <form id="passwordForm" class="card">
-    <h2><span class="icon">🔒</span>Change Password</h2>
-    <p class="help">
-      Update your password to keep your account secure.
-    </p>
-
-    <div class="grid">
-      <label for="currentPassword">Current Password</label>
-      <div class="input-wrap">
-        <span class="prefix">▣</span>
-        <input class="password" id="currentPassword"
-          type="password" autocomplete="current-password"
-          required placeholder="Enter current password">
-        <button class="toggle" type="button"
-          data-target="currentPassword"
-          aria-label="Show or hide current password">◉</button>
-      </div>
-
-      <label for="newPassword">New Password</label>
-      <div class="input-wrap">
-        <span class="prefix">▣</span>
-        <input class="password" id="newPassword"
-          type="password" autocomplete="new-password"
-          minlength="12" maxlength="128" required
-          placeholder="At least 12 characters">
-        <button class="toggle" type="button"
-          data-target="newPassword"
-          aria-label="Show or hide new password">◉</button>
-      </div>
-
-      <label for="confirmPassword">Confirm New Password</label>
-      <div class="input-wrap">
-        <span class="prefix">▣</span>
-        <input class="password" id="confirmPassword"
-          type="password" autocomplete="new-password"
-          minlength="12" maxlength="128" required
-          placeholder="Confirm new password">
-        <button class="toggle" type="button"
-          data-target="confirmPassword"
-          aria-label="Show or hide confirmation password">◉</button>
-      </div>
     </div>
 
-    <p class="security-note">
-      Your new password must contain at least 12 characters.
+    <label for="businessName">Professional Business Name</label>
+    <div class="input-wrap">
+      <span class="prefix" aria-hidden="true">▣</span>
+      <input
+        id="businessName"
+        name="businessName"
+        autocomplete="organization"
+        required
+        minlength="2"
+        maxlength="100"
+        placeholder="Example: Vero Data Hub"
+      >
+    </div>
+
+    <div></div>
+    <p class="field-hint">
+      This is the business name displayed at the top of your public store.
     </p>
 
-    <div id="passwordStatus" class="status"
-      role="status" aria-live="polite"></div>
+    <label for="phone">Phone Number</label>
+    <div class="input-wrap">
+      <span class="prefix" aria-hidden="true">☎</span>
+      <input
+        id="phone"
+        name="phone"
+        type="tel"
+        autocomplete="tel"
+        required
+        maxlength="25"
+        placeholder="0241234567"
+      >
+    </div>
 
-    <button class="btn" id="changePasswordBtn" type="submit">
-      ⚿ &nbsp; Update Password
+    <label for="email">Email Address</label>
+    <div class="input-wrap">
+      <span class="prefix" aria-hidden="true">✉</span>
+      <input
+        id="email"
+        name="email"
+        type="email"
+        autocomplete="email"
+        required
+        maxlength="255"
+        placeholder="you@example.com"
+      >
+    </div>
+  </div>
+
+  <div id="profileStatus" class="status"
+    role="status" aria-live="polite"></div>
+</section>
+
+<section class="card" id="storeLinkCard">
+  <h2 class="card-heading">
+    <span class="card-icon" aria-hidden="true">🔗</span>
+    My Professional Store Link
+  </h2>
+
+  <p class="help">
+    Create a memorable store link using your business name.
+    Customers can open the link to view your store and available bundles.
+  </p>
+
+  <label class="store-name-label" for="storeName">
+    Store Name / Link Name
+  </label>
+
+  <input
+    id="storeName"
+    name="storeName"
+    type="text"
+    minlength="2"
+    maxlength="80"
+    autocomplete="off"
+    placeholder="Example: Vero Data Hub"
+    required
+  >
+
+  <p class="security-note">
+    Letters, numbers, spaces and hyphens are accepted. Your name is
+    converted to a web-friendly slug. The server must confirm that
+    the chosen slug is available before it can be used.
+  </p>
+
+  <label class="store-name-label" for="storeSlug"
+    style="margin-top:18px">
+    Your Proposed Store URL
+  </label>
+
+  <div class="store-link-row">
+    <input
+      id="storeSlug"
+      type="text"
+      readonly
+      placeholder="Your store link will appear here"
+      aria-label="Your proposed personal store URL"
+    >
+
+    <button class="btn-secondary"
+      id="copyStoreLink" type="button">
+      Copy Link
     </button>
+  </div>
+
+  <p id="storeLinkPreview" class="store-preview" aria-live="polite">
+    Enter your store name to preview your link.
+  </p>
+
+  <p class="security-note">
+    Your current store link should remain in use until a new slug
+    has been successfully saved by the server. If you change your
+    link name, update any old links you have shared with customers.
+  </p>
+
+  <div id="storeLinkStatus" class="status"
+    role="status" aria-live="polite"></div>
+</section>
+
+<section class="card">
+  <h2 class="card-heading">
+    <span class="card-icon" aria-hidden="true">↗</span>
+    Contact &amp; Social Links
+  </h2>
+
+  <p class="help">
+    Add your preferred contact channels so customers can reach you
+    when they visit your store.
+  </p>
+
+  <div class="grid">
+    <label for="whatsappNumber">WhatsApp Number</label>
+    <div class="input-wrap">
+      <span class="prefix" aria-hidden="true">☎</span>
+      <input
+        id="whatsappNumber"
+        name="whatsappNumber"
+        type="tel"
+        maxlength="25"
+        placeholder="0241234567"
+      >
+    </div>
+
+    <div></div>
+    <p class="field-hint">
+      Enter the WhatsApp number customers should message.
+    </p>
+
+    <label for="whatsappChannel">WhatsApp Channel Link</label>
+    <div class="input-wrap">
+      <span class="prefix" aria-hidden="true">↗</span>
+      <input
+        id="whatsappChannel"
+        name="whatsappChannel"
+        type="url"
+        maxlength="500"
+        placeholder="https://whatsapp.com/channel/..."
+      >
+    </div>
+
+    <div></div>
+    <p class="field-hint">
+      Optional. Paste your WhatsApp Channel link.
+    </p>
+
+    <label for="socialLink">Other Social Media Link</label>
+    <div class="input-wrap">
+      <span class="prefix" aria-hidden="true">↗</span>
+      <input
+        id="socialLink"
+        name="socialLink"
+        type="url"
+        maxlength="500"
+        placeholder="https://..."
+      >
+    </div>
+
+    <div></div>
+    <p class="field-hint">
+      Optional. Facebook, Instagram, TikTok or another business page.
+    </p>
+
+    <label for="description">Store Description</label>
+    <textarea
+      id="description"
+      name="description"
+      maxlength="200"
+      placeholder="Describe your business and services"
+    ></textarea>
+
+    <div></div>
+    <p class="field-hint">
+      Maximum 200 characters.
+    </p>
+  </div>
+
+  <button class="btn" id="saveProfileBtn" type="submit">
+    ▣ &nbsp; Save Profile Changes
+  </button>
+</section>
+
+  </form>  <form id="passwordForm" class="card">
+    <h2 class="card-heading">
+      <span class="card-icon" aria-hidden="true">🔒</span>
+      Change Password
+    </h2><p class="help">
+  Change your password regularly and never share it with anyone.
+</p>
+
+<div class="grid">
+  <label for="currentPassword">Current Password</label>
+  <div class="input-wrap">
+    <span class="prefix" aria-hidden="true">▣</span>
+    <input
+      class="password"
+      id="currentPassword"
+      type="password"
+      autocomplete="current-password"
+      required
+      placeholder="Enter current password"
+    >
+    <button
+      class="toggle"
+      type="button"
+      data-target="currentPassword"
+      aria-label="Show current password"
+      aria-pressed="false"
+    >◉</button>
+  </div>
+
+  <label for="newPassword">New Password</label>
+  <div class="input-wrap">
+    <span class="prefix" aria-hidden="true">▣</span>
+    <input
+      class="password"
+      id="newPassword"
+      type="password"
+      autocomplete="new-password"
+      minlength="12"
+      maxlength="128"
+      required
+      placeholder="At least 12 characters"
+    >
+    <button
+      class="toggle"
+      type="button"
+      data-target="newPassword"
+      aria-label="Show new password"
+      aria-pressed="false"
+    >◉</button>
+  </div>
+
+  <label for="confirmPassword">Confirm New Password</label>
+  <div class="input-wrap">
+    <span class="prefix" aria-hidden="true">▣</span>
+    <input
+      class="password"
+      id="confirmPassword"
+      type="password"
+      autocomplete="new-password"
+      minlength="12"
+      maxlength="128"
+      required
+      placeholder="Confirm new password"
+    >
+    <button
+      class="toggle"
+      type="button"
+      data-target="confirmPassword"
+      aria-label="Show password confirmation"
+      aria-pressed="false"
+    >◉</button>
+  </div>
+</div>
+
+<div class="password-rules">
+  <strong>Password requirements</strong><br>
+  • At least 12 characters<br>
+  • Maximum 128 characters<br>
+  • Must be different from your current password<br>
+  • Both new-password fields must match
+</div>
+
+<div id="passwordStatus" class="status"
+  role="status" aria-live="polite"></div>
+
+<button class="btn" id="changePasswordBtn" type="submit">
+  ⚿ &nbsp; Update Password
+</button>
+
   </form>
-</main>
+</main><nav class="nav" aria-label="Agent navigation">
+  <a href="agent-dashboard.html">
+    <span class="ni" aria-hidden="true">⌂</span>Home
+  </a>  <a href="agent-store.html">
+    <span class="ni" aria-hidden="true">□</span>Store
+  </a>  <a href="agent-prices.html">
+    <span class="ni" aria-hidden="true">₵</span>My Prices
+  </a>  <a href="agent-orders.html">
+    <span class="ni" aria-hidden="true">▤</span>Orders
+  </a><a class="active" href="agent-profile.html"
+aria-current="page">
+<span class="ni" aria-hidden="true">◎</span>Profile
+</a>
 
-<nav class="nav" aria-label="Agent navigation">
-  <a href="agent-dashboard.html"><span class="ni">⌂</span>Home</a>
-  <a href="agent-store.html"><span class="ni">□</span>Store</a>
-  <a href="agent-prices.html"><span class="ni">₵</span>My Prices</a>
-  <a href="agent-orders.html"><span class="ni">▤</span>Orders</a>
-  <a class="active" href="agent-profile.html"
-    aria-current="page"><span class="ni">◎</span>Profile</a>
-  <a href="agent-withdraw.html"><span class="ni">💰</span>Withdraw</a>
-</nav>
-
-<script>
+  <a href="agent-withdraw.html">
+    <span class="ni" aria-hidden="true">💰</span>Withdraw
+  </a>
+</nav><script>
 "use strict";
 
 const API_BASE =
@@ -605,6 +1037,7 @@ function getHeaders(json = true) {
 
 function showStatus(id, message, type = "error") {
   const element = $(id);
+
   element.textContent = message;
   element.className = "status show " + type;
 }
@@ -626,7 +1059,7 @@ function slugifyStoreName(value) {
     .trim()
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "")
-    .slice(0, 100)
+    .slice(0, 80)
     .replace(/_+$/g, "");
 }
 
@@ -634,15 +1067,72 @@ function updateStorePreview() {
   const slug = slugifyStoreName($("storeName").value);
 
   $("storeSlug").value = slug
-    ? `${window.location.origin}/${slug}`
+    ? window.location.origin + "/" + slug
     : "";
 
   $("storeLinkPreview").textContent = slug
     ? "Proposed link: " + $("storeSlug").value
     : "Enter a store name to preview your link.";
+
+  updateProfessionalIdentity();
 }
 
-$("storeName").addEventListener("input", updateStorePreview);
+function updateProfessionalIdentity() {
+  const businessName =
+    $("businessName").value.trim() || "Your Business Name";
+
+  const ownerName =
+    $("fullName").value.trim() || "Your registered name";
+
+  $("identityBusinessName").textContent = businessName;
+  $("identityOwnerName").textContent = "Managed by " + ownerName;
+  $("identityAvatar").textContent =
+    businessName.charAt(0).toUpperCase();
+
+  $("identityRegisteredName").textContent = ownerName;
+
+  $("identityStatus").textContent =
+    $("storeSlug").value ? "Store Link Preview" : "Store Profile";
+}
+
+function getSavedSlug(profile) {
+  return String(
+    profile.storeSlug ||
+    profile.store_slug ||
+    ""
+  ).trim();
+}
+
+function setSavedStoreLink(slug) {
+  if (!slug) {
+    updateStorePreview();
+    return;
+  }
+
+  $("storeName").value = slug.replace(/_/g, " ");
+  $("storeSlug").value =
+    window.location.origin + "/" + slug;
+
+  $("storeLinkPreview").textContent =
+    "Saved store link: " + $("storeSlug").value;
+
+  updateProfessionalIdentity();
+}
+
+function validOptionalURL(value) {
+  if (!value) return true;
+
+  try {
+    const url = new URL(value);
+
+    return (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      Boolean(url.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
 
 async function loadProfile() {
   if (!getAuthToken()) {
@@ -654,10 +1144,13 @@ async function loadProfile() {
   }
 
   try {
-    const response = await fetch(API_BASE + "/agents/profile", {
-      method: "GET",
-      headers: getHeaders(false)
-    });
+    const response = await fetch(
+      API_BASE + "/agents/profile",
+      {
+        method: "GET",
+        headers: getHeaders(false)
+      }
+    );
 
     const data = await readResponse(response);
 
@@ -669,20 +1162,43 @@ async function loadProfile() {
       return;
     }
 
-    const profile = data.profile || data.agent || data.data || data;
+    const profile =
+      data.profile || data.agent || data.data || data;
 
     const fields = {
-      fullName: profile.fullName ?? profile.full_name ?? profile.name,
-      businessName: profile.businessName ?? profile.business_name,
-      phone: profile.phone ?? profile.phoneNumber ?? profile.phone_number,
+      fullName:
+        profile.fullName ??
+        profile.full_name ??
+        profile.name,
+
+      businessName:
+        profile.businessName ??
+        profile.business_name,
+
+      phone:
+        profile.phone ??
+        profile.phoneNumber ??
+        profile.phone_number,
+
       email: profile.email,
+
       whatsappNumber:
-        profile.whatsappNumber ?? profile.whatsapp_number ?? profile.whatsapp,
+        profile.whatsappNumber ??
+        profile.whatsapp_number ??
+        profile.whatsapp,
+
       whatsappChannel:
-        profile.whatsappChannel ?? profile.whatsapp_channel,
-      socialLink: profile.socialLink ?? profile.social_link,
+        profile.whatsappChannel ??
+        profile.whatsapp_channel,
+
+      socialLink:
+        profile.socialLink ??
+        profile.social_link,
+
       description:
-        profile.description ?? profile.storeDescription ?? profile.store_description
+        profile.description ??
+        profile.storeDescription ??
+        profile.store_description
     };
 
     for (const [id, value] of Object.entries(fields)) {
@@ -691,28 +1207,41 @@ async function loadProfile() {
       }
     }
 
-    const currentSlug =
-      profile.storeSlug || profile.store_slug || "";
-
-    $("storeName").value = currentSlug
-      ? currentSlug.replace(/_/g, " ")
-      : (profile.businessName || profile.business_name || "");
-
-    updateStorePreview();
+    const currentSlug = getSavedSlug(profile);
 
     if (currentSlug) {
-      $("storeSlug").value =
-        `${window.location.origin}/${currentSlug}`;
+      setSavedStoreLink(currentSlug);
+    } else {
+      $("storeName").value =
+        profile.businessName ||
+        profile.business_name ||
+        "";
+
+      updateStorePreview();
     }
+
+    updateProfessionalIdentity();
   } catch (error) {
     console.error("Profile loading error:", error);
 
     showStatus(
       "profileStatus",
-      "Cannot connect to the server. Check the Render API and CORS settings."
+      "Cannot connect to the server. Check your internet connection and Render API."
     );
   }
 }
+
+$("storeName").addEventListener("input", updateStorePreview);
+
+$("businessName").addEventListener(
+  "input",
+  updateProfessionalIdentity
+);
+
+$("fullName").addEventListener(
+  "input",
+  updateProfessionalIdentity
+);
 
 $("profileForm").addEventListener("submit", async event => {
   event.preventDefault();
@@ -728,7 +1257,8 @@ $("profileForm").addEventListener("submit", async event => {
     return;
   }
 
-  const proposedSlug = slugifyStoreName($("storeName").value);
+  const proposedSlug =
+    slugifyStoreName($("storeName").value);
 
   if (!proposedSlug || proposedSlug.length < 2) {
     showStatus(
@@ -747,34 +1277,53 @@ $("profileForm").addEventListener("submit", async event => {
     whatsappChannel: $("whatsappChannel").value.trim(),
     socialLink: $("socialLink").value.trim(),
     description: $("description").value.trim(),
-
-    // Requires the matching backend update described above.
     storeSlug: proposedSlug
   };
 
-  for (const key of ["whatsappChannel", "socialLink"]) {
-    if (
-      payload[key] &&
-      !/^https?:\/\/\S+$/i.test(payload[key])
-    ) {
-      showStatus(
-        "profileStatus",
-        "Links must begin with https:// or http://."
-      );
-      return;
-    }
+  if (!payload.fullName || !payload.businessName) {
+    showStatus(
+      "profileStatus",
+      "Enter your full name and business name."
+    );
+    return;
+  }
+
+  if (
+    payload.whatsappChannel &&
+    !validOptionalURL(payload.whatsappChannel)
+  ) {
+    showStatus(
+      "profileStatus",
+      "Enter a valid WhatsApp Channel URL beginning with https:// or http://."
+    );
+    return;
+  }
+
+  if (
+    payload.socialLink &&
+    !validOptionalURL(payload.socialLink)
+  ) {
+    showStatus(
+      "profileStatus",
+      "Enter a valid social media URL beginning with https:// or http://."
+    );
+    return;
   }
 
   const button = $("saveProfileBtn");
+
   button.disabled = true;
   button.textContent = "Saving profile...";
 
   try {
-    const response = await fetch(API_BASE + "/agents/profile", {
-      method: "PUT",
-      headers: getHeaders(true),
-      body: JSON.stringify(payload)
-    });
+    const response = await fetch(
+      API_BASE + "/agents/profile",
+      {
+        method: "PUT",
+        headers: getHeaders(true),
+        body: JSON.stringify(payload)
+      }
+    );
 
     const data = await readResponse(response);
 
@@ -787,20 +1336,11 @@ $("profileForm").addEventListener("submit", async event => {
     }
 
     const savedProfile = data.profile || {};
+
     const savedSlug =
-      savedProfile.storeSlug ||
-      savedProfile.store_slug ||
-      proposedSlug;
+      getSavedSlug(savedProfile) || proposedSlug;
 
-    $("storeName").value = savedSlug.replace(/_/g, " ");
-    $("storeSlug").value =
-      `${window.location.origin}/${savedSlug}`;
-
-    updateStorePreview();
-
-    // Restore the exact saved URL after preview normalization.
-    $("storeSlug").value =
-      `${window.location.origin}/${savedSlug}`;
+    setSavedStoreLink(savedSlug);
 
     showStatus(
       "profileStatus",
@@ -810,9 +1350,12 @@ $("profileForm").addEventListener("submit", async event => {
 
     showStatus(
       "storeLinkStatus",
-      "Your profile was saved. Store link: " + $("storeSlug").value,
+      "The server accepted your profile update. Your store link is: " +
+      $("storeSlug").value,
       "success"
     );
+
+    updateProfessionalIdentity();
   } catch (error) {
     console.error("Profile save error:", error);
 
@@ -822,7 +1365,7 @@ $("profileForm").addEventListener("submit", async event => {
     );
   } finally {
     button.disabled = false;
-    button.textContent = "▣ Save Profile Changes";
+    button.innerHTML = "▣ &nbsp; Save Profile Changes";
   }
 });
 
@@ -832,7 +1375,7 @@ $("copyStoreLink").addEventListener("click", async () => {
   if (!link.startsWith("https://")) {
     showStatus(
       "storeLinkStatus",
-      "Your store link is not ready yet. Save your profile first."
+      "Your store link is not ready yet."
     );
     return;
   }
@@ -845,7 +1388,7 @@ $("copyStoreLink").addEventListener("click", async () => {
       "Store link copied successfully!",
       "success"
     );
-  } catch (_error) {
+  } catch (error) {
     $("storeSlug").focus();
     $("storeSlug").select();
 
@@ -897,8 +1440,11 @@ $("passwordForm").addEventListener("submit", async event => {
   }
 
   const button = $("changePasswordBtn");
+
   button.disabled = true;
   button.textContent = "Updating password...";
+
+  let passwordChanged = false;
 
   try {
     const response = await fetch(
@@ -923,14 +1469,21 @@ $("passwordForm").addEventListener("submit", async event => {
       return;
     }
 
+    passwordChanged = true;
+
     $("passwordForm").reset();
 
     showStatus(
       "passwordStatus",
-      data.message || "Password changed. Please log in again.",
+      data.message ||
+      "Password changed successfully. Please sign in again.",
       "success"
     );
 
+    /*
+     * Preserve the existing logout/session-invalidation behavior.
+     * The backend may already have invalidated the current session.
+     */
     sessionStorage.removeItem("k636_agent_token");
 
     for (const key of [
@@ -942,8 +1495,6 @@ $("passwordForm").addEventListener("submit", async event => {
     ]) {
       localStorage.removeItem(key);
     }
-
-    button.textContent = "Sign in again to continue";
   } catch (error) {
     console.error("Password change error:", error);
 
@@ -954,25 +1505,33 @@ $("passwordForm").addEventListener("submit", async event => {
   } finally {
     button.disabled = false;
 
-    if (button.textContent !== "Sign in again to continue") {
-      button.textContent = "⚿ Update Password";
-    }
+    button.textContent = passwordChanged
+      ? "Sign in again to continue"
+      : "⚿ Update Password";
   }
 });
 
 document.querySelectorAll(".toggle").forEach(button => {
   button.addEventListener("click", () => {
     const input = $(button.dataset.target);
-    input.type =
-      input.type === "password" ? "text" : "password";
+    const show = input.type === "password";
 
-    button.textContent =
-      input.type === "password" ? "◉" : "◌";
+    input.type = show ? "text" : "password";
+    button.textContent = show ? "◌" : "◉";
+    button.setAttribute("aria-pressed", show ? "true" : "false");
+
+    const label = input.labels && input.labels[0]
+      ? input.labels[0].textContent.trim()
+      : "password";
+
+    button.setAttribute(
+      "aria-label",
+      (show ? "Hide " : "Show ") + label
+    );
   });
 });
 
+updateProfessionalIdentity();
 loadProfile();
-</script>
-
-</body>
-</html>
+</script></body>
+  </html>
