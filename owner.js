@@ -463,8 +463,11 @@ const tbody = byId("agentRankingsBody");
 
 if (!tbody) return;
 
-tbody.innerHTML =
-'<tr><td colspan="6">Loading agent rankings...</td></tr>';
+} catch (error) {
+tbody.innerHTML = "<tr> <td colspan="6">${escapeHTML(error.message)}</td> </tr>";
+
+throw error;
+}
 
 try {
 const data = await ownerRequest("/owner/agents/rankings");
