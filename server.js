@@ -2907,8 +2907,12 @@ app.get("/owner/stats", requireOwner, async (req, res) => {
   suspendedAgents: Number(agents.suspendedAgents),
   rejectedAgents: Number(agents.rejectedAgents),
 
-  pendingWithdrawals: Number(withdrawals.pendingWithdrawals),
-  pendingWithdrawalAmount: Number(withdrawals.pendingWithdrawalAmount)
+    pendingWithdrawals:
+    Number(withdrawals.pendingWithdrawals),
+  pendingWithdrawalAmount:
+    Number(withdrawals.pendingWithdrawalAmount)
+  });
+
   } catch (error) {
     console.error("Owner stats error:", error.message);
 
@@ -2918,7 +2922,6 @@ app.get("/owner/stats", requireOwner, async (req, res) => {
     });
   }
 });
-
 
 // 2. OWNER ORDER LIST
 
