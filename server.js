@@ -2874,31 +2874,42 @@ app.get("/owner/stats", requireOwner, async (req, res) => {
     const withdrawals = withdrawalResult.rows[0];
 
     res.json({
-      success: true,
+  success: true,
 
-      ...stats,
+  ...stats,
 
-      totalRevenue: stats.totalSales,
+  // Keep compatibility with the existing dashboard.
+  totalRevenue: Number(stats.totalSales),
+  totalSales: Number(stats.totalSales),
 
-      agents,
+  // This is estimated agent margin, not net business profit.
+  totalAgentProfit: Number(stats.totalAgentProfit),
+  totalProfit: Number(stats.totalAgentProfit),
 
-      registeredAgents: agents.registeredAgents,
-      activeAgents: agents.activeAgents,
-      pendingAgents: agents.pendingAgents,
-      suspendedAgents: agents.suspendedAgents,
-      rejectedAgents: agents.rejectedAgents,
+  todaySales: Number(stats.todaySales),
+  todayAgentProfit: Number(stats.todayAgentProfit),
 
-      pendingWithdrawals: withdrawals.pendingWithdrawals,
-      pendingWithdrawalAmount: withdrawals.pendingWithdrawalAmount
-    });
+  // Match the frontend field name.
+  todayAgentMargin: Number(stats.todayAgentProfit),
 
-  } catch (error) {
-    console.error("Owner stats error:", error);
+  totalOrders: Number(stats.totalOrders),
+  paidOrders: Number(stats.paidOrders),
+  successfulDeliveries: Number(stats.successfulDeliveries),
+  pendingOrders: Number(stats.pendingOrders),
+  failedOrders: Number(stats.failedOrders),
+  todayOrders: Number(stats.todayOrders),
 
-    res.status(500).json({
-      success: false,
-      message: "Unable to load owner statistics."
-    });
+  agents,
+
+  registeredAgents: Number(agents.registeredAgents),
+  activeAgents: Number(agents.activeAgents),
+  pendingAgents: Number(agents.pendingAgents),
+  suspendedAgents: Number(agents.suspendedAgents),
+  rejectedAgents: Number(agents.rejectedAgents),
+
+  pendingWithdrawals: Number(withdrawals.pendingWithdrawals),
+  pendingWithdrawalAmount: Number(withdrawals.pendingWithdrawalAmount)
+});
   }
 });
 
@@ -3437,17 +3448,23 @@ app.get("/owner/agents/rankings", requireOwner, async (req, res) => {
         a.status
 
       ORDER BY
-        estimated_agent_margin DESC,
-        paid_sales DESC,
-        total_orders DESC
+  paid_sales DESC,
+  estimated_agent_margin DESC,
+  total_orders DESC
 
       LIMIT 20
     `);
 
     res.json({
-      success: true,
-      rankings: result.rows
-    });
+  success: true,
+  rankings: result.rows.map(agent => ({
+    ...agent,
+    total_orders: Number(agent.total_orders),
+    paid_orders: Number(agent.paid_orders),
+    paid_sales: Number(agent.paid_sales),
+    estimated_agent_margin: Number(agent.estimated_agent_margin)
+  }))
+});
 
   } catch (error) {
     console.error("Owner agent rankings error:", error);
