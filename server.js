@@ -2909,7 +2909,13 @@ app.get("/owner/stats", requireOwner, async (req, res) => {
 
   pendingWithdrawals: Number(withdrawals.pendingWithdrawals),
   pendingWithdrawalAmount: Number(withdrawals.pendingWithdrawalAmount)
-});
+  } catch (error) {
+    console.error("Owner stats error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not load owner statistics."
+    });
   }
 });
 
