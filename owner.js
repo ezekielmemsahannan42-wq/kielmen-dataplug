@@ -1,10 +1,9 @@
 "use strict";
 
 /* =========================================
-   KIELMEN 636 DATAPLUG
-   OWNER DASHBOARD
-   Login, Statistics, Orders, Agents,
-   Withdrawals and SMS Campaigns
+   KIELMEN 636 DATAPLUG — OWNER DASHBOARD
+   Login, Logout, Statistics, Orders, Agents,
+   Agent Rankings, Withdrawals and SMS
 ========================================= */
 
 const OWNER_API =
@@ -19,6 +18,7 @@ let refreshTimer = null;
 let dashboardLoading = false;
 let smsCampaignRunning = false;
 let loginRunning = false;
+let logoutRunning = false;
 
 /* =========================================
    GENERAL HELPERS
@@ -35,11 +35,9 @@ function money(value) {
 
   const amount = Number(value);
 
-  if (!Number.isFinite(amount)) {
-    return "—";
-  }
-
-  return "GH₵" + amount.toFixed(2);
+  return Number.isFinite(amount)
+    ? "GH₵" + amount.toFixed(2)
+    : "—";
 }
 
 function escapeHTML(value) {
@@ -99,7 +97,9 @@ function saveToken(token) {
   try {
     sessionStorage.setItem(TOKEN_KEY, token);
   } catch (_error) {
-    throw new Error("Your browser could not save the login session.");
+    throw new Error(
+      "Your browser could not save the login session. Please enable browser storage."
+    );
   }
 }
 
@@ -109,14 +109,22 @@ function clearToken() {
   try {
     sessionStorage.removeItem(TOKEN_KEY);
   } catch (_error) {
-    // The local session is still cleared.
+    // Clear the in-memory session even if storage is unavailable.
   }
 }
 
 function stopRefreshTimer() {
-  if (refreshTimer) {
+  if (refreshTimer !== null) {
     clearInterval(refreshTimer);
     refreshTimer = null;
+  }
+}
+
+function hideLogin() {
+  const overlay = byId("ownerLoginOverlay");
+
+  if (overlay) {
+    overlay.style.display = "none";
   }
 }
 
@@ -133,7 +141,12 @@ async function apiRequest(path, options = {}) {
     headers.Authorization = "Bearer " + ownerToken;
   }
 
-  if (options.body && !headers["Content-Type"]) {
+  if (
+    options.body &&
+    !Object.keys(headers).some(
+      key => key.toLowerCase() === "content-type"
+    )
+  ) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -146,7 +159,7 @@ async function apiRequest(path, options = {}) {
     });
   } catch (_error) {
     throw new Error(
-      "Cannot connect to the backend. Check your internet connection or Render service."
+      "Cannot connect to the backend. Check your internet connection and Render service."
     );
   }
 
@@ -159,6 +172,8 @@ async function apiRequest(path, options = {}) {
     clearToken();
     stopRefreshTimer();
     hideDashboard();
+
+    showLogin("Your owner session has expired. Please log in again.");
 
     throw new Error(
       "Your owner session has expired. Please log in again."
@@ -185,8 +200,7 @@ async function ownerRequest(path, options = {}) {
 }
 
 /* =========================================
-   OWNER LOGIN
-   POST /owner/login
+   OWNER LOGIN SCREEN
 ========================================= */
 
 function showLogin(messageText = "") {
@@ -224,7 +238,6 @@ function showLogin(messageText = "") {
         border-radius:16px;
         box-sizing:border-box;
       ">
-
         <h1 style="color:#eab308;font-size:25px">
           KIELMEN 636 DATAPLUG
         </h1>
@@ -233,9 +246,7 @@ function showLogin(messageText = "") {
 
         <p>Sign in to manage your business.</p>
 
-        <label for="ownerPassword">
-          Owner password
-        </label>
+        <label for="ownerPassword">Owner password</label>
 
         <input
           id="ownerPassword"
@@ -275,16 +286,16 @@ function showLogin(messageText = "") {
           aria-live="polite"
           style="overflow-wrap:anywhere"
         ></p>
-
       </form>
     `;
 
     document.body.appendChild(overlay);
 
-    byId("ownerLoginForm").addEventListener(
-      "submit",
-      handleLogin
-    );
+    const form = byId("ownerLoginForm");
+
+    if (form) {
+      form.addEventListener("submit", handleLogin);
+    }
   }
 
   overlay.style.display = "flex";
@@ -302,16 +313,25 @@ function showLogin(messageText = "") {
   }
 }
 
+/* =========================================
+   OWNER LOGIN
+   POST /owner/login
+========================================= */
+
 async function handleLogin(event) {
   event.preventDefault();
 
-  if (loginRunning) return;
+  if (loginRunning) {
+    return;
+  }
 
   const passwordInput = byId("ownerPassword");
   const message = byId("ownerLoginMessage");
   const button = byId("ownerLoginButton");
 
-  if (!passwordInput || !message || !button) return;
+  if (!passwordInput || !message || !button) {
+    return;
+  }
 
   const password = passwordInput.value;
 
@@ -347,22 +367,29 @@ async function handleLogin(event) {
     if (!data.success || !data.token) {
       throw new Error(
         data.message ||
-        "The server did not return a valid login token. Check /owner/login in server.js."
+        "The server did not return a valid login token. Check the /owner/login backend route."
       );
     }
 
+    // Save the new session before opening the dashboard.
     saveToken(data.token);
     ownerToken = data.token;
 
     passwordInput.value = "";
-
-    byId("ownerLoginOverlay").style.display = "none";
-
+    hideLogin();
     showDashboard();
-    showMessage("Login successful. Loading your business data...");
 
-    await startDashboard();
+    showMessage("Login successful. Loading your dashboard...");
 
+    // Dashboard data errors should not invalidate a valid login.
+    try {
+      await startDashboard();
+    } catch (error) {
+      showMessage(
+        "You are logged in, but some dashboard data could not load: " +
+        error.message
+      );
+    }
   } catch (error) {
     clearToken();
     hideDashboard();
@@ -370,8 +397,11 @@ async function handleLogin(event) {
     message.textContent =
       error.message || "Login failed. Please try again.";
 
-    byId("ownerLoginOverlay").style.display = "flex";
+    const overlay = byId("ownerLoginOverlay");
 
+    if (overlay) {
+      overlay.style.display = "flex";
+    }
   } finally {
     loginRunning = false;
     button.disabled = false;
@@ -384,138 +414,145 @@ async function handleLogin(event) {
    GET /owner/stats
 ========================================= */
 
-
 async function loadStatistics() {
-const data = await ownerRequest("/owner/stats");
+  const data = await ownerRequest("/owner/stats");
 
-if (!data.success) {
-throw new Error(
-data.message || "Could not load dashboard statistics."
-);
+  if (!data.success) {
+    throw new Error(
+      data.message || "Could not load dashboard statistics."
+    );
+  }
+
+  const stats = data.stats || data;
+
+  if (
+    stats.totalOrders == null &&
+    stats.totalSales == null &&
+    stats.totalRevenue == null
+  ) {
+    throw new Error(
+      "The backend response is missing the expected statistics."
+    );
+  }
+
+  setText(
+    "totalSales",
+    money(stats.totalSales ?? stats.totalRevenue)
+  );
+
+  const profit =
+    stats.totalProfit ?? stats.totalAgentProfit;
+
+  setText(
+    "totalProfit",
+    profit == null ? "Not available" : money(profit)
+  );
+
+  setText("totalOrders", stats.totalOrders);
+
+  setText(
+    "successfulDeliveries",
+    stats.successfulDeliveries ?? stats.deliveredOrders
+  );
+
+  setText(
+    "pendingOrders",
+    stats.pendingOrders ?? stats.processingOrders
+  );
+
+  setText(
+    "failedOrders",
+    stats.failedOrders ?? stats.failedDeliveries
+  );
+
+  setText("registeredAgents", stats.registeredAgents);
+  setText("pendingWithdrawals", stats.pendingWithdrawals);
+
+  setText(
+    "todaySales",
+    stats.todaySales == null ? "—" : money(stats.todaySales)
+  );
+
+  setText(
+    "todayAgentMargin",
+    stats.todayAgentMargin == null
+      ? "—"
+      : money(stats.todayAgentMargin)
+  );
+
+  setText("activeAgents", stats.activeAgents);
+  setText("pendingAgents", stats.pendingAgents);
+  setText("suspendedAgents", stats.suspendedAgents);
+  setText("rejectedAgents", stats.rejectedAgents);
 }
 
-const stats = data.stats || data;
-
-if (
-stats.totalOrders == null &&
-stats.totalSales == null &&
-stats.totalRevenue == null
-) {
-throw new Error(
-"The backend response is missing the expected statistics."
-);
-}
-
-setText(
-"totalSales",
-money(stats.totalSales ?? stats.totalRevenue)
-);
-
-const profit =
-stats.totalProfit ?? stats.totalAgentProfit;
-
-setText(
-"totalProfit",
-profit == null ? "Not available" : money(profit)
-);
-
-setText("totalOrders", stats.totalOrders);
-
-setText(
-"successfulDeliveries",
-stats.successfulDeliveries ?? stats.deliveredOrders
-);
-
-setText(
-"pendingOrders",
-stats.pendingOrders ?? stats.processingOrders
-);
-
-setText(
-"failedOrders",
-stats.failedOrders ?? stats.failedDeliveries
-);
-
-setText("registeredAgents", stats.registeredAgents);
-setText("pendingWithdrawals", stats.pendingWithdrawals);
-
-// Additional statistics
-setText(
-"todaySales",
-stats.todaySales == null ? "—" : money(stats.todaySales)
-);
-
-setText(
-"todayAgentMargin",
-stats.todayAgentMargin == null
-? "—"
-: money(stats.todayAgentMargin)
-);
-
-setText("activeAgents", stats.activeAgents);
-setText("pendingAgents", stats.pendingAgents);
-setText("suspendedAgents", stats.suspendedAgents);
-setText("rejectedAgents", stats.rejectedAgents);
-}
+/* =========================================
+   AGENT RANKINGS
+   GET /owner/agents/rankings
+========================================= */
 
 async function loadAgentRankings() {
-const tbody = byId("agentRankingsBody");
+  const tbody = byId("agentRankingsBody");
 
-if (!tbody) return;
+  // Rankings are optional until their table exists in owner.html.
+  if (!tbody) {
+    return;
+  }
 
-} catch (error) {
-tbody.innerHTML = "<tr> <td colspan="6">${escapeHTML(error.message)}</td> </tr>";
-
-throw error;
-}
-
-try {
-const data = await ownerRequest("/owner/agents/rankings");
-
-if (!data.success) {
-  throw new Error(
-    data.message || "Could not load agent rankings."
-  );
-}
-
-const agents = data.rankings || [];
-
-if (!agents.length) {
   tbody.innerHTML =
-    '<tr><td colspan="6">No agent sales found yet.</td></tr>';
-  return;
+    '<tr><td colspan="6">Loading agent rankings...</td></tr>';
+
+  try {
+    const data = await ownerRequest("/owner/agents/rankings");
+
+    if (!data.success) {
+      throw new Error(
+        data.message || "Could not load agent rankings."
+      );
+    }
+
+    const agents = data.rankings || [];
+
+    if (!agents.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="6">No agent sales found yet.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = agents.map((agent, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${escapeHTML(
+          agent.business_name || agent.full_name || "—"
+        )}</td>
+        <td>${escapeHTML(agent.agent_code || "—")}</td>
+        <td>${escapeHTML(agent.paid_orders ?? 0)}</td>
+        <td>${money(agent.paid_sales)}</td>
+        <td>${money(agent.estimated_agent_margin)}</td>
+      </tr>
+    `).join("");
+  } catch (error) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6">${escapeHTML(error.message)}</td>
+      </tr>
+    `;
+
+    throw error;
+  }
 }
 
-tbody.innerHTML = agents.map((agent, index) => `
-  <tr>
-    <td>${index + 1}</td>
-    <td>${escapeHTML(
-      agent.business_name || agent.full_name || "—"
-    )}</td>
-    <td>${escapeHTML(agent.agent_code || "—")}</td>
-    <td>${escapeHTML(agent.paid_orders ?? 0)}</td>
-    <td>${money(agent.paid_sales)}</td>
-    <td>${money(agent.estimated_agent_margin)}</td>
-  </tr>
-`).join("");
-
-} catch (error) {
-tbody.innerHTML = "<tr> <td colspan="6">${escapeHTML(error.message)}</td> </tr>";
-
-throw error;
-
-}
-}
 /* =========================================
    CUSTOMER ORDERS
    GET /owner/orders
-   Includes Retry Delivery for failed orders
 ========================================= */
 
 async function loadOrders() {
   const tbody = byId("ordersTableBody");
 
-  if (!tbody) return;
+  if (!tbody) {
+    return;
+  }
 
   tbody.innerHTML =
     '<tr><td colspan="8">Loading orders...</td></tr>';
@@ -531,7 +568,9 @@ async function loadOrders() {
   const deliveryStatus =
     byId("orderDeliveryFilter")?.value || "";
 
-  if (search) params.set("search", search);
+  if (search) {
+    params.set("search", search);
+  }
 
   if (paymentStatus) {
     params.set("status", paymentStatus);
@@ -609,7 +648,6 @@ async function loadOrders() {
         </tr>
       `;
     }).join("");
-
   } catch (error) {
     tbody.innerHTML = `
       <tr>
@@ -627,7 +665,7 @@ async function loadOrders() {
 
 async function retryOrderDelivery(reference, button) {
   if (!ownerToken) {
-    showLogin();
+    showLogin("Please log in to continue.");
     return;
   }
 
@@ -635,22 +673,21 @@ async function retryOrderDelivery(reference, button) {
     "Retry delivery for this order?\n\n" +
     "Reference: " + reference + "\n\n" +
     "The customer has already paid. No new payment will be taken.\n\n" +
-    "Before continuing, ensure DataMart did not already accept " +
-    "the original purchase. A retry may risk duplicate delivery " +
-    "if the supplier processed it despite the earlier error.\n\n" +
-    "Do you want to continue?"
+    "Confirm that DataMart did not already accept the original purchase. " +
+    "A retry could risk duplicate delivery if the supplier processed it " +
+    "despite the earlier error.\n\nContinue?"
   );
 
-  if (!confirmed) return;
+  if (!confirmed) {
+    return;
+  }
 
   if (button) {
     button.disabled = true;
     button.textContent = "Retrying...";
   }
 
-  showMessage(
-    "Retrying DataMart delivery for " + reference + "..."
-  );
+  showMessage("Retrying delivery for " + reference + "...");
 
   try {
     const data = await ownerRequest(
@@ -665,20 +702,24 @@ async function retryOrderDelivery(reference, button) {
 
     showMessage(
       data.message ||
-      "Retry request processed. Refresh the order status."
+      "Retry request processed. Check the order delivery status."
     );
 
     await loadOrders();
-
   } catch (error) {
     showMessage(
       "Retry result: " + error.message +
-      " Check the order and DataMart status before retrying again."
+      ". Check the order and supplier status before retrying again."
     );
 
     await loadOrders().catch(() => {});
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Retry Delivery";
+    }
   }
-         }
+}
 
 /* =========================================
    AGENT MANAGEMENT
@@ -688,7 +729,9 @@ async function retryOrderDelivery(reference, button) {
 async function loadAgents() {
   const tbody = byId("agentsTableBody");
 
-  if (!tbody) return;
+  if (!tbody) {
+    return;
+  }
 
   tbody.innerHTML =
     '<tr><td colspan="7">Loading agents...</td></tr>';
@@ -697,7 +740,9 @@ async function loadAgents() {
     const data = await ownerRequest("/owner/agents");
 
     if (!data.success) {
-      throw new Error(data.message || "Could not retrieve agents.");
+      throw new Error(
+        data.message || "Could not retrieve agents."
+      );
     }
 
     let agents = data.agents || [];
@@ -732,7 +777,7 @@ async function loadAgents() {
         <td>${escapeHTML(agent.full_name)}</td>
         <td>${escapeHTML(agent.business_name)}</td>
         <td>${escapeHTML(agent.status)}</td>
-        <td>${escapeHTML(agent.total_orders)}</td>
+        <td>${escapeHTML(agent.total_orders ?? 0)}</td>
         <td>${money(agent.paid_sales)}</td>
         <td>
           <button
@@ -744,7 +789,6 @@ async function loadAgents() {
         </td>
       </tr>
     `).join("");
-
   } catch (error) {
     tbody.innerHTML = `
       <tr>
@@ -763,7 +807,9 @@ async function loadAgents() {
 async function loadAgentDetails(id) {
   const panel = byId("agentDetails");
 
-  if (!panel) return;
+  if (!panel) {
+    return;
+  }
 
   panel.textContent = "Loading agent details...";
 
@@ -786,7 +832,7 @@ async function loadAgentDetails(id) {
     const withdrawals = data.withdrawals || [];
 
     panel.innerHTML = `
-      <h3>${escapeHTML(agent.business_name)}</h3>
+      <h3>${escapeHTML(agent.business_name || "Agent")}</h3>
 
       <p>Name: ${escapeHTML(agent.full_name)}</p>
       <p>Agent code: ${escapeHTML(agent.agent_code)}</p>
@@ -794,11 +840,11 @@ async function loadAgentDetails(id) {
       <p>Phone: ${escapeHTML(agent.phone)}</p>
       <p>Status: ${escapeHTML(agent.status)}</p>
 
-      <p>Total orders: ${escapeHTML(stats.totalOrders)}</p>
-      <p>Paid orders: ${escapeHTML(stats.paidOrders)}</p>
-      <p>Delivered orders: ${escapeHTML(stats.deliveredOrders)}</p>
+      <p>Total orders: ${escapeHTML(stats.totalOrders ?? 0)}</p>
+      <p>Paid orders: ${escapeHTML(stats.paidOrders ?? 0)}</p>
+      <p>Delivered orders: ${escapeHTML(stats.deliveredOrders ?? 0)}</p>
       <p>Total sales: ${money(stats.totalSales)}</p>
-      <p>Estimated profit: ${money(
+      <p>Estimated agent margin: ${money(
         stats.estimatedProfit ?? stats.totalProfit
       )}</p>
 
@@ -864,7 +910,6 @@ async function loadAgentDetails(id) {
         </table>
       </div>
     `;
-
   } catch (error) {
     panel.textContent = error.message;
   }
@@ -878,7 +923,9 @@ async function loadAgentDetails(id) {
 async function loadWithdrawals() {
   const tbody = byId("withdrawalsTableBody");
 
-  if (!tbody) return;
+  if (!tbody) {
+    return;
+  }
 
   tbody.innerHTML =
     '<tr><td colspan="7">Loading withdrawals...</td></tr>';
@@ -895,7 +942,7 @@ async function loadWithdrawals() {
     const withdrawals = data.withdrawals || [];
 
     const pending = withdrawals.filter(item =>
-      String(item.status).toLowerCase() === "pending"
+      String(item.status || "").toLowerCase() === "pending"
     );
 
     setText("ownerPendingCount", pending.length);
@@ -918,7 +965,7 @@ async function loadWithdrawals() {
 
     tbody.innerHTML = withdrawals.map(item => {
       const isPending =
-        String(item.status).toLowerCase() === "pending";
+        String(item.status || "").toLowerCase() === "pending";
 
       return `
         <tr>
@@ -926,7 +973,8 @@ async function loadWithdrawals() {
           <td>${escapeHTML(
             item.business_name ||
             item.full_name ||
-            item.agent_code
+            item.agent_code ||
+            "—"
           )}</td>
           <td>${money(item.amount)}</td>
           <td>${escapeHTML(item.phone)}</td>
@@ -948,7 +996,6 @@ async function loadWithdrawals() {
         </tr>
       `;
     }).join("");
-
   } catch (error) {
     tbody.innerHTML = `
       <tr>
@@ -962,7 +1009,7 @@ async function loadWithdrawals() {
 
 /* =========================================
    UPDATE WITHDRAWAL STATUS
-   This does NOT send Mobile Money.
+   Does NOT send Mobile Money.
 ========================================= */
 
 async function updateWithdrawalStatus(id, status) {
@@ -970,7 +1017,9 @@ async function updateWithdrawalStatus(id, status) {
     ? "Have you already sent this money successfully through Mobile Money?"
     : "Are you sure you want to reject this withdrawal?";
 
-  if (!window.confirm(promptMessage)) return;
+  if (!window.confirm(promptMessage)) {
+    return;
+  }
 
   try {
     const data = await ownerRequest(
@@ -991,7 +1040,6 @@ async function updateWithdrawalStatus(id, status) {
       loadStatistics(),
       loadWithdrawals()
     ]);
-
   } catch (error) {
     showMessage(error.message);
   }
@@ -1056,14 +1104,16 @@ function updateSmsRecipientCount() {
 
 /* =========================================
    SMS CONTACT FILE UPLOAD
-   Supports TXT and CSV files
+   Supports TXT and CSV
 ========================================= */
 
 async function handleSmsFileUpload(event) {
   const input = event.target;
   const file = input.files && input.files[0];
 
-  if (!file) return;
+  if (!file) {
+    return;
+  }
 
   const recipientsBox = byId("smsRecipients");
   const statusBox = byId("smsCampaignStatus");
@@ -1088,7 +1138,6 @@ async function handleSmsFileUpload(event) {
   try {
     const content = await file.text();
 
-    // Find Ghanaian numbers without consuming a whole CSV row.
     const matches = content.match(
       /(?:\+233|00233|233|0)\s*[\d\s()-]{8,18}/g
     ) || [];
@@ -1120,9 +1169,10 @@ async function handleSmsFileUpload(event) {
     }
 
     alert(resultMessage);
-
   } catch (_error) {
-    alert("Unable to read this file. Please try another TXT or CSV file.");
+    alert(
+      "Unable to read this file. Please try another TXT or CSV file."
+    );
   } finally {
     input.value = "";
   }
@@ -1130,7 +1180,6 @@ async function handleSmsFileUpload(event) {
 
 /* =========================================
    SMS SEGMENT ESTIMATION
-   Estimate only; not Sailup's official price.
 ========================================= */
 
 function estimateSmsSegments(message) {
@@ -1176,10 +1225,18 @@ function estimateSmsCampaign() {
   const status = byId("smsCampaignStatus");
   const recipients = updateSmsRecipientCount();
 
-  if (!status) return null;
+  if (!status) {
+    return null;
+  }
 
   if (!message) {
     status.textContent = "Please enter your SMS message.";
+    return null;
+  }
+
+  if (message.length > 1000) {
+    status.textContent =
+      "Your message cannot exceed 1,000 characters.";
     return null;
   }
 
@@ -1201,17 +1258,11 @@ function estimateSmsCampaign() {
     recipients.valid.length / SMS_BATCH_SIZE
   );
 
-  /*
-   * Do not invent a price per SMS.
-   * The backend/provider must supply the actual rate
-   * before a reliable monetary estimate can be shown.
-   */
-
   status.textContent =
     `Recipients: ${recipients.valid.length}. ` +
     `Estimated SMS segments per recipient: ${segments}. ` +
     `Batches: ${batches}. ` +
-    "The actual cost must be confirmed using your Sailup account rate.";
+    "Confirm the actual SMS price in your Sailup account.";
 
   return {
     message,
@@ -1235,22 +1286,21 @@ async function sendSmsCampaign() {
   const sendButton = byId("sendSmsCampaign");
   const estimateButton = byId("estimateSmsCost");
 
-  if (!status || !sendButton) return;
+  if (!status || !sendButton) {
+    return;
+  }
 
   if (!ownerToken) {
     status.textContent =
       "Please log in to your owner account before sending SMS.";
+
     showLogin();
     return;
   }
 
   const campaign = estimateSmsCampaign();
 
-  if (!campaign) return;
-
-  if (campaign.message.length > 1000) {
-    status.textContent =
-      "Your message cannot exceed 1,000 characters.";
+  if (!campaign) {
     return;
   }
 
@@ -1258,11 +1308,13 @@ async function sendSmsCampaign() {
     `Send this SMS campaign?\n\n` +
     `Recipients: ${campaign.recipients.length}\n` +
     `Batches: ${campaign.batches}\n\n` +
-    `Only send messages to people who agreed to receive them. ` +
-    `SMS charges may apply. Continue?`
+    "Only message people who agreed to receive these messages. " +
+    "SMS charges may apply. Continue?"
   );
 
-  if (!consentConfirmed) return;
+  if (!consentConfirmed) {
+    return;
+  }
 
   smsCampaignRunning = true;
   sendButton.disabled = true;
@@ -1317,7 +1369,8 @@ async function sendSmsCampaign() {
         status.textContent =
           `Campaign stopped at batch ${batchNumber}. ` +
           `${error.message} Previously accepted recipients: ${accepted}. ` +
-          "Check your Sailup records before retrying.";
+          "Check Sailup records before retrying.";
+
         break;
       }
 
@@ -1328,6 +1381,7 @@ async function sendSmsCampaign() {
           `Batch ${batchNumber} was not confirmed. ` +
           `${data.message || "The server did not confirm acceptance."} ` +
           `Previously accepted recipients: ${accepted}.`;
+
         break;
       }
 
@@ -1345,7 +1399,6 @@ async function sendSmsCampaign() {
         `Campaign submission completed. ${accepted} recipients were ` +
         "accepted for processing. This does not guarantee delivery.";
     }
-
   } finally {
     smsCampaignRunning = false;
     sendButton.disabled = false;
@@ -1369,11 +1422,7 @@ function initializeSmsCampaign() {
 
   if (fileInput && !fileInput.dataset.ownerBound) {
     fileInput.dataset.ownerBound = "true";
-
-    fileInput.addEventListener(
-      "change",
-      handleSmsFileUpload
-    );
+    fileInput.addEventListener("change", handleSmsFileUpload);
   }
 
   if (recipientsBox && !recipientsBox.dataset.ownerBound) {
@@ -1384,7 +1433,9 @@ function initializeSmsCampaign() {
 
       const status = byId("smsCampaignStatus");
 
-      if (status) status.textContent = "";
+      if (status) {
+        status.textContent = "";
+      }
     });
   }
 
@@ -1394,26 +1445,20 @@ function initializeSmsCampaign() {
     messageBox.addEventListener("input", () => {
       const status = byId("smsCampaignStatus");
 
-      if (status) status.textContent = "";
+      if (status) {
+        status.textContent = "";
+      }
     });
   }
 
   if (estimateButton && !estimateButton.dataset.ownerBound) {
     estimateButton.dataset.ownerBound = "true";
-
-    estimateButton.addEventListener(
-      "click",
-      estimateSmsCampaign
-    );
+    estimateButton.addEventListener("click", estimateSmsCampaign);
   }
 
   if (sendButton && !sendButton.dataset.ownerBound) {
     sendButton.dataset.ownerBound = "true";
-
-    sendButton.addEventListener(
-      "click",
-      sendSmsCampaign
-    );
+    sendButton.addEventListener("click", sendSmsCampaign);
   }
 
   updateSmsRecipientCount();
@@ -1425,17 +1470,19 @@ function initializeSmsCampaign() {
 
 async function loadDashboard() {
   if (!ownerToken) {
-    showLogin();
+    showLogin("Please log in to continue.");
     return;
   }
 
-  if (dashboardLoading) return;
+  if (dashboardLoading) {
+    return;
+  }
 
   dashboardLoading = true;
   showMessage("Refreshing dashboard...");
 
   try {
-        const results = await Promise.allSettled([
+    const results = await Promise.allSettled([
       loadStatistics(),
       loadOrders(),
       loadAgents(),
@@ -1443,7 +1490,7 @@ async function loadDashboard() {
       loadAgentRankings()
     ]);
 
-        const names = [
+    const names = [
       "Statistics",
       "Orders",
       "Agents",
@@ -1468,7 +1515,6 @@ async function loadDashboard() {
     } else {
       showMessage("Dashboard updated successfully.");
     }
-
   } finally {
     dashboardLoading = false;
   }
@@ -1501,30 +1547,39 @@ async function startDashboard() {
 
 /* =========================================
    LOGOUT
+   Clears the local session immediately.
 ========================================= */
 
 async function logoutOwner() {
+  if (logoutRunning) {
+    return;
+  }
+
+  logoutRunning = true;
+
   const oldToken = ownerToken;
 
+  // Clear the local session first so the user is logged out
+  // even if the backend is temporarily unavailable.
   clearToken();
   stopRefreshTimer();
-
   hideDashboard();
 
-  // Immediately return to login.
   showLogin("You have been logged out successfully.");
 
-  if (oldToken) {
-    try {
+  try {
+    if (oldToken) {
       await fetch(OWNER_API + "/owner/logout", {
         method: "POST",
         headers: {
           Authorization: "Bearer " + oldToken
         }
       });
-    } catch (_error) {
-      // The local logout has already completed.
     }
+  } catch (_error) {
+    // Local logout is already complete.
+  } finally {
+    logoutRunning = false;
   }
 }
 
@@ -1540,6 +1595,12 @@ function initializeOwnerDashboard() {
   );
 
   navLinks.forEach(link => {
+    if (link.dataset.ownerBound) {
+      return;
+    }
+
+    link.dataset.ownerBound = "true";
+
     link.addEventListener("click", () => {
       navLinks.forEach(item =>
         item.classList.remove("active")
@@ -1549,47 +1610,67 @@ function initializeOwnerDashboard() {
     });
   });
 
-  byId("ownerLogoutButton")?.addEventListener(
-    "click",
-    logoutOwner
-  );
+  const logoutButton = byId("ownerLogoutButton");
 
-  byId("refreshDashboard")?.addEventListener(
-    "click",
-    () => {
+  if (logoutButton && !logoutButton.dataset.ownerBound) {
+    logoutButton.dataset.ownerBound = "true";
+    logoutButton.addEventListener("click", logoutOwner);
+  }
+
+  const refreshButton = byId("refreshDashboard");
+
+  if (refreshButton && !refreshButton.dataset.ownerBound) {
+    refreshButton.dataset.ownerBound = "true";
+
+    refreshButton.addEventListener("click", () => {
       loadDashboard().catch(error => {
         showMessage(error.message);
       });
-    }
-  );
+    });
+  }
 
-  byId("searchOrders")?.addEventListener(
-    "click",
-    () => {
+  const searchOrdersButton = byId("searchOrders");
+
+  if (
+    searchOrdersButton &&
+    !searchOrdersButton.dataset.ownerBound
+  ) {
+    searchOrdersButton.dataset.ownerBound = "true";
+
+    searchOrdersButton.addEventListener("click", () => {
       loadOrders().catch(error => {
         showMessage(error.message);
       });
-    }
-  );
-   byId("ordersTableBody")?.addEventListener(
-  "click",
-  event => {
-    const button = event.target.closest(
-      "[data-retry-delivery]"
-    );
-
-    if (!button || button.disabled) return;
-
-    retryOrderDelivery(
-      button.dataset.retryDelivery,
-      button
-    );
+    });
   }
-);
 
-  byId("orderSearch")?.addEventListener(
-    "keydown",
-    event => {
+  const ordersBody = byId("ordersTableBody");
+
+  if (ordersBody && !ordersBody.dataset.ownerBound) {
+    ordersBody.dataset.ownerBound = "true";
+
+    ordersBody.addEventListener("click", event => {
+      const button = event.target.closest(
+        "[data-retry-delivery]"
+      );
+
+      if (!button || button.disabled) {
+        return;
+      }
+
+      retryOrderDelivery(
+        button.dataset.retryDelivery,
+        button
+      );
+    });
+  }
+
+  const orderSearch = byId("orderSearch");
+
+  if (orderSearch && !orderSearch.dataset.ownerBound) {
+    orderSearch.dataset.ownerBound = "true";
+
+    orderSearch.addEventListener("keydown", event => {
       if (event.key === "Enter") {
         event.preventDefault();
 
@@ -1597,21 +1678,27 @@ function initializeOwnerDashboard() {
           showMessage(error.message);
         });
       }
-    }
-  );
+    });
+  }
 
-  byId("agentSearch")?.addEventListener(
-    "input",
-    () => {
+  const agentSearch = byId("agentSearch");
+
+  if (agentSearch && !agentSearch.dataset.ownerBound) {
+    agentSearch.dataset.ownerBound = "true";
+
+    agentSearch.addEventListener("input", () => {
       loadAgents().catch(error => {
         showMessage(error.message);
       });
-    }
-  );
+    });
+  }
 
-  byId("agentsTableBody")?.addEventListener(
-    "click",
-    event => {
+  const agentsBody = byId("agentsTableBody");
+
+  if (agentsBody && !agentsBody.dataset.ownerBound) {
+    agentsBody.dataset.ownerBound = "true";
+
+    agentsBody.addEventListener("click", event => {
       const button = event.target.closest(
         "[data-agent-details]"
       );
@@ -1619,12 +1706,18 @@ function initializeOwnerDashboard() {
       if (button) {
         loadAgentDetails(button.dataset.agentDetails);
       }
-    }
-  );
+    });
+  }
 
-  byId("withdrawalsTableBody")?.addEventListener(
-    "click",
-    event => {
+  const withdrawalsBody = byId("withdrawalsTableBody");
+
+  if (
+    withdrawalsBody &&
+    !withdrawalsBody.dataset.ownerBound
+  ) {
+    withdrawalsBody.dataset.ownerBound = "true";
+
+    withdrawalsBody.addEventListener("click", event => {
       const paidButton = event.target.closest(
         "[data-withdrawal-paid]"
       );
@@ -1646,12 +1739,12 @@ function initializeOwnerDashboard() {
           "rejected"
         );
       }
-    }
-  );
+    });
+  }
 
   initializeSmsCampaign();
 
-  // Restore the owner session if available.
+  // Restore the owner session when a valid token is available.
   ownerToken = getSavedToken();
 
   if (ownerToken) {
@@ -1675,4 +1768,4 @@ if (document.readyState === "loading") {
   );
 } else {
   initializeOwnerDashboard();
-     }
+}
