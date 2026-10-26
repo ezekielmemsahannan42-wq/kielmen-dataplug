@@ -5182,6 +5182,7 @@ async function startServer() {
   try {
     await createAgentTables();
     await createOrdersTable();
+    await createPasswordResetTable();
 
     app.listen(PORT, () => {
       console.log(
