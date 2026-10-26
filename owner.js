@@ -1488,6 +1488,7 @@ async function loadDashboard() {
       loadAgents(),
       loadWithdrawals(),
       loadAgentRankings()
+       loadPasswordResetRequests()
     ]);
 
     const names = [
@@ -1519,6 +1520,197 @@ async function loadDashboard() {
     dashboardLoading = false;
   }
 }
+// ==========================================
+// PASSWORD RESET REQUEST MANAGEMENT
+// ==========================================
+
+async function loadPasswordResetRequests() {
+  const container = document.getElementById("passwordResetRequests");
+
+  if (!container) {
+    console.warn("Password reset requests container not found.");
+    return;
+  }
+
+  container.innerHTML = "<p>Loading password reset requests...</p>";
+
+  try {
+    const response = await apiRequest("/owner/password-reset/requests");
+
+    if (!response.ok) {
+      throw new Error("Failed to load password reset requests.");
+    }
+
+    const data = await response.json();
+
+    const requests = Array.isArray(data)
+      ? data
+      : (data.requests || []);
+
+    if (requests.length === 0) {
+      container.innerHTML = "<p>No password reset requests found.</p>";
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="password-reset-list">
+        ${requests.map(request => {
+          const id = Number(request.id);
+          const status = String(request.status || "pending").toLowerCase();
+
+          return `
+            <div class="password-reset-card">
+              <h3>${escapeResetHtml(request.full_name || "Agent")}</h3>
+
+              <p><strong>Email:</strong>
+                ${escapeResetHtml(request.email || "")}
+              </p>
+
+              <p><strong>Phone:</strong>
+                ${escapeResetHtml(request.phone || "Not provided")}
+              </p>
+
+              <p><strong>Status:</strong>
+                ${escapeResetHtml(status.toUpperCase())}
+              </p>
+
+              <p><strong>Requested:</strong>
+                ${escapeResetHtml(request.created_at || "Unknown")}
+              </p>
+
+              ${
+                status === "pending"
+                  ? `
+                    <button type="button"
+                      onclick="reviewPasswordReset(${id}, 'approved')">
+                      Approve
+                    </button>
+
+                    <button type="button"
+                      onclick="reviewPasswordReset(${id}, 'rejected')">
+                      Reject
+                    </button>
+                  `
+                  : ""
+              }
+
+              ${
+                status === "approved"
+                  ? `
+                    <button type="button"
+                      onclick="generatePasswordResetCode(${id})">
+                      Generate Reset Code
+                    </button>
+                  `
+                  : ""
+              }
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+  } catch (error) {
+    console.error("Password reset requests error:", error);
+
+    container.innerHTML =
+      "<p>Could not load password reset requests. Please try again.</p>";
+  }
+}
+
+
+// Escape values before displaying them in HTML.
+function escapeResetHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character]);
+}
+
+
+// Approve or reject a request.
+async function reviewPasswordReset(id, status) {
+  if (!["approved", "rejected"].includes(status)) {
+    return;
+  }
+
+  const action = status === "approved" ? "approve" : "reject";
+
+  if (!confirm(`Are you sure you want to ${action} this request?`)) {
+    return;
+  }
+
+  try {
+    const response = await apiRequest(
+      `/owner/password-reset/requests/${id}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Request could not be updated.");
+    }
+
+    alert(`Password reset request ${status}.`);
+
+    await loadPasswordResetRequests();
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "Could not update the request.");
+  }
+}
+
+
+// Generate a reset code for an approved request.
+async function generatePasswordResetCode(id) {
+  if (!confirm("Generate a password reset code for this agent?")) {
+    return;
+  }
+
+  try {
+    const response = await apiRequest(
+      `/owner/password-reset/requests/${id}/code`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.message || "Could not generate reset code.");
+    }
+
+    const code = result.code || result.resetCode;
+
+    if (!code) {
+      throw new Error("The server did not return the reset code.");
+    }
+
+    alert(
+      "RESET CODE: " + code +
+      "\n\nGive this code only to the correct agent through their registered phone number. " +
+      "It should expire after 10 minutes and can be used only once."
+    );
+
+    await loadPasswordResetRequests();
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "Could not generate reset code.");
+  }
+                                }
 
 /* =========================================
    START DASHBOARD
