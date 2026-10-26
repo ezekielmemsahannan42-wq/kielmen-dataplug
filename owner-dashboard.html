@@ -13,6 +13,8 @@
     content="Kielmen 636 Dataplug Owner Dashboard"
   >
 
+  <meta name="theme-color" content="#030712">
+
   <title>Kielmen 636 Dataplug | Owner Dashboard</title>
 
   <style>
@@ -25,10 +27,16 @@
       --white: #f9fafb;
       --muted: #9ca3af;
       --red: #ef4444;
+      --blue: #2563eb;
     }
 
     * {
       box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 20px;
     }
 
     body {
@@ -36,88 +44,62 @@
       background: var(--background);
       color: var(--white);
       font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
     }
 
     button,
-    input {
+    input,
+    select,
+    textarea {
       font: inherit;
     }
 
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    input,
+    select,
+    textarea {
+      max-width: 100%;
+    }
+
+    input,
+    select,
+    textarea {
+      color: #111827;
+    }
+
     .topbar {
-padding: 18px;
-border-bottom: 1px solid var(--border);
-background: #030712;
-}
+      position: relative;
+      padding: 18px;
+      border-bottom: 1px solid var(--border);
+      background: #030712;
+    }
 
-.topbar-inner {
-display: flex;
-align-items: center;
-justify-content: space-between;
-flex-wrap: wrap;
-gap: 18px;
-}
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 18px;
+    }
 
-.brand-area {
-min-width: 0;
-}
-
-.owner-nav {
-display: flex;
-align-items: center;
-justify-content: flex-end;
-flex-wrap: wrap;
-gap: 8px;
-}
-
-.nav-link {
-display: inline-block;
-padding: 11px 14px;
-border: 1px solid var(--border);
-border-radius: 9px;
-color: var(--white);
-text-decoration: none;
-font-size: 14px;
-font-weight: bold;
-white-space: nowrap;
-}
-
-.nav-link:hover,
-.nav-link:focus-visible,
-.nav-link.active {
-background: var(--gold);
-border-color: var(--gold);
-color: #030712;
-}
-
-html {
-scroll-behavior: smooth;
-scroll-padding-top: 20px;
-}
-
-@media (max-width: 600px) {
-.topbar-inner {
-align-items: flex-start;
-}
-
-.owner-nav {
-width: 100%;
-justify-content: flex-start;
-flex-wrap: nowrap;
-overflow-x: auto;
-padding-bottom: 4px;
-}
-
-.nav-link {
-flex-shrink: 0;
-padding: 10px 13px;
-}
-}
+    .brand-area {
+      min-width: 0;
+    }
 
     .brand {
       margin: 0;
       color: var(--gold);
       font-size: 25px;
       font-weight: 800;
+      overflow-wrap: anywhere;
     }
 
     .subtitle {
@@ -125,9 +107,40 @@ padding: 10px 13px;
       color: var(--muted);
     }
 
+    .owner-nav {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .nav-link {
+      display: inline-block;
+      padding: 11px 14px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      color: var(--white);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: bold;
+      white-space: nowrap;
+      transition:
+        background 0.2s ease,
+        color 0.2s ease;
+    }
+
+    .nav-link:hover,
+    .nav-link:focus-visible,
+    .nav-link.active {
+      background: var(--gold);
+      border-color: var(--gold);
+      color: #030712;
+    }
+
     .container {
       width: 100%;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: auto;
       padding: 22px 16px 50px;
     }
@@ -147,6 +160,7 @@ padding: 10px 13px;
     }
 
     .button {
+      display: inline-block;
       padding: 12px 18px;
       border: none;
       border-radius: 8px;
@@ -155,12 +169,36 @@ padding: 10px 13px;
       cursor: pointer;
     }
 
+    .button:hover {
+      filter: brightness(1.08);
+    }
+
     .logout {
       background: #b91c1c;
     }
 
     .refresh {
       background: #166534;
+    }
+
+    .approve {
+      background: #15803d;
+      color: white;
+    }
+
+    .reject {
+      background: #b91c1c;
+      color: white;
+    }
+
+    .generate-code {
+      background: #ca8a04;
+      color: #030712;
+    }
+
+    .secondary {
+      background: #374151;
+      color: white;
     }
 
     .status {
@@ -222,6 +260,7 @@ padding: 10px 13px;
 
     .section {
       margin-top: 34px;
+      scroll-margin-top: 20px;
     }
 
     .section h2 {
@@ -238,6 +277,70 @@ padding: 10px 13px;
       overflow-wrap: anywhere;
     }
 
+    .table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 20px;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--gold);
+      white-space: nowrap;
+    }
+
+    td {
+      overflow-wrap: anywhere;
+    }
+
+    .table-button {
+      padding: 9px 12px;
+      margin: 2px;
+      border: none;
+      border-radius: 7px;
+      font-weight: bold;
+      white-space: nowrap;
+    }
+
+    .field {
+      display: block;
+      width: 100%;
+      max-width: 500px;
+      padding: 11px 12px;
+      margin: 8px 0 14px;
+      border: 1px solid #9ca3af;
+      border-radius: 8px;
+      background: white;
+      color: #111827;
+    }
+
+    .field:focus,
+    textarea:focus,
+    select:focus {
+      outline: 2px solid var(--gold);
+      outline-offset: 2px;
+    }
+
+    .field-label {
+      display: block;
+      margin-top: 12px;
+      color: var(--white);
+      font-weight: bold;
+    }
+
     .footer {
       padding: 24px 16px;
       border-top: 1px solid var(--border);
@@ -246,9 +349,74 @@ padding: 10px 13px;
       font-size: 13px;
     }
 
-    @media (max-width: 480px) {
-      .brand {
-        font-size: 21px;
+    .reset-code-panel {
+      display: none;
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      background: #1c1917;
+    }
+
+    .reset-code {
+      padding: 16px;
+      margin: 12px 0;
+      border: 1px dashed var(--gold);
+      border-radius: 8px;
+      background: #030712;
+      color: var(--gold);
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: 5px;
+      overflow-wrap: anywhere;
+      user-select: all;
+    }
+
+    .reset-warning {
+      color: #fbbf24;
+      font-size: 14px;
+    }
+
+    .reset-message {
+      margin-top: 14px;
+      overflow-wrap: anywhere;
+    }
+
+    .small-note {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 850px) {
+      .topbar-inner {
+        align-items: flex-start;
+      }
+
+      .owner-nav {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .topbar {
+        padding: 15px 12px;
+      }
+
+      .owner-nav {
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
+
+      .nav-link {
+        flex-shrink: 0;
+        padding: 10px 12px;
+      }
+
+      .container {
+        padding: 18px 12px 40px;
       }
 
       .toolbar h2 {
@@ -271,35 +439,98 @@ padding: 10px 13px;
       .card-value {
         font-size: 23px;
       }
+
+      .info-panel {
+        padding: 14px;
+      }
+
+      .reset-code {
+        font-size: 24px;
+        letter-spacing: 3px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .brand {
+        font-size: 20px;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand-area">
-      <h1 class="brand">KIELMEN 636 DATAPLUG</h1>
-      <div class="subtitle">Owner Dashboard</div>
-    <nav class="owner-nav" aria-label="Owner dashboard navigation">
-  <a href="#dashboardHome" class="nav-link active">Dashboard</a>
-  <a href="#agentManagement" class="nav-link">Agents</a>
-  <a href="#orderManagement" class="nav-link">Orders</a>
-  <a href="#smsManagement" class="nav-link">SMS Campaigns</a>
-  <a href="#withdrawalManagement" class="nav-link">Withdrawals</a>
-    </nav>
+  <!-- =====================================
+       HEADER AND NAVIGATION
+  ====================================== -->
 
-  </div>
+  <header class="topbar">
+    <div class="topbar-inner">
+
+      <div class="brand-area">
+        <h1 class="brand">KIELMEN 636 DATAPLUG</h1>
+        <div class="subtitle">Owner Dashboard</div>
+      </div>
+
+      <nav
+        class="owner-nav"
+        aria-label="Owner dashboard navigation"
+      >
+        <a href="#dashboardHome" class="nav-link active">
+          Dashboard
+        </a>
+
+        <a href="#advancedStatistics" class="nav-link">
+          Performance
+        </a>
+
+        <a href="#agentRankings" class="nav-link">
+          Rankings
+        </a>
+
+        <a href="#agentManagement" class="nav-link">
+          Agents
+        </a>
+
+        <a href="#orderManagement" class="nav-link">
+          Orders
+        </a>
+
+        <a href="#passwordResetManagement" class="nav-link">
+          Password Resets
+        </a>
+
+        <a href="#smsManagement" class="nav-link">
+          SMS Campaigns
+        </a>
+
+        <a href="#withdrawalManagement" class="nav-link">
+          Withdrawals
+        </a>
+      </nav>
+
+    </div>
   </header>
 
+  <!-- =====================================
+       MAIN OWNER DASHBOARD
+
+       Keep this ID unchanged. owner.js uses it.
+  ====================================== -->
+
   <main class="container" id="ownerDashboardContent">
-  <div id="dashboardHome"></div>
+
+    <div id="dashboardHome"></div>
 
     <div class="toolbar">
       <h2>Business Overview</h2>
 
       <div style="display:flex;gap:10px;flex-wrap:wrap">
+
         <button
           id="refreshDashboard"
           class="button refresh"
@@ -315,6 +546,7 @@ padding: 10px 13px;
         >
           Log Out
         </button>
+
       </div>
     </div>
 
@@ -327,7 +559,14 @@ padding: 10px 13px;
       Connect your owner account to load business statistics.
     </div>
 
-    <section class="grid" aria-label="Business statistics">
+    <!-- ===================================
+         BUSINESS STATISTICS
+    ==================================== -->
+
+    <section
+      class="grid"
+      aria-label="Business statistics"
+    >
 
       <article class="card">
         <p class="card-label">Total Sales</p>
@@ -358,12 +597,18 @@ padding: 10px 13px;
 
       <article class="card">
         <p class="card-label">Pending Orders</p>
-        <p id="pendingOrders" class="card-value pending">0</p>
+        <p
+          id="pendingOrders"
+          class="card-value pending"
+        >0</p>
       </article>
 
       <article class="card">
         <p class="card-label">Failed Orders</p>
-        <p id="failedOrders" class="card-value failed">0</p>
+        <p
+          id="failedOrders"
+          class="card-value failed"
+        >0</p>
       </article>
 
       <article class="card">
@@ -380,284 +625,552 @@ padding: 10px 13px;
         </p>
       </article>
 
-    </section><!-- ADDITIONAL BUSINESS STATISTICS -->
-<section class="section" id="advancedStatistics">
-  <h2>📊 Business Performance</h2>
+    </section>
 
-  <div class="grid">
+    <!-- ===================================
+         ADVANCED STATISTICS
+    ==================================== -->
 
-    <article class="card">
-      <p class="card-label">Today's Sales</p>
-      <p id="todaySales" class="card-value sales">—</p>
-    </article>
-
-    <article class="card">
-      <p class="card-label">Today's Estimated Agent Margin</p>
-      <p id="todayAgentMargin" class="card-value profit">—</p>
-    </article>
-
-    <article class="card">
-      <p class="card-label">Active Agents</p>
-      <p id="activeAgents" class="card-value success">—</p>
-    </article>
-
-    <article class="card">
-      <p class="card-label">Pending Agent Approvals</p>
-      <p id="pendingAgents" class="card-value pending">—</p>
-    </article>
-
-    <article class="card">
-      <p class="card-label">Suspended Agents</p>
-      <p id="suspendedAgents" class="card-value failed">—</p>
-    </article>
-
-    <article class="card">
-      <p class="card-label">Rejected Agents</p>
-      <p id="rejectedAgents" class="card-value failed">—</p>
-    </article>
-
-  </div>
-</section>
-
-<!-- TOP AGENTS -->
-<section class="section" id="agentRankings">
-  <h2>🏆 Top 20 Agents</h2>
-
-  <div class="info-panel">
-    <p>
-      Agents are ranked by paid sales. Estimated agent margin
-      is shown separately and is not the same as net business profit.
-    </p>
-
-    <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;min-width:650px;">
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Agent</th>
-            <th>Agent Code</th>
-            <th>Paid Orders</th>
-            <th>Paid Sales</th>
-            <th>Estimated Agent Margin</th>
-          </tr>
-        </thead>
-
-        <tbody id="agentRankingsBody">
-          <tr>
-            <td colspan="6">Rankings will appear here.</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
-
-<!-- ORDER MANAGEMENT -->
-<section class="section" id="orderManagement">
-  <h2>📦 Order Management</h2>
-
-  <div class="info-panel">
-    <input
-      id="orderSearch"
-      type="search"
-      placeholder="Search reference, phone or agent"
-      style="padding:10px;width:100%;max-width:400px;"
+    <section
+      class="section"
+      id="advancedStatistics"
     >
+      <h2>📊 Business Performance</h2>
 
-    <select id="orderPaymentFilter" style="padding:10px;">
-      <option value="">All payment statuses</option>
-      <option value="paid">Paid</option>
-      <option value="pending">Pending</option>
-    </select>
+      <div class="grid">
 
-    <select id="orderDeliveryFilter" style="padding:10px;">
-      <option value="">All delivery statuses</option>
-      <option value="delivered">Delivered</option>
-      <option value="processing">Processing</option>
-      <option value="failed">Failed</option>
-    </select>
+        <article class="card">
+          <p class="card-label">Today's Sales</p>
+          <p id="todaySales" class="card-value sales">—</p>
+        </article>
 
-    <button class="button refresh" id="searchOrders">
-      Search Orders
-    </button>
+        <article class="card">
+          <p class="card-label">
+            Today's Estimated Agent Margin
+          </p>
+          <p
+            id="todayAgentMargin"
+            class="card-value profit"
+          >—</p>
+        </article>
 
-    <div style="overflow-x:auto;margin-top:20px;">
-      <table style="width:100%;border-collapse:collapse;min-width:700px;">
-        <thead>
-          <tr>
-            <th>Reference</th>
-            <th>Phone</th>
-            <th>Network</th>
-            <th>Bundle</th>
-            <th>Amount</th>
-            <th>Payment</th>
-            <th>Delivery</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="ordersTableBody">
-          <tr><td colspan="7">Loading orders...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
+        <article class="card">
+          <p class="card-label">Active Agents</p>
+          <p
+            id="activeAgents"
+            class="card-value success"
+          >—</p>
+        </article>
 
-<!-- AGENT MANAGEMENT -->
-<section class="section" id="agentManagement">
-  <h2>👥 Agent Management</h2>
+        <article class="card">
+          <p class="card-label">Pending Agent Approvals</p>
+          <p
+            id="pendingAgents"
+            class="card-value pending"
+          >—</p>
+        </article>
 
-  <div class="info-panel">
-    <input
-      id="agentSearch"
-      type="search"
-      placeholder="Search agent name or business"
-      style="padding:10px;width:100%;max-width:400px;"
+        <article class="card">
+          <p class="card-label">Suspended Agents</p>
+          <p
+            id="suspendedAgents"
+            class="card-value failed"
+          >—</p>
+        </article>
+
+        <article class="card">
+          <p class="card-label">Rejected Agents</p>
+          <p
+            id="rejectedAgents"
+            class="card-value failed"
+          >—</p>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ===================================
+         TOP AGENTS
+    ==================================== -->
+
+    <section
+      class="section"
+      id="agentRankings"
     >
+      <h2>🏆 Top Agents</h2>
 
-    <div style="overflow-x:auto;margin-top:20px;">
-      <table style="width:100%;border-collapse:collapse;min-width:650px;">
-        <thead>
-          <tr>
-            <th>Agent Code</th>
-            <th>Name</th>
-            <th>Business</th>
-            <th>Status</th>
-            <th>Orders</th>
-            <th>Paid Sales</th>
-            <th>Details</th>
-          </tr>
-        </thead>
-        <tbody id="agentsTableBody">
-          <tr><td colspan="7">Loading agents...</td></tr>
-        </tbody>
-      </table>
-    </div>
+      <div class="info-panel">
 
-    <div id="agentDetails" style="margin-top:20px;"></div>
-  </div>
-</section>
+        <p>
+          Agents are ranked by paid sales. Estimated agent
+          margin is shown separately and is not the same as
+          net business profit.
+        </p>
 
-<!-- WITHDRAWAL MANAGEMENT -->
-    <!-- SMS CAMPAIGN MANAGEMENT -->
-<section class="section" id="smsManagement">
-  <h2>📩 SMS Campaign Management</h2>
+        <div class="table-wrapper">
+          <table style="min-width:650px">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Agent</th>
+                <th>Agent Code</th>
+                <th>Paid Orders</th>
+                <th>Paid Sales</th>
+                <th>Estimated Agent Margin</th>
+              </tr>
+            </thead>
 
-  <div class="info-panel">
-    <p>
-      Send promotional messages to customers using Sailup.
-      Make sure recipients have agreed to receive your messages.
-    </p>
+            <tbody id="agentRankingsBody">
+              <tr>
+                <td colspan="6">
+                  Rankings will appear here.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-    <label for="smsMessage">Message</label>
-    <textarea
-      id="smsMessage"
-      maxlength="1000"
-      placeholder="Hello! Welcome to Kielmen 636 Dataplug. Get affordable data bundles at https://kielmen.com"
-      style="display:block;width:100%;min-height:130px;padding:12px;margin:10px 0 16px;border-radius:8px;"
-    ></textarea>
+      </div>
+    </section>
 
-    <label for="smsContactFile">
-  📂 Upload Customer Numbers from Your Phone
-</label>
+    <!-- ===================================
+         ORDER MANAGEMENT
+    ==================================== -->
 
-<input
-  type="file"
-  id="smsContactFile"
-  accept=".txt,.csv,text/plain,text/csv"
-  style="
-    display:block;
-    width:100%;
-    padding:15px;
-    margin:12px 0 20px;
-    background:#222;
-    color:white;
-    border:2px solid #d4a017;
-    border-radius:10px;
-  "
->
-
-<p style="font-size:14px;color:#aaa;">
-  Select a TXT or CSV file containing customer phone numbers.
-  The numbers will be added to the recipient box below.
-</p>
-
-<label for="smsRecipients">
-  Recipient phone numbers (one per line)
-</label>
-    <textarea
-      id="smsRecipients"
-      placeholder="0241234567&#10;0201234567&#10;0551234567"
-      style="display:block;width:100%;min-height:160px;padding:12px;margin:10px 0 16px;border-radius:8px;"
-    ></textarea>
-
-    <p id="smsRecipientCount">Recipients: 0</p>
-
-    <button
-      class="button refresh"
-      type="button"
-      id="estimateSmsCost"
+    <section
+      class="section"
+      id="orderManagement"
     >
-      Check Estimated Cost
-    </button>
+      <h2>📦 Order Management</h2>
 
-    <button
-      class="button"
-      type="button"
-      id="sendSmsCampaign"
-      style="background:#ca8a04;margin-left:8px;"
+      <div class="info-panel">
+
+        <label class="field-label" for="orderSearch">
+          Search orders
+        </label>
+
+        <input
+          id="orderSearch"
+          class="field"
+          type="search"
+          placeholder="Search reference, phone or agent"
+        >
+
+        <label class="field-label" for="orderPaymentFilter">
+          Payment status
+        </label>
+
+        <select
+          id="orderPaymentFilter"
+          class="field"
+        >
+          <option value="">All payment statuses</option>
+          <option value="paid">Paid</option>
+          <option value="pending">Pending</option>
+        </select>
+
+        <label class="field-label" for="orderDeliveryFilter">
+          Delivery status
+        </label>
+
+        <select
+          id="orderDeliveryFilter"
+          class="field"
+        >
+          <option value="">All delivery statuses</option>
+          <option value="delivered">Delivered</option>
+          <option value="processing">Processing</option>
+          <option value="failed">Failed</option>
+        </select>
+
+        <button
+          class="button refresh"
+          id="searchOrders"
+          type="button"
+        >
+          Search Orders
+        </button>
+
+        <div class="table-wrapper">
+          <table style="min-width:800px">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Phone</th>
+                <th>Network</th>
+                <th>Bundle</th>
+                <th>Amount</th>
+                <th>Payment</th>
+                <th>Delivery</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody id="ordersTableBody">
+              <tr>
+                <td colspan="8">Loading orders...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================
+         AGENT MANAGEMENT
+    ==================================== -->
+
+    <section
+      class="section"
+      id="agentManagement"
     >
-      Send SMS
-    </button>
+      <h2>👥 Agent Management</h2>
 
-    <div
-      id="smsCampaignStatus"
-      role="status"
-      aria-live="polite"
-      style="margin-top:18px;overflow-wrap:anywhere;"
-    ></div>
-  </div>
-</section>
-<section class="section" id="withdrawalManagement">
-  <h2>💸 Withdrawal Management</h2>
+      <div class="info-panel">
 
-  <div class="info-panel">
-    <p>
-      Review withdrawal requests and confirm Mobile Money
-      payments before marking a request as paid.
-    </p>
+        <label class="field-label" for="agentSearch">
+          Search agents
+        </label>
 
-    <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;min-width:700px;">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Agent</th>
-            <th>Amount</th>
-            <th>MoMo Number</th>
-            <th>Provider</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="withdrawalsTableBody">
-          <tr><td colspan="7">Loading withdrawals...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</section>
+        <input
+          id="agentSearch"
+          class="field"
+          type="search"
+          placeholder="Search agent name, email or business"
+        >
 
+        <div class="table-wrapper">
+          <table style="min-width:750px">
+            <thead>
+              <tr>
+                <th>Agent Code</th>
+                <th>Name</th>
+                <th>Business</th>
+                <th>Status</th>
+                <th>Orders</th>
+                <th>Paid Sales</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+
+            <tbody id="agentsTableBody">
+              <tr>
+                <td colspan="7">Loading agents...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div
+          id="agentDetails"
+          style="margin-top:20px;"
+        ></div>
+
+      </div>
+    </section>
+
+    <!-- ===================================
+         PASSWORD RESET MANAGEMENT
+    ==================================== -->
+
+    <section
+      class="section"
+      id="passwordResetManagement"
+    >
+      <h2>🔐 Agent Password Reset Requests</h2>
+
+      <div class="info-panel">
+
+        <p>
+          Review password-reset requests from registered agents.
+          Approve legitimate requests and generate a one-time
+          reset code when necessary.
+        </p>
+
+        <p class="reset-warning">
+          Security: Verify the agent's identity before sharing
+          a reset code. Never share a code with an unverified person.
+        </p>
+
+        <button
+          id="refreshPasswordResets"
+          class="button refresh"
+          type="button"
+        >
+          Refresh Password Requests
+        </button>
+
+        <div
+          id="passwordResetMessage"
+          class="reset-message"
+          role="status"
+          aria-live="polite"
+        >
+          Password-reset requests will appear here.
+        </div>
+
+        <div class="table-wrapper">
+          <table style="min-width:850px">
+            <thead>
+              <tr>
+                <th>Agent Name</th>
+                <th>Email</th>
+                <th>Registered Phone</th>
+                <th>Status</th>
+                <th>Requested At</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody id="passwordResetRequestsBody">
+              <tr>
+                <td colspan="6">
+                  Log in to view password-reset requests.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Generated reset code panel -->
+
+        <div
+          id="passwordResetCodePanel"
+          class="reset-code-panel"
+          aria-live="polite"
+        >
+          <h3>Generated Password Reset Code</h3>
+
+          <p>
+            Provide this code only to the verified agent through
+            the registered contact channel.
+          </p>
+
+          <div
+            id="passwordResetGeneratedCode"
+            class="reset-code"
+          ></div>
+
+          <p
+            id="passwordResetCodeExpiry"
+            class="reset-warning"
+          ></p>
+
+          <div
+            style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;"
+          >
+            <button
+              id="copyPasswordResetCode"
+              class="button refresh"
+              type="button"
+            >
+              Copy Code
+            </button>
+
+            <button
+              id="closePasswordResetCode"
+              class="button secondary"
+              type="button"
+            >
+              Close Code Panel
+            </button>
+          </div>
+
+          <p class="small-note">
+            Closing this panel hides the code from the dashboard.
+            It does not revoke the code. The backend must enforce
+            expiration and single-use validation.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================
+         SMS CAMPAIGN MANAGEMENT
+    ==================================== -->
+
+    <section
+      class="section"
+      id="smsManagement"
+    >
+      <h2>📩 SMS Campaign Management</h2>
+
+      <div class="info-panel">
+
+        <p>
+          Send promotional messages to customers using Sailup.
+          Only message people who have agreed to receive them.
+        </p>
+
+        <label
+          class="field-label"
+          for="smsMessage"
+        >
+          SMS message
+        </label>
+
+        <textarea
+          id="smsMessage"
+          maxlength="1000"
+          placeholder="Hello! Welcome to Kielmen 636 Dataplug. Get affordable data bundles at https://kielmen.com"
+          style="
+            display:block;
+            width:100%;
+            min-height:130px;
+            padding:12px;
+            margin:10px 0 16px;
+            border-radius:8px;
+          "
+        ></textarea>
+
+        <label
+          class="field-label"
+          for="smsContactFile"
+        >
+          📂 Upload customer numbers
+        </label>
+
+        <input
+          type="file"
+          id="smsContactFile"
+          accept=".txt,.csv,text/plain,text/csv"
+          style="
+            display:block;
+            width:100%;
+            padding:15px;
+            margin:12px 0 20px;
+            background:#222;
+            color:white;
+            border:2px solid #d4a017;
+            border-radius:10px;
+          "
+        >
+
+        <p class="small-note">
+          Select a TXT or CSV file containing customer phone
+          numbers. The extracted numbers will be added to the
+          recipient box below.
+        </p>
+
+        <label
+          class="field-label"
+          for="smsRecipients"
+        >
+          Recipient phone numbers
+        </label>
+
+        <textarea
+          id="smsRecipients"
+          placeholder="0241234567&#10;0201234567&#10;0551234567"
+          style="
+            display:block;
+            width:100%;
+            min-height:160px;
+            padding:12px;
+            margin:10px 0 16px;
+            border-radius:8px;
+          "
+        ></textarea>
+
+        <p id="smsRecipientCount">
+          Recipients: 0
+        </p>
+
+        <button
+          class="button refresh"
+          type="button"
+          id="estimateSmsCost"
+        >
+          Check Estimated Cost
+        </button>
+
+        <button
+          class="button"
+          type="button"
+          id="sendSmsCampaign"
+          style="background:#ca8a04;margin-left:8px;"
+        >
+          Send SMS
+        </button>
+
+        <div
+          id="smsCampaignStatus"
+          role="status"
+          aria-live="polite"
+          style="margin-top:18px;overflow-wrap:anywhere;"
+        ></div>
+
+      </div>
+    </section>
+
+    <!-- ===================================
+         WITHDRAWAL MANAGEMENT
+    ==================================== -->
+
+    <section
+      class="section"
+      id="withdrawalManagement"
+    >
+      <h2>💸 Withdrawal Management</h2>
+
+      <div class="info-panel">
+
+        <p>
+          Review withdrawal requests and confirm Mobile Money
+          payments before marking a request as paid.
+        </p>
+
+        <p>
+          Pending requests:
+          <strong id="ownerPendingCount">—</strong>
+        </p>
+
+        <p>
+          Pending withdrawal amount:
+          <strong id="ownerPendingAmount">—</strong>
+        </p>
+
+        <div class="table-wrapper">
+          <table style="min-width:750px">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Agent</th>
+                <th>Amount</th>
+                <th>MoMo Number</th>
+                <th>Provider</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody id="withdrawalsTableBody">
+              <tr>
+                <td colspan="7">
+                  Loading withdrawals...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </section>
 
   </main>
+
+  <!-- =====================================
+       FOOTER
+  ====================================== -->
 
   <footer class="footer">
     Kielmen 636 Dataplug &copy; 2026
   </footer>
 
+  <!-- Keep owner.js as the only dashboard script. -->
   <script src="./owner.js" defer></script>
-
-  
 
 </body>
 </html>
