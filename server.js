@@ -96,10 +96,11 @@ app.use(
     methods: ["GET", "POST", "PUT", "PATCH", "OPTIONS"],
 
     allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With"
-    ]
+  "Content-Type",
+  "Authorization",
+  "X-Requested-With",
+  "Idempotency-Key"
+]
   })
 );
 
