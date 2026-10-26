@@ -385,7 +385,7 @@ async function handleLogin(event) {
 ========================================= */
 
 async function loadStatistics() {
-    const data = await ownerRequest("/owner/stats");
+      const data = await ownerRequest("/owner/stats");
 
   if (!data.success) {
     throw new Error(
@@ -393,8 +393,18 @@ async function loadStatistics() {
     );
   }
 
-  // Support both nested and direct statistics responses.
+  // Support both nested and direct backend responses.
   const stats = data.stats || data;
+
+  if (
+    stats.totalOrders == null &&
+    stats.totalSales == null &&
+    stats.totalRevenue == null
+  ) {
+    throw new Error(
+      "The backend response is missing the expected statistics."
+    );
+  }
 
   if (
     stats.totalOrders == null &&
