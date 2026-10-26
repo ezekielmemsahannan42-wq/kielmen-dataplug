@@ -384,69 +384,125 @@ async function handleLogin(event) {
    GET /owner/stats
 ========================================= */
 
+
 async function loadStatistics() {
-      const data = await ownerRequest("/owner/stats");
+const data = await ownerRequest("/owner/stats");
 
-  if (!data.success) {
-    throw new Error(
-      data.message || "Could not load dashboard statistics."
-    );
-  }
-
-  // Support both nested and direct backend responses.
-  const stats = data.stats || data;
-
-    if (
-    stats.totalOrders == null &&
-    stats.totalSales == null &&
-    stats.totalRevenue == null
-  ) {
-    throw new Error(
-      "The backend response is missing the expected statistics."
-    );
-    }
-
-  // Do not replace missing values with false zeroes.
-  setText(
-    "totalSales",
-    stats.totalSales ?? stats.totalRevenue ?? "—"
-  );
-
-  if (
-    stats.totalSales != null ||
-    stats.totalRevenue != null
-  ) {
-    setText(
-      "totalSales",
-      money(stats.totalSales ?? stats.totalRevenue)
-    );
-  }
-
-  const profit =
-    stats.totalProfit ?? stats.totalAgentProfit;
-
-  setText(
-    "totalProfit",
-    profit == null ? "Not available" : money(profit)
-  );
-
-  setText("totalOrders", stats.totalOrders);
-  setText(
-    "successfulDeliveries",
-    stats.successfulDeliveries ?? stats.deliveredOrders
-  );
-  setText(
-    "pendingOrders",
-    stats.pendingOrders ?? stats.processingOrders
-  );
-  setText(
-    "failedOrders",
-    stats.failedOrders ?? stats.failedDeliveries
-  );
-  setText("registeredAgents", stats.registeredAgents);
-  setText("pendingWithdrawals", stats.pendingWithdrawals);
+if (!data.success) {
+throw new Error(
+data.message || "Could not load dashboard statistics."
+);
 }
 
+const stats = data.stats || data;
+
+if (
+stats.totalOrders == null &&
+stats.totalSales == null &&
+stats.totalRevenue == null
+) {
+throw new Error(
+"The backend response is missing the expected statistics."
+);
+}
+
+setText(
+"totalSales",
+money(stats.totalSales ?? stats.totalRevenue)
+);
+
+const profit =
+stats.totalProfit ?? stats.totalAgentProfit;
+
+setText(
+"totalProfit",
+profit == null ? "Not available" : money(profit)
+);
+
+setText("totalOrders", stats.totalOrders);
+
+setText(
+"successfulDeliveries",
+stats.successfulDeliveries ?? stats.deliveredOrders
+);
+
+setText(
+"pendingOrders",
+stats.pendingOrders ?? stats.processingOrders
+);
+
+setText(
+"failedOrders",
+stats.failedOrders ?? stats.failedDeliveries
+);
+
+setText("registeredAgents", stats.registeredAgents);
+setText("pendingWithdrawals", stats.pendingWithdrawals);
+
+// Additional statistics
+setText(
+"todaySales",
+stats.todaySales == null ? "—" : money(stats.todaySales)
+);
+
+setText(
+"todayAgentMargin",
+stats.todayAgentMargin == null
+? "—"
+: money(stats.todayAgentMargin)
+);
+
+setText("activeAgents", stats.activeAgents);
+setText("pendingAgents", stats.pendingAgents);
+setText("suspendedAgents", stats.suspendedAgents);
+setText("rejectedAgents", stats.rejectedAgents);
+}
+
+async function loadAgentRankings() {
+const tbody = byId("agentRankingsBody");
+
+if (!tbody) return;
+
+tbody.innerHTML =
+'<tr><td colspan="6">Loading agent rankings...</td></tr>';
+
+try {
+const data = await ownerRequest("/owner/agents/rankings");
+
+if (!data.success) {
+  throw new Error(
+    data.message || "Could not load agent rankings."
+  );
+}
+
+const agents = data.rankings || [];
+
+if (!agents.length) {
+  tbody.innerHTML =
+    '<tr><td colspan="6">No agent sales found yet.</td></tr>';
+  return;
+}
+
+tbody.innerHTML = agents.map((agent, index) => `
+  <tr>
+    <td>${index + 1}</td>
+    <td>${escapeHTML(
+      agent.business_name || agent.full_name || "—"
+    )}</td>
+    <td>${escapeHTML(agent.agent_code || "—")}</td>
+    <td>${escapeHTML(agent.paid_orders ?? 0)}</td>
+    <td>${money(agent.paid_sales)}</td>
+    <td>${money(agent.estimated_agent_margin)}</td>
+  </tr>
+`).join("");
+
+} catch (error) {
+tbody.innerHTML = "<tr> <td colspan="6">${escapeHTML(error.message)}</td> </tr>";
+
+throw error;
+
+}
+}
 /* =========================================
    CUSTOMER ORDERS
    GET /owner/orders
@@ -1376,18 +1432,20 @@ async function loadDashboard() {
   showMessage("Refreshing dashboard...");
 
   try {
-    const results = await Promise.allSettled([
+        const results = await Promise.allSettled([
       loadStatistics(),
       loadOrders(),
       loadAgents(),
-      loadWithdrawals()
+      loadWithdrawals(),
+      loadAgentRankings()
     ]);
 
-    const names = [
+        const names = [
       "Statistics",
       "Orders",
       "Agents",
-      "Withdrawals"
+      "Withdrawals",
+      "Agent Rankings"
     ];
 
     const failures = results
