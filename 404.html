@@ -4,111 +4,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#030712">
   <meta name="robots" content="noindex, nofollow">
-  <title>Opening Agent Store | Kielmen 636 Dataplug</title>  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 20px;
-      box-sizing: border-box;
-      background: #030712;
-      color: #f9fafb;
-      font-family: Arial, Helvetica, sans-serif;
-      text-align: center;
-    }
-
-    main {
-      width: 100%;
-      max-width: 420px;
-      padding: 28px 20px;
-      box-sizing: border-box;
-      border: 1px solid #374151;
-      border-radius: 18px;
-      background: #111827;
-    }
-
-    .logo {
-      font-size: 35px;
-    }
-
-    h1 {
-      font-size: 23px;
-    }
-
-    p {
-      color: #9ca3af;
-      line-height: 1.7;
-    }
-
-    a {
-      color: #4ade80;
-    }
-  </style></head><body>
-  <main>
-    <div class="logo" aria-hidden="true">📶</div>
-    <h1>Opening Agent Store</h1>
-    <p id="message">Please wait while we find the correct store.</p>
-    <p><a id="homeLink" href="/">Return to the homepage</a></p>
-  </main>  <script>
-    "use strict";
-
+  <title>Opening Agent Store | Kielmen 636 Dataplug</title>
+</head>
+<body style="margin:0;padding:30px;background:#030712;color:white;font-family:Arial,sans-serif;text-align:center">
+  <h2>Opening Agent Store...</h2>
+  <p id="message">Please wait.</p>  <script>
     (function () {
-      const pathname = window.location.pathname;
+      const originalPath = window.location.pathname;
       const params = new URLSearchParams(window.location.search);
-      const message = document.getElementById("message");
-      const homeLink = document.getElementById("homeLink");
-
-      /*
-       * This version assumes the custom domain serves the site
-       * from its root directory.
-       */
-
-      homeLink.href = "/";
 
       let path;
 
       try {
-        path = decodeURIComponent(pathname);
-      } catch {
-        message.textContent = "This store link contains an invalid address.";
+        path = decodeURIComponent(originalPath)
+          .replace(/^\/+|\/+$/g, "");
+      } catch (error) {
+        document.getElementById("message").textContent =
+          "This store link is invalid.";
         return;
       }
 
-      path = path.replace(/^\/+|\/+$/g, "");
-
-      // Do not redirect unrelated site pages as agent stores.
-      if (
-        !path ||
-        path.includes("..") ||
-        path.includes("\\") ||
-        path.includes("?") ||
-        path.includes("#")
-      ) {
-        message.textContent =
-          "We couldn't identify an agent store from this address.";
-        return;
+      // Support /agents/kofi and /kofi.
+      if (path.startsWith("agents/")) {
+        path = path.slice("agents/".length);
       }
 
-      // Support /agents/kofi as well as /kofi.
-      let slug = path;
-
-      if (slug.startsWith("agents/")) {
-        slug = slug.slice("agents/".length);
-      }
-
-      // A store slug must be a single path segment.
-      if (
-        !slug ||
-        slug.includes("/") ||
-        !/^[a-zA-Z0-9_-]+$/.test(slug)
-      ) {
-        message.textContent =
-          "This agent store link is invalid.";
-        return;
-      }
-
-      // Avoid redirecting ordinary website files as agent stores.
+      // Do not redirect normal website pages.
       const reserved = new Set([
         "index.html",
         "agent-store.html",
@@ -117,20 +38,27 @@
         "agent-login.html",
         "agent-register.html",
         "agent-dashboard.html",
-        "owner-dashboard.html",
         "agent-profile.html",
+        "agent-withdrawal.html",
         "agent-forgot-password.html",
-        "agent-withdrawal.html"
+        "owner-dashboard.html"
       ]);
 
-      if (reserved.has(slug.toLowerCase())) {
-        message.textContent =
-          "This page could not be found. Please return to the homepage.";
+      if (
+        !path ||
+        path.includes("/") ||
+        path.includes("\\") ||
+        !/^[a-zA-Z0-9_-]+$/.test(path) ||
+        reserved.has(path.toLowerCase())
+      ) {
+        document.getElementById("message").textContent =
+          "This page could not be found.";
         return;
       }
 
-      params.set("store", slug);
+      params.set("store", path);
 
+      // Assumes kielmen.com serves the website from its root.
       window.location.replace(
         "/agent-store.html?" +
         params.toString() +
