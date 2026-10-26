@@ -10,7 +10,7 @@ const OWNER_API =
   "https://kielmen-dataplug-payment-api.onrender.com";
 
 const TOKEN_KEY = "kielmen_owner_token";
-const SMS_BATCH_SIZE = 100;
+const SMS_BATCH_SIZE = 2000;
 const SMS_MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 let ownerToken = null;
