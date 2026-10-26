@@ -4297,9 +4297,34 @@ function normalizeSailupRecipients(input) {
     throw new Error("Recipients must be supplied as an array.");
   }
 
-  if (input.length < 1 || input.length > 100) {
-    throw new Error("Provide between 1 and 100 recipients per batch.");
+  if (input.length < 1 || input.length > 2000) {
+    throw new Error("Provide between 1 and 2000 recipients per batch.");
   }
+
+  const normalized = input.map(value => {
+    let phone = String(value || "")
+      .trim()
+      .replace(/[\s()-]/g, "");
+
+    if (/^0\d{9}$/.test(phone)) {
+      phone = "+233" + phone.slice(1);
+    } else if (/^233\d{9}$/.test(phone)) {
+      phone = "+" + phone;
+    } else if (/^00233\d{9}$/.test(phone)) {
+      phone = "+" + phone.slice(2);
+    }
+
+    return phone;
+  });
+
+  if (normalized.some(phone => !/^\+233\d{9}$/.test(phone))) {
+    throw new Error(
+      "One or more recipients are invalid. Use Ghanaian numbers such as +233241234567."
+    );
+  }
+
+  return [...new Set(normalized)];
+}
 
   const normalized = input.map(value => {
     let phone = String(value || "")
