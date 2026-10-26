@@ -1161,16 +1161,54 @@ summaryNetwork: $("summaryNetwork"),
     ========================================== */
 
     function getStoreIdentifiers() {
-      const params = new URLSearchParams(window.location.search);
+const params = new URLSearchParams(window.location.search);
 
-      const queryCode = params.get("code") || "";
+const queryCode = params.get("code") || "";
 const querySlug =
-  params.get("slug") ||
-  params.get("store") ||
-  "";
+params.get("slug") ||
+params.get("store") ||
+"";
 
-      agentCode = queryCode.trim().toUpperCase();
-      storeSlug = querySlug.trim().toLowerCase();
+agentCode = queryCode.trim().toUpperCase();
+storeSlug = querySlug.trim().toLowerCase();
+
+// First priority: an explicit agent code or store slug.
+if (agentCode || storeSlug) {
+return;
+}
+
+// Otherwise, try to extract the slug from the URL path.
+let pathParts = window.location.pathname
+.split("/")
+.filter(Boolean);
+
+// Support /agents/kofi.
+if (
+pathParts.length >= 2 &&
+pathParts[pathParts.length - 2].toLowerCase() === "agents"
+) {
+storeSlug = pathParts[pathParts.length - 1].toLowerCase();
+return;
+}
+
+// Support /kofi.
+const lastPart = pathParts[pathParts.length - 1] || "";
+
+const ignored = new Set([
+"agent-store.html",
+"index.html",
+"success.html",
+"404.html"
+]);
+
+if (lastPart && !ignored.has(lastPart.toLowerCase())) {
+try {
+storeSlug = decodeURIComponent(lastPart).toLowerCase();
+} catch {
+storeSlug = lastPart.toLowerCase();
+}
+}
+    }
 
       /*
        * Supported URL formats:
