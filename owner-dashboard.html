@@ -379,9 +379,79 @@ padding: 10px 13px;
         </p>
       </article>
 
-    </section>
+    </section><!-- ADDITIONAL BUSINESS STATISTICS -->
+<section class="section" id="advancedStatistics">
+  <h2>📊 Business Performance</h2>
 
-    <!-- ORDER MANAGEMENT -->
+  <div class="grid">
+
+    <article class="card">
+      <p class="card-label">Today's Sales</p>
+      <p id="todaySales" class="card-value sales">—</p>
+    </article>
+
+    <article class="card">
+      <p class="card-label">Today's Estimated Agent Margin</p>
+      <p id="todayAgentMargin" class="card-value profit">—</p>
+    </article>
+
+    <article class="card">
+      <p class="card-label">Active Agents</p>
+      <p id="activeAgents" class="card-value success">—</p>
+    </article>
+
+    <article class="card">
+      <p class="card-label">Pending Agent Approvals</p>
+      <p id="pendingAgents" class="card-value pending">—</p>
+    </article>
+
+    <article class="card">
+      <p class="card-label">Suspended Agents</p>
+      <p id="suspendedAgents" class="card-value failed">—</p>
+    </article>
+
+    <article class="card">
+      <p class="card-label">Rejected Agents</p>
+      <p id="rejectedAgents" class="card-value failed">—</p>
+    </article>
+
+  </div>
+</section>
+
+<!-- TOP AGENTS -->
+<section class="section" id="agentRankings">
+  <h2>🏆 Top 20 Agents</h2>
+
+  <div class="info-panel">
+    <p>
+      Agents are ranked by paid sales. Estimated agent margin
+      is shown separately and is not the same as net business profit.
+    </p>
+
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;min-width:650px;">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Agent</th>
+            <th>Agent Code</th>
+            <th>Paid Orders</th>
+            <th>Paid Sales</th>
+            <th>Estimated Agent Margin</th>
+          </tr>
+        </thead>
+
+        <tbody id="agentRankingsBody">
+          <tr>
+            <td colspan="6">Rankings will appear here.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ORDER MANAGEMENT -->
 <section class="section" id="orderManagement">
   <h2>📦 Order Management</h2>
 
