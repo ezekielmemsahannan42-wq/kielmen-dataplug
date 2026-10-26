@@ -2,14 +2,26 @@
 
 /* =========================================
    KIELMEN 636 DATAPLUG — OWNER DASHBOARD
-   Login, Logout, Statistics, Orders, Agents,
-   Agent Rankings, Withdrawals and SMS
+
+   Features:
+   - Owner login and logout
+   - Statistics
+   - Orders and delivery retry
+   - Agent management and details
+   - Agent rankings
+   - Withdrawals
+   - SMS campaigns
+   - Agent password-reset management
+
+   IMPORTANT:
+   The backend must implement all matching routes.
 ========================================= */
 
 const OWNER_API =
   "https://kielmen-dataplug-payment-api.onrender.com";
 
 const TOKEN_KEY = "kielmen_owner_token";
+
 const SMS_BATCH_SIZE = 2000;
 const SMS_MAX_FILE_SIZE = 2 * 1024 * 1024;
 
@@ -98,7 +110,8 @@ function saveToken(token) {
     sessionStorage.setItem(TOKEN_KEY, token);
   } catch (_error) {
     throw new Error(
-      "Your browser could not save the login session. Please enable browser storage."
+      "Your browser could not save the login session. " +
+      "Please enable browser storage."
     );
   }
 }
@@ -109,7 +122,7 @@ function clearToken() {
   try {
     sessionStorage.removeItem(TOKEN_KEY);
   } catch (_error) {
-    // Clear the in-memory session even if storage is unavailable.
+    // The in-memory session is still cleared.
   }
 }
 
@@ -130,6 +143,8 @@ function hideLogin() {
 
 /* =========================================
    API REQUEST HELPER
+
+   Returns parsed JSON, NOT a Fetch Response.
 ========================================= */
 
 async function apiRequest(path, options = {}) {
@@ -141,12 +156,11 @@ async function apiRequest(path, options = {}) {
     headers.Authorization = "Bearer " + ownerToken;
   }
 
-  if (
-    options.body &&
-    !Object.keys(headers).some(
-      key => key.toLowerCase() === "content-type"
-    )
-  ) {
+  const hasContentType = Object.keys(headers).some(
+    key => key.toLowerCase() === "content-type"
+  );
+
+  if (options.body && !hasContentType) {
     headers["Content-Type"] = "application/json";
   }
 
@@ -159,7 +173,8 @@ async function apiRequest(path, options = {}) {
     });
   } catch (_error) {
     throw new Error(
-      "Cannot connect to the backend. Check your internet connection and Render service."
+      "Cannot connect to the backend. Check your internet connection " +
+      "and Render service."
     );
   }
 
@@ -173,7 +188,9 @@ async function apiRequest(path, options = {}) {
     stopRefreshTimer();
     hideDashboard();
 
-    showLogin("Your owner session has expired. Please log in again.");
+    showLogin(
+      "Your owner session has expired. Please log in again."
+    );
 
     throw new Error(
       "Your owner session has expired. Please log in again."
@@ -238,6 +255,7 @@ function showLogin(messageText = "") {
         border-radius:16px;
         box-sizing:border-box;
       ">
+
         <h1 style="color:#eab308;font-size:25px">
           KIELMEN 636 DATAPLUG
         </h1>
@@ -367,21 +385,21 @@ async function handleLogin(event) {
     if (!data.success || !data.token) {
       throw new Error(
         data.message ||
-        "The server did not return a valid login token. Check the /owner/login backend route."
+        "The server did not return a valid login token. " +
+        "Check the /owner/login backend route."
       );
     }
 
-    // Save the new session before opening the dashboard.
     saveToken(data.token);
     ownerToken = data.token;
 
     passwordInput.value = "";
+
     hideLogin();
     showDashboard();
 
     showMessage("Login successful. Loading your dashboard...");
 
-    // Dashboard data errors should not invalidate a valid login.
     try {
       await startDashboard();
     } catch (error) {
@@ -494,7 +512,6 @@ async function loadStatistics() {
 async function loadAgentRankings() {
   const tbody = byId("agentRankingsBody");
 
-  // Rankings are optional until their table exists in owner.html.
   if (!tbody) {
     return;
   }
@@ -1009,7 +1026,9 @@ async function loadWithdrawals() {
 
 /* =========================================
    UPDATE WITHDRAWAL STATUS
-   Does NOT send Mobile Money.
+
+   This only updates the status.
+   It does not send Mobile Money.
 ========================================= */
 
 async function updateWithdrawalStatus(id, status) {
@@ -1465,6 +1484,436 @@ function initializeSmsCampaign() {
 }
 
 /* =========================================
+   PASSWORD RESET MANAGEMENT
+
+   Expected HTML IDs:
+   - passwordResetRequestsBody
+   - passwordResetMessage
+   - refreshPasswordResets
+   - passwordResetCodePanel
+   - passwordResetGeneratedCode
+   - passwordResetCodeExpiry
+   - copyPasswordResetCode
+   - closePasswordResetCode
+
+   Expected backend routes:
+   GET   /owner/password-reset/requests
+   PATCH /owner/password-reset/requests/:id
+   POST  /owner/password-reset/requests/:id/code
+========================================= */
+
+let resetCodeExpiryTimer = null;
+
+function showPasswordResetMessage(message, isError = false) {
+  const element = byId("passwordResetMessage");
+
+  if (!element) {
+    showMessage(message);
+    return;
+  }
+
+  element.textContent = String(message || "");
+
+  element.style.color = isError
+    ? "#dc2626"
+    : "#16a34a";
+}
+
+function formatResetDate(value) {
+  if (!value) {
+    return "Unknown";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value);
+  }
+
+  return date.toLocaleString();
+}
+
+function setResetCodePanelVisible(visible) {
+  const panel = byId("passwordResetCodePanel");
+
+  if (panel) {
+    panel.style.display = visible ? "block" : "none";
+  }
+}
+
+function clearResetCodeExpiryTimer() {
+  if (resetCodeExpiryTimer !== null) {
+    clearInterval(resetCodeExpiryTimer);
+    resetCodeExpiryTimer = null;
+  }
+}
+
+function displayResetCode(code, expiresAt) {
+  const codeElement = byId("passwordResetGeneratedCode");
+  const expiryElement = byId("passwordResetCodeExpiry");
+
+  if (!codeElement) {
+    alert(
+      "Reset code: " + code +
+      "\n\nGive this code only to the verified agent."
+    );
+    return;
+  }
+
+  codeElement.textContent = String(code);
+  setResetCodePanelVisible(true);
+
+  clearResetCodeExpiryTimer();
+
+  const expiryDate = expiresAt
+    ? new Date(expiresAt)
+    : new Date(Date.now() + 10 * 60 * 1000);
+
+  function updateCountdown() {
+    if (!expiryElement) {
+      return;
+    }
+
+    const remaining = expiryDate.getTime() - Date.now();
+
+    if (!Number.isFinite(remaining) || remaining <= 0) {
+      expiryElement.textContent =
+        "The code has expired. Generate a new code if necessary.";
+
+      clearResetCodeExpiryTimer();
+      return;
+    }
+
+    const totalSeconds = Math.floor(remaining / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+
+    expiryElement.textContent =
+      `Expires in ${minutes}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  updateCountdown();
+
+  resetCodeExpiryTimer = setInterval(updateCountdown, 1000);
+}
+
+async function loadPasswordResetRequests() {
+  const tbody = byId("passwordResetRequestsBody");
+
+  // This dashboard section is optional on pages that do not contain it.
+  if (!tbody) {
+    return;
+  }
+
+  if (!ownerToken) {
+    tbody.innerHTML =
+      '<tr><td colspan="6">Log in to view password-reset requests.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML =
+    '<tr><td colspan="6">Loading password-reset requests...</td></tr>';
+
+  try {
+    const data = await ownerRequest(
+      "/owner/password-reset/requests"
+    );
+
+    if (data.success === false) {
+      throw new Error(
+        data.message || "Could not load password-reset requests."
+      );
+    }
+
+    const requests = Array.isArray(data)
+      ? data
+      : (data.requests || []);
+
+    if (!requests.length) {
+      tbody.innerHTML =
+        '<tr><td colspan="6">No password-reset requests found.</td></tr>';
+
+      showPasswordResetMessage(
+        "There are currently no password-reset requests."
+      );
+
+      return;
+    }
+
+    tbody.innerHTML = requests.map(request => {
+      const id = Number(request.id);
+
+      const status = String(
+        request.status || "pending"
+      ).toLowerCase();
+
+      const validId = Number.isSafeInteger(id) && id > 0;
+
+      let actions = "—";
+
+      if (validId && status === "pending") {
+        actions = `
+          <button
+            type="button"
+            data-reset-review="${id}"
+            data-reset-status="approved"
+          >Approve</button>
+
+          <button
+            type="button"
+            data-reset-review="${id}"
+            data-reset-status="rejected"
+          >Reject</button>
+        `;
+      } else if (validId && status === "approved") {
+        actions = `
+          <button
+            type="button"
+            data-reset-generate="${id}"
+          >Generate Reset Code</button>
+        `;
+      }
+
+      return `
+        <tr>
+          <td>${escapeHTML(request.full_name || "Agent")}</td>
+          <td>${escapeHTML(request.email || "—")}</td>
+          <td>${escapeHTML(request.phone || "Not provided")}</td>
+          <td>${escapeHTML(status.toUpperCase())}</td>
+          <td>${escapeHTML(formatResetDate(request.created_at))}</td>
+          <td>${actions}</td>
+        </tr>
+      `;
+    }).join("");
+
+    showPasswordResetMessage(
+      `${requests.length} password-reset request(s) loaded.`
+    );
+  } catch (error) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6">${escapeHTML(error.message)}</td>
+      </tr>
+    `;
+
+    showPasswordResetMessage(
+      error.message || "Could not load password-reset requests.",
+      true
+    );
+
+    throw error;
+  }
+}
+
+async function reviewPasswordResetRequest(id, status) {
+  if (!["approved", "rejected"].includes(status)) {
+    showPasswordResetMessage("Invalid request status.", true);
+    return;
+  }
+
+  if (!ownerToken) {
+    showLogin("Please log in to manage password-reset requests.");
+    return;
+  }
+
+  const action = status === "approved"
+    ? "approve"
+    : "reject";
+
+  if (!window.confirm(
+    `Are you sure you want to ${action} this password-reset request?`
+  )) {
+    return;
+  }
+
+  try {
+    const data = await ownerRequest(
+      `/owner/password-reset/requests/${encodeURIComponent(id)}`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ status })
+      }
+    );
+
+    if (data.success === false) {
+      throw new Error(
+        data.message || "The request could not be updated."
+      );
+    }
+
+    showPasswordResetMessage(
+      data.message || `Password-reset request ${status}.`
+    );
+
+    await loadPasswordResetRequests();
+  } catch (error) {
+    showPasswordResetMessage(
+      error.message || "Could not update the request.",
+      true
+    );
+  }
+}
+
+async function generatePasswordResetCode(id, button = null) {
+  if (!ownerToken) {
+    showLogin("Please log in to generate a reset code.");
+    return;
+  }
+
+  if (!window.confirm(
+    "Generate a one-time password-reset code for this approved agent?\n\n" +
+    "The code should expire after 10 minutes. Give it only to the " +
+    "verified agent through their registered contact channel."
+  )) {
+    return;
+  }
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Generating...";
+  }
+
+  try {
+    const data = await ownerRequest(
+      `/owner/password-reset/requests/${encodeURIComponent(id)}/code`,
+      {
+        method: "POST",
+        body: JSON.stringify({})
+      }
+    );
+
+    if (data.success === false) {
+      throw new Error(
+        data.message || "Could not generate a reset code."
+      );
+    }
+
+    const code = data.code || data.resetCode;
+
+    if (!code) {
+      throw new Error(
+        "The server did not return a reset code."
+      );
+    }
+
+    displayResetCode(
+      code,
+      data.expiresAt || data.expires_at || null
+    );
+
+    showPasswordResetMessage(
+      "Reset code generated. Give it only to the verified agent."
+    );
+
+    await loadPasswordResetRequests();
+  } catch (error) {
+    showPasswordResetMessage(
+      error.message || "Could not generate the reset code.",
+      true
+    );
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Generate Reset Code";
+    }
+  }
+}
+
+async function copyPasswordResetCode() {
+  const codeElement = byId("passwordResetGeneratedCode");
+  const code = codeElement?.textContent?.trim() || "";
+
+  if (!code) {
+    showPasswordResetMessage("There is no reset code to copy.", true);
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(code);
+
+    showPasswordResetMessage(
+      "Reset code copied. Share it only with the verified agent."
+    );
+  } catch (_error) {
+    showPasswordResetMessage(
+      "Automatic copying failed. Select and copy the code manually.",
+      true
+    );
+  }
+}
+
+function closePasswordResetCodePanel() {
+  setResetCodePanelVisible(false);
+  clearResetCodeExpiryTimer();
+
+  const codeElement = byId("passwordResetGeneratedCode");
+  const expiryElement = byId("passwordResetCodeExpiry");
+
+  if (codeElement) {
+    codeElement.textContent = "";
+  }
+
+  if (expiryElement) {
+    expiryElement.textContent = "";
+  }
+}
+
+function initializePasswordResetManagement() {
+  const tbody = byId("passwordResetRequestsBody");
+  const refreshButton = byId("refreshPasswordResets");
+  const copyButton = byId("copyPasswordResetCode");
+  const closeButton = byId("closePasswordResetCode");
+
+  if (tbody && !tbody.dataset.ownerBound) {
+    tbody.dataset.ownerBound = "true";
+
+    tbody.addEventListener("click", event => {
+      const reviewButton = event.target.closest(
+        "[data-reset-review]"
+      );
+
+      if (reviewButton) {
+        reviewPasswordResetRequest(
+          reviewButton.dataset.resetReview,
+          reviewButton.dataset.resetStatus
+        );
+
+        return;
+      }
+
+      const generateButton = event.target.closest(
+        "[data-reset-generate]"
+      );
+
+      if (generateButton) {
+        generatePasswordResetCode(
+          generateButton.dataset.resetGenerate,
+          generateButton
+        );
+      }
+    });
+  }
+
+  if (refreshButton && !refreshButton.dataset.ownerBound) {
+    refreshButton.dataset.ownerBound = "true";
+
+    refreshButton.addEventListener("click", () => {
+      loadPasswordResetRequests().catch(() => {});
+    });
+  }
+
+  if (copyButton && !copyButton.dataset.ownerBound) {
+    copyButton.dataset.ownerBound = "true";
+    copyButton.addEventListener("click", copyPasswordResetCode);
+  }
+
+  if (closeButton && !closeButton.dataset.ownerBound) {
+    closeButton.dataset.ownerBound = "true";
+    closeButton.addEventListener("click", closePasswordResetCodePanel);
+  }
+}
+
+/* =========================================
    DASHBOARD REFRESH
 ========================================= */
 
@@ -1487,8 +1936,8 @@ async function loadDashboard() {
       loadOrders(),
       loadAgents(),
       loadWithdrawals(),
-      loadAgentRankings()
-       loadPasswordResetRequests()
+      loadAgentRankings(),
+      loadPasswordResetRequests()
     ]);
 
     const names = [
@@ -1496,7 +1945,8 @@ async function loadDashboard() {
       "Orders",
       "Agents",
       "Withdrawals",
-      "Agent Rankings"
+      "Agent Rankings",
+      "Password Reset Requests"
     ];
 
     const failures = results
@@ -1510,7 +1960,9 @@ async function loadDashboard() {
       showMessage(
         "Some sections failed: " +
         failures.map(item =>
-          `${item.name}: ${item.result.reason?.message || "Unknown error"}`
+          `${item.name}: ${
+            item.result.reason?.message || "Unknown error"
+          }`
         ).join(" | ")
       );
     } else {
@@ -1520,197 +1972,6 @@ async function loadDashboard() {
     dashboardLoading = false;
   }
 }
-// ==========================================
-// PASSWORD RESET REQUEST MANAGEMENT
-// ==========================================
-
-async function loadPasswordResetRequests() {
-  const container = document.getElementById("passwordResetRequests");
-
-  if (!container) {
-    console.warn("Password reset requests container not found.");
-    return;
-  }
-
-  container.innerHTML = "<p>Loading password reset requests...</p>";
-
-  try {
-    const response = await apiRequest("/owner/password-reset/requests");
-
-    if (!response.ok) {
-      throw new Error("Failed to load password reset requests.");
-    }
-
-    const data = await response.json();
-
-    const requests = Array.isArray(data)
-      ? data
-      : (data.requests || []);
-
-    if (requests.length === 0) {
-      container.innerHTML = "<p>No password reset requests found.</p>";
-      return;
-    }
-
-    container.innerHTML = `
-      <div class="password-reset-list">
-        ${requests.map(request => {
-          const id = Number(request.id);
-          const status = String(request.status || "pending").toLowerCase();
-
-          return `
-            <div class="password-reset-card">
-              <h3>${escapeResetHtml(request.full_name || "Agent")}</h3>
-
-              <p><strong>Email:</strong>
-                ${escapeResetHtml(request.email || "")}
-              </p>
-
-              <p><strong>Phone:</strong>
-                ${escapeResetHtml(request.phone || "Not provided")}
-              </p>
-
-              <p><strong>Status:</strong>
-                ${escapeResetHtml(status.toUpperCase())}
-              </p>
-
-              <p><strong>Requested:</strong>
-                ${escapeResetHtml(request.created_at || "Unknown")}
-              </p>
-
-              ${
-                status === "pending"
-                  ? `
-                    <button type="button"
-                      onclick="reviewPasswordReset(${id}, 'approved')">
-                      Approve
-                    </button>
-
-                    <button type="button"
-                      onclick="reviewPasswordReset(${id}, 'rejected')">
-                      Reject
-                    </button>
-                  `
-                  : ""
-              }
-
-              ${
-                status === "approved"
-                  ? `
-                    <button type="button"
-                      onclick="generatePasswordResetCode(${id})">
-                      Generate Reset Code
-                    </button>
-                  `
-                  : ""
-              }
-            </div>
-          `;
-        }).join("")}
-      </div>
-    `;
-  } catch (error) {
-    console.error("Password reset requests error:", error);
-
-    container.innerHTML =
-      "<p>Could not load password reset requests. Please try again.</p>";
-  }
-}
-
-
-// Escape values before displaying them in HTML.
-function escapeResetHtml(value) {
-  return String(value ?? "").replace(/[&<>"']/g, character => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  })[character]);
-}
-
-
-// Approve or reject a request.
-async function reviewPasswordReset(id, status) {
-  if (!["approved", "rejected"].includes(status)) {
-    return;
-  }
-
-  const action = status === "approved" ? "approve" : "reject";
-
-  if (!confirm(`Are you sure you want to ${action} this request?`)) {
-    return;
-  }
-
-  try {
-    const response = await apiRequest(
-      `/owner/password-reset/requests/${id}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ status })
-      }
-    );
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.message || "Request could not be updated.");
-    }
-
-    alert(`Password reset request ${status}.`);
-
-    await loadPasswordResetRequests();
-  } catch (error) {
-    console.error(error);
-    alert(error.message || "Could not update the request.");
-  }
-}
-
-
-// Generate a reset code for an approved request.
-async function generatePasswordResetCode(id) {
-  if (!confirm("Generate a password reset code for this agent?")) {
-    return;
-  }
-
-  try {
-    const response = await apiRequest(
-      `/owner/password-reset/requests/${id}/code`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        }
-      }
-    );
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.message || "Could not generate reset code.");
-    }
-
-    const code = result.code || result.resetCode;
-
-    if (!code) {
-      throw new Error("The server did not return the reset code.");
-    }
-
-    alert(
-      "RESET CODE: " + code +
-      "\n\nGive this code only to the correct agent through their registered phone number. " +
-      "It should expire after 10 minutes and can be used only once."
-    );
-
-    await loadPasswordResetRequests();
-  } catch (error) {
-    console.error(error);
-    alert(error.message || "Could not generate reset code.");
-  }
-                                }
 
 /* =========================================
    START DASHBOARD
@@ -1739,7 +2000,6 @@ async function startDashboard() {
 
 /* =========================================
    LOGOUT
-   Clears the local session immediately.
 ========================================= */
 
 async function logoutOwner() {
@@ -1751,11 +2011,10 @@ async function logoutOwner() {
 
   const oldToken = ownerToken;
 
-  // Clear the local session first so the user is logged out
-  // even if the backend is temporarily unavailable.
   clearToken();
   stopRefreshTimer();
   hideDashboard();
+  closePasswordResetCodePanel();
 
   showLogin("You have been logged out successfully.");
 
@@ -1935,8 +2194,8 @@ function initializeOwnerDashboard() {
   }
 
   initializeSmsCampaign();
+  initializePasswordResetManagement();
 
-  // Restore the owner session when a valid token is available.
   ownerToken = getSavedToken();
 
   if (ownerToken) {
