@@ -2733,114 +2733,171 @@ app.patch(
 // ============================================================
 
 
-// 1. OWNER DASHBOARD STATISTICS
+// ======================================================
+// OWNER DASHBOARD: BUSINESS STATISTICS
+// ======================================================
 
-app.get("/owner/stats", requireOwner, async (_req, res) => {
+app.get("/owner/stats", requireOwner, async (req, res) => {
   try {
     const result = await pool.query(`
       SELECT
-        COUNT(*)::int AS total_orders,
+        COUNT(*)::int AS "totalOrders",
 
         COALESCE(
           SUM(amount) FILTER (
-            WHERE LOWER(status) = 'paid'
-          ), 0
-        )::numeric(12,2) AS total_revenue,
+            WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+          ),
+          0
+        ) AS "totalSales",
 
         COUNT(*) FILTER (
-          WHERE LOWER(status) = 'paid'
-        )::int AS paid_orders,
+          WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+        )::int AS "paidOrders",
 
         COUNT(*) FILTER (
-          WHERE LOWER(delivery_status) = 'delivered'
-        )::int AS successful_deliveries,
+          WHERE LOWER(TRIM(COALESCE(delivery_status, '')))
+            IN ('delivered', 'completed', 'success', 'successful')
+        )::int AS "successfulDeliveries",
 
         COUNT(*) FILTER (
-          WHERE LOWER(delivery_status) IN (
-            'processing', 'pending', 'not_started'
-          )
-        )::int AS processing_orders,
+          WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+            AND LOWER(TRIM(COALESCE(delivery_status, '')))
+              IN ('not_started', 'pending', 'processing', '')
+        )::int AS "pendingOrders",
 
         COUNT(*) FILTER (
-          WHERE LOWER(delivery_status) = 'failed'
-        )::int AS failed_deliveries,
+          WHERE LOWER(TRIM(COALESCE(delivery_status, '')))
+            IN ('failed', 'rejected', 'cancelled', 'canceled')
+        )::int AS "failedOrders",
+
+        COALESCE(
+          SUM(amount) FILTER (
+            WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+              AND created_at >=
+                (date_trunc('day', NOW() AT TIME ZONE 'Africa/Accra')
+                  AT TIME ZONE 'Africa/Accra')
+          ),
+          0
+        ) AS "todaySales",
+
+        COUNT(*) FILTER (
+          WHERE created_at >=
+            (date_trunc('day', NOW() AT TIME ZONE 'Africa/Accra')
+              AT TIME ZONE 'Africa/Accra')
+        )::int AS "todayOrders",
 
         COALESCE(
           SUM(
-            GREATEST(amount - agent_base_price, 0)
-          ) FILTER (
-            WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-  AND LOWER(TRIM(COALESCE(delivery_status, '')))
-    IN ('processing', 'delivered', 'completed', 'success', 'successful')
-  AND agent_id IS NOT NULL
-  AND agent_base_price IS NOT NULL
-  AND supplier_reference IS NOT NULL
-          ), 0
-        )::numeric(12,2) AS total_agent_profit
+            CASE
+              WHEN LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+                AND agent_id IS NOT NULL
+                AND agent_base_price IS NOT NULL
+                AND supplier_reference IS NOT NULL
+                AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                  IN (
+                    'processing',
+                    'delivered',
+                    'completed',
+                    'success',
+                    'successful'
+                  )
+              THEN amount - agent_base_price
+              ELSE 0
+            END
+          ),
+          0
+        ) AS "totalAgentProfit",
+
+        COALESCE(
+          SUM(
+            CASE
+              WHEN LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+                AND agent_id IS NOT NULL
+                AND agent_base_price IS NOT NULL
+                AND supplier_reference IS NOT NULL
+                AND LOWER(TRIM(COALESCE(delivery_status, '')))
+                  IN (
+                    'processing',
+                    'delivered',
+                    'completed',
+                    'success',
+                    'successful'
+                  )
+                AND created_at >=
+                  (date_trunc('day', NOW() AT TIME ZONE 'Africa/Accra')
+                    AT TIME ZONE 'Africa/Accra')
+              THEN amount - agent_base_price
+              ELSE 0
+            END
+          ),
+          0
+        ) AS "todayAgentProfit"
 
       FROM orders
     `);
 
-    const agentsResult = await pool.query(`
-      SELECT COUNT(*)::int AS total_agents
+    const agentResult = await pool.query(`
+      SELECT
+        COUNT(*)::int AS "registeredAgents",
+
+        COUNT(*) FILTER (
+          WHERE LOWER(TRIM(COALESCE(status, ''))) = 'approved'
+        )::int AS "activeAgents",
+
+        COUNT(*) FILTER (
+          WHERE LOWER(TRIM(COALESCE(status, '')))
+            IN ('pending', 'awaiting_approval')
+        )::int AS "pendingAgents",
+
+        COUNT(*) FILTER (
+          WHERE LOWER(TRIM(COALESCE(status, '')))
+            IN ('suspended', 'disabled')
+        )::int AS "suspendedAgents",
+
+        COUNT(*) FILTER (
+          WHERE LOWER(TRIM(COALESCE(status, ''))) = 'rejected'
+        )::int AS "rejectedAgents"
+
       FROM agents
     `);
 
-    const withdrawalsResult = await pool.query(`
+    const withdrawalResult = await pool.query(`
       SELECT
-        COUNT(*) FILTER (
-          WHERE LOWER(status) = 'pending'
-        )::int AS pending_withdrawals,
-
-        COALESCE(
-          SUM(amount) FILTER (
-            WHERE LOWER(status) = 'pending'
-          ), 0
-        )::numeric(12,2) AS pending_withdrawal_amount
-
+        COUNT(*)::int AS "pendingWithdrawals",
+        COALESCE(SUM(amount), 0) AS "pendingWithdrawalAmount"
       FROM agent_withdrawals
+      WHERE LOWER(TRIM(COALESCE(status, ''))) = 'pending'
     `);
 
-    const row = result.rows[0];
-    const withdrawal = withdrawalsResult.rows[0];
+    const stats = result.rows[0];
+    const agents = agentResult.rows[0];
+    const withdrawals = withdrawalResult.rows[0];
 
     res.json({
       success: true,
 
-      stats: {
-        totalOrders: Number(row.total_orders),
-        totalRevenue: Number(row.total_revenue),
-        totalSales: Number(row.total_revenue),
-        paidOrders: Number(row.paid_orders),
-        successfulDeliveries: Number(row.successful_deliveries),
-        deliveredOrders: Number(row.successful_deliveries),
-        processingOrders: Number(row.processing_orders),
-        pendingOrders: Number(row.processing_orders),
-        failedDeliveries: Number(row.failed_deliveries),
-        failedOrders: Number(row.failed_deliveries),
-        totalAgentProfit: Number(row.total_agent_profit),
-        totalProfit: Number(row.total_agent_profit),
-        registeredAgents: Number(
-          agentsResult.rows[0].total_agents
-        ),
-        pendingWithdrawals: Number(
-          withdrawal.pending_withdrawals
-        ),
-        pendingWithdrawalAmount: Number(
-          withdrawal.pending_withdrawal_amount
-        )
-      },
+      ...stats,
 
-      note:
-        "Agent profit is an estimated margin on paid and delivered agent orders. It is not net business profit."
+      totalRevenue: stats.totalSales,
+
+      agents,
+
+      registeredAgents: agents.registeredAgents,
+      activeAgents: agents.activeAgents,
+      pendingAgents: agents.pendingAgents,
+      suspendedAgents: agents.suspendedAgents,
+      rejectedAgents: agents.rejectedAgents,
+
+      pendingWithdrawals: withdrawals.pendingWithdrawals,
+      pendingWithdrawalAmount: withdrawals.pendingWithdrawalAmount
     });
 
   } catch (error) {
-    console.error("Owner statistics:", error.message);
+    console.error("Owner stats error:", error);
 
     res.status(500).json({
       success: false,
-      message: "Could not load owner statistics."
+      message: "Unable to load owner statistics."
     });
   }
 });
