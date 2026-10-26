@@ -385,16 +385,26 @@ async function handleLogin(event) {
 ========================================= */
 
 async function loadStatistics() {
-  const data = await ownerRequest("/owner/stats");
+    const data = await ownerRequest("/owner/stats");
 
-  if (!data.success || !data.stats) {
+  if (!data.success) {
     throw new Error(
-      data.message ||
-      "The statistics endpoint did not return a valid stats object."
+      data.message || "Could not load dashboard statistics."
     );
   }
 
-  const stats = data.stats;
+  // Support both nested and direct statistics responses.
+  const stats = data.stats || data;
+
+  if (
+    stats.totalOrders == null &&
+    stats.totalSales == null &&
+    stats.totalRevenue == null
+  ) {
+    throw new Error(
+      "The backend response is missing the expected statistics."
+    );
+  }
 
   // Do not replace missing values with false zeroes.
   setText(
