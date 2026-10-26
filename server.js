@@ -4326,30 +4326,6 @@ function normalizeSailupRecipients(input) {
   return [...new Set(normalized)];
 }
 
-  const normalized = input.map(value => {
-    let phone = String(value || "")
-      .trim()
-      .replace(/[\s()-]/g, "");
-
-    if (/^0\d{9}$/.test(phone)) {
-      phone = "+233" + phone.slice(1);
-    } else if (/^233\d{9}$/.test(phone)) {
-      phone = "+" + phone;
-    } else if (/^00233\d{9}$/.test(phone)) {
-      phone = "+" + phone.slice(2);
-    }
-
-    return phone;
-  });
-
-  if (normalized.some(phone => !/^\+233\d{9}$/.test(phone))) {
-    throw new Error(
-      "One or more recipients are invalid. Use Ghanaian numbers such as +233241234567."
-    );
-  }
-
-  return [...new Set(normalized)];
-}
 
 // GET /owner/sms/credits
 app.get(
