@@ -515,6 +515,55 @@ await pool.query(`
     ON agents(status)
   `);
 }
+// ============================================================
+// AGENT PASSWORD RESET TABLE
+// ============================================================
+
+async function createPasswordResetTable() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS agent_password_resets (
+      id BIGSERIAL PRIMARY KEY,
+
+      agent_id BIGINT NOT NULL
+        REFERENCES agents(id) ON DELETE CASCADE,
+
+      status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (
+          status IN (
+            'pending',
+            'approved',
+            'rejected',
+            'completed',
+            'expired'
+          )
+        ),
+
+      code_hash TEXT,
+
+      code_expires_at TIMESTAMPTZ,
+
+      attempts INTEGER NOT NULL DEFAULT 0,
+
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+      reviewed_at TIMESTAMPTZ,
+
+      used_at TIMESTAMPTZ
+    )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS
+      agent_password_resets_agent_id_idx
+    ON agent_password_resets(agent_id)
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS
+      agent_password_resets_status_idx
+    ON agent_password_resets(status)
+  `);
+}
 
 // ============================================================
 // 5. PAYSTACK API
@@ -3485,6 +3534,641 @@ app.get("/owner/agents/rankings", requireOwner, async (req, res) => {
     });
   }
 });
+
+// ============================================================
+// AGENT PASSWORD RESET — PUBLIC AND OWNER ROUTES
+// Insert before Section 14
+// ============================================================
+
+const RESET_SUPPORT_PHONE = "0533878548";
+
+function hashResetCode(code) {
+  return crypto
+    .createHash("sha256")
+    .update(String(code))
+    .digest("hex");
+}
+
+// ------------------------------------------------------------
+// AGENT: REQUEST PASSWORD RESET
+// POST /agents/password-reset/request
+// ------------------------------------------------------------
+
+app.post(
+  "/agents/password-reset/request",
+  async (req, res) => {
+    try {
+      const email = String(req.body?.email || "")
+        .trim()
+        .toLowerCase();
+
+      if (
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+        email.length > 255
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Enter a valid registered email address."
+        });
+      }
+
+      const agentResult = await pool.query(
+        `
+          SELECT id
+          FROM agents
+          WHERE email = $1
+            AND status = 'approved'
+          LIMIT 1
+        `,
+        [email]
+      );
+
+      // Use a generic response so the endpoint does not disclose
+      // whether an email belongs to a registered account.
+      if (!agentResult.rowCount) {
+        return res.json({
+          success: true,
+          message:
+            "If the account is eligible, your request will be reviewed. Contact 0533878548 for assistance."
+        });
+      }
+
+      const agentId = agentResult.rows[0].id;
+
+      const existing = await pool.query(
+        `
+          SELECT id, status
+          FROM agent_password_resets
+          WHERE agent_id = $1
+            AND status IN ('pending', 'approved')
+            AND (
+              status = 'pending'
+              OR (
+                status = 'approved'
+                AND code_expires_at > NOW()
+              )
+            )
+          ORDER BY created_at DESC
+          LIMIT 1
+        `,
+        [agentId]
+      );
+
+      if (existing.rowCount) {
+        return res.json({
+          success: true,
+          message:
+            "Your password-reset request is already being processed. Contact 0533878548 for assistance."
+        });
+      }
+
+      await pool.query(
+        `
+          INSERT INTO agent_password_resets (
+            agent_id,
+            status
+          )
+          VALUES ($1, 'pending')
+        `,
+        [agentId]
+      );
+
+      return res.json({
+        success: true,
+        message:
+          "Your request has been submitted. Wait for owner approval. Contact 0533878548 for assistance."
+      });
+    } catch (error) {
+      console.error(
+        "Password reset request:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not submit your request. Please try again."
+      });
+    }
+  }
+);
+
+// ------------------------------------------------------------
+// AGENT: CHECK RESET STATUS
+// GET /agents/password-reset/status?email=...
+// ------------------------------------------------------------
+
+app.get(
+  "/agents/password-reset/status",
+  async (req, res) => {
+    try {
+      const email = String(req.query.email || "")
+        .trim()
+        .toLowerCase();
+
+      if (
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+        email.length > 255
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Enter a valid email address."
+        });
+      }
+
+      const result = await pool.query(
+        `
+          SELECT
+            r.status,
+            r.created_at,
+            r.code_expires_at,
+            r.used_at
+          FROM agent_password_resets r
+          JOIN agents a ON a.id = r.agent_id
+          WHERE a.email = $1
+          ORDER BY r.created_at DESC
+          LIMIT 1
+        `,
+        [email]
+      );
+
+      if (!result.rowCount) {
+        return res.json({
+          success: true,
+          status: "not_requested"
+        });
+      }
+
+      const reset = result.rows[0];
+
+      let status = reset.status;
+
+      if (
+        status === "approved" &&
+        (
+          !reset.code_expires_at ||
+          new Date(reset.code_expires_at).getTime() <= Date.now()
+        )
+      ) {
+        await pool.query(
+          `
+            UPDATE agent_password_resets
+            SET status = 'expired',
+                code_hash = NULL
+            WHERE status = 'approved'
+              AND code_expires_at <= NOW()
+              AND code_expires_at IS NOT NULL
+          `
+        );
+
+        status = "expired";
+      }
+
+      return res.json({
+        success: true,
+        status,
+        supportPhone: RESET_SUPPORT_PHONE
+      });
+    } catch (error) {
+      console.error(
+        "Password reset status:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not check your request status."
+      });
+    }
+  }
+);
+
+// ------------------------------------------------------------
+// OWNER: LIST PASSWORD RESET REQUESTS
+// GET /owner/password-reset/requests
+// ------------------------------------------------------------
+
+app.get(
+  "/owner/password-reset/requests",
+  requireOwner,
+  async (_req, res) => {
+    try {
+      const result = await pool.query(
+        `
+          SELECT
+            r.id,
+            r.status,
+            r.created_at,
+            r.reviewed_at,
+            r.code_expires_at,
+            r.used_at,
+            a.agent_code,
+            a.full_name,
+            a.business_name,
+            a.email,
+            a.phone
+          FROM agent_password_resets r
+          JOIN agents a ON a.id = r.agent_id
+          ORDER BY
+            CASE WHEN r.status = 'pending' THEN 0 ELSE 1 END,
+            r.created_at DESC
+          LIMIT 200
+        `
+      );
+
+      return res.json({
+        success: true,
+        requests: result.rows
+      });
+    } catch (error) {
+      console.error(
+        "Owner password reset requests:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not load password-reset requests."
+      });
+    }
+  }
+);
+
+// ------------------------------------------------------------
+// OWNER: APPROVE OR REJECT REQUEST
+// PATCH /owner/password-reset/requests/:id
+// Body: { "status": "approved" } or { "status": "rejected" }
+// ------------------------------------------------------------
+
+app.patch(
+  "/owner/password-reset/requests/:id",
+  requireOwner,
+  async (req, res) => {
+    const id = Number(req.params.id);
+
+    const status = String(req.body?.status || "")
+      .trim()
+      .toLowerCase();
+
+    if (
+      !Number.isSafeInteger(id) ||
+      id < 1 ||
+      !["approved", "rejected"].includes(status)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request ID or status."
+      });
+    }
+
+    try {
+      const client = await pool.connect();
+
+      try {
+        await client.query("BEGIN");
+
+        const result = await client.query(
+          `
+            SELECT id, status
+            FROM agent_password_resets
+            WHERE id = $1
+            FOR UPDATE
+          `,
+          [id]
+        );
+
+        if (!result.rowCount) {
+          await client.query("ROLLBACK");
+
+          return res.status(404).json({
+            success: false,
+            message: "Password-reset request not found."
+          });
+        }
+
+        if (result.rows[0].status !== "pending") {
+          await client.query("ROLLBACK");
+
+          return res.status(409).json({
+            success: false,
+            message:
+              "Only pending requests can be approved or rejected."
+          });
+        }
+
+        await client.query(
+          `
+            UPDATE agent_password_resets
+            SET status = $1,
+                reviewed_at = NOW(),
+                code_hash = NULL,
+                code_expires_at = NULL,
+                used_at = NULL,
+                attempts = 0
+            WHERE id = $2
+          `,
+          [status, id]
+        );
+
+        await client.query("COMMIT");
+
+        return res.json({
+          success: true,
+          message:
+            status === "approved"
+              ? "Request approved. Generate a reset code for the agent."
+              : "Password-reset request rejected."
+        });
+      } catch (error) {
+        await client.query("ROLLBACK").catch(() => {});
+        throw error;
+      } finally {
+        client.release();
+      }
+    } catch (error) {
+      console.error(
+        "Review password reset:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not update the request."
+      });
+    }
+  }
+);
+
+// ------------------------------------------------------------
+// OWNER: GENERATE A RESET CODE
+// POST /owner/password-reset/requests/:id/code
+// ------------------------------------------------------------
+
+app.post(
+  "/owner/password-reset/requests/:id/code",
+  requireOwner,
+  async (req, res) => {
+    const id = Number(req.params.id);
+
+    if (!Number.isSafeInteger(id) || id < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request ID."
+      });
+    }
+
+    try {
+      const code = crypto
+        .randomInt(100000, 1000000)
+        .toString();
+
+      const codeHash = hashResetCode(code);
+
+      const result = await pool.query(
+        `
+          UPDATE agent_password_resets
+          SET code_hash = $1,
+              code_expires_at = NOW() + INTERVAL '10 minutes',
+              attempts = 0,
+              used_at = NULL
+          WHERE id = $2
+            AND status = 'approved'
+            AND used_at IS NULL
+          RETURNING id
+        `,
+        [codeHash, id]
+      );
+
+      if (!result.rowCount) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "This request is not approved or cannot receive a new code."
+        });
+      }
+
+      // The code is returned only to the authenticated owner.
+      // Give it directly to the agent's registered phone.
+      return res.json({
+        success: true,
+        code,
+        expiresInSeconds: 600,
+        message:
+          "Give this code to the agent's registered phone. It expires in 10 minutes."
+      });
+    } catch (error) {
+      console.error(
+        "Generate reset code:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not generate the reset code."
+      });
+    }
+  }
+);
+
+// ------------------------------------------------------------
+// AGENT: VERIFY CODE AND SET NEW PASSWORD
+// POST /agents/password-reset/complete
+// Body: { email, code, newPassword }
+// ------------------------------------------------------------
+
+app.post(
+  "/agents/password-reset/complete",
+  async (req, res) => {
+    const email = String(req.body?.email || "")
+      .trim()
+      .toLowerCase();
+
+    const code = String(req.body?.code || "").trim();
+
+    const newPassword = String(
+      req.body?.newPassword || ""
+    );
+
+    if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ||
+      email.length > 255 ||
+      !/^\d{6}$/.test(code) ||
+      newPassword.length < 12 ||
+      newPassword.length > 128
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Enter a valid email, six-digit reset code, and a password containing 12–128 characters."
+      });
+    }
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      const result = await client.query(
+        `
+          SELECT
+            r.id AS reset_id,
+            r.agent_id,
+            r.status,
+            r.code_hash,
+            r.code_expires_at,
+            r.used_at,
+            r.attempts,
+            a.password_hash
+          FROM agent_password_resets r
+          JOIN agents a ON a.id = r.agent_id
+          WHERE a.email = $1
+          ORDER BY r.created_at DESC
+          LIMIT 1
+          FOR UPDATE OF r
+        `,
+        [email]
+      );
+
+      if (!result.rowCount) {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          success: false,
+          message: "The reset request or code is invalid."
+        });
+      }
+
+      const reset = result.rows[0];
+
+      if (
+        reset.status !== "approved" ||
+        reset.used_at ||
+        !reset.code_hash ||
+        !reset.code_expires_at ||
+        new Date(reset.code_expires_at).getTime() <= Date.now()
+      ) {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "The code is invalid or expired. Contact 0533878548 for assistance."
+        });
+      }
+
+      if (Number(reset.attempts) >= 5) {
+        await client.query(
+          `
+            UPDATE agent_password_resets
+            SET status = 'expired',
+                code_hash = NULL
+            WHERE id = $1
+          `,
+          [reset.reset_id]
+        );
+
+        await client.query("COMMIT");
+
+        return res.status(429).json({
+          success: false,
+          message:
+            "Too many incorrect attempts. Submit a new reset request."
+        });
+      }
+
+      if (
+        !safeEqualText(
+          hashResetCode(code),
+          reset.code_hash
+        )
+      ) {
+        await client.query(
+          `
+            UPDATE agent_password_resets
+            SET attempts = attempts + 1
+            WHERE id = $1
+          `,
+          [reset.reset_id]
+        );
+
+        await client.query("COMMIT");
+
+        return res.status(400).json({
+          success: false,
+          message: "The reset code is incorrect."
+        });
+      }
+
+      if (
+        await verifyAgentPassword(
+          newPassword,
+          reset.password_hash
+        )
+      ) {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Your new password must be different from your current password."
+        });
+      }
+
+      const newHash = await hashAgentPassword(newPassword);
+
+      await client.query(
+        `
+          UPDATE agents
+          SET password_hash = $1,
+              updated_at = NOW()
+          WHERE id = $2
+        `,
+        [newHash, reset.agent_id]
+      );
+
+      await client.query(
+        `
+          UPDATE agent_password_resets
+          SET status = 'completed',
+              code_hash = NULL,
+              used_at = NOW()
+          WHERE id = $1
+        `,
+        [reset.reset_id]
+      );
+
+      await client.query("COMMIT");
+
+      // Invalidate all sessions for this agent.
+      for (const [token, session] of agentSessions) {
+        if (
+          String(session.agentId) === String(reset.agent_id)
+        ) {
+          agentSessions.delete(token);
+        }
+      }
+
+      return res.json({
+        success: true,
+        message:
+          "Password reset successfully. You can now sign in with your new password."
+      });
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+
+      console.error(
+        "Complete password reset:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not reset your password. Please try again."
+      });
+    } finally {
+      client.release();
+    }
+  }
+);
 // ============================================================
 // 14. BASIC API ROUTES
 // ============================================================
