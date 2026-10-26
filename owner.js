@@ -396,7 +396,7 @@ async function loadStatistics() {
   // Support both nested and direct backend responses.
   const stats = data.stats || data;
 
-  if (
+    if (
     stats.totalOrders == null &&
     stats.totalSales == null &&
     stats.totalRevenue == null
@@ -404,17 +404,7 @@ async function loadStatistics() {
     throw new Error(
       "The backend response is missing the expected statistics."
     );
-  }
-
-  if (
-    stats.totalOrders == null &&
-    stats.totalSales == null &&
-    stats.totalRevenue == null
-  ) {
-    throw new Error(
-      "The backend response is missing the expected statistics."
-    );
-  }
+    }
 
   // Do not replace missing values with false zeroes.
   setText(
