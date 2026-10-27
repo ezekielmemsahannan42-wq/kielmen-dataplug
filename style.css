@@ -448,7 +448,120 @@ section[id] {
 #mobileMenu a:active {
     background: #e5e7eb;
 }
+/* Desktop navigation */
+.desktop-nav {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
 
+.desktop-nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    color: #374151;
+    font-size: 0.84rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.desktop-nav-link:hover,
+.desktop-nav-link.active {
+    color: #111827;
+    background: #f3f4f6;
+}
+
+@media (min-width: 900px) {
+    .desktop-nav {
+        display: flex;
+    }
+
+    .header-inner {
+        gap: 16px;
+    }
+
+    .header-brand {
+        flex: 0 0 auto;
+    }
+
+    .header-actions {
+        flex: 0 0 auto;
+    }
+}
+
+@media (min-width: 900px) and (max-width: 1100px) {
+    .desktop-nav {
+        gap: 0;
+    }
+
+    .desktop-nav-link {
+        padding-right: 7px;
+        padding-left: 7px;
+        font-size: 0.75rem;
+    }
+}
+
+/* Bundle-card layout and network colours */
+.bundle-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.bundle-card[data-network="MTN"] {
+    border-top-color: #ffcc00;
+}
+
+.bundle-card[data-network="TELECEL"] {
+    border-top-color: #e60023;
+}
+
+.bundle-card[data-network="AIRTELTIGO"] {
+    border-top-color: #0755c9;
+}
+
+.bundle-card[data-network="MTN"] .bundle-network {
+    color: #111111;
+    background: #fff2ad;
+}
+
+.bundle-card[data-network="TELECEL"] .bundle-network {
+    color: #b0001b;
+    background: #ffe1e5;
+}
+
+.bundle-card[data-network="AIRTELTIGO"] .bundle-network {
+    color: #0755c9;
+    background: #dbeafe;
+}
+
+.bundle-badge {
+    color: #374151;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.bundle-card .buy-button {
+    color: #ffffff;
+    background: #111827;
+}
+
+.bundle-card .buy-button:hover {
+    background: #374151;
+}
+
+.bundle-card.selected {
+    box-shadow: 0 0 0 2px #15803d;
+}
 
 /* =========================================================
    8. MAIN CONTENT LAYOUT
