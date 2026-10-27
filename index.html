@@ -1,32 +1,49 @@
 <!DOCTYPE html><html lang="en">
 <head>
-  <!-- Google Ads -->
+  <!-- =========================================
+       GOOGLE ADS
+       ========================================= -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18536771634"></script>
   <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag() {
-      window.dataLayer.push(arguments);
-    }
-    gtag("js", new Date());
-    gtag("config", "AW-18536771634");
-  </script>  <!-- Basic Page Settings -->  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    window.dataLayer = window.dataLayer || [];function gtag() {
+  window.dataLayer.push(arguments);
+}
+
+gtag("js", new Date());
+gtag("config", "AW-18536771634");
+
+  </script>  <!-- =========================================
+       BASIC PAGE SETTINGS
+       ========================================= -->  <meta charset="UTF-8">
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  >
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Buy MTN, Telecel and AirtelTigo data bundles from Kielmen 636 Dataplug. Fast, convenient data bundle ordering in Ghana.">
-  <meta name="robots" content="index, follow">  <title>Kielmen 636 Dataplug | Buy Data Bundles</title>  <!-- Main Stylesheet -->  <link rel="stylesheet" href="style.css?v=10">
+  <meta
+    name="description"
+    content="Buy MTN, Telecel and AirtelTigo data bundles from Kielmen 636 Dataplug. Fast, convenient data bundle ordering in Ghana."
+  >
+  <meta name="robots" content="index, follow">  <title>Kielmen 636 Dataplug | Buy Data Bundles</title>  <!-- Main stylesheet -->  <link rel="stylesheet" href="style.css?v=11">
 </head><body>  <!-- =========================================
        HEADER AND MAIN NAVIGATION
        ========================================= -->  <header class="site-header" id="home"><div class="header-inner">
 
-  <a href="index.html" class="header-brand" aria-label="Kielmen 636 Dataplug Home">
+  <!-- Brand -->
+  <a
+    href="index.html"
+    class="header-brand"
+    aria-label="Kielmen 636 Dataplug Home"
+  >
     <span class="header-logo" aria-hidden="true">📶</span>
 
     <span class="brand-name">
-      KIELMEN 636<br>
-      DATAPLUG
+      <span>KIELMEN 636</span>
+      <span>DATAPLUG</span>
     </span>
   </a>
 
+  <!-- Header actions -->
   <div class="header-actions">
 
     <a
@@ -37,14 +54,15 @@
       rel="noopener noreferrer"
       aria-label="Contact Kielmen 636 Dataplug on WhatsApp"
     >
-      WhatsApp
+      <span class="whatsapp-icon" aria-hidden="true">●</span>
+      <span>WhatsApp</span>
     </a>
 
     <button
       id="menuButton"
       class="menu-button"
       type="button"
-      aria-label="Open menu"
+      aria-label="Open navigation menu"
       aria-expanded="false"
       aria-controls="mobileMenu"
     >
@@ -55,27 +73,44 @@
 </div>
 
 <!--
-  Navigation starts closed.
-  script.js will control opening and closing.
+  JavaScript opens and closes this menu.
+  The hidden attribute keeps it closed initially.
 -->
-
 <nav
   id="mobileMenu"
   class="mobile-menu"
   aria-label="Main navigation"
   hidden
 >
-  <a href="index.html">🏠 Home</a>
+  <a href="index.html">
+    <span aria-hidden="true">🏠</span>
+    <span>Home</span>
+  </a>
 
-  <a href="#bundles">🛒 Buy Data Bundles</a>
+  <a href="#bundles">
+    <span aria-hidden="true">🛒</span>
+    <span>Buy Data Bundles</span>
+  </a>
 
-  <a href="#checkout">💳 Checkout</a>
+  <a href="#checkout">
+    <span aria-hidden="true">💳</span>
+    <span>Checkout</span>
+  </a>
 
-  <a href="#track-order">📦 Track Your Order</a>
+  <a href="#track-order">
+    <span aria-hidden="true">📦</span>
+    <span>Track Your Order</span>
+  </a>
 
-  <a href="#agent-section">🤝 Become an Agent</a>
+  <a href="#agent-section">
+    <span aria-hidden="true">🤝</span>
+    <span>Become an Agent</span>
+  </a>
 
-  <a href="agent-login.html">🔐 Agent Sign In</a>
+  <a href="agent-login.html">
+    <span aria-hidden="true">🔐</span>
+    <span>Agent Sign In</span>
+  </a>
 
   <a
     data-whatsapp-contact
@@ -83,32 +118,38 @@
     target="_blank"
     rel="noopener noreferrer"
   >
-    💬 Contact Support
+    <span aria-hidden="true">💬</span>
+    <span>Contact Support</span>
   </a>
 </nav>
 
   </header>  <!-- =========================================
        MAIN WEBSITE CONTENT
-       ========================================= -->  <main class="home-container"><!-- WELCOME SECTION -->
-
-<section class="welcome-banner" aria-labelledby="welcomeHeading">
+       ========================================= -->  <main class="home-container"><!-- =========================================
+     WELCOME SECTION
+     ========================================= -->
+<section
+  class="welcome-banner"
+  aria-labelledby="welcomeHeading"
+>
 
   <p class="welcome-label">
     WELCOME TO KIELMEN 636 DATAPLUG
   </p>
 
   <h1 id="welcomeHeading">
-    Buy Your Data.<br>
+    Buy Your Data.
     <span>Fast and Convenient.</span>
   </h1>
 
-  <p>
+  <p class="welcome-description">
     Choose your network, select your preferred data bundle,
     enter the recipient's phone number, and proceed to payment.
   </p>
 
   <a href="#bundles" class="shop-button">
-    🛒 Shop Data Bundles
+    <span aria-hidden="true">🛒</span>
+    <span>Shop Data Bundles</span>
   </a>
 
   <div class="trust-row" aria-label="Available services">
@@ -125,7 +166,7 @@
       🔵 AirtelTigo
     </span>
 
-    <span class="trust-item">
+    <span class="trust-item paystack-trust">
       💳 Paystack Checkout
     </span>
 
@@ -137,8 +178,11 @@
 <!-- =========================================
      DATA BUNDLE SECTION
      ========================================= -->
-
-<section id="bundles" aria-labelledby="bundlesHeading">
+<section
+  id="bundles"
+  class="bundles-section"
+  aria-labelledby="bundlesHeading"
+>
 
   <h2 class="section-heading" id="bundlesHeading">
     Choose Your Data Bundle
@@ -148,9 +192,12 @@
     Select a network below to view the available bundles and prices.
   </p>
 
-  <!-- NETWORK SELECTORS -->
-
-  <div class="network-tabs" role="group" aria-label="Select a data network">
+  <!-- Network selectors -->
+  <div
+    class="network-tabs"
+    role="group"
+    aria-label="Select a data network"
+  >
 
     <button
       class="network-tab active"
@@ -181,8 +228,7 @@
 
   </div>
 
-  <!-- BUNDLE SEARCH -->
-
+  <!-- Bundle search -->
   <div class="bundle-search-container">
 
     <label for="bundleSearch" class="visually-hidden">
@@ -208,11 +254,7 @@
     Loading available bundles...
   </p>
 
-  <!--
-    script.js will insert bundle cards here.
-    Each card will display the correct network colour and price.
-  -->
-
+  <!-- JavaScript inserts bundle cards here -->
   <div
     id="bundleGrid"
     class="bundle-grid"
@@ -225,7 +267,6 @@
 <!-- =========================================
      CHECKOUT SECTION
      ========================================= -->
-
 <section
   id="checkout"
   class="checkout-card"
@@ -240,8 +281,7 @@
     Check your selected bundle and enter the details below.
   </p>
 
-  <!-- SELECTED BUNDLE SUMMARY -->
-
+  <!-- Selected bundle summary -->
   <div class="selected-summary">
 
     <div class="summary-row">
@@ -262,8 +302,7 @@
 
   </div>
 
-  <!-- CHECKOUT FORM -->
-
+  <!-- Checkout form -->
   <form id="checkoutForm">
 
     <div class="field">
@@ -312,8 +351,7 @@
 
     </div>
 
-    <!-- Hidden fields updated by script.js -->
-
+    <!-- Updated by script.js -->
     <input
       type="hidden"
       id="selectedNetwork"
@@ -328,8 +366,7 @@
       value=""
     >
 
-    <!-- PAYMENT BUTTON -->
-
+    <!-- Payment button -->
     <button
       id="paymentButton"
       class="pay-button"
@@ -339,8 +376,7 @@
       Select a Bundle First
     </button>
 
-    <!-- CHECKOUT FEEDBACK -->
-
+    <!-- Checkout feedback -->
     <div
       id="checkoutMessage"
       class="form-message"
@@ -368,7 +404,6 @@
 <!-- =========================================
      AGENT REGISTRATION SECTION
      ========================================= -->
-
 <section
   id="agent-section"
   class="agent-box"
@@ -412,7 +447,6 @@
 <!-- =========================================
      ORDER TRACKING SECTION
      ========================================= -->
-
 <section
   id="track-order"
   class="agent-box tracking-box"
@@ -489,7 +523,6 @@
 <!-- =========================================
      SUPPORT SECTION
      ========================================= -->
-
 <section
   id="help-section"
   class="agent-box help-box"
@@ -531,6 +564,7 @@
 
   <p class="support-phone">
     Support number:
+
     <a
       id="supportPhoneDisplay"
       href="tel:+233533878548"
@@ -640,7 +674,5 @@ aria-label="Contact Kielmen 636 Dataplug on WhatsApp"
 
   </dialog>  <!-- =========================================
        MAIN WEBSITE JAVASCRIPT
-       All interactive behaviour is handled here.
-       Do not add a second menu/settings script below.
-       ========================================= -->  <script src="script.js?v=10" defer></script></body>
-      </html>
+       ========================================= -->  <script src="script.js?v=11" defer></script></body>
+    </html>
