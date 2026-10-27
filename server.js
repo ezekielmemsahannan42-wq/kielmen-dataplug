@@ -564,6 +564,37 @@ async function createPasswordResetTable() {
     ON agent_password_resets(status)
   `);
 }
+// ============================================================
+// WEBSITE SETTINGS — PERSISTENT OWNER CONTROLS
+// ============================================================
+
+async function createWebsiteSettingsTable() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS website_settings (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+
+      whatsapp_link TEXT NOT NULL DEFAULT '',
+      contact_number VARCHAR(30) NOT NULL DEFAULT '0533878548',
+
+      announcement TEXT NOT NULL DEFAULT '',
+      announcement_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+
+      colours JSONB NOT NULL DEFAULT
+        '{"primary":"#d4a017","background":"#030712","accent":"#16a34a","text":"#ffffff"}'::jsonb,
+
+      network_availability JSONB NOT NULL DEFAULT
+        '{"MTN":true,"TELECEL":true,"AIRTELTIGO":true}'::jsonb,
+
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await pool.query(`
+    INSERT INTO website_settings (id)
+    VALUES (1)
+    ON CONFLICT (id) DO NOTHING
+  `);
+}
 
 // ============================================================
 // 5. PAYSTACK API
@@ -2765,6 +2796,263 @@ app.patch(
     }
   }
 );
+// ============================================================
+// OWNER WEBSITE SETTINGS API
+// ============================================================
+
+const DEFAULT_WEBSITE_SETTINGS = {
+  whatsappLink: "",
+  contactNumber: "0533878548",
+  announcement: "",
+  announcementEnabled: false,
+
+  colours: {
+    primary: "#d4a017",
+    background: "#030712",
+    accent: "#16a34a",
+    text: "#ffffff"
+  },
+
+  networkAvailability: {
+    MTN: true,
+    TELECEL: true,
+    AIRTELTIGO: true
+  }
+};
+
+function formatWebsiteSettings(row) {
+  return {
+    whatsappLink: row.whatsapp_link,
+    contactNumber: row.contact_number,
+    announcement: row.announcement,
+    announcementEnabled: row.announcement_enabled,
+    colours: row.colours,
+    networkAvailability: row.network_availability,
+    updatedAt: row.updated_at
+  };
+}
+
+// PUBLIC API: The customer website and agent stores read this.
+app.get("/website-settings", async (_req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT *
+      FROM website_settings
+      WHERE id = 1
+    `);
+
+    if (!result.rowCount) {
+      return res.json({
+        success: true,
+        settings: DEFAULT_WEBSITE_SETTINGS
+      });
+    }
+
+    return res.json({
+      success: true,
+      settings: formatWebsiteSettings(result.rows[0])
+    });
+  } catch (error) {
+    console.error("Public website settings:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not load website settings."
+    });
+  }
+});
+
+// OWNER API: Load settings in the authenticated dashboard.
+app.get(
+  "/owner/website-settings",
+  requireOwner,
+  async (_req, res) => {
+    try {
+      const result = await pool.query(`
+        SELECT *
+        FROM website_settings
+        WHERE id = 1
+      `);
+
+      if (!result.rowCount) {
+        return res.status(500).json({
+          success: false,
+          message: "Website settings have not been initialized."
+        });
+      }
+
+      return res.json({
+        success: true,
+        settings: formatWebsiteSettings(result.rows[0])
+      });
+    } catch (error) {
+      console.error("Owner website settings:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not load website settings."
+      });
+    }
+  }
+);
+
+// OWNER API: Save website settings.
+app.put(
+  "/owner/website-settings",
+  requireOwner,
+  async (req, res) => {
+    try {
+      const body = req.body || {};
+
+      const whatsappLink = String(
+        body.whatsappLink ?? ""
+      ).trim();
+
+      const contactNumber = String(
+        body.contactNumber ?? ""
+      ).trim();
+
+      const announcement = String(
+        body.announcement ?? ""
+      ).trim();
+
+      const announcementEnabled =
+        body.announcementEnabled === true;
+
+      const suppliedColours = body.colours || {};
+
+      const suppliedAvailability =
+        body.networkAvailability || {};
+
+      const colours = {
+        primary: String(
+          suppliedColours.primary || "#d4a017"
+        ),
+
+        background: String(
+          suppliedColours.background || "#030712"
+        ),
+
+        accent: String(
+          suppliedColours.accent || "#16a34a"
+        ),
+
+        text: String(
+          suppliedColours.text || "#ffffff"
+        )
+      };
+
+      const networkAvailability = {
+        MTN: suppliedAvailability.MTN,
+        TELECEL: suppliedAvailability.TELECEL,
+        AIRTELTIGO: suppliedAvailability.AIRTELTIGO
+      };
+
+      if (
+        whatsappLink.length > 500 ||
+        (
+          whatsappLink &&
+          !/^https:\/\/(chat\.whatsapp\.com|whatsapp\.com|wa\.me)\//i
+            .test(whatsappLink)
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Enter a valid WhatsApp link."
+        });
+      }
+
+      if (
+        !contactNumber ||
+        contactNumber.length > 30
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Enter a valid contact number."
+        });
+      }
+
+      if (announcement.length > 1000) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Your announcement cannot exceed 1000 characters."
+        });
+      }
+
+      const validColour = value =>
+        /^#[0-9a-fA-F]{6}$/.test(value);
+
+      if (!Object.values(colours).every(validColour)) {
+        return res.status(400).json({
+          success: false,
+          message: "Use valid six-digit hexadecimal colours."
+        });
+      }
+
+      if (
+        typeof networkAvailability.MTN !== "boolean" ||
+        typeof networkAvailability.TELECEL !== "boolean" ||
+        typeof networkAvailability.AIRTELTIGO !== "boolean"
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Choose Available or Unavailable for all three networks."
+        });
+      }
+
+      const result = await pool.query(
+        `
+          INSERT INTO website_settings (
+            id,
+            whatsapp_link,
+            contact_number,
+            announcement,
+            announcement_enabled,
+            colours,
+            network_availability,
+            updated_at
+          )
+          VALUES (1, $1, $2, $3, $4, $5::jsonb, $6::jsonb, NOW())
+
+          ON CONFLICT (id)
+          DO UPDATE SET
+            whatsapp_link = EXCLUDED.whatsapp_link,
+            contact_number = EXCLUDED.contact_number,
+            announcement = EXCLUDED.announcement,
+            announcement_enabled = EXCLUDED.announcement_enabled,
+            colours = EXCLUDED.colours,
+            network_availability = EXCLUDED.network_availability,
+            updated_at = NOW()
+
+          RETURNING *
+        `,
+        [
+          whatsappLink,
+          contactNumber,
+          announcement,
+          announcementEnabled,
+          JSON.stringify(colours),
+          JSON.stringify(networkAvailability)
+        ]
+      );
+
+      return res.json({
+        success: true,
+        message: "Website settings saved successfully.",
+        settings: formatWebsiteSettings(result.rows[0])
+      });
+    } catch (error) {
+      console.error("Save website settings:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not save website settings."
+      });
+    }
+  }
+);
 
 
 // ============================================================
@@ -4269,6 +4557,29 @@ if (
           "Select a valid network and available data bundle."
       });
     }
+    // Enforce the owner's global network availability setting.
+const availabilityResult = await pool.query(`
+  SELECT network_availability
+  FROM website_settings
+  WHERE id = 1
+`);
+
+const availability =
+  availabilityResult.rows[0]?.network_availability || {
+    MTN: true,
+    TELECEL: true,
+    AIRTELTIGO: true
+  };
+
+if (availability[network] !== true) {
+  return res.status(503).json({
+    success: false,
+    network,
+    unavailable: true,
+    message:
+      `${network} is currently unavailable. Please select another network.`
+  });
+}
 
     const agentCode = String(
       req.body?.agentCode ||
@@ -5181,8 +5492,9 @@ async function startServer() {
 
   try {
     await createAgentTables();
-    await createOrdersTable();
-    await createPasswordResetTable();
+await createOrdersTable();
+await createPasswordResetTable();
+await createWebsiteSettingsTable();
 
     app.listen(PORT, () => {
       console.log(
