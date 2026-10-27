@@ -1,1051 +1,1264 @@
 /* =========================================
-KIELMEN 636 DATAPLUG
-COMPLETE RESPONSIVE STYLESHEET
-WHITE THEME — GHANA NETWORK COLOURS
-========================================= */
+   KIELMEN 636 DATAPLUG
+   COMPLETE RESPONSIVE STYLESHEET
+   WHITE BACKGROUND — DEEP BLACK TEXT
+   MTN YELLOW | TELECEL RED | AIRTELTIGO BLUE
+   ========================================= */
 
 /* ---------- 1. GLOBAL SETTINGS ---------- */
 
 :root {
---background: #ffffff;
---surface: #ffffff;
---surface-light: #f3f4f6;
---card: #ffffff;
---border: #e5e7eb;
+  --background: #ffffff;
+  --surface: #ffffff;
+  --surface-light: #f3f4f6;
+  --card: #ffffff;
+  --border: #e5e7eb;
 
---text: #111827;
---muted: #6b7280;
+  --text: #000000;
+  --muted: #111111;
 
---primary: #facc15;
---primary-dark: #eab308;
---success: #10b981;
---danger: #ef4444;
+  --primary: #ffcc00;
+  --primary-dark: #eab308;
+  --success: #10b981;
+  --danger: #ed1c24;
 
-/* Ghana network colours */
---mtn: #ffcc00;
---telecel: #ed1c24;
---airtel: #1688ff;
+  /* Network colours */
+  --mtn: #ffcc00;
+  --mtn-border: #eab308;
+  --mtn-text: #000000;
 
---radius: 16px;
---shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+  --telecel: #ed1c24;
+  --telecel-light: #ffdddd;
+  --telecel-border: #b91c1c;
+  --telecel-text: #000000;
+
+  --airtel: #1688ff;
+  --airtel-light: #cfe5ff;
+  --airtel-border: #075fc4;
+  --airtel-text: #000000;
+
+  --radius: 16px;
+  --shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
 }
 
 * {
   box-sizing: border-box;
-  }
+}
 
 html {
-scroll-behavior: smooth;
-scroll-padding-top: 100px;
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
 }
 
 body {
-margin: 0;
-padding: 0;
-background: var(--background);
-color: var(--text);
-font-family:
-Inter,
--apple-system,
-BlinkMacSystemFont,
-"Segoe UI",
-Roboto,
-Arial,
-sans-serif;
-font-size: 16px;
-line-height: 1.5;
--webkit-font-smoothing: antialiased;
+  margin: 0;
+  padding: 0;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
 }
 
 button,
 input,
 select,
 textarea {
-font: inherit;
+  font: inherit;
 }
 
 button {
-cursor: pointer;
+  cursor: pointer;
 }
 
 button:disabled {
-cursor: not-allowed;
-opacity: 0.6;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 a {
-color: inherit;
-text-decoration: none;
+  color: #000000;
+  text-decoration: none;
 }
 
 img {
-max-width: 100%;
-height: auto;
+  max-width: 100%;
+  height: auto;
 }
 
 .hidden {
-display: none !important;
+  display: none !important;
 }
 
-/* ---------- 2. PAGE CONTAINER ---------- */
+/* Make common page sections white */
+
+main,
+section,
+article,
+.container,
+.wrapper,
+.main-container {
+  color: #000000;
+}
+
+main {
+  width: 100%;
+}
 
 .container,
 .wrapper,
 .main-container {
-width: min(1200px, 100%);
-margin-inline: auto;
-padding-inline: 20px;
+  width: min(1200px, 100%);
+  margin-inline: auto;
+  padding-inline: 20px;
 }
 
-main {
-width: 100%;
-}
-
-/* ---------- 3. HEADER ---------- */
+/* ---------- 2. HEADER ---------- */
 
 header,
 .site-header,
 .topbar {
-position: sticky;
-top: 0;
-z-index: 1000;
-background: rgba(255, 255, 255, 0.97);
-color: #111827;
-border-bottom: 1px solid var(--border);
-backdrop-filter: blur(16px);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: #ffffff !important;
+  color: #000000 !important;
+  border-bottom: 1px solid #e5e7eb;
+  backdrop-filter: blur(16px);
 }
 
 .header-inner,
 .navbar,
 .header-content {
-display: flex;
-align-items: center;
-justify-content: space-between;
-gap: 14px;
-min-height: 86px;
-padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: 86px;
+  padding: 14px 20px;
 }
 
 .logo,
 .brand,
 .site-logo {
-display: flex;
-align-items: center;
-gap: 12px;
-font-size: 20px;
-font-weight: 850;
-line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #000000;
+  font-size: 20px;
+  font-weight: 850;
+  line-height: 1.2;
 }
 
 .logo img,
 .site-logo img {
-width: 54px;
-height: 54px;
-object-fit: contain;
+  width: 54px;
+  height: 54px;
+  object-fit: contain;
 }
 
 .brand-icon,
 .logo-icon {
-display: grid;
-place-items: center;
-width: 54px;
-height: 54px;
-flex-shrink: 0;
-border: 2px solid var(--success);
-border-radius: 16px;
-background: #ffffff;
-font-size: 27px;
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  border: 2px solid #15803d;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #000000;
+  font-size: 27px;
 }
 
 .brand-name {
-color: #111827;
+  color: #000000 !important;
 }
 
 .header-actions {
-display: flex;
-align-items: center;
-gap: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-/* ---------- 4. BUTTONS ---------- */
+/* ---------- 3. BUTTONS ---------- */
 
 .btn,
 button.btn,
 .whatsapp-button,
 .primary-button {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-gap: 8px;
-min-height: 46px;
-padding: 12px 18px;
-border: 1px solid var(--border);
-border-radius: 14px;
-font-weight: 750;
-text-align: center;
-transition:
-transform 0.18s ease,
-background 0.18s ease,
-border-color 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 12px 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  font-weight: 750;
+  text-align: center;
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
 }
 
 .btn:hover,
 .whatsapp-button:hover,
 .primary-button:hover {
-transform: translateY(-1px);
+  transform: translateY(-1px);
 }
 
 .btn-primary,
 .primary-button {
-background: var(--primary);
-color: #111111;
-border-color: var(--primary);
+  background: #ffcc00;
+  color: #000000 !important;
+  border-color: #eab308;
 }
 
 .btn-primary:hover,
 .primary-button:hover {
-background: var(--primary-dark);
+  background: #facc15;
+  color: #000000 !important;
 }
 
 .btn-secondary {
-background: #f3f4f6;
-color: #111827;
+  background: #f3f4f6;
+  color: #000000 !important;
 }
 
 .whatsapp-button {
-background: #ffffff;
-color: #111827;
+  background: #16a34a;
+  color: #ffffff !important;
+  border-color: #15803d;
+}
+
+.whatsapp-button:hover {
+  background: #15803d;
+  color: #ffffff !important;
 }
 
 .menu-button {
-width: 54px;
-height: 54px;
-padding: 0;
-border: 1px solid var(--border);
-border-radius: 16px;
-background: #f3f4f6;
-color: #111827;
-font-size: 27px;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  border-radius: 16px;
+  background: #f3f4f6;
+  color: #000000;
+  font-size: 27px;
 }
 
-/* ---------- 5. NAVIGATION ---------- */
+/* ---------- 4. NAVIGATION ---------- */
 
 nav {
-color: #111827;
+  color: #000000;
 }
 
 nav a {
-transition: color 0.2s ease;
+  color: #000000;
+  transition: color 0.2s ease;
 }
 
 nav a:hover {
-color: var(--primary-dark);
+  color: #92400e;
 }
 
 .mobile-menu {
-display: none;
-padding: 12px 20px 20px;
-background: #ffffff;
-border-top: 1px solid var(--border);
+  display: none;
+  padding: 12px 20px 20px;
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
 }
 
 .mobile-menu.open {
-display: grid;
-gap: 12px;
+  display: grid;
+  gap: 12px;
 }
 
 .mobile-menu a {
-padding: 12px;
-border-radius: 10px;
-background: #f3f4f6;
-color: #111827;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #000000;
 }
 
-/* ---------- 6. HERO SECTION ---------- */
+/* ---------- 5. HERO SECTION ---------- */
 
 .hero {
-position: relative;
-padding: 48px 20px 30px;
-text-align: center;
-background: #ffffff;
-color: #111827;
+  position: relative;
+  padding: 48px 20px 30px;
+  text-align: center;
+  background: #ffffff !important;
+  color: #000000 !important;
 }
 
 .hero h1 {
-max-width: 850px;
-margin: 0 auto 16px;
-font-size: clamp(32px, 6vw, 56px);
-line-height: 1.1;
-letter-spacing: -1.5px;
+  max-width: 850px;
+  margin: 0 auto 16px;
+  color: #000000 !important;
+  font-size: clamp(32px, 6vw, 56px);
+  line-height: 1.1;
+  letter-spacing: -1.5px;
 }
 
 .hero h1 span {
-color: var(--primary-dark);
+  color: #000000 !important;
 }
 
 .hero p {
-max-width: 650px;
-margin: 0 auto 24px;
-color: var(--muted);
-font-size: 17px;
+  max-width: 650px;
+  margin: 0 auto 24px;
+  color: #111111 !important;
+  font-size: 17px;
 }
 
 .hero-actions {
-display: flex;
-justify-content: center;
-flex-wrap: wrap;
-gap: 12px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-/* ---------- 7. NETWORK SELECTORS ---------- */
+/* ---------- 6. NETWORK SELECTORS ---------- */
 
 .network-tabs,
 .network-selector,
 .network-buttons {
-display: grid;
-grid-template-columns: repeat(3, minmax(0, 1fr));
-gap: 12px;
-width: 100%;
-margin: 20px 0 24px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  margin: 20px 0 24px;
 }
 
 .network-tab,
 .network-button {
-display: flex;
-align-items: center;
-justify-content: center;
-min-width: 0;
-min-height: 58px;
-padding: 12px 8px;
-border: 2px solid var(--border);
-border-radius: 17px;
-background: #ffffff;
-color: #111827;
-font-weight: 850;
-text-align: center;
-overflow-wrap: anywhere;
-transition: 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 58px;
+  padding: 12px 8px;
+  border: 2px solid #d1d5db;
+  border-radius: 17px;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 850;
+  text-align: center;
+  overflow-wrap: anywhere;
+  transition: 0.2s ease;
 }
 
-/* MTN — Yellow */
+/* MTN NETWORK BUTTON */
 
 .network-tab[data-network="MTN"],
-.network-button.mtn {
-border-color: #ffcc00;
-background: #fff8d6;
-color: #111827;
+.network-button.mtn,
+.network-button[data-network="MTN"] {
+  border-color: #eab308;
+  background: #ffcc00;
+  color: #000000 !important;
 }
 
-/* Telecel — Red */
+/* TELECEL NETWORK BUTTON */
 
 .network-tab[data-network="TELECEL"],
-.network-button.telecel {
-border-color: #ed1c24;
-background: #fff0f0;
-color: #991b1b;
+.network-button.telecel,
+.network-button[data-network="TELECEL"] {
+  border-color: #b91c1c;
+  background: #ed1c24;
+  color: #000000 !important;
 }
 
-/* AirtelTigo — Blue */
+/* AIRTELTIGO NETWORK BUTTON */
 
 .network-tab[data-network="AIRTELTIGO"],
 .network-button.airtel,
-.network-button.airteltigo {
-border-color: #1688ff;
-background: #eff6ff;
-color: #1d4ed8;
+.network-button.airteltigo,
+.network-button[data-network="AIRTELTIGO"] {
+  border-color: #075fc4;
+  background: #1688ff;
+  color: #000000 !important;
 }
 
-/* Selected MTN */
+/* SELECTED NETWORKS */
 
 .network-tab[data-network="MTN"].active,
-.network-button.mtn.active {
-background: #ffcc00;
-color: #111111;
-border-color: #eab308;
+.network-button.mtn.active,
+.network-button[data-network="MTN"].active {
+  background: #ffcc00;
+  color: #000000 !important;
+  border-color: #92400e;
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.22);
 }
-
-/* Selected Telecel */
 
 .network-tab[data-network="TELECEL"].active,
-.network-button.telecel.active {
-background: #ed1c24;
-color: #ffffff;
-border-color: #b91c1c;
+.network-button.telecel.active,
+.network-button[data-network="TELECEL"].active {
+  background: #ed1c24;
+  color: #000000 !important;
+  border-color: #7f1d1d;
+  box-shadow: 0 0 0 3px rgba(237, 28, 36, 0.16);
 }
-
-/* Selected AirtelTigo */
 
 .network-tab[data-network="AIRTELTIGO"].active,
 .network-button.airtel.active,
-.network-button.airteltigo.active {
-background: #1688ff;
-color: #ffffff;
-border-color: #1d4ed8;
+.network-button.airteltigo.active,
+.network-button[data-network="AIRTELTIGO"].active {
+  background: #1688ff;
+  color: #000000 !important;
+  border-color: #1e40af;
+  box-shadow: 0 0 0 3px rgba(22, 136, 255, 0.18);
 }
 
 .network-tab.active,
 .network-button.active {
-box-shadow: var(--shadow);
+  box-shadow: var(--shadow);
 }
 
-/* ---------- 8. SEARCH ---------- */
+/* ---------- 7. SEARCH ---------- */
 
 .search-box {
-position: relative;
-margin: 18px 0;
+  position: relative;
+  margin: 18px 0;
 }
 
 .search-box input,
 #bundleSearch {
-width: 100%;
-min-height: 58px;
-padding: 15px 18px;
-border: 1px solid #d1d5db;
-border-radius: 16px;
-outline: none;
-background: #ffffff;
-color: #111827;
-font-size: 17px;
+  width: 100%;
+  min-height: 58px;
+  padding: 15px 18px;
+  border: 1px solid #d1d5db;
+  border-radius: 16px;
+  outline: none;
+  background: #ffffff !important;
+  color: #000000 !important;
+  font-size: 17px;
 }
 
 .search-box input:focus,
 #bundleSearch:focus {
-border-color: var(--primary-dark);
-box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.15);
+  border-color: #92400e;
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.20);
 }
 
 input::placeholder,
 textarea::placeholder {
-color: #6b7280;
+  color: #4b5563;
+  opacity: 1;
 }
 
 .result-count,
 #resultCount {
-margin: 16px 0;
-color: var(--muted);
-font-size: 14px;
+  margin: 16px 0;
+  color: #111111 !important;
+  font-size: 14px;
 }
 
-/* ---------- 9. BUNDLE GRID ---------- */
+/* ---------- 8. NETWORK-COLOURED BUNDLE GRID ---------- */
 
 .bundle-grid,
 #bundleGrid {
-display: grid;
-grid-template-columns: repeat(2, minmax(0, 1fr));
-gap: 12px;
-width: 100%;
-align-items: stretch;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  align-items: stretch;
 }
 
-/* White bundle cards */
+/* General bundle-card styling */
 
 .bundle-card {
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-gap: 5px;
-min-width: 0;
-min-height: 125px;
-padding: 14px 8px;
-border: 1px solid #e5e7eb;
-border-radius: 22px;
-background: #ffffff;
-color: #111827;
-text-align: center;
-box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-transition:
-transform 0.18s ease,
-border-color 0.18s ease,
-background 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  min-height: 140px;
+  padding: 16px 8px;
+  border: 2px solid #d1d5db;
+  border-radius: 20px;
+  background: #ffffff;
+  color: #000000 !important;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .bundle-card:hover {
-transform: translateY(-2px);
-border-color: #d1d5db;
+  transform: translateY(-2px);
+  box-shadow: 0 7px 16px rgba(0, 0, 0, 0.12);
 }
 
-.bundle-card.selected,
-.bundle-card:focus-visible {
-outline: none;
-border: 2px solid var(--primary-dark);
-background: #fffbea;
-color: #111827;
-box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.15);
-}
+/* Deep-black bundle size */
 
 .bundle-size {
-display: block;
-color: #111827;
-font-size: clamp(23px, 5vw, 34px);
-font-weight: 900;
-line-height: 1.15;
-letter-spacing: -0.5px;
+  display: block;
+  color: #000000 !important;
+  font-size: clamp(23px, 5vw, 34px);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.5px;
 }
 
+/* Deep-black price */
+
 .bundle-price {
-display: block;
-color: #b88700;
-font-size: clamp(17px, 3.7vw, 22px);
-font-weight: 850;
-line-height: 1.3;
-overflow-wrap: anywhere;
+  display: block;
+  color: #000000 !important;
+  font-size: clamp(17px, 3.7vw, 22px);
+  font-weight: 900;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .bundle-label {
-display: block;
-margin-top: 4px;
-color: #6b7280;
-font-size: 13px;
-font-weight: 650;
+  display: block;
+  margin-top: 4px;
+  color: #000000 !important;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+/*
+   NETWORK COLOURS ARE ASSIGNED USING:
+   1. The selected network's data attribute on the card.
+   2. A network class on the card.
+   3. The network class on the containing grid.
+*/
+
+/* MTN — ALL MTN BUNDLE BOXES YELLOW */
+
+.bundle-card[data-network="MTN"],
+.bundle-card.mtn,
+.mtn .bundle-card,
+#bundleGrid.mtn .bundle-card,
+.bundle-grid.mtn .bundle-card {
+  border-color: #eab308;
+  background: #ffcc00 !important;
+  color: #000000 !important;
+}
+
+.bundle-card[data-network="MTN"] .bundle-size,
+.bundle-card[data-network="MTN"] .bundle-price,
+.bundle-card[data-network="MTN"] .bundle-label,
+.bundle-card.mtn .bundle-size,
+.bundle-card.mtn .bundle-price,
+.bundle-card.mtn .bundle-label,
+.mtn .bundle-card .bundle-size,
+.mtn .bundle-card .bundle-price,
+.mtn .bundle-card .bundle-label {
+  color: #000000 !important;
+}
+
+/* TELECEL — ALL TELECEL BUNDLE BOXES RED */
+
+.bundle-card[data-network="TELECEL"],
+.bundle-card.telecel,
+.telecel .bundle-card,
+#bundleGrid.telecel .bundle-card,
+.bundle-grid.telecel .bundle-card {
+  border-color: #b91c1c;
+  background: #ed1c24 !important;
+  color: #000000 !important;
+}
+
+.bundle-card[data-network="TELECEL"] .bundle-size,
+.bundle-card[data-network="TELECEL"] .bundle-price,
+.bundle-card[data-network="TELECEL"] .bundle-label,
+.bundle-card.telecel .bundle-size,
+.bundle-card.telecel .bundle-price,
+.bundle-card.telecel .bundle-label,
+.telecel .bundle-card .bundle-size,
+.telecel .bundle-card .bundle-price,
+.telecel .bundle-card .bundle-label {
+  color: #000000 !important;
+}
+
+/* AIRTELTIGO — ALL AIRTELTIGO BUNDLE BOXES BLUE */
+
+.bundle-card[data-network="AIRTELTIGO"],
+.bundle-card[data-network="AIRTEL"],
+.bundle-card.airtel,
+.bundle-card.airteltigo,
+.airteltigo .bundle-card,
+.airtel .bundle-card,
+#bundleGrid.airteltigo .bundle-card,
+.bundle-grid.airteltigo .bundle-card {
+  border-color: #075fc4;
+  background: #1688ff !important;
+  color: #000000 !important;
+}
+
+.bundle-card[data-network="AIRTELTIGO"] .bundle-size,
+.bundle-card[data-network="AIRTELTIGO"] .bundle-price,
+.bundle-card[data-network="AIRTELTIGO"] .bundle-label,
+.bundle-card[data-network="AIRTEL"] .bundle-size,
+.bundle-card[data-network="AIRTEL"] .bundle-price,
+.bundle-card[data-network="AIRTEL"] .bundle-label,
+.bundle-card.airtel .bundle-size,
+.bundle-card.airtel .bundle-price,
+.bundle-card.airtel .bundle-label,
+.bundle-card.airteltigo .bundle-size,
+.bundle-card.airteltigo .bundle-price,
+.bundle-card.airteltigo .bundle-label {
+  color: #000000 !important;
+}
+
+/* SELECTED BUNDLE — PRESERVE NETWORK COLOUR */
+
+.bundle-card.selected,
+.bundle-card:focus-visible {
+  outline: 3px solid #111111;
+  outline-offset: 2px;
+  border-width: 3px;
+  color: #000000 !important;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.10);
+}
+
+/* Keep MTN yellow when selected */
+
+.bundle-card[data-network="MTN"].selected,
+.bundle-card.mtn.selected {
+  background: #ffcc00 !important;
+  border-color: #111111;
+}
+
+/* Keep Telecel red when selected */
+
+.bundle-card[data-network="TELECEL"].selected,
+.bundle-card.telecel.selected {
+  background: #ed1c24 !important;
+  border-color: #111111;
+}
+
+/* Keep AirtelTigo blue when selected */
+
+.bundle-card[data-network="AIRTELTIGO"].selected,
+.bundle-card[data-network="AIRTEL"].selected,
+.bundle-card.airtel.selected,
+.bundle-card.airteltigo.selected {
+  background: #1688ff !important;
+  border-color: #111111;
 }
 
 .empty-state {
-grid-column: 1 / -1;
-padding: 24px;
-color: var(--muted);
-text-align: center;
+  grid-column: 1 / -1;
+  padding: 24px;
+  color: #000000 !important;
+  text-align: center;
 }
 
-/* ---------- 10. CHECKOUT ---------- */
+/* ---------- 9. CHECKOUT ---------- */
 
 .checkout-section,
 #checkout,
 .checkout-card {
-width: 100%;
-margin-top: 28px;
-padding: 22px;
-border: 1px solid var(--border);
-border-radius: 22px;
-background: #ffffff;
-color: #111827;
-box-shadow: var(--shadow);
-scroll-margin-top: 100px;
+  width: 100%;
+  margin-top: 28px;
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 22px;
+  background: #ffffff !important;
+  color: #000000 !important;
+  box-shadow: var(--shadow);
+  scroll-margin-top: 100px;
 }
 
 .checkout-section h2,
 #checkout h2,
 .checkout-card h2 {
-margin-top: 0;
-margin-bottom: 20px;
-font-size: clamp(23px, 5vw, 32px);
-line-height: 1.2;
-color: #111827;
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #000000 !important;
+  font-size: clamp(23px, 5vw, 32px);
+  line-height: 1.2;
 }
 
 .selected-bundle,
 .order-summary {
-display: flex;
-align-items: center;
-justify-content: space-between;
-flex-wrap: wrap;
-gap: 10px;
-margin-bottom: 20px;
-padding: 16px;
-border: 1px solid var(--border);
-border-radius: 14px;
-background: #f9fafb;
-color: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 14px;
+  background: #f9fafb;
+  color: #000000 !important;
 }
 
 .selected-bundle strong,
 .order-summary strong {
-color: #b88700;
+  color: #000000 !important;
 }
 
 form {
-width: 100%;
+  width: 100%;
 }
 
 .form-group,
 .input-group {
-display: grid;
-gap: 8px;
-margin-bottom: 18px;
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
 }
 
 label {
-color: #374151;
-font-size: 14px;
-font-weight: 700;
+  color: #000000 !important;
+  font-size: 14px;
+  font-weight: 750;
 }
 
 input,
 select,
 textarea {
-width: 100%;
-min-height: 52px;
-padding: 13px 15px;
-border: 1px solid #d1d5db;
-border-radius: 13px;
-outline: none;
-background: #ffffff;
-color: #111827;
+  width: 100%;
+  min-height: 52px;
+  padding: 13px 15px;
+  border: 1px solid #d1d5db;
+  border-radius: 13px;
+  outline: none;
+  background: #ffffff !important;
+  color: #000000 !important;
 }
 
 input:focus,
 select:focus,
 textarea:focus {
-border-color: var(--primary-dark);
-box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.15);
+  border-color: #92400e;
+  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.20);
 }
 
 textarea {
-min-height: 110px;
-resize: vertical;
+  min-height: 110px;
+  resize: vertical;
 }
+
+/* Payment button */
 
 #paymentButton,
 .payment-button,
 button[type="submit"] {
-width: 100%;
-min-height: 54px;
-padding: 14px 18px;
-border: 0;
-border-radius: 14px;
-background: var(--primary);
-color: #111111;
-font-size: 16px;
-font-weight: 850;
+  width: 100%;
+  min-height: 54px;
+  padding: 14px 18px;
+  border: 1px solid #eab308;
+  border-radius: 14px;
+  background: #ffcc00;
+  color: #000000 !important;
+  font-size: 16px;
+  font-weight: 900;
 }
 
 #paymentButton:hover,
 .payment-button:hover,
 button[type="submit"]:hover {
-background: var(--primary-dark);
+  background: #facc15;
+  color: #000000 !important;
 }
 
 #paymentButton:disabled,
 button[type="submit"]:disabled {
-opacity: 0.6;
+  opacity: 0.6;
 }
 
 #checkoutMessage {
-display: none;
-margin-top: 16px;
-padding: 12px;
-border-radius: 12px;
-background: #f3f4f6;
-color: #374151;
-overflow-wrap: anywhere;
+  display: none;
+  margin-top: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f3f4f6;
+  color: #000000;
+  overflow-wrap: anywhere;
 }
 
 .checkout-note,
 .payment-note {
-margin-top: 14px;
-color: var(--muted);
-font-size: 13px;
+  margin-top: 14px;
+  color: #111111;
+  font-size: 13px;
 }
 
-/* ---------- 11. ANNOUNCEMENT POPUP ---------- */
+/* ---------- 10. ANNOUNCEMENT POPUP ---------- */
 
 dialog,
 #announcement {
-width: min(430px, calc(100% - 28px));
-max-width: 430px;
-padding: 26px 22px;
-border: 1px solid #e5e7eb;
-border-radius: 24px;
-background: #ffffff;
-color: #111827;
-box-shadow: 0 25px 80px rgba(0, 0, 0, 0.22);
+  width: min(430px, calc(100% - 28px));
+  max-width: 430px;
+  padding: 26px 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 24px;
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.22);
 }
 
 dialog::backdrop {
-background: rgba(17, 24, 39, 0.55);
-backdrop-filter: blur(5px);
+  background: rgba(17, 24, 39, 0.55);
+  backdrop-filter: blur(5px);
 }
 
 .popup-title {
-margin-top: 0;
-font-size: 25px;
-font-weight: 900;
-color: #111827;
+  margin-top: 0;
+  color: #000000;
+  font-size: 25px;
+  font-weight: 900;
 }
 
 .popup-text {
-color: #4b5563;
-line-height: 1.7;
+  color: #111111;
+  line-height: 1.7;
 }
 
 .popup-network-list {
-display: grid;
-gap: 8px;
-margin: 18px 0;
+  display: grid;
+  gap: 8px;
+  margin: 18px 0;
 }
 
 .popup-network {
-padding: 10px;
-border-radius: 10px;
-background: #f3f4f6;
-color: #111827;
-font-weight: 800;
+  padding: 10px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #000000;
+  font-weight: 800;
 }
 
 .popup-join,
 .popup-continue {
-display: flex;
-align-items: center;
-justify-content: center;
-width: 100%;
-min-height: 48px;
-margin-top: 12px;
-padding: 12px;
-border-radius: 12px;
-font-weight: 800;
-text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  font-weight: 800;
+  text-align: center;
 }
 
 .popup-join {
-background: #128c4a;
-color: #ffffff;
+  background: #128c4a;
+  color: #ffffff !important;
 }
 
 .popup-continue {
-border: 1px solid var(--border);
-background: #f3f4f6;
-color: #111827;
+  border: 1px solid #d1d5db;
+  background: #f3f4f6;
+  color: #000000 !important;
 }
 
-/* ---------- 12. WHATSAPP / CONTACT BUTTON ---------- */
+/* ---------- 11. FLOATING WHATSAPP / CONTACT ---------- */
 
 .floating-whatsapp,
 .whatsapp-float,
 .floating-contact {
-position: fixed;
-right: 18px;
-bottom: 105px;
-z-index: 900;
-display: flex;
-align-items: center;
-justify-content: center;
-width: 64px;
-height: 64px;
-border: 3px solid #0b6b37;
-border-radius: 50%;
-background: #087a31;
-color: #ffffff;
-font-size: 27px;
-box-shadow: 0 8px 25px rgba(0, 0, 0, 0.20);
+  position: fixed;
+  right: 18px;
+  bottom: 105px;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border: 3px solid #087a31;
+  border-radius: 50%;
+  background: #087a31;
+  color: #ffffff !important;
+  font-size: 27px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.20);
 }
 
 .floating-whatsapp:hover,
 .whatsapp-float:hover,
 .floating-contact:hover {
-transform: scale(1.04);
+  transform: scale(1.04);
 }
 
-/* ---------- 13. BOTTOM NAVIGATION ---------- */
+/* ---------- 12. BOTTOM NAVIGATION ---------- */
 
 .bottom-nav {
-position: fixed;
-right: 0;
-bottom: 0;
-left: 0;
-z-index: 950;
-display: grid;
-grid-template-columns: repeat(3, minmax(0, 1fr));
-min-height: 76px;
-padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-border-top: 1px solid #e5e7eb;
-background: rgba(255, 255, 255, 0.98);
-backdrop-filter: blur(14px);
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 950;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-height: 76px;
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  border-top: 1px solid #e5e7eb;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(14px);
 }
 
 .bottom-nav a,
 .bottom-nav button {
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-gap: 2px;
-min-width: 0;
-padding: 5px;
-border: 0;
-background: transparent;
-color: #6b7280;
-font-size: 12px;
-font-weight: 750;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  padding: 5px;
+  border: 0;
+  background: transparent;
+  color: #000000 !important;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .bottom-nav .active {
-color: #059669;
+  color: #047857 !important;
 }
 
 .bottom-nav .nav-icon {
-font-size: 23px;
+  font-size: 23px;
 }
 
-/* Keep page content visible above the fixed bottom navigation. */
-
-body {
-padding-bottom: calc(100px + env(safe-area-inset-bottom));
-}
-
-/* ---------- 14. AGENT SECTION ---------- */
+/* ---------- 13. AGENT SECTION ---------- */
 
 .agent-section,
 .agent-card {
-margin-top: 30px;
-padding: 22px;
-border: 1px solid var(--border);
-border-radius: 20px;
-background: #ffffff;
-color: #111827;
+  margin-top: 30px;
+  padding: 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 20px;
+  background: #ffffff;
+  color: #000000;
 }
 
 .agent-section h2,
 .agent-card h2 {
-margin-top: 0;
-color: #111827;
+  margin-top: 0;
+  color: #000000;
 }
 
 .agent-section p,
 .agent-card p {
-color: #6b7280;
+  color: #111111;
 }
 
 .agent-section .btn,
 .agent-card .btn {
-margin-top: 10px;
+  margin-top: 10px;
 }
 
-/* ---------- 15. TABLES / DASHBOARDS ---------- */
+/* ---------- 14. TABLES / DASHBOARDS ---------- */
 
 .table-wrap {
-width: 100%;
-overflow-x: auto;
-border: 1px solid var(--border);
-border-radius: 14px;
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
 }
 
 table {
-width: 100%;
-border-collapse: collapse;
-background: #ffffff;
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
 }
 
 th,
 td {
-padding: 13px;
-border-bottom: 1px solid var(--border);
-text-align: left;
-white-space: nowrap;
+  padding: 13px;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+  white-space: nowrap;
 }
 
 th {
-background: #f3f4f6;
-color: #92400e;
+  background: #f3f4f6;
+  color: #000000;
 }
 
 td {
-color: #374151;
+  background: #ffffff;
+  color: #000000;
 }
 
-/* ---------- 16. FOOTER ---------- */
+/* ---------- 15. FOOTER ---------- */
 
 footer,
 .site-footer {
-margin-top: 35px;
-padding: 28px 20px;
-border-top: 1px solid var(--border);
-background: #ffffff;
-color: #6b7280;
-text-align: center;
-font-size: 13px;
+  margin-top: 35px;
+  padding: 28px 20px;
+  border-top: 1px solid #e5e7eb;
+  background: #ffffff !important;
+  color: #000000 !important;
+  text-align: center;
+  font-size: 13px;
 }
 
 .footer-links {
-display: flex;
-justify-content: center;
-flex-wrap: wrap;
-gap: 18px;
-margin-top: 12px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-top: 12px;
+}
+
+.footer-links a {
+  color: #000000;
+}
+
+/* ---------- 16. ORDER RESULTS ---------- */
+
+.order-result {
+  margin: 18px 0;
+  padding: 18px;
+  border: 1px solid #16a34a;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #000000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow-wrap: anywhere;
+}
+
+.order-result p {
+  margin: 12px 0;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #000000;
+  line-height: 1.6;
+}
+
+.order-result strong {
+  color: #15803d;
+}
+
+.order-result p:first-child {
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 /* ---------- 17. ACCESSIBILITY ---------- */
 
 :focus-visible {
-outline: 2px solid var(--primary-dark);
-outline-offset: 3px;
+  outline: 2px solid #111111;
+  outline-offset: 3px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-*,
-*::before,
-*::after {
-scroll-behavior: auto !important;
-transition-duration: 0.01ms !important;
-animation-duration: 0.01ms !important;
-}
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
-/* ---------- 18. MOBILE RESPONSIVENESS ---------- */
+/* ---------- 18. SMALL MOBILE SCREENS ---------- */
 
 @media (max-width: 380px) {
-.header-inner,
-.navbar,
-.header-content {
-gap: 8px;
-padding-inline: 12px;
+  .header-inner,
+  .navbar,
+  .header-content {
+    gap: 8px;
+    padding-inline: 12px;
+  }
+
+  .logo,
+  .brand,
+  .site-logo {
+    gap: 8px;
+    font-size: 16px;
+  }
+
+  .brand-icon,
+  .logo-icon {
+    width: 43px;
+    height: 43px;
+    font-size: 22px;
+  }
+
+  .whatsapp-button {
+    padding: 9px;
+    font-size: 12px;
+  }
+
+  .menu-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .container,
+  .wrapper,
+  .main-container {
+    padding-inline: 12px;
+  }
+
+  .network-tabs,
+  .network-selector,
+  .network-buttons {
+    gap: 6px;
+  }
+
+  .network-tab,
+  .network-button {
+    min-height: 48px;
+    padding: 8px 4px;
+    font-size: 12px;
+  }
+
+  .bundle-grid,
+  #bundleGrid {
+    gap: 8px;
+  }
+
+  .bundle-card {
+    min-height: 120px;
+    padding: 12px 5px;
+    border-radius: 16px;
+  }
+
+  .bundle-size {
+    font-size: 24px;
+  }
+
+  .bundle-price {
+    font-size: 16px;
+  }
+
+  .bundle-label {
+    font-size: 12px;
+  }
+
+  .checkout-section,
+  #checkout,
+  .checkout-card {
+    padding: 16px;
+  }
 }
 
-.logo,
-.brand,
-.site-logo {
-gap: 8px;
-font-size: 16px;
-}
-
-.brand-icon,
-.logo-icon {
-width: 43px;
-height: 43px;
-font-size: 22px;
-}
-
-.whatsapp-button {
-padding: 9px;
-font-size: 12px;
-}
-
-.menu-button {
-width: 44px;
-height: 44px;
-}
-
-.container,
-.wrapper,
-.main-container {
-padding-inline: 12px;
-}
-
-.network-tabs,
-.network-selector,
-.network-buttons {
-gap: 6px;
-}
-
-.network-tab,
-.network-button {
-min-height: 48px;
-padding: 8px 4px;
-font-size: 12px;
-}
-
-.bundle-grid,
-#bundleGrid {
-gap: 8px;
-}
-
-.bundle-card {
-min-height: 115px;
-padding: 10px 5px;
-border-radius: 16px;
-}
-
-.bundle-size {
-font-size: 24px;
-}
-
-.bundle-price {
-font-size: 16px;
-}
-
-.bundle-label {
-font-size: 12px;
-}
-
-.checkout-section,
-#checkout,
-.checkout-card {
-padding: 16px;
-}
-}
+/* ---------- 19. TABLET ---------- */
 
 @media (min-width: 600px) {
-.bundle-grid,
-#bundleGrid {
-grid-template-columns: repeat(3, minmax(0, 1fr));
-gap: 14px;
+  .bundle-grid,
+  #bundleGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .bundle-card {
+    min-height: 140px;
+  }
+
+  .hero {
+    padding-top: 65px;
+    padding-bottom: 45px;
+  }
 }
 
-.bundle-card {
-min-height: 140px;
-}
-
-.hero {
-padding-top: 65px;
-padding-bottom: 45px;
-}
-}
+/* ---------- 20. DESKTOP ---------- */
 
 @media (min-width: 900px) {
-.bundle-grid,
-#bundleGrid {
-grid-template-columns: repeat(4, minmax(0, 1fr));
-gap: 16px;
+  .bundle-grid,
+  #bundleGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .container,
+  .wrapper,
+  .main-container {
+    padding-inline: 28px;
+  }
+
+  .checkout-section,
+  #checkout,
+  .checkout-card {
+    max-width: 760px;
+    margin: 40px auto 0;
+    padding: 30px;
+  }
+
+  .bottom-nav {
+    display: none;
+  }
+
+  body {
+    padding-bottom: 0;
+  }
+
+  .floating-whatsapp,
+  .whatsapp-float,
+  .floating-contact {
+    bottom: 24px;
+  }
 }
 
-.container,
-.wrapper,
-.main-container {
-padding-inline: 28px;
-}
+/* ---------- 21. WHITE THEME SAFETY OVERRIDES ---------- */
 
-.checkout-section,
+/* Prevent common dark-theme containers from staying black. */
+
+#home,
+#buy,
+#bundles,
+#bundleGrid,
 #checkout,
-.checkout-card {
-max-width: 760px;
-margin-inline: auto;
-margin-top: 40px;
-padding: 30px;
+#trackOrder,
+#help,
+.hero,
+main,
+section,
+article,
+.card,
+.panel,
+.content,
+.page-content {
+  color: #000000;
 }
 
-.bottom-nav {
-display: none;
+/* Keep inputs readable. */
+
+input,
+select,
+textarea,
+input[type="text"],
+input[type="tel"],
+input[type="email"],
+input[type="search"],
+input[type="number"] {
+  background-color: #ffffff;
+  color: #000000;
 }
 
-body {
-padding-bottom: 0;
+/* Keep the main store text dark. */
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+label,
+strong,
+small,
+span {
+  text-shadow: none;
 }
 
-.floating-whatsapp,
-.whatsapp-float,
-.floating-contact {
-bottom: 24px;
-}
-}
-
-/* ---------- 19. ORDER BOXES ---------- */
-
-.order-result {
-background: #ffffff;
-border: 1px solid #16a34a;
-border-radius: 14px;
-padding: 18px;
-margin: 18px 0;
-color: #111827;
-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-overflow-wrap: anywhere;
-}
-
-.order-result p {
-margin: 12px 0;
-padding: 10px;
-background: #f3f4f6;
-color: #374151;
-border-radius: 8px;
-line-height: 1.6;
-}
-
-.order-result strong {
-color: #15803d;
-}
-
-.order-result p:first-child {
-border-bottom: 1px solid #e5e7eb;
-padding-bottom: 14px;
-}
-
-/* ---------- END OF KIELMEN 636 STYLESHEET ---------- */
+/* END OF KIELMEN 636 DATAPLUG STYLESHEET */
