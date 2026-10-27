@@ -682,6 +682,536 @@ if (announcement && continueShopping) {
     });
 }
 </script>
+  <!-- KIELMEN 636 DATAPLUG: OWNER WEBSITE SETTINGS INTEGRATION -->
+<script>
+(() => {
+  "use strict";
+
+  const API_BASE = "https://kielmen-dataplug-payment-api.onrender.com";
+
+  const DEFAULT_SETTINGS = {
+    whatsappLink: "https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S",
+    contactNumber: "0533878548",
+    announcement: "",
+    announcementEnabled: false,
+    colours: {
+      primary: "#d4a017",
+      background: "#030712",
+      accent: "#16a34a",
+      text: "#ffffff"
+    },
+    networkAvailability: {
+      MTN: true,
+      TELECEL: true,
+      AIRTELTIGO: true
+    }
+  };
+
+  let websiteSettings = structuredClone(DEFAULT_SETTINGS);
+
+  /* -----------------------------
+     COLOUR SETTINGS
+  ----------------------------- */
+
+  function applyWebsiteColours(colours = {}) {
+    const root = document.documentElement;
+
+    const validHex = value =>
+      typeof value === "string" &&
+      /^#[0-9a-fA-F]{6}$/.test(value);
+
+    const primary = validHex(colours.primary)
+      ? colours.primary
+      : DEFAULT_SETTINGS.colours.primary;
+
+    const background = validHex(colours.background)
+      ? colours.background
+      : DEFAULT_SETTINGS.colours.background;
+
+    const accent = validHex(colours.accent)
+      ? colours.accent
+      : DEFAULT_SETTINGS.colours.accent;
+
+    const text = validHex(colours.text)
+      ? colours.text
+      : DEFAULT_SETTINGS.colours.text;
+
+    root.style.setProperty("--site-primary", primary);
+    root.style.setProperty("--site-background", background);
+    root.style.setProperty("--site-accent", accent);
+    root.style.setProperty("--site-text", text);
+  }
+
+  /* -----------------------------
+     WHATSAPP CONTACT SETTINGS
+  ----------------------------- */
+
+  function normaliseGhanaNumber(number) {
+    let digits = String(number || "").replace(/\D/g, "");
+
+    if (digits.startsWith("00")) {
+      digits = digits.slice(2);
+    }
+
+    if (digits.startsWith("0")) {
+      digits = "233" + digits.slice(1);
+    } else if (!digits.startsWith("233")) {
+      digits = "233" + digits;
+    }
+
+    return digits;
+  }
+
+  function getContactWhatsAppLink() {
+    const number = normaliseGhanaNumber(
+      websiteSettings.contactNumber
+    );
+
+    return number.length >= 12
+      ? "https://wa.me/" + number
+      : DEFAULT_SETTINGS.whatsappLink;
+  }
+
+  function isWhatsAppLink(url) {
+    try {
+      const parsed = new URL(url);
+
+      return (
+        parsed.protocol === "https:" &&
+        (
+          parsed.hostname === "wa.me" ||
+          parsed.hostname === "whatsapp.com" ||
+          parsed.hostname === "www.whatsapp.com" ||
+          parsed.hostname === "chat.whatsapp.com"
+        )
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  function isChannelOrGroupLink(url) {
+    try {
+      const parsed = new URL(url);
+
+      return (
+        parsed.protocol === "https:" &&
+        (
+          parsed.hostname === "whatsapp.com" ||
+          parsed.hostname === "www.whatsapp.com" ||
+          parsed.hostname === "chat.whatsapp.com"
+        )
+      );
+    } catch {
+      return false;
+    }
+  }
+
+  function applyWhatsAppSettings() {
+    const contactLink = getContactWhatsAppLink();
+
+    /*
+      These links contact the business directly.
+      The owner's contact number controls them.
+    */
+    document.querySelectorAll(
+      "[data-whatsapp-contact], .whatsapp-float"
+    ).forEach(link => {
+      if (link.tagName === "A") {
+        link.href = contactLink;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+      }
+    });
+
+    /*
+      Update existing direct-contact WhatsApp links while
+      leaving the WhatsApp channel link separate.
+    */
+    document.querySelectorAll('a[href*="wa.me/"]').forEach(link => {
+      if (link.hasAttribute("data-channel-link")) return;
+
+      link.href = contactLink;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+    });
+
+    /*
+      The owner's WhatsApp group/channel link controls
+      links marked data-channel-link.
+    */
+    let channelLink = websiteSettings.whatsappLink;
+
+    if (!isChannelOrGroupLink(channelLink)) {
+      channelLink = DEFAULT_SETTINGS.whatsappLink;
+    }
+
+    document.querySelectorAll("[data-channel-link]").forEach(link => {
+      if (link.tagName === "A") {
+        link.href = channelLink;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+      }
+    });
+
+    /*
+      Display the contact number if the page has an element
+      with this ID.
+    */
+    const phoneDisplay = document.getElementById(
+      "supportPhoneDisplay"
+    );
+
+    if (phoneDisplay) {
+      phoneDisplay.textContent = websiteSettings.contactNumber;
+
+      if (phoneDisplay.tagName === "A") {
+        phoneDisplay.href =
+          "tel:+" + normaliseGhanaNumber(
+            websiteSettings.contactNumber
+          );
+      }
+    }
+  }
+
+  /* -----------------------------
+     ANNOUNCEMENT POPUP
+  ----------------------------- */
+
+  function applyAnnouncementSettings() {
+    const dialog = document.getElementById("announcement");
+
+    if (!dialog) return;
+
+    const messageElement = document.getElementById(
+      "announcementMessage"
+    );
+
+    const enabled = websiteSettings.announcementEnabled === true;
+    const message = String(
+      websiteSettings.announcement || ""
+    ).trim();
+
+    if (!enabled || !message) {
+      if (dialog.open && typeof dialog.close === "function") {
+        dialog.close();
+      }
+
+      dialog.hidden = true;
+      dialog.style.display = "none";
+      return;
+    }
+
+    if (messageElement) {
+      messageElement.textContent = message;
+    } else {
+      /*
+        Fallback for an existing dialog without the
+        announcementMessage element.
+      */
+      const paragraph = dialog.querySelector("p");
+
+      if (paragraph) {
+        paragraph.textContent = message;
+      }
+    }
+
+    dialog.hidden = false;
+    dialog.style.display = "";
+
+    const alreadyShown =
+      sessionStorage.getItem("kielmenAnnouncementShown") === "yes";
+
+    if (!alreadyShown) {
+      if (typeof dialog.showModal === "function") {
+        if (!dialog.open) {
+          dialog.showModal();
+        }
+      } else {
+        dialog.style.display = "block";
+      }
+
+      sessionStorage.setItem(
+        "kielmenAnnouncementShown",
+        "yes"
+      );
+    }
+
+    const continueButton = document.getElementById(
+      "continueShopping"
+    );
+
+    if (continueButton && !continueButton.dataset.settingsBound) {
+      continueButton.dataset.settingsBound = "yes";
+
+      continueButton.addEventListener("click", () => {
+        if (dialog.open && typeof dialog.close === "function") {
+          dialog.close();
+        } else {
+          dialog.style.display = "none";
+        }
+      });
+    }
+  }
+
+  /* -----------------------------
+     NETWORK AVAILABILITY
+  ----------------------------- */
+
+  function getNetworkKey(button) {
+    const text = (
+      button.dataset.network ||
+      button.dataset.type ||
+      button.textContent ||
+      ""
+    ).toUpperCase().replace(/[^A-Z]/g, "");
+
+    if (text.includes("AIRTELTIGO") || text.includes("ATIG")) {
+      return "AIRTELTIGO";
+    }
+
+    if (text.includes("TELECEL")) {
+      return "TELECEL";
+    }
+
+    if (text.includes("MTN")) {
+      return "MTN";
+    }
+
+    return null;
+  }
+
+  function applyNetworkAvailability() {
+    const tabs = Array.from(
+      document.querySelectorAll(
+        ".network-tab, [data-network]"
+      )
+    );
+
+    const availableTabs = [];
+
+    tabs.forEach(tab => {
+      const network = getNetworkKey(tab);
+
+      if (!network) return;
+
+      const available =
+        websiteSettings.networkAvailability[network] === true;
+
+      tab.hidden = !available;
+      tab.disabled = !available;
+      tab.setAttribute(
+        "aria-disabled",
+        available ? "false" : "true"
+      );
+
+      if (available) {
+        availableTabs.push(tab);
+      } else {
+        tab.classList.remove("active");
+      }
+    });
+
+    const paymentButton = document.getElementById(
+      "paymentButton"
+    );
+
+    const checkoutMessage = document.getElementById(
+      "checkoutMessage"
+    );
+
+    const selectedNetwork = document.getElementById(
+      "selectedNetwork"
+    );
+
+    if (availableTabs.length === 0) {
+      if (paymentButton) {
+        paymentButton.disabled = true;
+      }
+
+      if (checkoutMessage) {
+        checkoutMessage.textContent =
+          "All networks are temporarily unavailable. Please check again later.";
+      }
+
+      const grid = document.getElementById("bundleGrid");
+
+      if (grid) {
+        grid.replaceChildren();
+
+        const notice = document.createElement("p");
+        notice.textContent =
+          "All data bundle networks are temporarily unavailable.";
+        notice.setAttribute("role", "status");
+
+        grid.appendChild(notice);
+      }
+
+      return;
+    }
+
+    if (paymentButton) {
+      paymentButton.disabled = false;
+    }
+
+    const activeTab = availableTabs.find(
+      tab => tab.classList.contains("active")
+    );
+
+    if (!activeTab) {
+      /*
+        Click an available tab so the existing script.js
+        can render that network's bundles normally.
+      */
+      availableTabs[0].click();
+    }
+
+    if (selectedNetwork) {
+      const current = String(
+        selectedNetwork.value || ""
+      ).toUpperCase();
+
+      if (
+        current &&
+        websiteSettings.networkAvailability[current] !== true
+      ) {
+        const firstNetwork = getNetworkKey(availableTabs[0]);
+
+        if (firstNetwork) {
+          selectedNetwork.value = firstNetwork;
+        }
+      }
+    }
+  }
+
+  /* -----------------------------
+     PROTECT CHECKOUT FROM DISABLED NETWORKS
+  ----------------------------- */
+
+  function protectCheckout() {
+    const form = document.getElementById("checkoutForm");
+
+    if (!form || form.dataset.availabilityGuard === "yes") {
+      return;
+    }
+
+    form.dataset.availabilityGuard = "yes";
+
+    form.addEventListener("submit", event => {
+      const selectedNetwork = document.getElementById(
+        "selectedNetwork"
+      );
+
+      const network = String(
+        selectedNetwork?.value || ""
+      ).toUpperCase();
+
+      const message = document.getElementById(
+        "checkoutMessage"
+      );
+
+      if (
+        !network ||
+        websiteSettings.networkAvailability[network] !== true
+      ) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+
+        if (message) {
+          message.textContent =
+            "This network is currently unavailable. Please select another available network.";
+        }
+      }
+    }, true);
+  }
+
+  /* -----------------------------
+     LOAD OWNER SETTINGS
+  ----------------------------- */
+
+  async function loadWebsiteSettings() {
+    try {
+      const response = await fetch(
+        API_BASE + "/website-settings",
+        {
+          method: "GET",
+          cache: "no-store",
+          headers: {
+            "Accept": "application/json"
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(
+          "Settings request failed: HTTP " + response.status
+        );
+      }
+
+      const result = await response.json();
+
+      if (!result.success || !result.settings) {
+        throw new Error("Website settings were not returned.");
+      }
+
+      const saved = result.settings;
+
+      websiteSettings = {
+        ...DEFAULT_SETTINGS,
+        ...saved,
+        colours: {
+          ...DEFAULT_SETTINGS.colours,
+          ...(saved.colours || {})
+        },
+        networkAvailability: {
+          ...DEFAULT_SETTINGS.networkAvailability,
+          ...(saved.networkAvailability || {})
+        }
+      };
+
+      applyWebsiteColours(websiteSettings.colours);
+      applyWhatsAppSettings();
+      applyAnnouncementSettings();
+      applyNetworkAvailability();
+
+      console.log(
+        "Kielmen 636 Dataplug website settings loaded."
+      );
+    } catch (error) {
+      /*
+        If the settings endpoint is temporarily unavailable,
+        keep the existing website working with its defaults.
+      */
+      console.warn(
+        "Could not load website settings. Using defaults.",
+        error
+      );
+
+      applyWebsiteColours(DEFAULT_SETTINGS.colours);
+      protectCheckout();
+    }
+  }
+
+  /* -----------------------------
+     START
+  ----------------------------- */
+
+  function startSettingsIntegration() {
+    protectCheckout();
+    loadWebsiteSettings();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener(
+      "DOMContentLoaded",
+      startSettingsIntegration,
+      { once: true }
+    );
+  } else {
+    startSettingsIntegration();
+  }
+})();
+      </script>
 
 </body>
 </html>
