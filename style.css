@@ -2538,3 +2538,58 @@ a:focus:not(:focus-visible) {
         border-top-color: #0755c9 !important;
     }
 }
+/* Welcome section: keep existing shop button and add agent access */
+
+.welcome-actions {
+display: flex;
+flex-wrap: wrap;
+align-items: stretch;
+gap: 12px;
+margin-top: 20px;
+}
+
+.welcome-actions .shop-button {
+flex: 0 1 auto;
+margin: 0;
+}
+
+.welcome-agent-button {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+min-height: 47px;
+padding: 12px 19px;
+border: 1px solid #d1d5db;
+border-radius: 12px;
+color: #111827;
+background: #ffffff;
+font-weight: 900;
+text-align: center;
+transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.welcome-agent-button:hover {
+color: #111827;
+background: #f3f4f6;
+transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+.welcome-actions {
+gap: 10px;
+}
+
+.welcome-actions .shop-button {
+    flex: 1 1 100%;
+    width: 100%;
+    min-height: 54px;
+}
+
+.welcome-agent-button {
+    flex: 1 1 100%;
+    width: 100%;
+    min-height: 50px;
+}
+
+}
