@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-18536771634"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'AW-18536771634');
-</script>
+  <!-- Google Ads -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18536771634"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-18536771634');
+  </script>
+
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#080a0f">
@@ -16,12 +17,23 @@
   <title>Kielmen 636 Dataplug | Buy Data Bundles</title>
 
   <meta name="description"
-    content="Buy MTN, Telecel and AirtelTigo data bundles from Kielmen 636 Dataplug. Select your bundle, enter your details and pay securely.">
+    content="Buy MTN, Telecel and AirtelTigo data bundles from Kielmen 636 Dataplug.">
 
   <link rel="stylesheet" href="style.css?v=3">
 
   <style>
-    /* Homepage-specific layout */
+    :root {
+      --site-primary: #d4a017;
+      --site-background: #030712;
+      --site-accent: #16a34a;
+      --site-text: #ffffff;
+    }
+
+    body {
+      background: var(--site-background);
+      color: var(--site-text);
+    }
+
     .home-container {
       width: min(1100px, 100%);
       margin: auto;
@@ -43,7 +55,7 @@
     }
 
     .welcome-banner h1 span {
-      color: #facc15;
+      color: var(--site-primary);
     }
 
     .welcome-banner p {
@@ -92,6 +104,11 @@
       background: #191b21;
       color: #f9fafb;
       font-weight: 800;
+      cursor: pointer;
+    }
+
+    .network-tab[hidden] {
+      display: none !important;
     }
 
     .network-tab[data-network="MTN"] {
@@ -145,7 +162,7 @@
 
     .bundle-card:hover,
     .bundle-card.selected {
-      border: 2px solid #facc15;
+      border: 2px solid var(--site-primary);
       background: #302b19;
     }
 
@@ -155,8 +172,12 @@
       line-height: 1.2;
     }
 
+    .bundle-price,
+    .selected-summary strong {
+      color: var(--site-primary);
+    }
+
     .bundle-price {
-      color: #facc15;
       font-size: 19px;
       font-weight: 850;
     }
@@ -176,6 +197,7 @@
       background: #15171c;
       color: white;
       font-size: 16px;
+      box-sizing: border-box;
     }
 
     .checkout-card {
@@ -200,10 +222,6 @@
       background: #191b21;
     }
 
-    .selected-summary strong {
-      color: #facc15;
-    }
-
     .field {
       margin-bottom: 17px;
     }
@@ -224,6 +242,7 @@
       background: #181a20;
       color: white;
       font-size: 16px;
+      box-sizing: border-box;
     }
 
     .pay-button {
@@ -232,14 +251,16 @@
       padding: 14px;
       border: none;
       border-radius: 13px;
-      background: #facc15;
+      background: var(--site-primary);
       color: #111;
       font-size: 17px;
       font-weight: 900;
+      cursor: pointer;
     }
 
     .pay-button:disabled {
       opacity: 0.65;
+      cursor: not-allowed;
     }
 
     .form-message {
@@ -300,6 +321,10 @@
       color: white;
     }
 
+    .announcement[hidden] {
+      display: none !important;
+    }
+
     .announcement::backdrop {
       background: #000b;
     }
@@ -311,6 +336,8 @@
     .announcement p {
       color: #c5cad4;
       line-height: 1.6;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     .announcement a,
@@ -324,6 +351,7 @@
       border-radius: 11px;
       font-weight: 800;
       text-align: center;
+      box-sizing: border-box;
     }
 
     .announcement a {
@@ -334,6 +362,7 @@
     .announcement button {
       background: #292c34;
       color: white;
+      cursor: pointer;
     }
 
     .bottom-nav {
@@ -365,7 +394,7 @@
     }
 
     .bottom-nav .active {
-      color: #10b981;
+      color: var(--site-accent);
     }
 
     .site-footer {
@@ -412,14 +441,14 @@
     </a>
 
     <div style="display:flex;align-items:center;gap:8px;">
-      <a href="https://wa.me/233533878548"
+      <a data-whatsapp-contact href="https://wa.me/233533878548"
+         target="_blank" rel="noopener noreferrer"
          style="padding:11px;border:1px solid #383b44;border-radius:12px;">
         WhatsApp
       </a>
 
-      <button id="menuButton"
-        type="button"
-        aria-label="Open menu"
+      <button id="menuButton" type="button" aria-label="Open menu"
+        aria-expanded="false"
         style="width:48px;height:48px;border:1px solid #383b44;border-radius:13px;background:#20232a;color:white;font-size:25px;">
         ☰
       </button>
@@ -427,44 +456,19 @@
   </div>
 
   <nav id="mobileMenu" class="mobile-menu"
-     style="display:none;padding:12px 20px 18px;background:#111318;"
-     aria-label="Main navigation">
+    style="display:none;padding:12px 20px 18px;background:#111318;"
+    aria-label="Main navigation">
 
-    <a href="index.html"
-       style="display:block;padding:14px;border-bottom:1px solid #333;">
-       🏠 Home
+    <a href="index.html" style="display:block;padding:14px;border-bottom:1px solid #333;">🏠 Home</a>
+    <a href="#bundles" style="display:block;padding:14px;border-bottom:1px solid #333;">🛒 Buy Data Bundles</a>
+    <a href="#checkout" style="display:block;padding:14px;border-bottom:1px solid #333;">💳 Checkout</a>
+    <a href="#track-order" style="display:block;padding:14px;border-bottom:1px solid #333;">📦 Track Your Order</a>
+    <a href="#agent-section" style="display:block;padding:14px;border-bottom:1px solid #333;">🤝 Become an Agent</a>
+    <a href="agent-login.html" style="display:block;padding:14px;border-bottom:1px solid #333;">🔐 Agent Sign In</a>
+    <a data-whatsapp-contact href="https://wa.me/233533878548"
+       target="_blank" rel="noopener noreferrer" style="display:block;padding:14px;">
+      💬 Contact Support
     </a>
-
-    <a href="#bundles"
-       style="display:block;padding:14px;border-bottom:1px solid #333;">
-       🛒 Buy Data Bundles
-    </a>
-
-    <a href="#checkout"
-       style="display:block;padding:14px;border-bottom:1px solid #333;">
-       💳 Checkout
-    </a>
-
-    <a href="#track-order"
-       style="display:block;padding:14px;border-bottom:1px solid #333;">
-       📦 Track Your Order
-    </a>
-
-    <a href="#agent-section"
-       style="display:block;padding:14px;border-bottom:1px solid #333;">
-       🤝 Become an Agent
-    </a>
-
-    <a href="agent-login.html"
-       style="display:block;padding:14px;border-bottom:1px solid #333;">
-       🔐 Agent Sign In
-    </a>
-
-    <a href="https://wa.me/233533878548"
-       style="display:block;padding:14px;">
-       💬 Contact Support
-    </a>
-
   </nav>
 </header>
 
@@ -476,7 +480,7 @@
     <p>Select your network and bundle, enter the recipient's phone number, and proceed to payment.</p>
 
     <a href="#bundles"
-       style="display:inline-flex;padding:13px 19px;border-radius:12px;background:#facc15;color:#111;font-weight:900;">
+       style="display:inline-flex;padding:13px 19px;border-radius:12px;background:var(--site-primary);color:#111;font-weight:900;">
       🛒 Shop Data Bundles
     </a>
 
@@ -498,12 +502,11 @@
       <button class="network-tab" data-network="AIRTELTIGO" type="button">🔵 AIRTELTIGO</button>
     </div>
 
-    <input id="bundleSearch" class="search-input"
-      type="search" placeholder="🔎 Search bundle size or price..."
+    <input id="bundleSearch" class="search-input" type="search"
+      placeholder="🔎 Search bundle size or price..."
       aria-label="Search data bundles">
 
-    <p id="resultCount" style="color:#9ca3af;">Loading bundles...</p>
-
+    <p id="resultCount" style="color:#9ca3af;" aria-live="polite">Loading bundles...</p>
     <div id="bundleGrid" class="bundle-grid" aria-live="polite"></div>
   </section>
 
@@ -522,24 +525,16 @@
           inputmode="tel" autocomplete="tel"
           placeholder="e.g. 0241234567" required>
       </div>
-            <div class="field">
+
+      <div class="field">
         <label for="customerEmail">Email address</label>
-        <input
-          id="customerEmail"
-          name="email"
-          type="email"
-          inputmode="email"
-          autocomplete="email"
-          placeholder="Enter your email address"
-          maxlength="254"
-          required
-        >
+        <input id="customerEmail" name="email" type="email"
+          inputmode="email" autocomplete="email"
+          placeholder="Enter your email address" maxlength="254" required>
         <small style="display:block;color:#aeb4c0;margin-top:6px;">
           Enter your email to receive your Paystack payment receipt.
         </small>
-            </div>
-
-      
+      </div>
 
       <input type="hidden" id="selectedNetwork" name="network" value="MTN">
       <input type="hidden" id="selectedSize" name="bundle" value="">
@@ -561,54 +556,48 @@
 
   <section class="agent-box" id="agent-section">
     <h2>🤝 Become a Kielmen Data Agent</h2>
-
     <p>
-        Interested in selling data bundles?
-        Join Kielmen 636 Dataplug and start your own data business.
-        Register today to apply for an agent account.
+      Interested in selling data bundles?
+      Join Kielmen 636 Dataplug and start your own data business.
+      Register today to apply for an agent account.
     </p>
-
-    <a href="agent-register.html">
-        Become an Agent / Sign Up
-    </a>
+    <a href="agent-register.html">Become an Agent / Sign Up</a>
   </section>
 
   <section class="agent-box">
     <h2>Need Help?</h2>
     <p>Contact our support team on WhatsApp if you have questions about your order.</p>
-    <a href="https://wa.me/233533878548">Chat with Support</a>
-    <a href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
+
+    <a data-whatsapp-contact href="https://wa.me/233533878548"
+       target="_blank" rel="noopener noreferrer">Chat with Support</a>
+
+    <a data-channel-link href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
        target="_blank" rel="noopener noreferrer">Join WhatsApp Channel</a>
+
+    <p>Support number:
+      <a id="supportPhoneDisplay" href="tel:+233533878548">0533878548</a>
+    </p>
   </section>
 
   <section class="agent-box" id="track-order">
-  <h2>📦 Track Your Order</h2>
-  <p>Enter the phone number used to receive your data.</p>
+    <h2>📦 Track Your Order</h2>
+    <p>Enter the phone number used to receive your data.</p>
 
-  <form id="trackOrderForm">
-    <label for="trackPhone">Recipient Phone Number</label>
-    <input
-      id="trackPhone"
-      type="tel"
-      placeholder="0241234567"
-      required
-    >
+    <form id="trackOrderForm">
+      <label for="trackPhone">Recipient Phone Number</label>
+      <input id="trackPhone" type="tel" placeholder="0241234567" required>
+      <button type="submit" id="trackOrderButton">Find My Orders</button>
+    </form>
 
-    <button type="submit" id="trackOrderButton">
-      Find My Orders
-    </button>
-  </form>
+    <div id="trackOrderMessage" role="status" aria-live="polite"></div>
+    <div id="trackOrderResults"></div>
 
-  <div id="trackOrderMessage" role="status" aria-live="polite"></div>
-  <div id="trackOrderResults"></div>
-
-  <p>
-    Need help?
-    <a href="https://wa.me/233533878548" target="_blank" rel="noopener">
-      Contact us on WhatsApp
-    </a>
-  </p>
+    <p>Need help?
+      <a data-whatsapp-contact href="https://wa.me/233533878548"
+         target="_blank" rel="noopener noreferrer">Contact us on WhatsApp</a>
+    </p>
   </section>
+
 </main>
 
 <footer class="site-footer">
@@ -618,71 +607,61 @@
   <p>Payments are processed through Paystack.</p>
 </footer>
 
-<a class="whatsapp-float"
-   href="https://wa.me/233533878548"
-   target="_blank"
-   rel="noopener noreferrer"
-   aria-label="Contact Kielmen on WhatsApp">☎</a>
+<a class="whatsapp-float" data-whatsapp-contact
+   href="https://wa.me/233533878548" target="_blank"
+   rel="noopener noreferrer" aria-label="Contact Kielmen on WhatsApp">☎</a>
 
 <nav class="bottom-nav" aria-label="Quick navigation">
   <a href="#bundles" class="active"><span>🛒</span>Buy</a>
   <a href="#checkout"><span>💳</span>Checkout</a>
-  <a href="https://wa.me/233533878548"><span>💬</span>Help</a>
+  <a data-whatsapp-contact href="https://wa.me/233533878548"
+     target="_blank" rel="noopener noreferrer"><span>💬</span>Help</a>
 </nav>
 
-<dialog id="announcement" class="announcement">
+<dialog id="announcement" class="announcement" hidden>
   <h2>📢 Kielmen 636 Dataplug</h2>
-  <p>Welcome! Join our WhatsApp Channel for data bundle updates, promotions and announcements.</p>
-  <a href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
+  <p id="announcementMessage"></p>
+  <a id="announcementChannelLink" data-channel-link
+     href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
      target="_blank" rel="noopener noreferrer">📣 Join WhatsApp Channel</a>
   <button id="continueShopping" type="button">Continue to Buy Data</button>
 </dialog>
 
-<script src="script.js?v=6"></script>
+<!-- Keep this file: it handles bundle selection, checkout and order tracking. -->
+<script src="script.js?v=7"></script>
 
 <script>
-document.getElementById("currentYear").textContent =
-    new Date().getFullYear();
+(() => {
+  "use strict";
 
-const menuButton = document.getElementById("menuButton");
-const mobileMenu = document.getElementById("mobileMenu");
+  const year = document.getElementById("currentYear");
+  if (year) year.textContent = new Date().getFullYear();
 
-menuButton.setAttribute("aria-expanded", "false");
+  const menuButton = document.getElementById("menuButton");
+  const mobileMenu = document.getElementById("mobileMenu");
 
-menuButton.addEventListener("click", function () {
-    const isOpen = mobileMenu.style.display === "block";
+  if (menuButton && mobileMenu) {
+    menuButton.addEventListener("click", () => {
+      const isOpen = mobileMenu.style.display === "block";
+      mobileMenu.style.display = isOpen ? "none" : "block";
+      menuButton.setAttribute("aria-expanded", String(!isOpen));
+      menuButton.setAttribute("aria-label", isOpen ? "Open menu" : "Close menu");
+      menuButton.textContent = isOpen ? "☰" : "✕";
+    });
 
-    mobileMenu.style.display = isOpen ? "none" : "block";
-
-    menuButton.setAttribute("aria-expanded", String(!isOpen));
-    menuButton.setAttribute(
-        "aria-label",
-        isOpen ? "Open menu" : "Close menu"
-    );
-
-    menuButton.textContent = isOpen ? "☰" : "✕";
-});
-
-mobileMenu.querySelectorAll("a").forEach(function (link) {
-    link.addEventListener("click", function () {
+    mobileMenu.querySelectorAll("a").forEach(link => {
+      link.addEventListener("click", () => {
         mobileMenu.style.display = "none";
-
         menuButton.setAttribute("aria-expanded", "false");
         menuButton.setAttribute("aria-label", "Open menu");
         menuButton.textContent = "☰";
+      });
     });
-});
-
-const announcement = document.getElementById("announcement");
-const continueShopping = document.getElementById("continueShopping");
-
-if (announcement && continueShopping) {
-    continueShopping.addEventListener("click", function () {
-        announcement.close();
-    });
-}
+  }
+})();
 </script>
-  <!-- KIELMEN 636 DATAPLUG: OWNER WEBSITE SETTINGS INTEGRATION -->
+
+<!-- OWNER WEBSITE SETTINGS INTEGRATION -->
 <script>
 (() => {
   "use strict";
@@ -707,44 +686,57 @@ if (announcement && continueShopping) {
     }
   };
 
-  let websiteSettings = structuredClone(DEFAULT_SETTINGS);
+  let websiteSettings = {
+    ...DEFAULT_SETTINGS,
+    colours: { ...DEFAULT_SETTINGS.colours },
+    networkAvailability: { ...DEFAULT_SETTINGS.networkAvailability }
+  };
 
-  /* -----------------------------
-     COLOUR SETTINGS
-  ----------------------------- */
+  const $ = id => document.getElementById(id);
+
+  function getSessionValue(key) {
+    try {
+      return sessionStorage.getItem(key);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function setSessionValue(key, value) {
+    try {
+      sessionStorage.setItem(key, value);
+    } catch (_error) {}
+  }
+
+  function validHex(value, fallback) {
+    return typeof value === "string" && /^#[0-9a-fA-F]{6}$/.test(value)
+      ? value
+      : fallback;
+  }
 
   function applyWebsiteColours(colours = {}) {
     const root = document.documentElement;
 
-    const validHex = value =>
-      typeof value === "string" &&
-      /^#[0-9a-fA-F]{6}$/.test(value);
+    root.style.setProperty(
+      "--site-primary",
+      validHex(colours.primary, DEFAULT_SETTINGS.colours.primary)
+    );
 
-    const primary = validHex(colours.primary)
-      ? colours.primary
-      : DEFAULT_SETTINGS.colours.primary;
+    root.style.setProperty(
+      "--site-background",
+      validHex(colours.background, DEFAULT_SETTINGS.colours.background)
+    );
 
-    const background = validHex(colours.background)
-      ? colours.background
-      : DEFAULT_SETTINGS.colours.background;
+    root.style.setProperty(
+      "--site-accent",
+      validHex(colours.accent, DEFAULT_SETTINGS.colours.accent)
+    );
 
-    const accent = validHex(colours.accent)
-      ? colours.accent
-      : DEFAULT_SETTINGS.colours.accent;
-
-    const text = validHex(colours.text)
-      ? colours.text
-      : DEFAULT_SETTINGS.colours.text;
-
-    root.style.setProperty("--site-primary", primary);
-    root.style.setProperty("--site-background", background);
-    root.style.setProperty("--site-accent", accent);
-    root.style.setProperty("--site-text", text);
+    root.style.setProperty(
+      "--site-text",
+      validHex(colours.text, DEFAULT_SETTINGS.colours.text)
+    );
   }
-
-  /* -----------------------------
-     WHATSAPP CONTACT SETTINGS
-  ----------------------------- */
 
   function normaliseGhanaNumber(number) {
     let digits = String(number || "").replace(/\D/g, "");
@@ -763,46 +755,26 @@ if (announcement && continueShopping) {
   }
 
   function getContactWhatsAppLink() {
-    const number = normaliseGhanaNumber(
-      websiteSettings.contactNumber
-    );
+    const number = normaliseGhanaNumber(websiteSettings.contactNumber);
 
-    return number.length >= 12
-      ? "https://wa.me/" + number
-      : DEFAULT_SETTINGS.whatsappLink;
-  }
-
-  function isWhatsAppLink(url) {
-    try {
-      const parsed = new URL(url);
-
-      return (
-        parsed.protocol === "https:" &&
-        (
-          parsed.hostname === "wa.me" ||
-          parsed.hostname === "whatsapp.com" ||
-          parsed.hostname === "www.whatsapp.com" ||
-          parsed.hostname === "chat.whatsapp.com"
-        )
-      );
-    } catch {
-      return false;
+    if (/^233\d{9}$/.test(number)) {
+      return "https://wa.me/" + number;
     }
+
+    return "https://wa.me/233533878548";
   }
 
   function isChannelOrGroupLink(url) {
     try {
       const parsed = new URL(url);
 
-      return (
-        parsed.protocol === "https:" &&
-        (
-          parsed.hostname === "whatsapp.com" ||
-          parsed.hostname === "www.whatsapp.com" ||
-          parsed.hostname === "chat.whatsapp.com"
-        )
-      );
-    } catch {
+      return parsed.protocol === "https:" &&
+        [
+          "whatsapp.com",
+          "www.whatsapp.com",
+          "chat.whatsapp.com"
+        ].includes(parsed.hostname);
+    } catch (_error) {
       return false;
     }
   }
@@ -810,36 +782,14 @@ if (announcement && continueShopping) {
   function applyWhatsAppSettings() {
     const contactLink = getContactWhatsAppLink();
 
-    /*
-      These links contact the business directly.
-      The owner's contact number controls them.
-    */
-    document.querySelectorAll(
-      "[data-whatsapp-contact], .whatsapp-float"
-    ).forEach(link => {
-      if (link.tagName === "A") {
-        link.href = contactLink;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-      }
-    });
-
-    /*
-      Update existing direct-contact WhatsApp links while
-      leaving the WhatsApp channel link separate.
-    */
-    document.querySelectorAll('a[href*="wa.me/"]').forEach(link => {
-      if (link.hasAttribute("data-channel-link")) return;
+    document.querySelectorAll("[data-whatsapp-contact]").forEach(link => {
+      if (link.tagName !== "A") return;
 
       link.href = contactLink;
       link.target = "_blank";
       link.rel = "noopener noreferrer";
     });
 
-    /*
-      The owner's WhatsApp group/channel link controls
-      links marked data-channel-link.
-    */
     let channelLink = websiteSettings.whatsappLink;
 
     if (!isChannelOrGroupLink(channelLink)) {
@@ -847,50 +797,35 @@ if (announcement && continueShopping) {
     }
 
     document.querySelectorAll("[data-channel-link]").forEach(link => {
-      if (link.tagName === "A") {
-        link.href = channelLink;
-        link.target = "_blank";
-        link.rel = "noopener noreferrer";
-      }
+      if (link.tagName !== "A") return;
+
+      link.href = channelLink;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
     });
 
-    /*
-      Display the contact number if the page has an element
-      with this ID.
-    */
-    const phoneDisplay = document.getElementById(
-      "supportPhoneDisplay"
-    );
+    const phoneDisplay = $("supportPhoneDisplay");
 
     if (phoneDisplay) {
-      phoneDisplay.textContent = websiteSettings.contactNumber;
+      phoneDisplay.textContent =
+        websiteSettings.contactNumber || DEFAULT_SETTINGS.contactNumber;
 
       if (phoneDisplay.tagName === "A") {
         phoneDisplay.href =
-          "tel:+" + normaliseGhanaNumber(
-            websiteSettings.contactNumber
-          );
+          "tel:+" + normaliseGhanaNumber(websiteSettings.contactNumber);
       }
     }
   }
 
-  /* -----------------------------
-     ANNOUNCEMENT POPUP
-  ----------------------------- */
-
   function applyAnnouncementSettings() {
-    const dialog = document.getElementById("announcement");
+    const dialog = $("announcement");
+    const messageElement = $("announcementMessage");
+    const continueButton = $("continueShopping");
 
     if (!dialog) return;
 
-    const messageElement = document.getElementById(
-      "announcementMessage"
-    );
-
     const enabled = websiteSettings.announcementEnabled === true;
-    const message = String(
-      websiteSettings.announcement || ""
-    ).trim();
+    const message = String(websiteSettings.announcement || "").trim();
 
     if (!enabled || !message) {
       if (dialog.open && typeof dialog.close === "function") {
@@ -904,77 +839,55 @@ if (announcement && continueShopping) {
 
     if (messageElement) {
       messageElement.textContent = message;
-    } else {
-      /*
-        Fallback for an existing dialog without the
-        announcementMessage element.
-      */
-      const paragraph = dialog.querySelector("p");
-
-      if (paragraph) {
-        paragraph.textContent = message;
-      }
     }
 
     dialog.hidden = false;
     dialog.style.display = "";
 
-    const alreadyShown =
-      sessionStorage.getItem("kielmenAnnouncementShown") === "yes";
-
-    if (!alreadyShown) {
-      if (typeof dialog.showModal === "function") {
-        if (!dialog.open) {
-          dialog.showModal();
-        }
-      } else {
-        dialog.style.display = "block";
-      }
-
-      sessionStorage.setItem(
-        "kielmenAnnouncementShown",
-        "yes"
-      );
-    }
-
-    const continueButton = document.getElementById(
-      "continueShopping"
-    );
-
-    if (continueButton && !continueButton.dataset.settingsBound) {
-      continueButton.dataset.settingsBound = "yes";
+    if (continueButton && !continueButton.dataset.settingsListenerAdded) {
+      continueButton.dataset.settingsListenerAdded = "yes";
 
       continueButton.addEventListener("click", () => {
+        setSessionValue("kielmenAnnouncementShown", "yes");
+
         if (dialog.open && typeof dialog.close === "function") {
           dialog.close();
         } else {
+          dialog.hidden = true;
           dialog.style.display = "none";
         }
       });
     }
+
+    if (getSessionValue("kielmenAnnouncementShown") !== "yes") {
+      if (typeof dialog.showModal === "function" && !dialog.open) {
+        try {
+          dialog.showModal();
+        } catch (_error) {
+          dialog.style.display = "block";
+        }
+      } else if (typeof dialog.showModal !== "function") {
+        dialog.style.display = "block";
+      }
+
+      setSessionValue("kielmenAnnouncementShown", "yes");
+    }
   }
 
-  /* -----------------------------
-     NETWORK AVAILABILITY
-  ----------------------------- */
-
-  function getNetworkKey(button) {
-    const text = (
-      button.dataset.network ||
-      button.dataset.type ||
-      button.textContent ||
-      ""
+  function getNetworkKey(tab) {
+    const value = String(
+      tab.dataset.network || tab.dataset.type || tab.textContent || ""
     ).toUpperCase().replace(/[^A-Z]/g, "");
 
-    if (text.includes("AIRTELTIGO") || text.includes("ATIG")) {
+    if (value.includes("AIRTELTIGO") || value.includes("ATIG")) {
       return "AIRTELTIGO";
     }
 
-    if (text.includes("TELECEL")) {
+    if (value.includes("TELECEL")) {
       return "TELECEL";
     }
 
-    if (text.includes("MTN")) {
+    if (value.includes("MTN")) {
       return "MTN";
     }
 
@@ -983,11 +896,10 @@ if (announcement && continueShopping) {
 
   function applyNetworkAvailability() {
     const tabs = Array.from(
-      document.querySelectorAll(
-        ".network-tab, [data-network]"
-      )
+      document.querySelectorAll(".network-tab[data-network]")
     );
 
+    const availability = websiteSettings.networkAvailability || {};
     const availableTabs = [];
 
     tabs.forEach(tab => {
@@ -995,15 +907,15 @@ if (announcement && continueShopping) {
 
       if (!network) return;
 
-      const available =
-        websiteSettings.networkAvailability[network] === true;
+      /*
+       * Only an explicit false disables a network.
+       * Missing settings must not accidentally freeze the website.
+       */
+      const available = availability[network] !== false;
 
       tab.hidden = !available;
       tab.disabled = !available;
-      tab.setAttribute(
-        "aria-disabled",
-        available ? "false" : "true"
-      );
+      tab.setAttribute("aria-disabled", available ? "false" : "true");
 
       if (available) {
         availableTabs.push(tab);
@@ -1012,84 +924,75 @@ if (announcement && continueShopping) {
       }
     });
 
-    const paymentButton = document.getElementById(
-      "paymentButton"
-    );
-
-    const checkoutMessage = document.getElementById(
-      "checkoutMessage"
-    );
-
-    const selectedNetwork = document.getElementById(
-      "selectedNetwork"
-    );
+    const paymentButton = $("paymentButton");
+    const checkoutMessage = $("checkoutMessage");
+    const selectedNetwork = $("selectedNetwork");
+    const bundleGrid = $("bundleGrid");
+    const resultCount = $("resultCount");
 
     if (availableTabs.length === 0) {
-      if (paymentButton) {
-        paymentButton.disabled = true;
-      }
+      if (paymentButton) paymentButton.disabled = true;
 
       if (checkoutMessage) {
         checkoutMessage.textContent =
           "All networks are temporarily unavailable. Please check again later.";
       }
 
-      const grid = document.getElementById("bundleGrid");
-
-      if (grid) {
-        grid.replaceChildren();
+      if (bundleGrid) {
+        bundleGrid.replaceChildren();
 
         const notice = document.createElement("p");
         notice.textContent =
           "All data bundle networks are temporarily unavailable.";
         notice.setAttribute("role", "status");
 
-        grid.appendChild(notice);
+        bundleGrid.appendChild(notice);
+      }
+
+      if (resultCount) {
+        resultCount.textContent = "No networks currently available.";
       }
 
       return;
     }
 
-    if (paymentButton) {
-      paymentButton.disabled = false;
-    }
+    const current = String(selectedNetwork?.value || "").toUpperCase();
+
+    const currentAvailable =
+      availability[current] !== false &&
+      availableTabs.some(tab => getNetworkKey(tab) === current);
 
     const activeTab = availableTabs.find(
       tab => tab.classList.contains("active")
     );
 
-    if (!activeTab) {
-      /*
-        Click an available tab so the existing script.js
-        can render that network's bundles normally.
-      */
-      availableTabs[0].click();
+    if (!activeTab || !currentAvailable) {
+      const nextTab = availableTabs[0];
+
+      if (nextTab) {
+        /*
+         * Update the selected network and activate an available tab.
+         * The existing script.js handles bundle rendering.
+         */
+        if (selectedNetwork) {
+          selectedNetwork.value = getNetworkKey(nextTab);
+        }
+
+        nextTab.click();
+      }
     }
 
-    if (selectedNetwork) {
-      const current = String(
-        selectedNetwork.value || ""
-      ).toUpperCase();
-
-      if (
-        current &&
-        websiteSettings.networkAvailability[current] !== true
-      ) {
-        const firstNetwork = getNetworkKey(availableTabs[0]);
-
-        if (firstNetwork) {
-          selectedNetwork.value = firstNetwork;
-        }
-      }
+    /*
+     * One unavailable network must never disable checkout for
+     * the other networks.
+     */
+    if (paymentButton) {
+      paymentButton.disabled = false;
     }
   }
 
-  /* -----------------------------
-     PROTECT CHECKOUT FROM DISABLED NETWORKS
-  ----------------------------- */
-
   function protectCheckout() {
-    const form = document.getElementById("checkoutForm");
+    const form = $("checkoutForm");
 
     if (!form || form.dataset.availabilityGuard === "yes") {
       return;
@@ -1097,23 +1000,18 @@ if (announcement && continueShopping) {
 
     form.dataset.availabilityGuard = "yes";
 
+    /*
+     * Capture phase blocks orders for disabled networks before
+     * the existing checkout handler can start payment.
+     */
     form.addEventListener("submit", event => {
-      const selectedNetwork = document.getElementById(
-        "selectedNetwork"
-      );
+      const network = String($("selectedNetwork")?.value || "")
+        .toUpperCase();
 
-      const network = String(
-        selectedNetwork?.value || ""
-      ).toUpperCase();
+      const message = $("checkoutMessage");
+      const availability = websiteSettings.networkAvailability || {};
 
-      const message = document.getElementById(
-        "checkoutMessage"
-      );
-
-      if (
-        !network ||
-        websiteSettings.networkAvailability[network] !== true
-      ) {
+      if (!network || availability[network] === false) {
         event.preventDefault();
         event.stopImmediatePropagation();
 
@@ -1125,27 +1023,18 @@ if (announcement && continueShopping) {
     }, true);
   }
 
-  /* -----------------------------
-     LOAD OWNER SETTINGS
-  ----------------------------- */
-
   async function loadWebsiteSettings() {
     try {
-      const response = await fetch(
-        API_BASE + "/website-settings",
-        {
-          method: "GET",
-          cache: "no-store",
-          headers: {
-            "Accept": "application/json"
-          }
+      const response = await fetch(API_BASE + "/website-settings", {
+        method: "GET",
+        cache: "no-store",
+        headers: {
+          "Accept": "application/json"
         }
-      );
+      });
 
       if (!response.ok) {
-        throw new Error(
-          "Settings request failed: HTTP " + response.status
-        );
+        throw new Error("Settings request failed: HTTP " + response.status);
       }
 
       const result = await response.json();
@@ -1159,59 +1048,52 @@ if (announcement && continueShopping) {
       websiteSettings = {
         ...DEFAULT_SETTINGS,
         ...saved,
+
         colours: {
           ...DEFAULT_SETTINGS.colours,
           ...(saved.colours || {})
         },
+
         networkAvailability: {
           ...DEFAULT_SETTINGS.networkAvailability,
           ...(saved.networkAvailability || {})
         }
       };
-
-      applyWebsiteColours(websiteSettings.colours);
-      applyWhatsAppSettings();
-      applyAnnouncementSettings();
-      applyNetworkAvailability();
-
-      console.log(
-        "Kielmen 636 Dataplug website settings loaded."
-      );
     } catch (error) {
       /*
-        If the settings endpoint is temporarily unavailable,
-        keep the existing website working with its defaults.
-      */
+       * If the API fails, keep the public website usable with
+       * safe defaults instead of blocking all interaction.
+       */
       console.warn(
         "Could not load website settings. Using defaults.",
         error
       );
 
-      applyWebsiteColours(DEFAULT_SETTINGS.colours);
-      protectCheckout();
+      websiteSettings = {
+        ...DEFAULT_SETTINGS,
+        colours: { ...DEFAULT_SETTINGS.colours },
+        networkAvailability: { ...DEFAULT_SETTINGS.networkAvailability }
+      };
     }
+
+    applyWebsiteColours(websiteSettings.colours);
+    applyWhatsAppSettings();
+    applyNetworkAvailability();
+    applyAnnouncementSettings();
   }
 
-  /* -----------------------------
-     START
-  ----------------------------- */
-
-  function startSettingsIntegration() {
+  function start() {
     protectCheckout();
     loadWebsiteSettings();
   }
 
   if (document.readyState === "loading") {
-    document.addEventListener(
-      "DOMContentLoaded",
-      startSettingsIntegration,
-      { once: true }
-    );
+    document.addEventListener("DOMContentLoaded", start, { once: true });
   } else {
-    startSettingsIntegration();
+    start();
   }
 })();
-      </script>
+</script>
 
 </body>
-</html>
+      </html>
