@@ -4,22 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Buy MTN, Telecel and AirtelTigo data bundles from your trusted Kielmen 636 agent.">
+  <meta name="description" content="Buy MTN, Telecel and AirtelTigo data bundles from your trusted agent.">
   <meta name="robots" content="index, follow">
-
   <title>Agent Data Store | Kielmen 636 Dataplug</title>
 
   <style>
-    /* =========================================
-       KIELMEN 636 DATAPLUG
-       AGENT STORE — WHITE THEME
-       MTN YELLOW | TELECEL RED | AIRTELTIGO BLUE
-       ========================================= */
-
     :root {
       --bg: #ffffff;
       --card: #ffffff;
-      --field: #ffffff;
       --border: #e5e7eb;
       --text: #111827;
       --muted: #6b7280;
@@ -28,21 +20,21 @@
       --green-dark: #15803d;
       --green-light: #f0fdf4;
 
-      --gold: #ffcc00;
-      --gold-dark: #a16207;
-      --gold-light: #fffbea;
+      --mtn: #ffcc00;
+      --mtn-border: #eab308;
+      --mtn-text: #713f12;
 
-      --red: #ed1c24;
-      --red-dark: #b91c1c;
-      --red-light: #fef2f2;
+      --telecel: #fee2e2;
+      --telecel-strong: #ed1c24;
+      --telecel-border: #f87171;
+      --telecel-text: #991b1b;
 
-      --blue: #1688ff;
-      --blue-dark: #1d4ed8;
-      --blue-light: #eff6ff;
+      --airteltigo: #dbeafe;
+      --airteltigo-strong: #1688ff;
+      --airteltigo-border: #60a5fa;
+      --airteltigo-text: #1d4ed8;
 
-      --surface: #f9fafb;
-      --shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-      --radius: 16px;
+      --shadow: 0 6px 18px rgba(0, 0, 0, .07);
     }
 
     * {
@@ -51,7 +43,7 @@
 
     html {
       scroll-behavior: smooth;
-      scroll-padding-top: 85px;
+      scroll-padding-top: 90px;
     }
 
     body {
@@ -60,17 +52,15 @@
       background: var(--bg);
       color: var(--text);
       font-family: Arial, Helvetica, sans-serif;
-      -webkit-font-smoothing: antialiased;
       line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
     }
 
-    button,
-    input {
+    button, input {
       font: inherit;
     }
 
-    button,
-    a {
+    button, a {
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -91,7 +81,7 @@
       display: none !important;
     }
 
-    /* ---------- HEADER ---------- */
+    /* HEADER */
 
     .header {
       position: sticky;
@@ -101,9 +91,8 @@
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      padding: 11px 14px;
-      background: rgba(255, 255, 255, 0.97);
-      color: var(--text);
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, .97);
       border-bottom: 1px solid var(--border);
       backdrop-filter: blur(12px);
     }
@@ -116,17 +105,15 @@
     }
 
     .logo {
-      width: 45px;
-      height: 45px;
-      flex: 0 0 45px;
+      width: 46px;
+      height: 46px;
+      flex: 0 0 46px;
       display: grid;
       place-items: center;
       border: 2px solid var(--green);
-      border-radius: 14px;
+      border-radius: 15px;
       background: var(--green-light);
-      color: var(--green-dark);
-      font-size: 19px;
-      font-weight: 900;
+      font-size: 23px;
     }
 
     .brand-text {
@@ -135,8 +122,7 @@
 
     .brand-text h1 {
       margin: 0;
-      color: var(--text);
-      font-size: 15px;
+      font-size: 16px;
       line-height: 1.35;
       overflow-wrap: anywhere;
     }
@@ -144,7 +130,7 @@
     .brand-text p {
       margin: 3px 0 0;
       color: var(--muted);
-      font-size: 11px;
+      font-size: 12px;
     }
 
     .header-actions {
@@ -154,28 +140,27 @@
       flex-shrink: 0;
     }
 
-    .whatsapp-btn,
-    .menu-btn {
-      min-height: 42px;
-      padding: 9px 10px;
+    .whatsapp-btn, .menu-btn {
+      min-height: 43px;
+      padding: 9px 11px;
       border: 1px solid var(--border);
-      border-radius: 11px;
-      background: var(--surface);
-      color: var(--text);
+      border-radius: 12px;
       text-decoration: none;
     }
 
     .whatsapp-btn {
-      border-color: #15803d;
+      border-color: var(--green-dark);
       background: var(--green);
-      color: #ffffff;
+      color: white;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
     }
 
     .menu-btn {
-      min-width: 42px;
-      font-size: 21px;
+      min-width: 43px;
+      background: #f9fafb;
+      color: var(--text);
+      font-size: 22px;
     }
 
     .menu-panel {
@@ -188,7 +173,7 @@
       padding: 8px;
       border: 1px solid var(--border);
       border-radius: 14px;
-      background: #ffffff;
+      background: white;
       box-shadow: var(--shadow);
     }
 
@@ -206,36 +191,34 @@
 
     .menu-panel a:hover {
       background: #f3f4f6;
-      color: #111827;
     }
 
-    /* ---------- HERO ---------- */
+    /* HERO */
 
     .hero {
-      padding: 32px 16px;
+      padding: 30px 16px;
       text-align: center;
-      background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+      background: linear-gradient(180deg, #f0fdf4, #ffffff);
       border-bottom: 1px solid var(--border);
     }
 
     .hero-logo {
-      width: 65px;
-      height: 65px;
-      margin: 0 auto 15px;
+      width: 66px;
+      height: 66px;
+      margin: 0 auto 14px;
       display: grid;
       place-items: center;
       border: 2px solid var(--green);
       border-radius: 20px;
-      background: #ffffff;
+      background: white;
       color: var(--green-dark);
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 900;
       box-shadow: var(--shadow);
     }
 
     .hero h2 {
       margin: 12px 0;
-      color: #111827;
       font-size: clamp(25px, 6vw, 39px);
       overflow-wrap: anywhere;
     }
@@ -256,17 +239,17 @@
       padding: 9px 13px;
       border: 1px solid #fde68a;
       border-radius: 999px;
-      background: var(--gold-light);
+      background: #fffbeb;
       color: #854d0e;
       font-size: 12px;
       overflow-wrap: anywhere;
     }
 
-    /* ---------- MAIN CONTAINER ---------- */
+    /* MAIN LAYOUT */
 
     .container {
       width: 100%;
-      max-width: 1050px;
+      max-width: 1100px;
       margin: 0 auto;
       padding: 20px 13px 35px;
     }
@@ -276,15 +259,13 @@
       margin-bottom: 18px;
       padding: 20px 15px;
       border: 1px solid var(--border);
-      border-radius: 17px;
-      background: #ffffff;
-      color: var(--text);
-      box-shadow: 0 3px 14px rgba(0, 0, 0, 0.035);
+      border-radius: 18px;
+      background: white;
+      box-shadow: 0 3px 14px rgba(0, 0, 0, .035);
     }
 
     .section-title {
       margin: 0 0 12px;
-      color: #111827;
       font-size: 23px;
       line-height: 1.35;
     }
@@ -294,7 +275,7 @@
       line-height: 1.7;
     }
 
-    /* ---------- NETWORK SELECTORS ---------- */
+    /* NETWORK BUTTONS */
 
     .network-grid {
       display: grid;
@@ -305,16 +286,15 @@
 
     .network-btn {
       min-width: 0;
-      min-height: 90px;
+      min-height: 100px;
       padding: 12px 4px;
       border: 2px solid var(--border);
-      border-radius: 15px;
-      background: #ffffff;
-      color: var(--text);
+      border-radius: 17px;
+      background: white;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
       line-height: 1.4;
-      transition: transform .18s ease, box-shadow .18s ease;
+      transition: transform .18s, box-shadow .18s;
     }
 
     .network-btn:hover:not(:disabled) {
@@ -324,52 +304,46 @@
 
     .network-icon {
       display: block;
-      margin-bottom: 6px;
-      font-size: 23px;
+      margin-bottom: 7px;
+      font-size: 25px;
     }
 
-    /* MTN — YELLOW */
-
     .network-btn[data-network="MTN"] {
-      border-color: var(--gold);
-      background: var(--gold-light);
+      border-color: var(--mtn-border);
+      background: #fff8cc;
       color: #713f12;
     }
 
     .network-btn[data-network="MTN"].active {
-      border-color: #eab308;
-      background: var(--gold);
+      border-color: #ca8a04;
+      background: var(--mtn);
       color: #111827;
-      box-shadow: 0 0 0 3px rgba(255, 204, 0, .18);
+      box-shadow: 0 0 0 3px rgba(255, 204, 0, .20);
     }
-
-    /* TELECEL — RED */
 
     .network-btn[data-network="TELECEL"] {
       border-color: #fca5a5;
-      background: var(--red-light);
-      color: #991b1b;
+      background: #fef2f2;
+      color: var(--telecel-text);
     }
 
     .network-btn[data-network="TELECEL"].active {
-      border-color: var(--red-dark);
-      background: var(--red);
-      color: #ffffff;
+      border-color: #b91c1c;
+      background: var(--telecel-strong);
+      color: white;
       box-shadow: 0 0 0 3px rgba(237, 28, 36, .12);
     }
 
-    /* AIRTELTIGO — BLUE */
-
     .network-btn[data-network="AIRTELTIGO"] {
       border-color: #93c5fd;
-      background: var(--blue-light);
-      color: #1d4ed8;
+      background: #eff6ff;
+      color: var(--airteltigo-text);
     }
 
     .network-btn[data-network="AIRTELTIGO"].active {
-      border-color: var(--blue-dark);
-      background: var(--blue);
-      color: #ffffff;
+      border-color: #1d4ed8;
+      background: var(--airteltigo-strong);
+      color: white;
       box-shadow: 0 0 0 3px rgba(22, 136, 255, .12);
     }
 
@@ -377,27 +351,24 @@
       filter: grayscale(.7);
     }
 
-    /* ---------- SEARCH ---------- */
+    /* SEARCH */
 
-    .search-box,
-    .field input {
+    .search-box, .field input {
       width: 100%;
-      min-height: 51px;
+      min-height: 52px;
       padding: 14px;
       border: 1px solid #d1d5db;
-      border-radius: 12px;
+      border-radius: 13px;
       outline: none;
-      background: #ffffff;
+      background: white;
       color: #111827;
     }
 
-    .search-box::placeholder,
-    .field input::placeholder {
+    .search-box::placeholder, .field input::placeholder {
       color: #9ca3af;
     }
 
-    .search-box:focus,
-    .field input:focus {
+    .search-box:focus, .field input:focus {
       border-color: #eab308;
       box-shadow: 0 0 0 3px rgba(250, 204, 21, .15);
     }
@@ -408,44 +379,48 @@
       font-size: 13px;
     }
 
-    /* ---------- BUNDLE CARDS ---------- */
+    /* NETWORK-COLOURED BUNDLE BOXES */
 
     .bundles {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 11px;
-      margin-top: 14px;
+      gap: 12px;
+      margin-top: 15px;
     }
 
     .bundle {
+      position: relative;
       min-width: 0;
-      min-height: 138px;
-      padding: 17px 8px;
-      border: 1px solid #e5e7eb;
-      border-radius: 16px;
-      background: #ffffff;
+      min-height: 145px;
+      padding: 18px 9px;
+      border: 2px solid #e5e7eb;
+      border-radius: 19px;
+      background: white;
       color: #111827;
       text-align: center;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, .045);
-      transition: transform .18s ease, border-color .18s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .06);
+      transition:
+        transform .18s ease,
+        box-shadow .18s ease,
+        border-color .18s ease;
     }
 
     .bundle:hover {
-      transform: translateY(-2px);
-      border-color: #d1d5db;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .11);
     }
 
     .bundle strong {
       display: block;
       margin-bottom: 12px;
       color: #111827;
-      font-size: clamp(20px, 5vw, 29px);
+      font-size: clamp(21px, 5vw, 29px);
+      font-weight: 900;
       overflow-wrap: anywhere;
     }
 
     .bundle .price {
       display: block;
-      color: #a16207;
       font-size: clamp(16px, 4vw, 22px);
       font-weight: 900;
       overflow-wrap: anywhere;
@@ -454,18 +429,100 @@
     .bundle small {
       display: block;
       margin-top: 12px;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: bold;
+      color: #374151;
+      font-size: 12px;
+      font-weight: 800;
     }
+
+    /* EVERY MTN BUNDLE BOX IS YELLOW */
+
+    .bundle[data-network="MTN"] {
+      border-color: #eab308;
+      background: #ffdf00;
+      color: #111827;
+    }
+
+    .bundle[data-network="MTN"] .price {
+      color: #713f12;
+    }
+
+    .bundle[data-network="MTN"] small {
+      color: #713f12;
+    }
+
+    .bundle[data-network="MTN"]:hover {
+      background: #ffd000;
+    }
+
+    /* EVERY TELECEL BUNDLE BOX IS RED */
+
+    .bundle[data-network="TELECEL"] {
+      border-color: #f87171;
+      background: #fee2e2;
+      color: #7f1d1d;
+    }
+
+    .bundle[data-network="TELECEL"] strong {
+      color: #7f1d1d;
+    }
+
+    .bundle[data-network="TELECEL"] .price {
+      color: #b91c1c;
+    }
+
+    .bundle[data-network="TELECEL"] small {
+      color: #991b1b;
+    }
+
+    .bundle[data-network="TELECEL"]:hover {
+      background: #fecaca;
+    }
+
+    /* EVERY AIRTELTIGO BUNDLE BOX IS BLUE */
+
+    .bundle[data-network="AIRTELTIGO"] {
+      border-color: #60a5fa;
+      background: #dbeafe;
+      color: #1e3a8a;
+    }
+
+    .bundle[data-network="AIRTELTIGO"] strong {
+      color: #1e3a8a;
+    }
+
+    .bundle[data-network="AIRTELTIGO"] .price {
+      color: #1d4ed8;
+    }
+
+    .bundle[data-network="AIRTELTIGO"] small {
+      color: #1e40af;
+    }
+
+    .bundle[data-network="AIRTELTIGO"]:hover {
+      background: #bfdbfe;
+    }
+
+    /* SELECTED BUNDLE: KEEP ITS NETWORK COLOUR */
 
     .bundle.selected {
-      border: 2px solid var(--green);
-      background: var(--green-light);
-      box-shadow: 0 0 0 3px rgba(22, 163, 74, .10);
+      border-width: 3px;
+      border-color: var(--green-dark);
+      box-shadow:
+        0 0 0 3px rgba(22, 163, 74, .15),
+        0 8px 18px rgba(0, 0, 0, .10);
+      transform: translateY(-2px);
     }
 
-    /* ---------- FORM FIELDS ---------- */
+    .bundle.selected::after {
+      content: "✓ SELECTED";
+      display: block;
+      margin-top: 8px;
+      color: var(--green-dark);
+      font-size: 10px;
+      font-weight: 900;
+    }
+
+    /* FORM FIELDS */
 
     .field {
       margin-bottom: 17px;
@@ -479,7 +536,7 @@
       font-weight: 800;
     }
 
-    /* ---------- ORDER SUMMARY ---------- */
+    /* ORDER SUMMARY */
 
     .summary {
       margin: 17px 0;
@@ -487,7 +544,6 @@
       border: 1px solid var(--border);
       border-radius: 13px;
       background: #f9fafb;
-      color: #111827;
     }
 
     .summary-row {
@@ -503,8 +559,8 @@
     }
 
     .summary-label {
-      color: var(--muted);
       flex: 0 0 auto;
+      color: var(--muted);
     }
 
     .summary-value {
@@ -517,11 +573,11 @@
 
     .total-price {
       color: var(--green-dark);
-      font-size: 26px;
+      font-size: 25px;
       font-weight: 900;
     }
 
-    /* ---------- BUTTONS ---------- */
+    /* BUTTONS */
 
     .btn {
       display: flex;
@@ -531,14 +587,14 @@
       min-height: 52px;
       padding: 14px;
       border: 0;
-      border-radius: 12px;
+      border-radius: 13px;
       background: var(--green-dark);
-      color: #ffffff;
+      color: white;
       text-align: center;
       text-decoration: none;
       font-weight: 900;
       line-height: 1.4;
-      transition: background .18s ease, transform .18s ease;
+      transition: background .18s, transform .18s;
     }
 
     .btn:hover:not(:disabled) {
@@ -556,7 +612,7 @@
       background: #e5e7eb;
     }
 
-    /* ---------- NOTICES AND MESSAGES ---------- */
+    /* NOTICES AND MESSAGES */
 
     .notice {
       margin: 16px 0;
@@ -586,14 +642,14 @@
       color: #b91c1c;
     }
 
-    /* ---------- ORDER TRACKING ---------- */
+    /* TRACKING */
 
     .tracking-order {
       margin-top: 13px;
       padding: 15px;
       border: 1px solid #d1d5db;
       border-radius: 13px;
-      background: #ffffff;
+      background: white;
       overflow-wrap: anywhere;
     }
 
@@ -613,27 +669,7 @@
       line-height: 1.6;
     }
 
-    /* ---------- LOADING INDICATOR ---------- */
-
-    .loading-indicator {
-      width: 17px;
-      height: 17px;
-      display: inline-block;
-      margin-right: 8px;
-      border: 2px solid #d1d5db;
-      border-top-color: var(--green);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-      vertical-align: middle;
-    }
-
-    @keyframes spin {
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    /* ---------- MOBILE BOTTOM NAVIGATION ---------- */
+    /* BOTTOM NAVIGATION */
 
     .bottom-nav {
       position: fixed;
@@ -658,7 +694,7 @@
       min-width: 0;
       padding: 7px 3px;
       border: 0;
-      border-radius: 10px;
+      border-radius: 11px;
       background: transparent;
       color: var(--muted);
       font-size: 11px;
@@ -670,11 +706,11 @@
     }
 
     .nav-btn.active {
-      background: #f0fdf4;
+      background: var(--green-light);
       color: var(--green-dark);
     }
 
-    /* ---------- FOOTER ---------- */
+    /* FOOTER */
 
     footer {
       padding: 24px 12px;
@@ -691,7 +727,7 @@
       font-weight: 800;
     }
 
-    /* ---------- RESPONSIVE LAYOUT ---------- */
+    /* RESPONSIVE */
 
     @media (min-width: 650px) {
       .container {
@@ -704,6 +740,7 @@
 
       .bundles {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 15px;
       }
 
       .network-btn {
@@ -722,10 +759,6 @@
 
       .bundles {
         grid-template-columns: repeat(4, minmax(0, 1fr));
-      }
-
-      .container {
-        max-width: 1100px;
       }
 
       .bottom-nav {
@@ -783,7 +816,6 @@
   <header class="header">
     <div class="brand">
       <div class="logo" aria-hidden="true">📶</div>
-
       <div class="brand-text">
         <h1 id="headerBusinessName">KIELMEN 636 DATAPLUG</h1>
         <p>Agent Data Store</p>
@@ -820,13 +852,10 @@
 
   <section id="home" class="hero">
     <div class="hero-logo" aria-hidden="true">K636</div>
-
     <h2 id="heroBusinessName">Loading Agent Store...</h2>
-
     <p id="storeDescription">
       Affordable data bundles from your trusted agent.
     </p>
-
     <span id="agentCode" class="agent-badge">
       Loading agent details...
     </span>
@@ -835,7 +864,6 @@
   <main class="container">
 
     <!-- BUY DATA -->
-
     <section id="buy" class="card">
       <h2 class="section-title">Choose Your Data Bundle</h2>
 
@@ -845,39 +873,26 @@
       </p>
 
       <div class="network-grid">
-        <button
-          type="button"
-          class="network-btn"
-          data-network="MTN"
-          aria-pressed="false"
-        >
+        <button type="button" class="network-btn"
+          data-network="MTN" aria-pressed="false">
           <span class="network-icon">🟡</span>
           MTN
         </button>
 
-        <button
-          type="button"
-          class="network-btn"
-          data-network="TELECEL"
-          aria-pressed="false"
-        >
+        <button type="button" class="network-btn"
+          data-network="TELECEL" aria-pressed="false">
           <span class="network-icon">🔴</span>
           TELECEL
         </button>
 
-        <button
-          type="button"
-          class="network-btn"
-          data-network="AIRTELTIGO"
-          aria-pressed="false"
-        >
+        <button type="button" class="network-btn"
+          data-network="AIRTELTIGO" aria-pressed="false">
           <span class="network-icon">🔵</span>
           AIRTELTIGO
         </button>
       </div>
 
       <label for="bundleSearch" class="hidden">Search bundles</label>
-
       <input
         id="bundleSearch"
         class="search-box"
@@ -891,18 +906,15 @@
         Loading bundles...
       </p>
 
-      <div
-        id="bundleMessage"
-        class="message"
-        role="status"
-        aria-live="polite"
-      >Connecting to the store...</div>
+      <div id="bundleMessage" class="message"
+        role="status" aria-live="polite">
+        Connecting to the store...
+      </div>
 
       <div id="bundles" class="bundles"></div>
     </section>
 
     <!-- CHECKOUT -->
-
     <section id="checkout" class="card">
       <h2 class="section-title">🛒 Place Your Order</h2>
 
@@ -912,7 +924,6 @@
 
       <div class="field">
         <label for="customerPhone">Phone Number Receiving Data</label>
-
         <input
           type="tel"
           id="customerPhone"
@@ -921,7 +932,6 @@
           placeholder="0241234567"
           autocomplete="tel"
         >
-
         <small class="muted">
           Example: 0241234567 or +233241234567.
         </small>
@@ -929,7 +939,6 @@
 
       <div class="field">
         <label for="customerEmail">Email Address</label>
-
         <input
           type="email"
           id="customerEmail"
@@ -940,7 +949,6 @@
           placeholder="Enter your email address"
           required
         >
-
         <small class="muted">
           Used for your Paystack payment receipt.
         </small>
@@ -978,16 +986,11 @@
         Select a Bundle First
       </button>
 
-      <p
-        id="checkoutMessage"
-        class="message"
-        role="status"
-        aria-live="polite"
-      ></p>
+      <p id="checkoutMessage" class="message"
+        role="status" aria-live="polite"></p>
     </section>
 
     <!-- ORDER TRACKING -->
-
     <section id="trackOrder" class="card">
       <h2 class="section-title">📦 Track Your Order</h2>
 
@@ -997,7 +1000,6 @@
 
       <div class="field">
         <label for="trackingPhone">Order Phone Number</label>
-
         <input
           type="tel"
           id="trackingPhone"
@@ -1012,18 +1014,13 @@
         Check My Orders
       </button>
 
-      <p
-        id="trackingMessage"
-        class="message"
-        role="status"
-        aria-live="polite"
-      ></p>
+      <p id="trackingMessage" class="message"
+        role="status" aria-live="polite"></p>
 
       <div id="trackingResults"></div>
     </section>
 
     <!-- SUPPORT -->
-
     <section id="help" class="card">
       <h2 class="section-title">💬 Need Help?</h2>
 
@@ -1037,9 +1034,7 @@
         href="https://wa.me/233533878548"
         target="_blank"
         rel="noopener noreferrer"
-      >
-        Chat with Your Agent on WhatsApp
-      </a>
+      >Chat with Your Agent on WhatsApp</a>
     </section>
   </main>
 
@@ -1047,30 +1042,22 @@
     <div id="footerBusinessName" class="footer-brand">
       Kielmen 636 Dataplug
     </div>
-
     <div>Powered by Kielmen 636 Dataplug</div>
     <div>Choose your bundle carefully before payment.</div>
   </footer>
 
   <nav class="bottom-nav" aria-label="Main navigation">
     <button class="nav-btn active" type="button" data-target="buy">
-      <span class="icon">🛒</span>
-      <span>Buy</span>
+      <span class="icon">🛒</span><span>Buy</span>
     </button>
-
     <button class="nav-btn" type="button" data-target="checkout">
-      <span class="icon">💳</span>
-      <span>Checkout</span>
+      <span class="icon">💳</span><span>Checkout</span>
     </button>
-
     <button class="nav-btn" type="button" data-target="trackOrder">
-      <span class="icon">📦</span>
-      <span>Track</span>
+      <span class="icon">📦</span><span>Track</span>
     </button>
-
     <button class="nav-btn" type="button" data-target="help">
-      <span class="icon">💬</span>
-      <span>Help</span>
+      <span class="icon">💬</span><span>Help</span>
     </button>
   </nav>
 
@@ -1134,7 +1121,6 @@
 
     function money(value) {
       const amount = Number(value);
-
       return Number.isFinite(amount)
         ? "GH₵" + amount.toFixed(2)
         : "GH₵0.00";
@@ -1150,10 +1136,7 @@
         return "MTN";
       }
 
-      if (
-        network.includes("TELECEL") ||
-        network === "VODAFONE"
-      ) {
+      if (network.includes("TELECEL") || network === "VODAFONE") {
         return "TELECEL";
       }
 
@@ -1232,7 +1215,7 @@
       return data;
     }
 
-    /* ---------- FIND THE AGENT STORE ---------- */
+    /* FIND AGENT STORE */
 
     function getStoreIdentifiers() {
       const params = new URLSearchParams(window.location.search);
@@ -1283,7 +1266,7 @@
       }
     }
 
-    /* ---------- READ AGENT PRICE DATA ---------- */
+    /* PRICE DATA */
 
     function getPriceBundle(item) {
       return safeText(
@@ -1372,18 +1355,13 @@
       elements.heroBusinessName.textContent = name;
       elements.footerBusinessName.textContent = name;
       elements.storeDescription.textContent = description;
-
       elements.agentCode.textContent = "Agent Code: " + agentCode;
-
       elements.headerWhatsApp.href = whatsapp;
       elements.helpWhatsApp.href = whatsapp;
-
       elements.summaryAgent.textContent = name;
 
       document.title = name + " | Agent Data Store";
     }
-
-    /* ---------- HANDLE STORE ERRORS ---------- */
 
     function showStoreError(message) {
       store = null;
@@ -1417,7 +1395,7 @@
       elements.payButton.textContent = "Store Unavailable";
     }
 
-    /* ---------- LOAD THE AGENT STORE ---------- */
+    /* LOAD STORE */
 
     async function loadStore() {
       getStoreIdentifiers();
@@ -1440,17 +1418,12 @@
       elements.payButton.textContent = "Loading Store...";
 
       const controller = new AbortController();
-
-      const timeout = setTimeout(() => {
-        controller.abort();
-      }, 20000);
+      const timeout = setTimeout(() => controller.abort(), 20000);
 
       try {
         const endpoint = agentCode
-          ? API_BASE + "/agents/store/" +
-            encodeURIComponent(agentCode)
-          : API_BASE + "/agents/store-by-slug/" +
-            encodeURIComponent(storeSlug);
+          ? API_BASE + "/agents/store/" + encodeURIComponent(agentCode)
+          : API_BASE + "/agents/store-by-slug/" + encodeURIComponent(storeSlug);
 
         const data = await fetchJSON(endpoint, {
           method: "GET",
@@ -1480,9 +1453,7 @@
         }
 
         agentCode = safeText(
-          store.agentCode ||
-          store.agent_code ||
-          store.code,
+          store.agentCode || store.agent_code || store.code,
           agentCode
         ).trim().toUpperCase();
 
@@ -1552,7 +1523,7 @@
       }
     }
 
-    /* ---------- NETWORK AVAILABILITY ---------- */
+    /* NETWORK AVAILABILITY */
 
     function setupNetworkButtons() {
       document.querySelectorAll(".network-btn").forEach(button => {
@@ -1574,7 +1545,7 @@
       });
     }
 
-    /* ---------- SELECT A NETWORK ---------- */
+    /* SELECT NETWORK */
 
     function selectNetwork(network) {
       selectedNetwork = normalizeNetwork(network);
@@ -1585,17 +1556,12 @@
           normalizeNetwork(button.dataset.network) === selectedNetwork;
 
         button.classList.toggle("active", active);
-
-        button.setAttribute(
-          "aria-pressed",
-          active ? "true" : "false"
-        );
+        button.setAttribute("aria-pressed", active ? "true" : "false");
       });
 
       elements.summaryNetwork.textContent = selectedNetwork;
       elements.summaryBundle.textContent = "Not selected";
       elements.selectedPrice.textContent = money(0);
-
       elements.payButton.disabled = true;
       elements.payButton.textContent = "Select a Bundle First";
 
@@ -1604,7 +1570,7 @@
       renderBundles();
     }
 
-    /* ---------- DISPLAY BUNDLES ---------- */
+    /* DISPLAY NETWORK-COLOURED BUNDLES */
 
     function renderBundles() {
       elements.bundles.replaceChildren();
@@ -1651,7 +1617,6 @@
             ? "No matching bundles are available for this network."
             : "No bundles are available at the moment."
         );
-
         return;
       }
 
@@ -1663,11 +1628,18 @@
       filtered.forEach(item => {
         const name = getPriceBundle(item);
         const amount = getPriceAmount(item);
+        const network = getPriceNetwork(item);
 
         const card = document.createElement("button");
-
         card.type = "button";
         card.className = "bundle";
+
+        /*
+         * IMPORTANT:
+         * This data-network attribute makes each box use its
+         * own network colour, regardless of the selected tab.
+         */
+        card.dataset.network = network;
         card.setAttribute("aria-pressed", "false");
 
         const title = document.createElement("strong");
@@ -1691,7 +1663,7 @@
       });
     }
 
-    /* ---------- SELECT A BUNDLE ---------- */
+    /* SELECT BUNDLE */
 
     function chooseBundle(item, selectedCard) {
       const name = getPriceBundle(item);
@@ -1718,20 +1690,14 @@
         card.setAttribute("aria-pressed", "false");
 
         const label = card.querySelector(".bundle-label");
-
-        if (label) {
-          label.textContent = "Tap to select";
-        }
+        if (label) label.textContent = "Tap to select";
       });
 
       selectedCard.classList.add("selected");
       selectedCard.setAttribute("aria-pressed", "true");
 
       const label = selectedCard.querySelector(".bundle-label");
-
-      if (label) {
-        label.textContent = "Selected ✓";
-      }
+      if (label) label.textContent = "Selected ✓";
 
       elements.summaryNetwork.textContent = network;
       elements.summaryBundle.textContent = name;
@@ -1752,8 +1718,6 @@
       });
     }
 
-    /* ---------- CLEAR BUNDLE SELECTION ---------- */
-
     function clearBundleSelection() {
       selectedBundle = null;
 
@@ -1762,20 +1726,16 @@
         card.setAttribute("aria-pressed", "false");
 
         const label = card.querySelector(".bundle-label");
-
-        if (label) {
-          label.textContent = "Tap to select";
-        }
+        if (label) label.textContent = "Tap to select";
       });
 
       elements.summaryBundle.textContent = "Not selected";
       elements.selectedPrice.textContent = money(0);
-
       elements.payButton.disabled = true;
       elements.payButton.textContent = "Select a Bundle First";
     }
 
-    /* ---------- PAYMENT ---------- */
+    /* PAYSTACK PAYMENT */
 
     async function startPayment() {
       if (isPaying) return;
@@ -1797,14 +1757,11 @@
           "Enter a valid Ghanaian phone number, such as 0241234567.",
           "error"
         );
-
         elements.customerPhone.focus();
         return;
       }
 
-      const email = elements.customerEmail.value
-        .trim()
-        .toLowerCase();
+      const email = elements.customerEmail.value.trim().toLowerCase();
 
       if (
         email.length > 254 ||
@@ -1815,7 +1772,6 @@
           "Enter a valid email address.",
           "error"
         );
-
         elements.customerEmail.focus();
         return;
       }
@@ -1841,7 +1797,6 @@
       if (!confirmed) return;
 
       isPaying = true;
-
       elements.payButton.disabled = true;
       elements.payButton.textContent = "Preparing Payment...";
 
@@ -1852,10 +1807,8 @@
 
       try {
         /*
-         * The server must validate the agent, network, bundle and amount.
-         * Never rely on browser-submitted prices as proof of payment.
-         * Existing server-side Paystack verification and data-delivery
-         * logic must remain in place.
+         * The backend must validate the agent, network, bundle and price.
+         * The browser must never be trusted as proof of payment.
          */
         const data = await fetchJSON(
           API_BASE + "/initialize-payment",
@@ -1880,18 +1833,13 @@
 
         const paymentURL = new URL(data.authorization_url);
 
-        if (
-          paymentURL.protocol !== "https:" ||
-          ![
-            "checkout.paystack.com",
-            "paystack.com"
-          ].some(host =>
-            paymentURL.hostname === host ||
-            paymentURL.hostname.endsWith("." + host)
-          )
-        ) {
+        /*
+         * Keep HTTPS validation without an overly restrictive hostname
+         * allowlist, which could reject a legitimate Paystack checkout URL.
+         */
+        if (paymentURL.protocol !== "https:") {
           throw new Error(
-            "The payment checkout link is not a recognised secure Paystack URL."
+            "The payment checkout link is not secure."
           );
         }
 
@@ -1912,7 +1860,6 @@
         );
 
         isPaying = false;
-
         elements.payButton.disabled = !selectedBundle;
 
         elements.payButton.textContent = selectedBundle
@@ -1921,14 +1868,12 @@
       }
     }
 
-    /* ---------- ORDER TRACKING ---------- */
+    /* ORDER TRACKING */
 
     async function trackCustomerOrders() {
       if (isTracking) return;
 
-      const phone = normalizePhone(
-        elements.trackingPhone.value
-      );
+      const phone = normalizePhone(elements.trackingPhone.value);
 
       if (!isValidGhanaPhone(phone)) {
         setMessage(
@@ -1936,7 +1881,6 @@
           "Enter the valid Ghanaian number used for your order.",
           "error"
         );
-
         elements.trackingPhone.focus();
         return;
       }
@@ -1951,10 +1895,8 @@
       }
 
       isTracking = true;
-
       elements.trackOrderButton.disabled = true;
       elements.trackOrderButton.textContent = "Checking Orders...";
-
       elements.trackingResults.replaceChildren();
 
       setMessage(
@@ -1978,9 +1920,7 @@
           );
         }
 
-        const orders = Array.isArray(data.orders)
-          ? data.orders
-          : [];
+        const orders = Array.isArray(data.orders) ? data.orders : [];
 
         if (!orders.length) {
           setMessage(
@@ -2021,7 +1961,6 @@
         card.className = "tracking-order";
 
         const title = document.createElement("h4");
-
         title.textContent = "Order " + safeText(
           order.orderNumber ||
           order.order_number ||
@@ -2033,51 +1972,28 @@
         card.appendChild(title);
 
         const fields = [
-          [
-            "Network",
-            normalizeNetwork(order.network || "Unknown")
-          ],
-          [
-            "Bundle",
-            safeText(
-              order.bundle || order.dataSize || order.size,
-              "Not specified"
-            )
-          ],
-          [
-            "Phone",
-            safeText(
-              order.phone ||
-              order.customerPhone ||
-              order.customer_phone,
-              "Not specified"
-            )
-          ],
-          [
-            "Amount",
-            money(
-              order.amount ??
-              order.price ??
-              order.sellingPrice ??
-              0
-            )
-          ],
-          [
-            "Payment",
-            safeText(
-              order.payment_status || order.paymentStatus,
-              "Pending"
-            )
-          ],
-          [
-            "Delivery",
-            safeText(
-              order.delivery_status ||
-              order.deliveryStatus ||
-              order.status,
-              "Pending"
-            )
-          ]
+          ["Network", normalizeNetwork(order.network || "Unknown")],
+          ["Bundle", safeText(
+            order.bundle || order.dataSize || order.size,
+            "Not specified"
+          )],
+          ["Phone", safeText(
+            order.phone || order.customerPhone || order.customer_phone,
+            "Not specified"
+          )],
+          ["Amount", money(
+            order.amount ?? order.price ?? order.sellingPrice ?? 0
+          )],
+          ["Payment", safeText(
+            order.payment_status || order.paymentStatus,
+            "Pending"
+          )],
+          ["Delivery", safeText(
+            order.delivery_status ||
+            order.deliveryStatus ||
+            order.status,
+            "Pending"
+          )]
         ];
 
         fields.forEach(([label, value]) => {
@@ -2090,21 +2006,12 @@
       });
     }
 
-    /* ---------- MENU ---------- */
+    /* MENU */
 
     function closeMenu() {
       elements.menuPanel.classList.remove("open");
-
-      elements.menuButton.setAttribute(
-        "aria-expanded",
-        "false"
-      );
-
-      elements.menuButton.setAttribute(
-        "aria-label",
-        "Open menu"
-      );
-
+      elements.menuButton.setAttribute("aria-expanded", "false");
+      elements.menuButton.setAttribute("aria-label", "Open menu");
       elements.menuButton.textContent = "☰";
     }
 
@@ -2139,13 +2046,12 @@
       });
     }
 
-    /* ---------- BOTTOM NAVIGATION ---------- */
+    /* BOTTOM NAVIGATION */
 
     function setupNavigation() {
       document.querySelectorAll(".nav-btn[data-target]").forEach(button => {
         button.addEventListener("click", () => {
           const target = $(button.dataset.target);
-
           if (!target) return;
 
           target.scrollIntoView({
@@ -2162,7 +2068,7 @@
       });
     }
 
-    /* ---------- EVENT LISTENERS ---------- */
+    /* EVENT LISTENERS */
 
     function setupEventListeners() {
       document.querySelectorAll(".network-btn[data-network]").forEach(button => {
@@ -2179,7 +2085,6 @@
       });
 
       elements.payButton.addEventListener("click", startPayment);
-
       elements.trackOrderButton.addEventListener(
         "click",
         trackCustomerOrders
@@ -2211,7 +2116,7 @@
       setupNavigation();
     }
 
-    /* ---------- START THE STORE ---------- */
+    /* START */
 
     function startAgentStore() {
       setupEventListeners();
@@ -2229,4 +2134,4 @@
     }
   </script>
 </body>
-  </html>
+        </html>
