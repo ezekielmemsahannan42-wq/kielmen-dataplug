@@ -693,29 +693,22 @@ function initializeMobileMenu() {
   const menuButton = getElement("menuButton");
   const mobileMenu = getElement("mobileMenu");
 
-  if (!menuButton || !mobileMenu) {
-    return;
-  }
+  if (!menuButton || !mobileMenu) return;
 
-  /*
-   * Use the same display property as the HTML menu.
-   * This avoids conflicts with another script toggling .open.
-   */
+  // Prevent duplicate event listeners.
+  if (menuButton.dataset.menuInitialized === "yes") return;
+  menuButton.dataset.menuInitialized = "yes";
+
+  // Start with the menu closed.
+  mobileMenu.style.display = "none";
+  menuButton.setAttribute("aria-expanded", "false");
+
   menuButton.addEventListener("click", () => {
-    const isOpen = mobileMenu.style.display === "block";
+    const isOpen = menuButton.getAttribute("aria-expanded") === "true";
 
     mobileMenu.style.display = isOpen ? "none" : "block";
-
-    menuButton.setAttribute(
-      "aria-expanded",
-      isOpen ? "false" : "true"
-    );
-
-    menuButton.setAttribute(
-      "aria-label",
-      isOpen ? "Open menu" : "Close menu"
-    );
-
+    menuButton.setAttribute("aria-expanded", String(!isOpen));
+    menuButton.setAttribute("aria-label", isOpen ? "Open menu" : "Close menu");
     menuButton.textContent = isOpen ? "☰" : "✕";
   });
 
