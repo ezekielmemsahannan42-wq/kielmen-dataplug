@@ -480,6 +480,9 @@
         class="owner-nav"
         aria-label="Owner dashboard navigation"
       >
+        <a href="#websiteSettings" class="nav-link">
+  Website Settings
+        </a>
         <a href="#dashboardHome" class="nav-link active">
           Dashboard
         </a>
@@ -1158,6 +1161,152 @@
 
       </div>
     </section>
+    <!-- WEBSITE SETTINGS -->
+<section class="section" id="websiteSettings">
+  <h2>⚙️ Website Settings</h2>
+
+  <div class="info-panel">
+    <p>Manage your public Kielmen 636 Dataplug website here.</p>
+
+    <div id="websiteSettingsMessage" class="status" role="status" aria-live="polite">
+      Loading website settings...
+    </div>
+
+    <form id="websiteSettingsForm">
+
+      <h3>Contact Information</h3>
+
+      <label class="field-label" for="settingsWhatsappLink">
+        WhatsApp Group or Channel Link
+      </label>
+      <input
+        class="field"
+        id="settingsWhatsappLink"
+        type="url"
+        placeholder="https://chat.whatsapp.com/..."
+      >
+
+      <label class="field-label" for="settingsContactNumber">
+        Customer Support Number
+      </label>
+      <input
+        class="field"
+        id="settingsContactNumber"
+        type="tel"
+        maxlength="30"
+        required
+        placeholder="0533878548"
+      >
+
+      <hr>
+
+      <h3>Website Announcement</h3>
+
+      <label class="field-label" for="settingsAnnouncement">
+        Announcement Message
+      </label>
+      <textarea
+        class="field"
+        id="settingsAnnouncement"
+        maxlength="1000"
+        rows="4"
+        placeholder="Enter your announcement..."
+      ></textarea>
+
+      <label style="display:flex;gap:10px;align-items:center;margin:15px 0;">
+        <input id="settingsAnnouncementEnabled" type="checkbox">
+        <span>Show announcement on the public website</span>
+      </label>
+
+      <hr>
+
+      <h3>Website Colours</h3>
+
+      <div class="grid">
+
+        <div>
+          <label class="field-label" for="settingsPrimaryColour">
+            Primary Colour
+          </label>
+          <input
+            class="field"
+            id="settingsPrimaryColour"
+            type="color"
+            value="#d4a017"
+          >
+        </div>
+
+        <div>
+          <label class="field-label" for="settingsBackgroundColour">
+            Background Colour
+          </label>
+          <input
+            class="field"
+            id="settingsBackgroundColour"
+            type="color"
+            value="#030712"
+          >
+        </div>
+
+        <div>
+          <label class="field-label" for="settingsAccentColour">
+            Accent Colour
+          </label>
+          <input
+            class="field"
+            id="settingsAccentColour"
+            type="color"
+            value="#16a34a"
+          >
+        </div>
+
+        <div>
+          <label class="field-label" for="settingsTextColour">
+            Text Colour
+          </label>
+          <input
+            class="field"
+            id="settingsTextColour"
+            type="color"
+            value="#ffffff"
+          >
+        </div>
+
+      </div>
+
+      <hr>
+
+      <h3>Network Availability</h3>
+      <p class="small-note">
+        Disable a network to prevent new purchases through the backend.
+      </p>
+
+      <label style="display:flex;gap:10px;align-items:center;margin:15px 0;">
+        <input id="settingsMtnEnabled" type="checkbox" checked>
+        <span>MTN available</span>
+      </label>
+
+      <label style="display:flex;gap:10px;align-items:center;margin:15px 0;">
+        <input id="settingsTelecelEnabled" type="checkbox" checked>
+        <span>Telecel available</span>
+      </label>
+
+      <label style="display:flex;gap:10px;align-items:center;margin:15px 0;">
+        <input id="settingsAirtelTigoEnabled" type="checkbox" checked>
+        <span>AirtelTigo available</span>
+      </label>
+
+      <button
+        id="saveWebsiteSettings"
+        class="button refresh"
+        type="submit"
+      >
+        Save Website Settings
+      </button>
+
+    </form>
+  </div>
+</section>
 
   </main>
 
