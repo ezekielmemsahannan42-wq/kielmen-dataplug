@@ -637,27 +637,7 @@
   const year = document.getElementById("currentYear");
   if (year) year.textContent = new Date().getFullYear();
 
-  const menuButton = document.getElementById("menuButton");
-  const mobileMenu = document.getElementById("mobileMenu");
-
-  if (menuButton && mobileMenu) {
-    menuButton.addEventListener("click", () => {
-      const isOpen = mobileMenu.style.display === "block";
-      mobileMenu.style.display = isOpen ? "none" : "block";
-      menuButton.setAttribute("aria-expanded", String(!isOpen));
-      menuButton.setAttribute("aria-label", isOpen ? "Open menu" : "Close menu");
-      menuButton.textContent = isOpen ? "☰" : "✕";
-    });
-
-    mobileMenu.querySelectorAll("a").forEach(link => {
-      link.addEventListener("click", () => {
-        mobileMenu.style.display = "none";
-        menuButton.setAttribute("aria-expanded", "false");
-        menuButton.setAttribute("aria-label", "Open menu");
-        menuButton.textContent = "☰";
-      });
-    });
-  }
+  
 })();
 </script>
 
