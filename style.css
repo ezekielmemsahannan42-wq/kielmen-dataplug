@@ -1,1434 +1,1526 @@
-/* =========================================
-   KIELMEN 636 DATAPLUG
-   COMPLETE RESPONSIVE STYLESHEET
-   WHITE BACKGROUND — DEEP BLACK TEXT
-   MTN YELLOW | TELECEL RED | AIRTELTIGO BLUE
-   ========================================= */
+/* =========================================================
+KIELMEN 636 DATAPLUG
+FILE 2: style.css
+Responsive design for mobile phones, tablets and laptops
+========================================================= */
 
-/* ---------- 1. GLOBAL SETTINGS ---------- */
+/* =========================
+
+1. GLOBAL SETTINGS
+   ========================= */
 
 :root {
-  --background: #ffffff;
-  --surface: #ffffff;
-  --surface-light: #f3f4f6;
-  --card: #ffffff;
-  --border: #e5e7eb;
+--primary: #111827;
+--secondary: #374151;
+--muted: #6b7280;
+--background: #f5f7fb;
+--surface: #ffffff;
+--border: #e5e7eb;
 
-  --text: #000000;
-  --muted: #111111;
+--mtn-yellow: #ffcc00;
+--mtn-dark: #171717;
 
-  --primary: #ffcc00;
-  --primary-dark: #eab308;
-  --success: #10b981;
-  --danger: #ed1c24;
+--telecel-red: #e60023;
+--airtel-blue: #0755c9;
 
-  /* Network colours */
-  --mtn: #ffcc00;
-  --mtn-border: #eab308;
-  --mtn-text: #000000;
+--success: #15803d;
+--success-light: #dcfce7;
+--danger: #b91c1c;
+--danger-light: #fee2e2;
 
-  --telecel: #ed1c24;
-  --telecel-light: #ffdddd;
-  --telecel-border: #b91c1c;
-  --telecel-text: #000000;
+--whatsapp: #25d366;
+--whatsapp-dark: #128c4a;
 
-  --airtel: #1688ff;
-  --airtel-light: #cfe5ff;
-  --airtel-border: #075fc4;
-  --airtel-text: #000000;
+--shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+--shadow-hover: 0 14px 30px rgba(15, 23, 42, 0.14);
 
-  --radius: 16px;
-  --shadow: 0 5px 18px rgba(0, 0, 0, 0.08);
+--radius: 16px;
+--small-radius: 10px;
+
+--content-width: 1150px;
 }
 
 * {
   box-sizing: border-box;
-}
+  }
 
 html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 100px;
+scroll-behavior: smooth;
+scroll-padding-top: 100px;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  padding-bottom: calc(100px + env(safe-area-inset-bottom));
-  background: #ffffff !important;
-  color: #000000 !important;
-  font-family:
-    Inter,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    Arial,
-    sans-serif;
-  font-size: 16px;
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
+margin: 0;
+padding: 0;
+font-family: Arial, Helvetica, sans-serif;
+font-size: 16px;
+line-height: 1.6;
+color: var(--primary);
+background: var(--background);
+-webkit-font-smoothing: antialiased;
+}
+
+body,
+input,
+button,
+select,
+textarea {
+font-family: Arial, Helvetica, sans-serif;
 }
 
 button,
 input,
 select,
 textarea {
-  font: inherit;
+font-size: inherit;
 }
 
 button {
-  cursor: pointer;
+cursor: pointer;
 }
 
 button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
+cursor: not-allowed;
+opacity: 0.6;
 }
 
 a {
-  color: #000000;
-  text-decoration: none;
+color: inherit;
+text-decoration: none;
 }
 
 img {
-  max-width: 100%;
-  height: auto;
+max-width: 100%;
+height: auto;
 }
 
-.hidden {
-  display: none !important;
+[hidden] {
+display: none !important;
 }
 
-/* Make common page sections white */
-
-main,
-section,
-article,
-.container,
-.wrapper,
-.main-container {
-  color: #000000;
-}
-
-main {
-  width: 100%;
+section[id] {
+scroll-margin-top: 100px;
 }
 
 .container,
-.wrapper,
-.main-container {
-  width: min(1200px, 100%);
-  margin-inline: auto;
-  padding-inline: 20px;
+.home-container {
+width: min(var(--content-width), calc(100% - 32px));
+margin-right: auto;
+margin-left: auto;
 }
 
-/* ---------- 2. HEADER ---------- */
+/* =========================
+2. HEADER
+========================= */
 
-header,
-.site-header,
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  background: #ffffff !important;
-  color: #000000 !important;
-  border-bottom: 1px solid #e5e7eb;
-  backdrop-filter: blur(16px);
+.site-header {
+position: sticky;
+top: 0;
+z-index: 1000;
+width: 100%;
+background: rgba(255, 255, 255, 0.97);
+border-bottom: 1px solid var(--border);
+box-shadow: 0 3px 12px rgba(15, 23, 42, 0.04);
+backdrop-filter: blur(12px);
 }
 
-.header-inner,
-.navbar,
-.header-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  min-height: 86px;
-  padding: 14px 20px;
+.header-container {
+width: min(var(--content-width), calc(100% - 32px));
+min-height: 76px;
+margin: 0 auto;
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 16px;
 }
 
-.logo,
 .brand,
-.site-logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #000000;
-  font-size: 20px;
-  font-weight: 850;
-  line-height: 1.2;
+.site-brand,
+.logo-container {
+display: flex;
+align-items: center;
+gap: 10px;
+min-width: 0;
 }
 
-.logo img,
-.site-logo img {
-  width: 54px;
-  height: 54px;
-  object-fit: contain;
+.brand-name,
+.site-title,
+.logo-text {
+margin: 0;
+color: var(--primary);
+font-size: 1.08rem;
+font-weight: 800;
+line-height: 1.25;
+overflow-wrap: anywhere;
 }
 
-.brand-icon,
-.logo-icon {
-  display: grid;
-  place-items: center;
-  width: 54px;
-  height: 54px;
-  flex-shrink: 0;
-  border: 2px solid #15803d;
-  border-radius: 16px;
-  background: #ffffff;
-  color: #000000;
-  font-size: 27px;
+.brand-subtitle {
+display: block;
+color: var(--muted);
+font-size: 0.76rem;
+font-weight: 500;
 }
 
-.brand-name {
-  color: #000000 !important;
+.brand img,
+.site-logo,
+.logo-container img {
+display: block;
+width: 46px;
+height: 46px;
+object-fit: contain;
+border-radius: 12px;
 }
+
+/* Header action buttons */
 
 .header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+display: flex;
+align-items: center;
+justify-content: flex-end;
+gap: 10px;
 }
 
-/* ---------- 3. BUTTONS ---------- */
+.whatsapp-header,
+.header-whatsapp {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+min-height: 42px;
+padding: 9px 14px;
+border: 0;
+border-radius: 999px;
+color: #ffffff;
+background: var(--whatsapp-dark);
+font-size: 0.88rem;
+font-weight: 700;
+white-space: nowrap;
+transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.whatsapp-header:hover,
+.header-whatsapp:hover {
+background: #0c713b;
+transform: translateY(-1px);
+}
+
+/* =========================
+3. MOBILE MENU BUTTON
+========================= */
+
+.menu-button,
+#menuButton {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+width: 44px;
+height: 44px;
+padding: 0;
+border: 1px solid var(--border);
+border-radius: 12px;
+color: var(--primary);
+background: #ffffff;
+font-size: 1.55rem;
+line-height: 1;
+transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.menu-button:hover,
+#menuButton:hover {
+background: #f3f4f6;
+border-color: #cbd5e1;
+}
+
+#menuIcon {
+display: inline-block;
+line-height: 1;
+}
+
+/* =========================
+4. MOBILE MENU
+========================= */
+
+/*
+JavaScript should toggle both the hidden attribute
+and the open class on #mobileMenu.
+*/
+
+.mobile-menu,
+#mobileMenu {
+display: none;
+position: absolute;
+top: 100%;
+right: 16px;
+left: 16px;
+z-index: 1001;
+max-height: calc(100vh - 100px);
+overflow-y: auto;
+padding: 10px;
+border: 1px solid var(--border);
+border-radius: 16px;
+background: #ffffff;
+box-shadow: var(--shadow-hover);
+}
+
+/* Show the menu when JavaScript opens it. */
+
+.mobile-menu.open,
+#mobileMenu.open {
+display: flex;
+flex-direction: column;
+gap: 4px;
+}
+
+/* Keep the menu hidden whenever the hidden attribute exists. */
+
+.mobile-menu[hidden],
+#mobileMenu[hidden] {
+display: none !important;
+}
+
+.mobile-menu a,
+#mobileMenu a {
+display: flex;
+align-items: center;
+min-height: 46px;
+padding: 11px 14px;
+border-radius: 10px;
+color: #111827;
+background: transparent;
+font-size: 0.95rem;
+font-weight: 600;
+overflow-wrap: anywhere;
+transition: color 0.2s ease, background 0.2s ease;
+}
+
+.mobile-menu a:hover,
+#mobileMenu a:hover {
+color: #111827;
+background: #f3f4f6;
+}
+
+/* Desktop navigation, if present in the HTML. */
+
+.desktop-nav,
+.main-nav {
+display: none;
+align-items: center;
+gap: 20px;
+}
+
+.desktop-nav a,
+.main-nav a {
+color: var(--secondary);
+font-size: 0.92rem;
+font-weight: 600;
+transition: color 0.2s ease;
+}
+
+.desktop-nav a:hover,
+.main-nav a:hover {
+color: #000000;
+}
+
+/* =========================
+5. MAIN CONTENT
+========================= */
+
+main {
+width: 100%;
+}
+
+.home-container {
+padding-top: 20px;
+padding-bottom: 32px;
+}
+
+section {
+margin-top: 28px;
+}
+
+.section-heading {
+margin: 0 0 8px;
+color: var(--primary);
+font-size: clamp(1.35rem, 4vw, 2rem);
+font-weight: 800;
+line-height: 1.25;
+}
+
+.section-description {
+margin: 0 0 20px;
+color: var(--muted);
+font-size: 0.96rem;
+}
+
+.section-title {
+margin: 0 0 14px;
+color: var(--primary);
+font-size: 1.35rem;
+font-weight: 800;
+}
+
+.text-muted {
+color: var(--muted);
+}
+
+/* =========================
+6. WELCOME BANNER
+========================= */
+
+.welcome-banner {
+position: relative;
+overflow: hidden;
+padding: 26px 22px;
+border: 1px solid #f0d66a;
+border-radius: var(--radius);
+background: linear-gradient(135deg, #fff9db 0%, #ffffff 72%);
+box-shadow: var(--shadow);
+}
+
+.welcome-banner h1,
+.welcome-banner h2 {
+margin: 0 0 10px;
+color: #111827;
+font-size: clamp(1.55rem, 5vw, 2.35rem);
+font-weight: 900;
+line-height: 1.2;
+}
+
+.welcome-banner p {
+max-width: 720px;
+margin: 0 0 16px;
+color: #374151;
+font-size: 0.98rem;
+}
+
+.welcome-banner .welcome-actions {
+display: flex;
+flex-wrap: wrap;
+gap: 10px;
+margin-top: 18px;
+}
+
+/* =========================
+7. BUTTONS
+========================= */
 
 .btn,
-button.btn,
-.whatsapp-button,
-.primary-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 46px;
-  padding: 12px 18px;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
-  font-weight: 750;
-  text-align: center;
-  transition:
-    transform 0.18s ease,
-    background 0.18s ease,
-    border-color 0.18s ease;
+.primary-button,
+.secondary-button,
+.pay-button,
+#paymentButton,
+#trackOrderButton {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+gap: 8px;
+min-height: 46px;
+padding: 12px 18px;
+border: 1px solid transparent;
+border-radius: 12px;
+font-weight: 800;
+text-align: center;
+transition:
+transform 0.2s ease,
+box-shadow 0.2s ease,
+background 0.2s ease;
 }
 
 .btn:hover,
-.whatsapp-button:hover,
-.primary-button:hover {
-  transform: translateY(-1px);
+.primary-button:hover,
+.secondary-button:hover,
+.pay-button:hover,
+#paymentButton:hover,
+#trackOrderButton:hover {
+transform: translateY(-1px);
+box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
 }
 
-.btn-primary,
-.primary-button {
-  background: #ffcc00;
-  color: #000000 !important;
-  border-color: #eab308;
+.primary-button,
+.btn-primary {
+color: #ffffff;
+background: var(--primary);
 }
 
-.btn-primary:hover,
-.primary-button:hover {
-  background: #facc15;
-  color: #000000 !important;
+.primary-button:hover,
+.btn-primary:hover {
+background: #374151;
 }
 
+.secondary-button,
 .btn-secondary {
-  background: #f3f4f6;
-  color: #000000 !important;
+color: var(--primary);
+background: #ffffff;
+border-color: var(--border);
+}
+
+.secondary-button:hover,
+.btn-secondary:hover {
+background: #f9fafb;
 }
 
 .whatsapp-button {
-  background: #16a34a;
-  color: #ffffff !important;
-  border-color: #15803d;
+color: #ffffff;
+background: var(--whatsapp-dark);
 }
 
 .whatsapp-button:hover {
-  background: #15803d;
-  color: #ffffff !important;
+background: #0c713b;
 }
 
-.menu-button {
-  width: 54px;
-  height: 54px;
-  padding: 0;
-  border: 1px solid #d1d5db;
-  border-radius: 16px;
-  background: #f3f4f6;
-  color: #000000;
-  font-size: 27px;
+/* =========================
+8. NETWORK TABS
+========================= */
+
+.network-tabs {
+display: grid;
+grid-template-columns: repeat(3, minmax(0, 1fr));
+gap: 8px;
+margin: 20px 0 18px;
 }
 
-/* ---------- 4. NAVIGATION ---------- */
-
-nav {
-  color: #000000;
+.network-tab {
+display: flex;
+align-items: center;
+justify-content: center;
+min-height: 48px;
+padding: 10px 8px;
+border: 2px solid transparent;
+border-radius: 12px;
+color: #111827;
+background: #ffffff;
+box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+font-size: 0.83rem;
+font-weight: 800;
+text-align: center;
+overflow-wrap: anywhere;
+transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-nav a {
-  color: #000000;
-  transition: color 0.2s ease;
-}
-
-nav a:hover {
-  color: #92400e;
-}
-
-.mobile-menu {
-  display: none;
-  padding: 12px 20px 20px;
-  background: #ffffff;
-  border-top: 1px solid #e5e7eb;
-}
-
-.mobile-menu.open {
-  display: grid;
-  gap: 12px;
-}
-
-.mobile-menu a {
-  padding: 12px;
-  border-radius: 10px;
-  background: #f3f4f6;
-  color: #000000;
-}
-
-/* ---------- 5. HERO SECTION ---------- */
-
-.hero {
-  position: relative;
-  padding: 48px 20px 30px;
-  text-align: center;
-  background: #ffffff !important;
-  color: #000000 !important;
-}
-
-.hero h1 {
-  max-width: 850px;
-  margin: 0 auto 16px;
-  color: #000000 !important;
-  font-size: clamp(32px, 6vw, 56px);
-  line-height: 1.1;
-  letter-spacing: -1.5px;
-}
-
-.hero h1 span {
-  color: #000000 !important;
-}
-
-.hero p {
-  max-width: 650px;
-  margin: 0 auto 24px;
-  color: #111111 !important;
-  font-size: 17px;
-}
-
-.hero-actions {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-/* ---------- 6. NETWORK SELECTORS ---------- */
-
-.network-tabs,
-.network-selector,
-.network-buttons {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  width: 100%;
-  margin: 20px 0 24px;
-}
-
-.network-tab,
-.network-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 0;
-  min-height: 58px;
-  padding: 12px 8px;
-  border: 2px solid #d1d5db;
-  border-radius: 17px;
-  background: #ffffff;
-  color: #000000;
-  font-weight: 850;
-  text-align: center;
-  overflow-wrap: anywhere;
-  transition: 0.2s ease;
-}
-
-/* MTN NETWORK BUTTON */
-
-.network-tab[data-network="MTN"],
-.network-button.mtn,
-.network-button[data-network="MTN"] {
-  border-color: #eab308;
-  background: #ffcc00;
-  color: #000000 !important;
-}
-
-/* TELECEL NETWORK BUTTON */
-
-.network-tab[data-network="TELECEL"],
-.network-button.telecel,
-.network-button[data-network="TELECEL"] {
-  border-color: #b91c1c;
-  background: #ed1c24;
-  color: #000000 !important;
-}
-
-/* AIRTELTIGO NETWORK BUTTON */
-
-.network-tab[data-network="AIRTELTIGO"],
-.network-button.airtel,
-.network-button.airteltigo,
-.network-button[data-network="AIRTELTIGO"] {
-  border-color: #075fc4;
-  background: #1688ff;
-  color: #000000 !important;
-}
-
-/* SELECTED NETWORKS */
-
-.network-tab[data-network="MTN"].active,
-.network-button.mtn.active,
-.network-button[data-network="MTN"].active {
-  background: #ffcc00;
-  color: #000000 !important;
-  border-color: #92400e;
-  box-shadow: 0 0 0 3px rgba(255, 204, 0, 0.22);
-}
-
-.network-tab[data-network="TELECEL"].active,
-.network-button.telecel.active,
-.network-button[data-network="TELECEL"].active {
-  background: #ed1c24;
-  color: #000000 !important;
-  border-color: #7f1d1d;
-  box-shadow: 0 0 0 3px rgba(237, 28, 36, 0.16);
-}
-
-.network-tab[data-network="AIRTELTIGO"].active,
-.network-button.airtel.active,
-.network-button.airteltigo.active,
-.network-button[data-network="AIRTELTIGO"].active {
-  background: #1688ff;
-  color: #000000 !important;
-  border-color: #1e40af;
-  box-shadow: 0 0 0 3px rgba(22, 136, 255, 0.18);
+.network-tab:hover {
+transform: translateY(-2px);
+box-shadow: var(--shadow);
 }
 
 .network-tab.active,
-.network-button.active {
-  box-shadow: var(--shadow);
+.network-tab[aria-selected="true"] {
+border-color: #111827;
+box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.08);
 }
 
-/* ---------- 7. SEARCH ---------- */
+/* Network tab colours */
 
-.search-box {
-  position: relative;
-  margin: 18px 0;
+.network-tab[data-network="MTN"] {
+color: #111111;
+background: var(--mtn-yellow);
 }
 
-.search-box input,
+.network-tab[data-network="TELECEL"] {
+color: #ffffff;
+background: var(--telecel-red);
+}
+
+.network-tab[data-network="AIRTELTIGO"] {
+color: #ffffff;
+background: var(--airtel-blue);
+}
+
+/* =========================
+9. SEARCH AND BUNDLE COUNT
+========================= */
+
+.bundle-tools {
+display: flex;
+flex-direction: column;
+gap: 12px;
+margin: 18px 0;
+}
+
+.bundle-search,
 #bundleSearch {
-  width: 100%;
-  min-height: 58px;
-  padding: 15px 18px;
-  border: 1px solid #d1d5db;
-  border-radius: 16px;
-  outline: none;
-  background: #ffffff !important;
-  color: #000000 !important;
-  font-size: 17px;
+display: block;
+width: 100%;
+min-height: 48px;
+padding: 12px 15px;
+border: 1px solid #d1d5db;
+border-radius: 12px;
+outline: none;
+color: var(--primary);
+background: #ffffff;
+transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.search-box input:focus,
+.bundle-search:focus,
 #bundleSearch:focus {
-  border-color: #92400e;
-  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.20);
+border-color: #111827;
+box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.09);
 }
 
-input::placeholder,
-textarea::placeholder {
-  color: #4b5563;
-  opacity: 1;
-}
-
-.result-count,
 #resultCount {
-  margin: 16px 0;
-  color: #111111 !important;
-  font-size: 14px;
+margin: 0;
+color: var(--muted);
+font-size: 0.88rem;
 }
 
-/* ---------- 8. NETWORK-COLOURED BUNDLE GRID ---------- */
+/* =========================
+10. BUNDLE GRID
+========================= */
 
 .bundle-grid,
 #bundleGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  width: 100%;
-  align-items: stretch;
+display: grid;
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 12px;
+align-items: stretch;
 }
 
-/* General bundle-card styling */
-
 .bundle-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  min-width: 0;
-  min-height: 140px;
-  padding: 16px 8px;
-  border: 2px solid #d1d5db;
-  border-radius: 20px;
-  background: #ffffff;
-  color: #000000 !important;
-  text-align: center;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07);
-  transition:
-    transform 0.18s ease,
-    border-color 0.18s ease,
-    background 0.18s ease,
-    box-shadow 0.18s ease;
+display: flex;
+flex-direction: column;
+min-width: 0;
+padding: 15px 12px;
+border: 1px solid var(--border);
+border-radius: 14px;
+background: #ffffff;
+box-shadow: 0 4px 12px rgba(15, 23, 42, 0.045);
+transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .bundle-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 7px 16px rgba(0, 0, 0, 0.12);
+transform: translateY(-3px);
+box-shadow: var(--shadow);
 }
 
-/* Deep-black bundle size */
-
-.bundle-size {
-  display: block;
-  color: #000000 !important;
-  font-size: clamp(23px, 5vw, 34px);
-  font-weight: 900;
-  line-height: 1.15;
-  letter-spacing: -0.5px;
+.bundle-card h3,
+.bundle-card h4 {
+margin: 0 0 8px;
+color: var(--primary);
+font-size: 1.12rem;
+font-weight: 900;
 }
 
-/* Deep-black price */
-
-.bundle-price {
-  display: block;
-  color: #000000 !important;
-  font-size: clamp(17px, 3.7vw, 22px);
-  font-weight: 900;
-  line-height: 1.3;
-  overflow-wrap: anywhere;
+.bundle-card p {
+margin: 0 0 8px;
+color: var(--secondary);
+font-size: 0.88rem;
 }
 
-.bundle-label {
-  display: block;
-  margin-top: 4px;
-  color: #000000 !important;
-  font-size: 13px;
-  font-weight: 750;
+.bundle-card .bundle-size {
+margin: 0 0 8px;
+font-size: 1.15rem;
+font-weight: 900;
 }
 
-/*
-   NETWORK COLOURS ARE ASSIGNED USING:
-   1. The selected network's data attribute on the card.
-   2. A network class on the card.
-   3. The network class on the containing grid.
-*/
-
-/* MTN — ALL MTN BUNDLE BOXES YELLOW */
-
-.bundle-card[data-network="MTN"],
-.bundle-card.mtn,
-.mtn .bundle-card,
-#bundleGrid.mtn .bundle-card,
-.bundle-grid.mtn .bundle-card {
-  border-color: #eab308;
-  background: #ffcc00 !important;
-  color: #000000 !important;
+.bundle-card .bundle-price {
+margin: 0 0 14px;
+color: var(--primary);
+font-size: 1.25rem;
+font-weight: 900;
 }
 
-.bundle-card[data-network="MTN"] .bundle-size,
-.bundle-card[data-network="MTN"] .bundle-price,
-.bundle-card[data-network="MTN"] .bundle-label,
-.bundle-card.mtn .bundle-size,
-.bundle-card.mtn .bundle-price,
-.bundle-card.mtn .bundle-label,
-.mtn .bundle-card .bundle-size,
-.mtn .bundle-card .bundle-price,
-.mtn .bundle-card .bundle-label {
-  color: #000000 !important;
+.bundle-card .bundle-network {
+display: inline-flex;
+align-self: flex-start;
+align-items: center;
+margin-bottom: 10px;
+padding: 4px 8px;
+border-radius: 999px;
+font-size: 0.7rem;
+font-weight: 900;
+letter-spacing: 0.02em;
 }
 
-/* TELECEL — ALL TELECEL BUNDLE BOXES RED */
-
-.bundle-card[data-network="TELECEL"],
-.bundle-card.telecel,
-.telecel .bundle-card,
-#bundleGrid.telecel .bundle-card,
-.bundle-grid.telecel .bundle-card {
-  border-color: #b91c1c;
-  background: #ed1c24 !important;
-  color: #000000 !important;
+.bundle-card button,
+.bundle-card .buy-button {
+width: 100%;
+min-height: 42px;
+margin-top: auto;
+padding: 10px 8px;
+border: 0;
+border-radius: 10px;
+color: #ffffff;
+background: var(--primary);
+font-size: 0.86rem;
+font-weight: 800;
+transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.bundle-card[data-network="TELECEL"] .bundle-size,
-.bundle-card[data-network="TELECEL"] .bundle-price,
-.bundle-card[data-network="TELECEL"] .bundle-label,
-.bundle-card.telecel .bundle-size,
-.bundle-card.telecel .bundle-price,
-.bundle-card.telecel .bundle-label,
-.telecel .bundle-card .bundle-size,
-.telecel .bundle-card .bundle-price,
-.telecel .bundle-card .bundle-label {
-  color: #000000 !important;
+.bundle-card button:hover,
+.bundle-card .buy-button:hover {
+opacity: 0.88;
+transform: translateY(-1px);
 }
 
-/* AIRTELTIGO — ALL AIRTELTIGO BUNDLE BOXES BLUE */
+/* MTN bundle cards: yellow with black text. */
 
-.bundle-card[data-network="AIRTELTIGO"],
-.bundle-card[data-network="AIRTEL"],
-.bundle-card.airtel,
-.bundle-card.airteltigo,
-.airteltigo .bundle-card,
-.airtel .bundle-card,
-#bundleGrid.airteltigo .bundle-card,
-.bundle-grid.airteltigo .bundle-card {
-  border-color: #075fc4;
-  background: #1688ff !important;
-  color: #000000 !important;
+.bundle-card[data-network="MTN"] {
+border-top: 4px solid var(--mtn-yellow);
 }
 
-.bundle-card[data-network="AIRTELTIGO"] .bundle-size,
-.bundle-card[data-network="AIRTELTIGO"] .bundle-price,
-.bundle-card[data-network="AIRTELTIGO"] .bundle-label,
-.bundle-card[data-network="AIRTEL"] .bundle-size,
-.bundle-card[data-network="AIRTEL"] .bundle-price,
-.bundle-card[data-network="AIRTEL"] .bundle-label,
-.bundle-card.airtel .bundle-size,
-.bundle-card.airtel .bundle-price,
-.bundle-card.airtel .bundle-label,
-.bundle-card.airteltigo .bundle-size,
-.bundle-card.airteltigo .bundle-price,
-.bundle-card.airteltigo .bundle-label {
-  color: #000000 !important;
+.bundle-card[data-network="MTN"] .bundle-network {
+color: #111111;
+background: var(--mtn-yellow);
 }
 
-/* SELECTED BUNDLE — PRESERVE NETWORK COLOUR */
-
-.bundle-card.selected,
-.bundle-card:focus-visible {
-  outline: 3px solid #111111;
-  outline-offset: 2px;
-  border-width: 3px;
-  color: #000000 !important;
-  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.10);
+.bundle-card[data-network="MTN"] button,
+.bundle-card[data-network="MTN"] .buy-button {
+color: #111111;
+background: var(--mtn-yellow);
 }
 
-/* Keep MTN yellow when selected */
+/* Telecel bundle cards: red with white text. */
 
-.bundle-card[data-network="MTN"].selected,
-.bundle-card.mtn.selected {
-  background: #ffcc00 !important;
-  border-color: #111111;
+.bundle-card[data-network="TELECEL"] {
+border-top: 4px solid var(--telecel-red);
 }
 
-/* Keep Telecel red when selected */
-
-.bundle-card[data-network="TELECEL"].selected,
-.bundle-card.telecel.selected {
-  background: #ed1c24 !important;
-  border-color: #111111;
+.bundle-card[data-network="TELECEL"] .bundle-network {
+color: #ffffff;
+background: var(--telecel-red);
 }
 
-/* Keep AirtelTigo blue when selected */
-
-.bundle-card[data-network="AIRTELTIGO"].selected,
-.bundle-card[data-network="AIRTEL"].selected,
-.bundle-card.airtel.selected,
-.bundle-card.airteltigo.selected {
-  background: #1688ff !important;
-  border-color: #111111;
+.bundle-card[data-network="TELECEL"] button,
+.bundle-card[data-network="TELECEL"] .buy-button {
+color: #ffffff;
+background: var(--telecel-red);
 }
 
-.empty-state {
-  grid-column: 1 / -1;
-  padding: 24px;
-  color: #000000 !important;
-  text-align: center;
+/* AirtelTigo bundle cards: blue with white text. */
+
+.bundle-card[data-network="AIRTELTIGO"] {
+border-top: 4px solid var(--airtel-blue);
 }
 
-/* ---------- 9. CHECKOUT ---------- */
-
-.checkout-section,
-#checkout,
-.checkout-card {
-  width: 100%;
-  margin-top: 28px;
-  padding: 22px;
-  border: 1px solid #e5e7eb;
-  border-radius: 22px;
-  background: #ffffff !important;
-  color: #000000 !important;
-  box-shadow: var(--shadow);
-  scroll-margin-top: 100px;
+.bundle-card[data-network="AIRTELTIGO"] .bundle-network {
+color: #ffffff;
+background: var(--airtel-blue);
 }
 
-.checkout-section h2,
-#checkout h2,
-.checkout-card h2 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  color: #000000 !important;
-  font-size: clamp(23px, 5vw, 32px);
-  line-height: 1.2;
+.bundle-card[data-network="AIRTELTIGO"] button,
+.bundle-card[data-network="AIRTELTIGO"] .buy-button {
+color: #ffffff;
+background: var(--airtel-blue);
 }
 
-.selected-bundle,
-.order-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 20px;
-  padding: 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 14px;
-  background: #f9fafb;
-  color: #000000 !important;
+/* Out-of-stock / unavailable bundle state. */
+
+.bundle-card.unavailable,
+.bundle-card:has(button:disabled) {
+opacity: 0.65;
 }
 
-.selected-bundle strong,
-.order-summary strong {
-  color: #000000 !important;
+.bundle-card button:disabled,
+.bundle-card .buy-button:disabled {
+cursor: not-allowed;
+opacity: 0.55;
 }
 
-form {
-  width: 100%;
+/* =========================
+11. CHECKOUT SECTION
+========================= */
+
+.checkout-card,
+.checkout-box,
+#checkoutForm {
+width: 100%;
+min-width: 0;
 }
 
-.form-group,
-.input-group {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 18px;
+.checkout-card,
+.checkout-box {
+padding: 20px;
+border: 1px solid var(--border);
+border-radius: var(--radius);
+background: #ffffff;
+box-shadow: var(--shadow);
 }
 
+#checkoutForm {
+display: flex;
+flex-direction: column;
+gap: 16px;
+margin-top: 16px;
+}
+
+.field,
+.form-group {
+display: flex;
+flex-direction: column;
+gap: 7px;
+min-width: 0;
+}
+
+.field label,
+.form-group label,
 label {
-  color: #000000 !important;
-  font-size: 14px;
-  font-weight: 750;
+color: var(--primary);
+font-size: 0.91rem;
+font-weight: 700;
 }
 
-input,
-select,
-textarea {
-  width: 100%;
-  min-height: 52px;
-  padding: 13px 15px;
-  border: 1px solid #d1d5db;
-  border-radius: 13px;
-  outline: none;
-  background: #ffffff !important;
-  color: #000000 !important;
+.field input,
+.field select,
+.field textarea,
+.form-group input,
+.form-group select,
+.form-group textarea,
+#customerPhone,
+#customerEmail,
+#trackPhone {
+display: block;
+width: 100%;
+min-height: 48px;
+padding: 12px 14px;
+border: 1px solid #d1d5db;
+border-radius: 11px;
+outline: none;
+color: var(--primary);
+background: #ffffff;
+transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: #92400e;
-  box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.20);
+.field input:focus,
+.field select:focus,
+.field textarea:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+#customerPhone:focus,
+#customerEmail:focus,
+#trackPhone:focus {
+border-color: #111827;
+box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
 }
 
-textarea {
-  min-height: 110px;
-  resize: vertical;
+.field small,
+.form-group small,
+.field .hint {
+color: var(--muted);
+font-size: 0.8rem;
 }
 
-/* Payment button */
-
-#paymentButton,
-.payment-button,
-button[type="submit"] {
-  width: 100%;
-  min-height: 54px;
-  padding: 14px 18px;
-  border: 1px solid #eab308;
-  border-radius: 14px;
-  background: #ffcc00;
-  color: #000000 !important;
-  font-size: 16px;
-  font-weight: 900;
+.selected-summary {
+padding: 16px;
+border: 1px dashed #d1d5db;
+border-radius: 12px;
+background: #f9fafb;
 }
 
-#paymentButton:hover,
-.payment-button:hover,
-button[type="submit"]:hover {
-  background: #facc15;
-  color: #000000 !important;
+.selected-summary h3 {
+margin: 0 0 10px;
+font-size: 1rem;
 }
 
-#paymentButton:disabled,
-button[type="submit"]:disabled {
-  opacity: 0.6;
+.selected-summary p {
+display: flex;
+justify-content: space-between;
+gap: 12px;
+margin: 6px 0;
+color: var(--secondary);
+font-size: 0.91rem;
 }
 
-#checkoutMessage {
-  display: none;
-  margin-top: 16px;
-  padding: 12px;
-  border-radius: 12px;
-  background: #f3f4f6;
-  color: #000000;
-  overflow-wrap: anywhere;
+.selected-summary strong {
+color: var(--primary);
+text-align: right;
+overflow-wrap: anywhere;
 }
 
-.checkout-note,
-.payment-note {
-  margin-top: 14px;
-  color: #111111;
-  font-size: 13px;
+#selectedPrice {
+font-size: 1.15rem;
+font-weight: 900;
 }
 
-/* ---------- 10. ANNOUNCEMENT POPUP ---------- */
-
-dialog,
-#announcement {
-  width: min(430px, calc(100% - 28px));
-  max-width: 430px;
-  padding: 26px 22px;
-  border: 1px solid #e5e7eb;
-  border-radius: 24px;
-  background: #ffffff;
-  color: #000000;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.22);
+.pay-button,
+#paymentButton {
+width: 100%;
+min-height: 50px;
+color: #111111;
+background: var(--mtn-yellow);
+font-size: 0.98rem;
 }
 
-dialog::backdrop {
-  background: rgba(17, 24, 39, 0.55);
-  backdrop-filter: blur(5px);
+.pay-button:hover,
+#paymentButton:hover {
+background: #f2c000;
 }
 
-.popup-title {
-  margin-top: 0;
-  color: #000000;
-  font-size: 25px;
-  font-weight: 900;
+#paymentButton:disabled {
+color: #6b7280;
+background: #e5e7eb;
+box-shadow: none;
+transform: none;
 }
 
-.popup-text {
-  color: #111111;
-  line-height: 1.7;
+/* =========================
+12. CHECKOUT / STATUS MESSAGES
+========================= */
+
+.checkout-message,
+#checkoutMessage,
+.tracking-message {
+margin-top: 12px;
+padding: 12px 14px;
+border-radius: 10px;
+color: var(--secondary);
+background: #f3f4f6;
+font-size: 0.9rem;
+overflow-wrap: anywhere;
 }
 
-.popup-network-list {
-  display: grid;
-  gap: 8px;
-  margin: 18px 0;
+.checkout-message.success,
+#checkoutMessage.success,
+.tracking-message.success {
+color: #166534;
+background: var(--success-light);
 }
 
-.popup-network {
-  padding: 10px;
-  border-radius: 10px;
-  background: #f3f4f6;
-  color: #000000;
-  font-weight: 800;
+.checkout-message.error,
+#checkoutMessage.error,
+.tracking-message.error {
+color: #991b1b;
+background: var(--danger-light);
 }
 
-.popup-join,
-.popup-continue {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: 48px;
-  margin-top: 12px;
-  padding: 12px;
-  border-radius: 12px;
-  font-weight: 800;
-  text-align: center;
+.checkout-message.info,
+#checkoutMessage.info,
+.tracking-message.info {
+color: #1e40af;
+background: #dbeafe;
 }
 
-.popup-join {
-  background: #128c4a;
-  color: #ffffff !important;
+/* =========================
+13. AGENT SECTION
+========================= */
+
+.agent-section,
+#agent-section {
+padding: 22px;
+border: 1px solid #dbeafe;
+border-radius: var(--radius);
+background: linear-gradient(135deg, #eff6ff, #ffffff);
+box-shadow: var(--shadow);
 }
 
-.popup-continue {
-  border: 1px solid #d1d5db;
-  background: #f3f4f6;
-  color: #000000 !important;
+.agent-box {
+display: flex;
+flex-direction: column;
+gap: 12px;
 }
 
-/* ---------- 11. FLOATING WHATSAPP / CONTACT ---------- */
-
-.floating-whatsapp,
-.whatsapp-float,
-.floating-contact {
-  position: fixed;
-  right: 18px;
-  bottom: 105px;
-  z-index: 900;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  border: 3px solid #087a31;
-  border-radius: 50%;
-  background: #087a31;
-  color: #ffffff !important;
-  font-size: 27px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.20);
+.agent-section h2,
+.agent-box h2,
+#agent-section h2 {
+margin: 0 0 8px;
+color: var(--primary);
+font-size: 1.45rem;
+font-weight: 900;
 }
 
-.floating-whatsapp:hover,
-.whatsapp-float:hover,
-.floating-contact:hover {
-  transform: scale(1.04);
+.agent-section p,
+.agent-box p,
+#agent-section p {
+margin: 0 0 12px;
+color: var(--secondary);
 }
 
-/* ---------- 12. BOTTOM NAVIGATION ---------- */
+/* =========================
+14. ORDER TRACKING
+========================= */
+
+.tracking-section,
+#track-order {
+padding: 20px;
+border: 1px solid var(--border);
+border-radius: var(--radius);
+background: #ffffff;
+box-shadow: var(--shadow);
+}
+
+#trackOrderForm {
+display: flex;
+flex-direction: column;
+gap: 12px;
+margin-top: 14px;
+}
+
+#trackOrderButton {
+width: 100%;
+color: #ffffff;
+background: var(--primary);
+}
+
+#trackOrderButton:hover {
+background: #374151;
+}
+
+#trackOrderResults {
+display: grid;
+gap: 12px;
+margin-top: 16px;
+}
+
+.order-result,
+.tracking-result {
+padding: 15px;
+border: 1px solid var(--border);
+border-radius: 12px;
+background: #f9fafb;
+overflow-wrap: anywhere;
+}
+
+.order-result h3,
+.tracking-result h3 {
+margin: 0 0 8px;
+color: var(--primary);
+font-size: 1rem;
+}
+
+.order-result p,
+.tracking-result p {
+margin: 5px 0;
+color: var(--secondary);
+font-size: 0.9rem;
+}
+
+.order-status,
+.status-badge {
+display: inline-flex;
+align-items: center;
+padding: 4px 9px;
+border-radius: 999px;
+color: #1f2937;
+background: #e5e7eb;
+font-size: 0.75rem;
+font-weight: 800;
+text-transform: capitalize;
+}
+
+.order-status.success,
+.status-badge.success {
+color: #166534;
+background: var(--success-light);
+}
+
+.order-status.pending,
+.status-badge.pending {
+color: #92400e;
+background: #fef3c7;
+}
+
+.order-status.failed,
+.status-badge.failed {
+color: #991b1b;
+background: var(--danger-light);
+}
+
+/* =========================
+15. SUPPORT SECTION
+========================= */
+
+.support-section,
+#help-section {
+padding: 22px;
+border: 1px solid var(--border);
+border-radius: var(--radius);
+background: #ffffff;
+box-shadow: var(--shadow);
+}
+
+.support-section h2,
+#help-section h2 {
+margin: 0 0 8px;
+font-size: 1.4rem;
+font-weight: 900;
+}
+
+.support-section p,
+#help-section p {
+color: var(--secondary);
+}
+
+.support-actions {
+display: flex;
+flex-direction: column;
+gap: 10px;
+margin-top: 16px;
+}
+
+.support-phone,
+#supportPhoneDisplay {
+font-weight: 800;
+overflow-wrap: anywhere;
+}
+
+.support-phone a {
+color: #075985;
+text-decoration: underline;
+text-underline-offset: 3px;
+}
+
+/* =========================
+16. WHATSAPP FLOATING BUTTON
+========================= */
+
+.whatsapp-float {
+position: fixed;
+right: 16px;
+bottom: 84px;
+z-index: 900;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+width: 56px;
+height: 56px;
+border: 0;
+border-radius: 50%;
+color: #ffffff;
+background: var(--whatsapp);
+box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+font-size: 1.7rem;
+line-height: 1;
+transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.whatsapp-float:hover {
+transform: translateY(-3px) scale(1.03);
+box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+}
+
+/* =========================
+17. BOTTOM NAVIGATION
+========================= */
 
 .bottom-nav {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 950;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  min-height: 76px;
-  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
-  border-top: 1px solid #e5e7eb;
-  background: rgba(255, 255, 255, 0.98) !important;
-  backdrop-filter: blur(14px);
+position: fixed;
+right: 0;
+bottom: 0;
+left: 0;
+z-index: 950;
+display: grid;
+grid-template-columns: repeat(3, minmax(0, 1fr));
+gap: 4px;
+min-height: 62px;
+padding: 7px 8px calc(7px + env(safe-area-inset-bottom));
+border-top: 1px solid var(--border);
+background: rgba(255, 255, 255, 0.97);
+box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.06);
+backdrop-filter: blur(12px);
 }
 
-.bottom-nav a,
-.bottom-nav button {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  min-width: 0;
-  padding: 5px;
-  border: 0;
-  background: transparent;
-  color: #000000 !important;
-  font-size: 12px;
-  font-weight: 800;
+.bottom-nav a {
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 2px;
+min-width: 0;
+min-height: 44px;
+padding: 5px 3px;
+border-radius: 10px;
+color: #6b7280;
+font-size: 0.72rem;
+font-weight: 700;
+text-align: center;
+transition: color 0.2s ease, background 0.2s ease;
 }
 
-.bottom-nav .active {
-  color: #047857 !important;
+.bottom-nav a.active,
+.bottom-nav a[aria-current="page"] {
+color: #111827;
+background: #f3f4f6;
+}
+
+.bottom-nav a:hover {
+color: #111827;
+background: #f9fafb;
 }
 
 .bottom-nav .nav-icon {
-  font-size: 23px;
+font-size: 1.1rem;
+line-height: 1.2;
 }
 
-/* ---------- 13. AGENT SECTION ---------- */
+/* =========================
+18. ANNOUNCEMENT DIALOG
+========================= */
 
-.agent-section,
-.agent-card {
-  margin-top: 30px;
-  padding: 22px;
-  border: 1px solid #e5e7eb;
-  border-radius: 20px;
-  background: #ffffff;
-  color: #000000;
+.announcement {
+width: min(480px, calc(100% - 32px));
+max-width: 480px;
+max-height: calc(100vh - 40px);
+overflow-y: auto;
+padding: 24px;
+border: 0;
+border-radius: 20px;
+color: var(--primary);
+background: #ffffff;
+box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
 }
 
-.agent-section h2,
-.agent-card h2 {
-  margin-top: 0;
-  color: #000000;
+.announcement::backdrop {
+background: rgba(15, 23, 42, 0.62);
+backdrop-filter: blur(3px);
 }
 
-.agent-section p,
-.agent-card p {
-  color: #111111;
+.announcement[hidden] {
+display: none !important;
 }
 
-.agent-section .btn,
-.agent-card .btn {
-  margin-top: 10px;
+.announcement h2 {
+margin: 0 0 12px;
+font-size: 1.4rem;
+font-weight: 900;
 }
 
-/* ---------- 14. TABLES / DASHBOARDS ---------- */
-
-.table-wrap {
-  width: 100%;
-  overflow-x: auto;
-  border: 1px solid #e5e7eb;
-  border-radius: 14px;
+.announcement p {
+margin: 0 0 16px;
+color: var(--secondary);
+overflow-wrap: anywhere;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #ffffff;
+.announcement-actions {
+display: flex;
+flex-direction: column;
+gap: 10px;
+margin-top: 20px;
 }
 
-th,
-td {
-  padding: 13px;
-  border-bottom: 1px solid #e5e7eb;
-  text-align: left;
-  white-space: nowrap;
+.announcement-actions a,
+.announcement-actions button,
+#announcementChannelLink,
+#continueShopping {
+display: inline-flex;
+align-items: center;
+justify-content: center;
+width: 100%;
+min-height: 46px;
+padding: 11px 15px;
+border: 0;
+border-radius: 11px;
+font-weight: 800;
+text-align: center;
 }
 
-th {
-  background: #f3f4f6;
-  color: #000000;
+#announcementChannelLink {
+color: #ffffff;
+background: var(--whatsapp-dark);
 }
 
-td {
-  background: #ffffff;
-  color: #000000;
+#continueShopping {
+color: var(--primary);
+background: #f3f4f6;
 }
 
-/* ---------- 15. FOOTER ---------- */
-
-footer,
-.site-footer {
-  margin-top: 35px;
-  padding: 28px 20px;
-  border-top: 1px solid #e5e7eb;
-  background: #ffffff !important;
-  color: #000000 !important;
-  text-align: center;
-  font-size: 13px;
+#continueShopping:hover {
+background: #e5e7eb;
 }
 
-.footer-links {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 18px;
-  margin-top: 12px;
+/* =========================
+19. FOOTER
+========================= */
+
+.site-footer,
+footer {
+margin-top: 28px;
+padding: 24px 16px 96px;
+border-top: 1px solid var(--border);
+color: var(--muted);
+background: #ffffff;
+text-align: center;
+font-size: 0.85rem;
 }
 
-.footer-links a {
-  color: #000000;
+.site-footer p,
+footer p {
+margin: 5px 0;
 }
 
-/* ---------- 16. ORDER RESULTS ---------- */
-
-.order-result {
-  margin: 18px 0;
-  padding: 18px;
-  border: 1px solid #16a34a;
-  border-radius: 14px;
-  background: #ffffff;
-  color: #000000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  overflow-wrap: anywhere;
+.site-footer a,
+footer a {
+color: var(--primary);
+font-weight: 700;
 }
 
-.order-result p {
-  margin: 12px 0;
-  padding: 10px;
-  border-radius: 8px;
-  background: #f3f4f6;
-  color: #000000;
-  line-height: 1.6;
+/* =========================
+20. LOADING AND EMPTY STATES
+========================= */
+
+.loading,
+.loading-state,
+.empty-state,
+.no-results {
+grid-column: 1 / -1;
+padding: 24px 16px;
+border: 1px dashed #d1d5db;
+border-radius: 12px;
+color: var(--muted);
+background: #ffffff;
+text-align: center;
 }
 
-.order-result strong {
-  color: #15803d;
+.error-message {
+padding: 14px;
+border-radius: 10px;
+color: #991b1b;
+background: var(--danger-light);
 }
 
-.order-result p:first-child {
-  padding-bottom: 14px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-/* ---------- 17. ACCESSIBILITY ---------- */
+/* =========================
+21. ACCESSIBILITY
+========================= */
 
 :focus-visible {
-  outline: 2px solid #111111;
-  outline-offset: 3px;
+outline: 3px solid #2563eb;
+outline-offset: 3px;
+}
+
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-  }
+html {
+scroll-behavior: auto;
 }
 
-/* ---------- 18. SMALL MOBILE SCREENS ---------- */
+*,
+*::before,
+*::after {
+scroll-behavior: auto !important;
+animation-duration: 0.01ms !important;
+animation-iteration-count: 1 !important;
+transition-duration: 0.01ms !important;
+}
+}
+
+/* =========================
+22. SMALL MOBILE SCREENS
+========================= */
 
 @media (max-width: 380px) {
-  .header-inner,
-  .navbar,
-  .header-content {
-    gap: 8px;
-    padding-inline: 12px;
-  }
-
-  .logo,
-  .brand,
-  .site-logo {
-    gap: 8px;
-    font-size: 16px;
-  }
-
-  .brand-icon,
-  .logo-icon {
-    width: 43px;
-    height: 43px;
-    font-size: 22px;
-  }
-
-  .whatsapp-button {
-    padding: 9px;
-    font-size: 12px;
-  }
-
-  .menu-button {
-    width: 44px;
-    height: 44px;
-  }
-
-  .container,
-  .wrapper,
-  .main-container {
-    padding-inline: 12px;
-  }
-
-  .network-tabs,
-  .network-selector,
-  .network-buttons {
-    gap: 6px;
-  }
-
-  .network-tab,
-  .network-button {
-    min-height: 48px;
-    padding: 8px 4px;
-    font-size: 12px;
-  }
-
-  .bundle-grid,
-  #bundleGrid {
-    gap: 8px;
-  }
-
-  .bundle-card {
-    min-height: 120px;
-    padding: 12px 5px;
-    border-radius: 16px;
-  }
-
-  .bundle-size {
-    font-size: 24px;
-  }
-
-  .bundle-price {
-    font-size: 16px;
-  }
-
-  .bundle-label {
-    font-size: 12px;
-  }
-
-  .checkout-section,
-  #checkout,
-  .checkout-card {
-    padding: 16px;
-  }
+.container,
+.home-container,
+.header-container {
+width: calc(100% - 22px);
 }
 
-/* ---------- 19. TABLET ---------- */
+.header-container {
+min-height: 68px;
+gap: 8px;
+}
+
+.brand-name,
+.site-title,
+.logo-text {
+font-size: 0.92rem;
+}
+
+.brand img,
+.site-logo,
+.logo-container img {
+width: 38px;
+height: 38px;
+}
+
+.whatsapp-header,
+.header-whatsapp {
+min-height: 38px;
+padding: 8px 10px;
+font-size: 0.75rem;
+}
+
+.menu-button,
+#menuButton {
+width: 40px;
+height: 40px;
+}
+
+.welcome-banner {
+padding: 20px 15px;
+}
+
+.bundle-grid,
+#bundleGrid {
+gap: 8px;
+}
+
+.bundle-card {
+padding: 12px 9px;
+}
+
+.bundle-card h3,
+.bundle-card h4 {
+font-size: 1rem;
+}
+
+.bundle-card .bundle-price {
+font-size: 1.1rem;
+}
+
+.network-tab {
+padding: 9px 4px;
+font-size: 0.72rem;
+}
+
+.checkout-card,
+.checkout-box,
+.tracking-section,
+#track-order {
+padding: 15px;
+}
+
+.whatsapp-float {
+right: 12px;
+bottom: 80px;
+width: 50px;
+height: 50px;
+}
+}
+
+/* =========================
+23. TABLETS
+========================= */
 
 @media (min-width: 600px) {
-  .bundle-grid,
-  #bundleGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  .bundle-card {
-    min-height: 140px;
-  }
-
-  .hero {
-    padding-top: 65px;
-    padding-bottom: 45px;
-  }
+.home-container {
+padding-top: 28px;
+padding-bottom: 40px;
 }
 
-/* ---------- 20. DESKTOP ---------- */
+.welcome-banner {
+padding: 34px;
+}
+
+.bundle-tools {
+flex-direction: row;
+align-items: center;
+justify-content: space-between;
+}
+
+.bundle-search,
+#bundleSearch {
+max-width: 420px;
+}
+
+.bundle-grid,
+#bundleGrid {
+grid-template-columns: repeat(3, minmax(0, 1fr));
+gap: 16px;
+}
+
+.checkout-card,
+.checkout-box,
+.tracking-section,
+#track-order {
+padding: 26px;
+}
+
+.support-actions {
+flex-direction: row;
+flex-wrap: wrap;
+}
+
+.support-actions a,
+.support-actions button {
+flex: 1 1 180px;
+}
+
+.announcement-actions {
+flex-direction: row;
+}
+}
+
+/* =========================
+24. DESKTOP / LAPTOP
+========================= */
 
 @media (min-width: 900px) {
-  .bundle-grid,
-  #bundleGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 16px;
-  }
-
-  .container,
-  .wrapper,
-  .main-container {
-    padding-inline: 28px;
-  }
-
-  .checkout-section,
-  #checkout,
-  .checkout-card {
-    max-width: 760px;
-    margin: 40px auto 0;
-    padding: 30px;
-  }
-
-  .bottom-nav {
-    display: none;
-  }
-
-  body {
-    padding-bottom: 0;
-  }
-
-  .floating-whatsapp,
-  .whatsapp-float,
-  .floating-contact {
-    bottom: 24px;
-  }
+.header-container {
+min-height: 82px;
 }
 
-/* ---------- 21. WHITE THEME SAFETY OVERRIDES ---------- */
-
-/* Prevent common dark-theme containers from staying black. */
-
-#home,
-#buy,
-#bundles,
-#bundleGrid,
-#checkout,
-#trackOrder,
-#help,
-.hero,
-main,
-section,
-article,
-.card,
-.panel,
-.content,
-.page-content {
-  color: #000000;
+.menu-button,
+#menuButton {
+display: none;
 }
 
-/* Keep inputs readable. */
-
-input,
-select,
-textarea,
-input[type="text"],
-input[type="tel"],
-input[type="email"],
-input[type="search"],
-input[type="number"] {
-  background-color: #ffffff;
-  color: #000000;
+.mobile-menu,
+#mobileMenu {
+display: none !important;
 }
 
-/* Keep the main store text dark. */
-
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p,
-label,
-strong,
-small,
-span {
-  text-shadow: none;
+.desktop-nav,
+.main-nav {
+display: flex;
 }
 
-/* END OF KIELMEN 636 DATAPLUG STYLESHEET */
-/* ==========================================
-   KIELMEN 636 DATAPLUG
-   FIX DARK CARDS AND BLACK TEXT
-   ADD THIS AT THE BOTTOM OF style.css
-   ========================================== */
-
-/* General page text */
-body,
-main,
-section {
-  color: #111111;
+.home-container {
+padding-top: 34px;
+padding-bottom: 48px;
 }
 
-/* Fix dark agent, help and tracking cards */
-.agent-section,
-.agent-card,
-.checkout-section,
+.bundle-grid,
+#bundleGrid {
+grid-template-columns: repeat(4, minmax(0, 1fr));
+gap: 18px;
+}
+
 .checkout-card,
-#checkout,
-.order-tracking,
-.track-order-section,
-#trackOrderForm,
-.help-section,
-.support-section {
-  background: #ffffff !important;
-  color: #111111 !important;
-  border: 1px solid #e5e7eb;
+.checkout-box {
+max-width: 760px;
+margin-right: auto;
+margin-left: auto;
 }
 
-/* Make headings clearly visible */
-.agent-section h1,
-.agent-section h2,
-.agent-section h3,
-.agent-card h1,
-.agent-card h2,
-.agent-card h3,
-.checkout-section h1,
-.checkout-section h2,
-.checkout-card h1,
-.checkout-card h2,
-#checkout h1,
-#checkout h2,
-.order-tracking h1,
-.order-tracking h2,
-.track-order-section h1,
-.track-order-section h2,
-.help-section h1,
-.help-section h2,
-.support-section h1,
-.support-section h2 {
-  color: #000000 !important;
+#trackOrderForm {
+flex-direction: row;
+align-items: flex-end;
 }
 
-/* Make paragraphs readable */
-.agent-section p,
-.agent-card p,
-.checkout-section p,
-.checkout-card p,
-#checkout p,
-.order-tracking p,
-.track-order-section p,
-.help-section p,
-.support-section p {
-  color: #222222 !important;
+#trackOrderForm .field,
+#trackOrderForm .form-group {
+flex: 1;
 }
 
-/* Labels and form text */
-label {
-  color: #111111 !important;
+#trackOrderButton {
+width: auto;
+min-width: 150px;
 }
 
-input,
-select,
-textarea {
-  background: #ffffff !important;
-  color: #111111 !important;
-  border: 1px solid #d1d5db;
+.bottom-nav {
+display: none;
 }
 
-input::placeholder,
-textarea::placeholder {
-  color: #6b7280 !important;
-  opacity: 1;
+.whatsapp-float {
+right: 24px;
+bottom: 24px;
+width: 60px;
+height: 60px;
 }
 
-/* Buttons remain readable */
-.btn-primary,
-.primary-button,
-#paymentButton,
-.payment-button,
-button[type="submit"] {
-  color: #111111 !important;
+.site-footer,
+footer {
+padding-bottom: 28px;
 }
 
-/* Secondary buttons */
-.btn-secondary,
-.agent-section .btn,
-.agent-card .btn {
-  background: #f3f4f6;
-  color: #111111 !important;
-  border: 1px solid #d1d5db;
+.announcement-actions {
+flex-direction: row;
+}
 }
 
-/* Network bundle cards */
-.bundle-card[data-network="MTN"] {
-  background: #ffcc00 !important;
-  border-color: #eab308 !important;
-  color: #111111 !important;
+/* =========================
+25. LARGE DESKTOP SCREENS
+========================= */
+
+@media (min-width: 1200px) {
+.bundle-grid,
+#bundleGrid {
+grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
-.bundle-card[data-network="TELECEL"] {
-  background: #ed1c24 !important;
-  border-color: #b91c1c !important;
-  color: #ffffff !important;
+.welcome-banner {
+padding: 40px;
 }
-
-.bundle-card[data-network="AIRTELTIGO"] {
-  background: #1688ff !important;
-  border-color: #1d4ed8 !important;
-  color: #ffffff !important;
-}
-
-/* Bundle sizes */
-.bundle-card[data-network="MTN"] .bundle-size,
-.bundle-card[data-network="MTN"] .bundle-price,
-.bundle-card[data-network="MTN"] .bundle-label {
-  color: #111111 !important;
-}
-
-.bundle-card[data-network="TELECEL"] .bundle-size,
-.bundle-card[data-network="TELECEL"] .bundle-price,
-.bundle-card[data-network="TELECEL"] .bundle-label {
-  color: #ffffff !important;
-}
-
-.bundle-card[data-network="AIRTELTIGO"] .bundle-size,
-.bundle-card[data-network="AIRTELTIGO"] .bundle-price,
-.bundle-card[data-network="AIRTELTIGO"] .bundle-label {
-  color: #ffffff !important;
-}
-
-/* Selected bundle */
-.bundle-card.selected {
-  outline: 3px solid #111111;
-  outline-offset: 2px;
-}
-
-/* Order results */
-.order-result {
-  background: #ffffff !important;
-  color: #111111 !important;
-}
-
-.order-result p {
-  background: #f3f4f6 !important;
-  color: #222222 !important;
-}
-
-.order-result strong {
-  color: #111111 !important;
-}
-
-/* Keep footer readable */
-footer,
-.site-footer {
-  background: #ffffff !important;
-  color: #222222 !important;
-}
-
-/* END OF VISIBILITY FIX */
+   }
