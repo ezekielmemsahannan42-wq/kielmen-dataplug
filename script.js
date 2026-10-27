@@ -3,6 +3,7 @@
 /* ==========================================
    KIELMEN 636 DATAPLUG
    CUSTOMER WEBSITE SCRIPT
+   NETWORK-COLOURED BUNDLE CARDS
    ========================================== */
 
 const PAYMENT_API =
@@ -72,6 +73,8 @@ let announcementSettings = {
 };
 
 let announcementInitialized = false;
+let checkoutInProgress = false;
+let settingsLoaded = false;
 
 /* ==========================================
    HELPER FUNCTIONS
@@ -82,7 +85,11 @@ function getElement(id) {
 }
 
 function formatMoney(amount) {
-  return "GH₵" + Number(amount).toFixed(2);
+  const number = Number(amount);
+
+  return "GH₵" + (
+    Number.isFinite(number) ? number : 0
+  ).toFixed(2);
 }
 
 function showMessage(message, type = "info") {
@@ -96,21 +103,55 @@ function showMessage(message, type = "info") {
   element.textContent = message;
   element.style.display = "block";
 
-  element.style.color =
-    type === "error"
-      ? "#ff6b6b"
-      : type === "success"
-      ? "#4ade80"
-      : "#ffffff";
+  if (type === "error") {
+    element.style.color = "#b91c1c";
+    element.style.backgroundColor = "#fef2f2";
+  } else if (type === "success") {
+    element.style.color = "#166534";
+    element.style.backgroundColor = "#f0fdf4";
+  } else {
+    element.style.color = "#000000";
+    element.style.backgroundColor = "#f3f4f6";
+  }
+}
+
+function normalizeNetwork(value) {
+  const network = String(value || "")
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "");
+
+  if (network.includes("MTN")) return "MTN";
+
+  if (
+    network.includes("TELECEL") ||
+    network.includes("VODAFONE")
+  ) {
+    return "TELECEL";
+  }
+
+  if (
+    network.includes("AIRTELTIGO") ||
+    network === "AIRTEL" ||
+    network === "TIGO"
+  ) {
+    return "AIRTELTIGO";
+  }
+
+  return network;
+}
+
+function formatNetworkName(network) {
+  const normalized = normalizeNetwork(network);
+
+  if (normalized === "AIRTELTIGO") return "AirtelTigo";
+  if (normalized === "TELECEL") return "Telecel";
+
+  return normalized;
 }
 
 function isNetworkAvailable(network) {
-  const key = String(network || "").toUpperCase();
+  const key = normalizeNetwork(network);
 
-  /*
-   * A network is unavailable only when the settings
-   * explicitly say false.
-   */
   return (
     Object.prototype.hasOwnProperty.call(PRODUCTS, key) &&
     networkAvailability[key] !== false
@@ -121,10 +162,14 @@ function getFirstAvailableNetwork() {
   return Object.keys(PRODUCTS).find(isNetworkAvailable) || null;
 }
 
-function formatNetworkName(network) {
-  if (network === "AIRTELTIGO") return "AirtelTigo";
-  if (network === "TELECEL") return "Telecel";
-  return network;
+function getNetworkClass(network) {
+  const normalized = normalizeNetwork(network);
+
+  if (normalized === "MTN") return "mtn";
+  if (normalized === "TELECEL") return "telecel";
+  if (normalized === "AIRTELTIGO") return "airteltigo";
+
+  return "";
 }
 
 /* ==========================================
@@ -146,21 +191,24 @@ async function loadPublicWebsiteSettings() {
 
     if (!response.ok) {
       throw new Error(
-        "Website settings request failed: HTTP " + response.status
+        "Website settings request failed: HTTP " +
+        response.status
       );
     }
 
     const result = await response.json();
 
     if (!result.success || !result.settings) {
-      throw new Error("Website settings were not returned.");
+      throw new Error(
+        "Website settings were not returned."
+      );
     }
 
     const settings = result.settings;
 
     /*
-     * Do not interpret missing network settings as disabled.
-     * Only an explicit false means unavailable.
+     * Only an explicit false disables a network.
+     * Missing settings do not disable a network.
      */
     networkAvailability = {
       MTN: settings.networkAvailability?.MTN !== false,
@@ -173,30 +221,29 @@ async function loadPublicWebsiteSettings() {
       message: String(settings.announcement || "").trim()
     };
 
-    /*
-     * Keep the existing public website integration working
-     * with the owner settings script in index.html.
-     */
-    applyAvailableNetworks();
+    settingsLoaded = true;
 
+    applyAvailableNetworks();
     applyAnnouncementFromSettings();
 
     console.log("Website settings loaded successfully.");
   } catch (error) {
-    /*
-     * A settings API failure must not freeze the website.
-     * Keep all networks available by default.
-     */
     console.warn(
-      "Could not load website settings. Using defaults.",
+      "Could not load website settings. Using default network availability.",
       error
     );
 
+    /*
+     * Fail safely on the public page.
+     * The backend must still enforce its own availability rules.
+     */
     networkAvailability = {
       MTN: true,
       TELECEL: true,
       AIRTELTIGO: true
     };
+
+    settingsLoaded = false;
 
     applyAvailableNetworks();
     applyAnnouncementFromSettings();
@@ -204,13 +251,11 @@ async function loadPublicWebsiteSettings() {
 }
 
 /* ==========================================
-   NETWORK SELECTION
+   NETWORK TAB SELECTION
    ========================================== */
 
 function selectNetwork(network) {
-  const normalized = String(network || "")
-    .toUpperCase()
-    .replace(/[^A-Z]/g, "");
+  const normalized = normalizeNetwork(network);
 
   if (!PRODUCTS[normalized]) {
     return;
@@ -219,7 +264,7 @@ function selectNetwork(network) {
   if (!isNetworkAvailable(normalized)) {
     showMessage(
       formatNetworkName(normalized) +
-        " is temporarily unavailable. Please select another network.",
+      " is temporarily unavailable. Please select another network.",
       "error"
     );
 
@@ -236,16 +281,18 @@ function selectNetwork(network) {
   }
 
   document.querySelectorAll(".network-tab").forEach(tab => {
-    const tabNetwork = String(
-      tab.dataset.network || tab.textContent || ""
-    )
-      .toUpperCase()
-      .replace(/[^A-Z]/g, "");
+    const tabNetwork = normalizeNetwork(
+      tab.dataset.network || tab.textContent
+    );
 
     const active = tabNetwork === normalized;
 
     tab.classList.toggle("active", active);
-    tab.setAttribute("aria-selected", active ? "true" : "false");
+
+    tab.setAttribute(
+      "aria-selected",
+      active ? "true" : "false"
+    );
   });
 
   renderBundles();
@@ -255,6 +302,7 @@ function selectNetwork(network) {
 
   if (message) {
     message.textContent = "";
+    message.style.display = "none";
   }
 }
 
@@ -268,8 +316,7 @@ function applyAvailableNetworks() {
   );
 
   tabs.forEach(tab => {
-    const network = String(tab.dataset.network || "")
-      .toUpperCase();
+    const network = normalizeNetwork(tab.dataset.network);
 
     if (!PRODUCTS[network]) {
       return;
@@ -287,6 +334,7 @@ function applyAvailableNetworks() {
 
     if (!available) {
       tab.classList.remove("active");
+      tab.setAttribute("aria-selected", "false");
     }
   });
 
@@ -303,7 +351,6 @@ function applyAvailableNetworks() {
       grid.replaceChildren();
 
       const notice = document.createElement("p");
-
       notice.className = "empty-state";
       notice.textContent =
         "All networks are temporarily unavailable. Please check again later.";
@@ -312,7 +359,8 @@ function applyAvailableNetworks() {
     }
 
     if (resultCount) {
-      resultCount.textContent = "No networks currently available.";
+      resultCount.textContent =
+        "No networks currently available.";
     }
 
     if (paymentButton) {
@@ -324,26 +372,18 @@ function applyAvailableNetworks() {
     return;
   }
 
-  if (paymentButton) {
-    paymentButton.disabled = false;
-  }
-
   /*
-   * If the currently selected network has been disabled,
-   * automatically switch to the first available network.
+   * Switch only if the current network is no longer available.
    */
   if (!isNetworkAvailable(selectedNetwork)) {
     selectNetwork(availableNetwork);
     return;
   }
 
-  /*
-   * If no network tab is active, restore the current valid one.
-   */
-  const activeTab = tabs.find(
-    tab =>
-      tab.dataset.network === selectedNetwork &&
-      !tab.disabled
+  const activeTab = tabs.find(tab =>
+    normalizeNetwork(tab.dataset.network) === selectedNetwork &&
+    !tab.disabled &&
+    !tab.hidden
   );
 
   if (!activeTab) {
@@ -366,7 +406,22 @@ function renderBundles() {
     return;
   }
 
-  if (!isNetworkAvailable(selectedNetwork)) {
+  const network = normalizeNetwork(selectedNetwork);
+  const networkClass = getNetworkClass(network);
+
+  /*
+   * Add the network class to the grid so the stylesheet
+   * can apply the right colours to every bundle card.
+   */
+  grid.classList.remove("mtn", "telecel", "airteltigo");
+
+  if (networkClass) {
+    grid.classList.add(networkClass);
+  }
+
+  grid.dataset.network = network;
+
+  if (!isNetworkAvailable(network)) {
     grid.replaceChildren();
 
     const notice = document.createElement("p");
@@ -385,7 +440,7 @@ function renderBundles() {
     return;
   }
 
-  const bundles = PRODUCTS[selectedNetwork] || [];
+  const bundles = PRODUCTS[network] || [];
 
   const filteredBundles = bundles.filter(bundle => {
     const text = (
@@ -412,11 +467,37 @@ function renderBundles() {
     card.type = "button";
     card.className = "bundle-card";
 
-    if (
+    /*
+     * These identifiers connect the network to the CSS.
+     * This is the important fix for network-coloured boxes.
+     */
+    card.dataset.network = network;
+    card.dataset.bundle = bundle.size;
+    card.classList.add(networkClass);
+
+    card.setAttribute(
+      "aria-label",
+      network + " " + bundle.size + " for " +
+      formatMoney(bundle.price)
+    );
+
+    card.setAttribute(
+      "aria-pressed",
+      String(
+        Boolean(
+          selectedBundle &&
+          selectedBundle.network === network &&
+          selectedBundle.size === bundle.size
+        )
+      )
+    );
+
+    const isSelected =
       selectedBundle &&
-      selectedBundle.network === selectedNetwork &&
-      selectedBundle.size === bundle.size
-    ) {
+      selectedBundle.network === network &&
+      selectedBundle.size === bundle.size;
+
+    if (isSelected) {
       card.classList.add("selected");
     }
 
@@ -430,12 +511,18 @@ function renderBundles() {
 
     const labelElement = document.createElement("span");
     labelElement.className = "bundle-label";
-    labelElement.textContent = "Select bundle";
+    labelElement.textContent = isSelected
+      ? "Selected ✓"
+      : "Select bundle";
 
-    card.append(sizeElement, priceElement, labelElement);
+    card.append(
+      sizeElement,
+      priceElement,
+      labelElement
+    );
 
     card.addEventListener("click", () => {
-      if (!isNetworkAvailable(selectedNetwork)) {
+      if (!isNetworkAvailable(network)) {
         showMessage(
           "This network is currently unavailable.",
           "error"
@@ -445,7 +532,7 @@ function renderBundles() {
       }
 
       selectedBundle = {
-        network: selectedNetwork,
+        network,
         size: bundle.size,
         price: bundle.price
       };
@@ -471,8 +558,11 @@ function renderBundles() {
   if (resultCount) {
     resultCount.textContent =
       filteredBundles.length +
-      (filteredBundles.length === 1 ? " bundle" : " bundles") +
-      " available";
+      (
+        filteredBundles.length === 1
+          ? " bundle available"
+          : " bundles available"
+      );
   }
 }
 
@@ -488,11 +578,14 @@ function updateSelectedBundle() {
   const price = getElement("selectedPrice");
   const selectedNetworkInput = getElement("selectedNetwork");
   const selectedSizeInput = getElement("selectedSize");
+  const paymentButton = getElement("paymentButton");
 
   if (selectedBundle) {
     if (name) {
       name.textContent =
-        selectedBundle.network + " " + selectedBundle.size;
+        formatNetworkName(selectedBundle.network) +
+        " " +
+        selectedBundle.size;
     }
 
     if (price) {
@@ -505,6 +598,11 @@ function updateSelectedBundle() {
 
     if (selectedSizeInput) {
       selectedSizeInput.value = selectedBundle.size;
+    }
+
+    if (paymentButton && !checkoutInProgress) {
+      paymentButton.disabled = false;
+      paymentButton.textContent = "Continue to Paystack";
     }
   } else {
     if (name) {
@@ -522,6 +620,11 @@ function updateSelectedBundle() {
     if (selectedNetworkInput) {
       selectedNetworkInput.value = selectedNetwork;
     }
+
+    if (paymentButton && !checkoutInProgress) {
+      paymentButton.disabled = true;
+      paymentButton.textContent = "Select a Bundle First";
+    }
   }
 }
 
@@ -532,6 +635,10 @@ function updateSelectedBundle() {
 async function handleCheckout(event) {
   event.preventDefault();
 
+  if (checkoutInProgress) {
+    return;
+  }
+
   if (!selectedBundle) {
     showMessage(
       "Please select a data bundle first.",
@@ -541,10 +648,6 @@ async function handleCheckout(event) {
     return;
   }
 
-  /*
-   * Final client-side protection.
-   * The backend must also enforce availability.
-   */
   if (!isNetworkAvailable(selectedBundle.network)) {
     showMessage(
       "This network is currently unavailable. Please select another network.",
@@ -568,10 +671,15 @@ async function handleCheckout(event) {
   }
 
   const phone = phoneInput.value.trim();
-  const email = emailInput ? emailInput.value.trim() : "";
+  const email = emailInput
+    ? emailInput.value.trim()
+    : "";
 
   if (!emailInput || !email) {
-    showMessage("Please enter your email address.", "error");
+    showMessage(
+      "Please enter your email address.",
+      "error"
+    );
 
     if (emailInput) {
       emailInput.focus();
@@ -580,8 +688,15 @@ async function handleCheckout(event) {
     return;
   }
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showMessage("Please enter a valid email address.", "error");
+  if (
+    email.length > 254 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+  ) {
+    showMessage(
+      "Please enter a valid email address.",
+      "error"
+    );
+
     emailInput.focus();
     return;
   }
@@ -595,6 +710,21 @@ async function handleCheckout(event) {
     phoneInput.focus();
     return;
   }
+
+  const confirmed = window.confirm(
+    "Please confirm your order:\n\n" +
+    "Network: " + formatNetworkName(selectedBundle.network) + "\n" +
+    "Bundle: " + selectedBundle.size + "\n" +
+    "Amount: " + formatMoney(selectedBundle.price) + "\n" +
+    "Recipient: " + phone + "\n\n" +
+    "Continue to payment?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  checkoutInProgress = true;
 
   if (paymentButton) {
     paymentButton.disabled = true;
@@ -617,6 +747,13 @@ async function handleCheckout(event) {
           email,
           network: selectedBundle.network,
           bundle: selectedBundle.size,
+
+          /*
+           * The server must calculate and verify the amount
+           * from its own approved price list. This amount is
+           * informational only and must not be trusted by
+           * the backend as proof of the correct price.
+           */
           amount: selectedBundle.price
         })
       }
@@ -646,12 +783,40 @@ async function handleCheckout(event) {
       );
     }
 
+    /*
+     * Require HTTPS and a recognised Paystack checkout host.
+     */
+    let paymentURL;
+
+    try {
+      paymentURL = new URL(data.authorization_url);
+    } catch (_error) {
+      throw new Error(
+        "The payment server returned an invalid checkout link."
+      );
+    }
+
+    const host = paymentURL.hostname.toLowerCase();
+
+    const isPaystackHost =
+      host === "paystack.com" ||
+      host.endsWith(".paystack.com");
+
+    if (
+      paymentURL.protocol !== "https:" ||
+      !isPaystackHost
+    ) {
+      throw new Error(
+        "The payment link is not a recognised secure Paystack URL."
+      );
+    }
+
     showMessage(
       "Opening Paystack payment page...",
       "success"
     );
 
-    window.location.assign(data.authorization_url);
+    window.location.assign(paymentURL.href);
   } catch (error) {
     console.error("Checkout error:", error);
 
@@ -661,9 +826,13 @@ async function handleCheckout(event) {
       "error"
     );
 
+    checkoutInProgress = false;
+
     if (paymentButton) {
-      paymentButton.disabled = false;
-      paymentButton.textContent = "Continue to Paystack";
+      paymentButton.disabled = !selectedBundle;
+      paymentButton.textContent = selectedBundle
+        ? "Continue to Paystack"
+        : "Select a Bundle First";
     }
   }
 }
@@ -675,9 +844,11 @@ async function handleCheckout(event) {
 function initializeSearch() {
   const search = getElement("bundleSearch");
 
-  if (!search) {
+  if (!search || search.dataset.searchInitialized === "yes") {
     return;
   }
+
+  search.dataset.searchInitialized = "yes";
 
   search.addEventListener("input", event => {
     searchText = event.target.value.trim();
@@ -693,28 +864,43 @@ function initializeMobileMenu() {
   const menuButton = getElement("menuButton");
   const mobileMenu = getElement("mobileMenu");
 
-  if (!menuButton || !mobileMenu) return;
+  if (!menuButton || !mobileMenu) {
+    return;
+  }
 
-  // Prevent duplicate event listeners.
-  if (menuButton.dataset.menuInitialized === "yes") return;
+  if (menuButton.dataset.menuInitialized === "yes") {
+    return;
+  }
+
   menuButton.dataset.menuInitialized = "yes";
 
-  // Start with the menu closed.
-  mobileMenu.style.display = "none";
+  /*
+   * Use the stylesheet's .open class rather than setting
+   * display styles that can conflict with responsive CSS.
+   */
+  mobileMenu.classList.remove("open");
   menuButton.setAttribute("aria-expanded", "false");
+  menuButton.setAttribute("aria-label", "Open menu");
 
   menuButton.addEventListener("click", () => {
-    const isOpen = menuButton.getAttribute("aria-expanded") === "true";
+    const isOpen = mobileMenu.classList.toggle("open");
 
-    mobileMenu.style.display = isOpen ? "none" : "block";
-    menuButton.setAttribute("aria-expanded", String(!isOpen));
-    menuButton.setAttribute("aria-label", isOpen ? "Open menu" : "Close menu");
-    menuButton.textContent = isOpen ? "☰" : "✕";
+    menuButton.setAttribute(
+      "aria-expanded",
+      String(isOpen)
+    );
+
+    menuButton.setAttribute(
+      "aria-label",
+      isOpen ? "Close menu" : "Open menu"
+    );
+
+    menuButton.textContent = isOpen ? "✕" : "☰";
   });
 
   mobileMenu.querySelectorAll("a").forEach(link => {
     link.addEventListener("click", () => {
-      mobileMenu.style.display = "none";
+      mobileMenu.classList.remove("open");
       menuButton.setAttribute("aria-expanded", "false");
       menuButton.setAttribute("aria-label", "Open menu");
       menuButton.textContent = "☰";
@@ -738,12 +924,11 @@ function applyAnnouncementFromSettings() {
     announcementSettings.enabled === true &&
     Boolean(announcementSettings.message);
 
-  /*
-   * If the owner switches announcements off, close and hide
-   * the popup. Do not let this script reopen it.
-   */
   if (!enabled) {
-    if (dialog.open && typeof dialog.close === "function") {
+    if (
+      dialog.open &&
+      typeof dialog.close === "function"
+    ) {
       dialog.close();
     }
 
@@ -754,12 +939,14 @@ function applyAnnouncementFromSettings() {
   }
 
   if (messageElement) {
-    messageElement.textContent = announcementSettings.message;
+    messageElement.textContent =
+      announcementSettings.message;
   } else {
     const paragraph = dialog.querySelector("p");
 
     if (paragraph) {
-      paragraph.textContent = announcementSettings.message;
+      paragraph.textContent =
+        announcementSettings.message;
     }
   }
 
@@ -799,15 +986,25 @@ function initializeAnnouncement() {
 
   function markAsSeen() {
     try {
-      sessionStorage.setItem("kielmenAnnouncementSeen", "true");
-      sessionStorage.setItem("kielmenAnnouncementShown", "yes");
+      sessionStorage.setItem(
+        "kielmenAnnouncementSeen",
+        "true"
+      );
+
+      sessionStorage.setItem(
+        "kielmenAnnouncementShown",
+        "yes"
+      );
     } catch (_error) {}
   }
 
   function closeAnnouncement() {
     markAsSeen();
 
-    if (dialog.open && typeof dialog.close === "function") {
+    if (
+      dialog.open &&
+      typeof dialog.close === "function"
+    ) {
       dialog.close();
     } else {
       dialog.hidden = true;
@@ -829,9 +1026,6 @@ function initializeAnnouncement() {
     );
   }
 
-  /*
-   * Never open the popup when the owner has disabled it.
-   */
   if (
     announcementSettings.enabled !== true ||
     !announcementSettings.message
@@ -860,7 +1054,9 @@ function initializeAnnouncement() {
         } catch (_error) {
           dialog.style.display = "block";
         }
-      } else if (typeof dialog.showModal !== "function") {
+      } else if (
+        typeof dialog.showModal !== "function"
+      ) {
         dialog.style.display = "block";
       }
 
@@ -902,7 +1098,10 @@ function escapeHTML(value) {
 function initializeOrderTracking() {
   const form = getElement("trackOrderForm");
 
-  if (!form || form.dataset.trackingInitialized === "yes") {
+  if (
+    !form ||
+    form.dataset.trackingInitialized === "yes"
+  ) {
     return;
   }
 
@@ -920,7 +1119,9 @@ function initializeOrderTracking() {
       return;
     }
 
-    const phone = phoneInput.value.trim().replace(/\D/g, "");
+    const phone = phoneInput.value
+      .trim()
+      .replace(/\D/g, "");
 
     message.textContent = "";
     results.replaceChildren();
@@ -938,8 +1139,8 @@ function initializeOrderTracking() {
     try {
       const response = await fetch(
         PAYMENT_API +
-          "/orders-by-phone/" +
-          encodeURIComponent(phone),
+        "/orders-by-phone/" +
+        encodeURIComponent(phone),
         {
           method: "GET",
           cache: "no-store",
@@ -963,16 +1164,30 @@ function initializeOrderTracking() {
         message.textContent =
           data.message ||
           "No orders found. Please check the number.";
+
         return;
       }
 
-      if (!Array.isArray(data.orders) || data.orders.length === 0) {
+      if (
+        !Array.isArray(data.orders) ||
+        data.orders.length === 0
+      ) {
         message.textContent =
           "No orders found for this phone number.";
+
         return;
       }
 
-      results.innerHTML = data.orders.map(order => {
+      message.textContent =
+        data.orders.length +
+        (data.orders.length === 1
+          ? " order found."
+          : " orders found.");
+
+      data.orders.forEach(order => {
+        const card = document.createElement("div");
+        card.className = "order-result";
+
         const date = order.created_at
           ? new Date(order.created_at).toLocaleString(
               "en-GB",
@@ -980,18 +1195,32 @@ function initializeOrderTracking() {
             )
           : "Date unavailable";
 
-        return `
-          <div class="order-result">
-            <p><strong>Order Date:</strong> ${escapeHTML(date)}</p>
-            <p><strong>Reference:</strong> ${escapeHTML(order.reference || "")}</p>
-            <p><strong>Network:</strong> ${escapeHTML(order.network || "")}</p>
-            <p><strong>Bundle:</strong> ${escapeHTML(order.bundle || "")}</p>
-            <p><strong>Amount:</strong> GH₵${Number(order.amount || 0).toFixed(2)}</p>
-            <p><strong>Payment:</strong> ${escapeHTML(order.payment_status || "")}</p>
-            <p><strong>Delivery:</strong> ${escapeHTML(order.delivery_status || "")}</p>
-          </div>
-        `;
-      }).join("");
+        const fields = [
+          ["Order Date", date],
+          ["Reference", order.reference || ""],
+          ["Network", formatNetworkName(order.network || "")],
+          ["Bundle", order.bundle || ""],
+          ["Amount", formatMoney(order.amount || 0)],
+          ["Payment", order.payment_status || ""],
+          ["Delivery", order.delivery_status || ""]
+        ];
+
+        fields.forEach(([label, value]) => {
+          const paragraph = document.createElement("p");
+          const strong = document.createElement("strong");
+
+          strong.textContent = label + ": ";
+
+          paragraph.appendChild(strong);
+          paragraph.appendChild(
+            document.createTextNode(String(value))
+          );
+
+          card.appendChild(paragraph);
+        });
+
+        results.appendChild(card);
+      });
     } catch (error) {
       console.error("Order tracking error:", error);
 
@@ -1010,7 +1239,7 @@ function initializeOrderTracking() {
 
 function initializeWebsite() {
   /*
-   * Attach network listeners only once.
+   * Network buttons.
    */
   document.querySelectorAll(".network-tab").forEach(tab => {
     if (tab.dataset.networkListenerAdded === "yes") {
@@ -1028,6 +1257,9 @@ function initializeWebsite() {
     });
   });
 
+  /*
+   * Checkout form.
+   */
   const checkoutForm = getElement("checkoutForm");
 
   if (
@@ -1036,7 +1268,10 @@ function initializeWebsite() {
   ) {
     checkoutForm.dataset.checkoutListenerAdded = "yes";
 
-    checkoutForm.addEventListener("submit", handleCheckout);
+    checkoutForm.addEventListener(
+      "submit",
+      handleCheckout
+    );
   }
 
   initializeSearch();
@@ -1045,45 +1280,46 @@ function initializeWebsite() {
   initializeOrderTracking();
 
   /*
- * Keep the website interactive while settings load.
- * Start with MTN if available; otherwise use another
- * available network.
- */
-try {
-  const firstNetwork = getFirstAvailableNetwork();
-
-  if (firstNetwork) {
-    selectNetwork(firstNetwork);
-  } else {
-    applyAvailableNetworks();
-  }
-} catch (error) {
-  console.error("Network initialization error:", error);
-
-  // Safe fallback: keep MTN selectable.
-  const mtnTab = document.querySelector(
-    '.network-tab[data-network="MTN"]'
-  );
-
-  if (mtnTab) {
-    mtnTab.hidden = false;
-    mtnTab.disabled = false;
-    selectNetwork("MTN");
-  }
-}
-
-  /*
-   * Load website settings safely.
-   * Settings errors must not freeze the website.
+   * Render the initial store immediately so the page
+   * remains interactive while public settings load.
    */
   try {
-    if (typeof loadPublicWebsiteSettings === "function") {
-      Promise.resolve(loadPublicWebsiteSettings()).catch(error => {
-        console.error("Website settings could not load:", error);
-      });
+    const firstNetwork = getFirstAvailableNetwork();
+
+    if (firstNetwork) {
+      selectNetwork(firstNetwork);
+    } else {
+      applyAvailableNetworks();
     }
   } catch (error) {
-    console.error("Website settings error:", error);
+    console.error(
+      "Network initialization error:",
+      error
+    );
+
+    selectedNetwork = "MTN";
+    renderBundles();
+    updateSelectedBundle();
+  }
+
+  /*
+   * Load owner-controlled settings without blocking
+   * initial page rendering.
+   */
+  try {
+    Promise.resolve(
+      loadPublicWebsiteSettings()
+    ).catch(error => {
+      console.error(
+        "Website settings could not load:",
+        error
+      );
+    });
+  } catch (error) {
+    console.error(
+      "Website settings error:",
+      error
+    );
   }
 }
 
@@ -1095,4 +1331,4 @@ if (document.readyState === "loading") {
   );
 } else {
   initializeWebsite();
-  }
+}
