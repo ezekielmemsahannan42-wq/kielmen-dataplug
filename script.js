@@ -4,24 +4,21 @@
    KIELMEN 636 DATAPLUG
    FILE 3: script.js
 
-   Features:
-   - Responsive mobile navigation
-   - Network tabs and bundle cards
-   - Bundle search
-   - Checkout and Paystack redirect
-   - Website settings and network availability
+   Compatible with index.html and style.css.
+   Includes:
+   - Mobile navigation
+   - Desktop navigation
+   - Network tabs and coloured bundle cards
+   - Bundle search and selection
+   - Paystack checkout
+   - Website settings
    - Announcement dialog
-   - WhatsApp support and channel links
+   - WhatsApp support
    - Order tracking
    - Bottom navigation
-   - Current year
-
-   Backend:
-   https://kielmen-dataplug-payment-api.onrender.com
 
    SECURITY:
-   The backend MUST validate bundle prices independently.
-   Never rely on the amount sent by the browser.
+   The backend must independently validate bundle prices.
 ========================================================= */
 
 
@@ -90,6 +87,7 @@ const DEFAULT_PRODUCTS = {
 let activeNetwork = "MTN";
 let selectedBundle = null;
 let paymentInProgress = false;
+let trackingInProgress = false;
 
 let networkAvailability = {
     MTN: true,
@@ -104,7 +102,7 @@ let whatsappChannel = DEFAULT_WHATSAPP_CHANNEL;
 
 
 /* =========================================================
-   4. DOM HELPERS
+   4. DOM AND GENERAL HELPERS
 ========================================================= */
 
 function getElement(id) {
@@ -173,15 +171,13 @@ function normalizeGhanaPhone(phone) {
 }
 
 function isValidGhanaPhone(phone) {
-    const value = normalizeGhanaPhone(phone);
-
-    return /^0\d{9}$/.test(value);
+    return /^0\d{9}$/.test(normalizeGhanaPhone(phone));
 }
 
 function isValidEmail(email) {
-    const value = String(email || "").trim();
-
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        String(email || "").trim()
+    );
 }
 
 function formatMoney(amount) {
@@ -220,7 +216,7 @@ function safelySetStorage(key, value) {
     try {
         sessionStorage.setItem(key, value);
     } catch (error) {
-        // The website can continue if browser storage is unavailable.
+        // The site remains usable when session storage is unavailable.
     }
 }
 
@@ -230,40 +226,48 @@ function safelySetStorage(key, value) {
 ========================================================= */
 
 async function fetchJSON(url, options = {}) {
-    const requestOptions = {
-        ...options,
-        headers: {
-            Accept: "application/json",
-            ...(options.headers || {})
+    const controller = new AbortController();
+
+    const timeout = window.setTimeout(() => {
+        controller.abort();
+    }, 25000);
+
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: options.signal || controller.signal,
+            headers: {
+                Accept: "application/json",
+                ...(options.headers || {})
+            }
+        });
+
+        const rawText = await response.text();
+
+        let result = {};
+
+        if (rawText) {
+            try {
+                result = JSON.parse(rawText);
+            } catch (error) {
+                throw new Error(
+                    "The server returned an invalid response. Please try again."
+                );
+            }
         }
-    };
 
-    const response = await fetch(url, requestOptions);
-
-    const rawText = await response.text();
-
-    let result = {};
-
-    if (rawText) {
-        try {
-            result = JSON.parse(rawText);
-        } catch (error) {
+        if (!response.ok) {
             throw new Error(
-                "The server returned an invalid response. Please try again."
+                result.message ||
+                result.error ||
+                `Request failed with status ${response.status}.`
             );
         }
+
+        return result;
+    } finally {
+        window.clearTimeout(timeout);
     }
-
-    if (!response.ok) {
-        const message =
-            result.message ||
-            result.error ||
-            `Request failed with status ${response.status}.`;
-
-        throw new Error(message);
-    }
-
-    return result;
 }
 
 function getResponseData(response) {
@@ -283,7 +287,7 @@ function getResponseData(response) {
 
 
 /* =========================================================
-   6. STATUS MESSAGES
+   6. CHECKOUT AND TRACKING MESSAGES
 ========================================================= */
 
 function showCheckoutMessage(message, type = "info") {
@@ -294,8 +298,10 @@ function showCheckoutMessage(message, type = "info") {
     }
 
     setText(element, message);
+
     element.classList.remove("success", "error", "info");
     element.classList.add(type);
+
     showElement(element);
 }
 
@@ -308,6 +314,7 @@ function clearCheckoutMessage() {
 
     setText(element, "");
     element.classList.remove("success", "error", "info");
+
     hideElement(element);
 }
 
@@ -319,8 +326,10 @@ function showTrackingMessage(message, type = "info") {
     }
 
     setText(element, message);
+
     element.classList.remove("success", "error", "info");
     element.classList.add(type);
+
     showElement(element);
 }
 
@@ -333,12 +342,13 @@ function clearTrackingMessage() {
 
     setText(element, "");
     element.classList.remove("success", "error", "info");
+
     hideElement(element);
 }
 
 
 /* =========================================================
-   7. MOBILE MENU
+   7. RESPONSIVE NAVIGATION
 ========================================================= */
 
 function setMenuOpen(shouldOpen) {
@@ -360,7 +370,9 @@ function setMenuOpen(shouldOpen) {
 
     button.setAttribute(
         "aria-label",
-        shouldOpen ? "Close navigation menu" : "Open navigation menu"
+        shouldOpen
+            ? "Close navigation menu"
+            : "Open navigation menu"
     );
 
     if (icon) {
@@ -380,23 +392,25 @@ function initializeMobileMenu() {
 
     button.addEventListener("click", event => {
         event.preventDefault();
+        event.stopPropagation();
 
-        const shouldOpen = menu.hidden;
-
-        setMenuOpen(shouldOpen);
+        setMenuOpen(menu.hidden);
     });
 
-    queryAll("#mobileMenu a").forEach(link => {
-        link.addEventListener("click", () => {
+    menu.addEventListener("click", event => {
+        const link = event.target.closest("a");
+
+        if (link) {
             setMenuOpen(false);
-        });
+        }
     });
 
     document.addEventListener("click", event => {
-        const clickedInsideMenu = menu.contains(event.target);
-        const clickedButton = button.contains(event.target);
-
-        if (!clickedInsideMenu && !clickedButton) {
+        if (
+            !menu.hidden &&
+            !menu.contains(event.target) &&
+            !button.contains(event.target)
+        ) {
             setMenuOpen(false);
         }
     });
@@ -406,6 +420,90 @@ function initializeMobileMenu() {
             setMenuOpen(false);
         }
     });
+
+    /*
+     * Close the mobile menu when switching to desktop layout.
+     */
+    window.addEventListener("resize", () => {
+        if (window.innerWidth >= 900) {
+            setMenuOpen(false);
+        }
+    });
+}
+
+function initializeDesktopNavigation() {
+    const desktopNav = getElement("desktopNav");
+
+    if (!desktopNav) {
+        return;
+    }
+
+    const links = queryAll("a[href]", desktopNav);
+
+    function setActiveLink(link) {
+        links.forEach(item => {
+            const active = item === link;
+
+            item.classList.toggle("active", active);
+
+            if (active) {
+                item.setAttribute("aria-current", "location");
+            } else {
+                item.removeAttribute("aria-current");
+            }
+        });
+    }
+
+    links.forEach(link => {
+        link.addEventListener("click", () => {
+            const href = link.getAttribute("href");
+
+            if (href && href.startsWith("#")) {
+                setActiveLink(link);
+            } else if (href === "index.html") {
+                setActiveLink(link);
+            }
+        });
+    });
+
+    if ("IntersectionObserver" in window) {
+        const sections = [
+            "bundles",
+            "checkout",
+            "track-order",
+            "agent-section"
+        ]
+            .map(getElement)
+            .filter(Boolean);
+
+        const observer = new IntersectionObserver(entries => {
+            const visible = entries
+                .filter(entry => entry.isIntersecting)
+                .sort(
+                    (a, b) =>
+                        b.intersectionRatio - a.intersectionRatio
+                );
+
+            if (!visible.length) {
+                return;
+            }
+
+            const sectionId = visible[0].target.id;
+
+            const matchingLink = links.find(
+                link => link.getAttribute("href") === `#${sectionId}`
+            );
+
+            if (matchingLink) {
+                setActiveLink(matchingLink);
+            }
+        }, {
+            rootMargin: "-15% 0px -65% 0px",
+            threshold: [0.1, 0.25, 0.5]
+        });
+
+        sections.forEach(section => observer.observe(section));
+    }
 }
 
 
@@ -442,12 +540,15 @@ function updateWhatsAppLinks() {
         link.rel = "noopener noreferrer";
     });
 
-    const displayNumber = getWhatsAppDisplayNumber(cleanNumber);
-
     const displayElement = getElement("supportPhoneDisplay");
 
     if (displayElement) {
-        setText(displayElement, displayNumber);
+        setText(
+            displayElement,
+            getWhatsAppDisplayNumber(cleanNumber)
+        );
+
+        displayElement.href = `tel:+${cleanNumber}`;
     }
 }
 
@@ -465,7 +566,7 @@ function updateChannelLinks() {
 
 
 /* =========================================================
-   9. NETWORK TABS
+   9. NETWORK TABS AND AVAILABILITY
 ========================================================= */
 
 function isNetworkAvailable(network) {
@@ -474,24 +575,26 @@ function isNetworkAvailable(network) {
 
 function updateNetworkTabs() {
     queryAll(".network-tab").forEach(tab => {
-        const network = normalizeNetwork(
-            tab.dataset.network
-        );
+        const network = normalizeNetwork(tab.dataset.network);
 
         const active = network === activeNetwork;
-        const available = isNetworkAvailable(network);
+        const available = network && isNetworkAvailable(network);
+
+        tab.disabled = !available;
+
+        tab.classList.toggle("active", active);
+        tab.classList.toggle("unavailable", !available);
 
         tab.setAttribute(
             "aria-pressed",
             active ? "true" : "false"
         );
 
-        tab.disabled = !available;
-        tab.classList.toggle("active", active);
-        tab.classList.toggle("unavailable", !available);
-
         if (!available) {
-            tab.setAttribute("aria-label", `${network} is temporarily unavailable`);
+            tab.setAttribute(
+                "aria-label",
+                `${network || "This network"} is temporarily unavailable`
+            );
         } else {
             tab.removeAttribute("aria-label");
         }
@@ -517,18 +620,19 @@ function selectNetwork(network) {
     activeNetwork = normalized;
     selectedBundle = null;
 
-    const selectedNetworkInput = getElement("selectedNetwork");
-    const selectedSizeInput = getElement("selectedSize");
+    const networkInput = getElement("selectedNetwork");
+    const sizeInput = getElement("selectedSize");
 
-    if (selectedNetworkInput) {
-        selectedNetworkInput.value = activeNetwork;
+    if (networkInput) {
+        networkInput.value = activeNetwork;
     }
 
-    if (selectedSizeInput) {
-        selectedSizeInput.value = "";
+    if (sizeInput) {
+        sizeInput.value = "";
     }
 
     clearCheckoutMessage();
+
     updateNetworkTabs();
     renderBundles();
     updateSelectedSummary();
@@ -551,13 +655,9 @@ function initializeNetworkTabs() {
 ========================================================= */
 
 function getProductsForNetwork(network) {
-    const products = DEFAULT_PRODUCTS[network];
-
-    if (!Array.isArray(products)) {
-        return [];
-    }
-
-    return products;
+    return Array.isArray(DEFAULT_PRODUCTS[network])
+        ? DEFAULT_PRODUCTS[network]
+        : [];
 }
 
 function renderBundles() {
@@ -573,8 +673,6 @@ function renderBundles() {
         ? searchInput.value.trim().toLowerCase()
         : "";
 
-    const products = getProductsForNetwork(activeNetwork);
-
     if (!isNetworkAvailable(activeNetwork)) {
         grid.innerHTML = `
             <div class="empty-state">
@@ -587,6 +685,8 @@ function renderBundles() {
         return;
     }
 
+    const products = getProductsForNetwork(activeNetwork);
+
     const filteredProducts = products.filter(product => {
         const searchableText =
             `${product.size} ${activeNetwork} ${product.price}`.toLowerCase();
@@ -594,14 +694,12 @@ function renderBundles() {
         return searchableText.includes(searchTerm);
     });
 
-    if (resultCount) {
-        setText(
-            resultCount,
-            `${filteredProducts.length} package${filteredProducts.length === 1 ? "" : "s"} available`
-        );
-    }
+    setText(
+        resultCount,
+        `${filteredProducts.length} package${filteredProducts.length === 1 ? "" : "s"} available`
+    );
 
-    if (filteredProducts.length === 0) {
+    if (!filteredProducts.length) {
         grid.innerHTML = `
             <div class="empty-state">
                 <h3>No bundles found</h3>
@@ -613,30 +711,41 @@ function renderBundles() {
     }
 
     grid.innerHTML = filteredProducts.map(product => {
-        const isSelected =
+        const isSelected = Boolean(
             selectedBundle &&
             selectedBundle.network === activeNetwork &&
-            selectedBundle.size === product.size;
-
-        const networkClass = activeNetwork.toLowerCase();
+            selectedBundle.size === product.size
+        );
 
         return `
-            <article class="bundle-card ${networkClass} ${isSelected ? "selected" : ""}">
+            <article
+                class="bundle-card"
+                data-network="${activeNetwork}"
+            >
                 <div class="bundle-card-top">
-                    <span class="bundle-network">${escapeHTML(activeNetwork)}</span>
-                    <span class="bundle-badge">DATA BUNDLE</span>
+                    <span class="bundle-network">
+                        ${escapeHTML(activeNetwork)}
+                    </span>
+
+                    <span class="bundle-badge">
+                        DATA BUNDLE
+                    </span>
                 </div>
 
-                <div class="bundle-size">${escapeHTML(product.size)}</div>
+                <div class="bundle-size">
+                    ${escapeHTML(product.size)}
+                </div>
 
-                <div class="bundle-price">${formatMoney(product.price)}</div>
+                <div class="bundle-price">
+                    ${formatMoney(product.price)}
+                </div>
 
                 <button
                     type="button"
-                    class="bundle-buy-button"
-                    data-buy-network="${escapeHTML(activeNetwork)}"
+                    class="buy-button"
+                    data-buy-network="${activeNetwork}"
                     data-buy-size="${escapeHTML(product.size)}"
-                    aria-label="Buy ${escapeHTML(product.size)} ${escapeHTML(activeNetwork)} bundle for ${formatMoney(product.price)}"
+                    aria-label="Buy ${escapeHTML(product.size)} ${activeNetwork} bundle for ${formatMoney(product.price)}"
                 >
                     ${isSelected ? "Selected ✓" : "Buy Bundle"}
                 </button>
@@ -646,15 +755,10 @@ function renderBundles() {
 
     queryAll("[data-buy-network]", grid).forEach(button => {
         button.addEventListener("click", () => {
-            const network = normalizeNetwork(
-                button.dataset.buyNetwork
+            chooseBundle(
+                button.dataset.buyNetwork,
+                button.dataset.buySize
             );
-
-            const size = String(
-                button.dataset.buySize || ""
-            );
-
-            chooseBundle(network, size);
         });
     });
 }
@@ -662,11 +766,9 @@ function renderBundles() {
 function initializeBundleSearch() {
     const searchInput = getElement("bundleSearch");
 
-    if (!searchInput) {
-        return;
+    if (searchInput) {
+        searchInput.addEventListener("input", renderBundles);
     }
-
-    searchInput.addEventListener("input", renderBundles);
 }
 
 
@@ -677,7 +779,10 @@ function initializeBundleSearch() {
 function chooseBundle(network, size) {
     const normalizedNetwork = normalizeNetwork(network);
 
-    if (!normalizedNetwork || !isNetworkAvailable(normalizedNetwork)) {
+    if (
+        !normalizedNetwork ||
+        !isNetworkAvailable(normalizedNetwork)
+    ) {
         showCheckoutMessage(
             "This network is currently unavailable. Please choose another one.",
             "error"
@@ -686,9 +791,8 @@ function chooseBundle(network, size) {
         return;
     }
 
-    const products = getProductsForNetwork(normalizedNetwork);
-
-    const product = products.find(item => item.size === size);
+    const product = getProductsForNetwork(normalizedNetwork)
+        .find(item => item.size === size);
 
     if (!product) {
         showCheckoutMessage(
@@ -707,15 +811,15 @@ function chooseBundle(network, size) {
         price: Number(product.price)
     };
 
-    const selectedNetworkInput = getElement("selectedNetwork");
-    const selectedSizeInput = getElement("selectedSize");
+    const networkInput = getElement("selectedNetwork");
+    const sizeInput = getElement("selectedSize");
 
-    if (selectedNetworkInput) {
-        selectedNetworkInput.value = selectedBundle.network;
+    if (networkInput) {
+        networkInput.value = selectedBundle.network;
     }
 
-    if (selectedSizeInput) {
-        selectedSizeInput.value = selectedBundle.size;
+    if (sizeInput) {
+        sizeInput.value = selectedBundle.size;
     }
 
     clearCheckoutMessage();
@@ -736,32 +840,21 @@ function chooseBundle(network, size) {
 }
 
 function updateSelectedSummary() {
-    const selectedBundleElement = getElement("selectedBundle");
-    const selectedPriceElement = getElement("selectedPrice");
+    const bundleElement = getElement("selectedBundle");
+    const priceElement = getElement("selectedPrice");
 
     if (!selectedBundle) {
-        setText(
-            selectedBundleElement,
-            "No bundle selected"
-        );
-
-        setText(
-            selectedPriceElement,
-            "GH₵0.00"
-        );
-
+        setText(bundleElement, "Choose a bundle above");
+        setText(priceElement, "GH₵0.00");
         return;
     }
 
     setText(
-        selectedBundleElement,
+        bundleElement,
         `${selectedBundle.network} ${selectedBundle.size}`
     );
 
-    setText(
-        selectedPriceElement,
-        formatMoney(selectedBundle.price)
-    );
+    setText(priceElement, formatMoney(selectedBundle.price));
 }
 
 
@@ -770,17 +863,14 @@ function updateSelectedSummary() {
 ========================================================= */
 
 function getCheckoutValues() {
-    const phoneElement = getElement("customerPhone");
-    const emailElement = getElement("customerEmail");
-
     return {
-        phone: phoneElement
-            ? normalizeGhanaPhone(phoneElement.value)
-            : "",
+        phone: normalizeGhanaPhone(
+            getElement("customerPhone")?.value || ""
+        ),
 
-        email: emailElement
-            ? emailElement.value.trim()
-            : ""
+        email: String(
+            getElement("customerEmail")?.value || ""
+        ).trim()
     };
 }
 
@@ -855,36 +945,35 @@ function updatePaymentButton() {
 
     const { phone, email } = getCheckoutValues();
 
-    const validPhone = isValidGhanaPhone(phone);
-    const validEmail = isValidEmail(email);
-
-    const valid =
-        validPhone &&
-        validEmail &&
+    const ready =
+        isValidGhanaPhone(phone) &&
+        isValidEmail(email) &&
         isNetworkAvailable(selectedBundle.network);
 
-    button.disabled = !valid;
-    button.textContent = valid
+    button.disabled = !ready;
+
+    button.textContent = ready
         ? `Pay ${formatMoney(selectedBundle.price)} Securely`
         : "Enter Your Details";
 }
 
 function initializeCheckoutValidation() {
-    const phoneElement = getElement("customerPhone");
-    const emailElement = getElement("customerEmail");
+    const phone = getElement("customerPhone");
+    const email = getElement("customerEmail");
 
-    [phoneElement, emailElement].forEach(element => {
+    [phone, email].forEach(element => {
         if (!element) {
             return;
         }
 
         element.addEventListener("input", () => {
+            element.setCustomValidity("");
             updatePaymentButton();
         });
 
         element.addEventListener("blur", () => {
             if (
-                element === phoneElement &&
+                element === phone &&
                 element.value.trim() &&
                 !isValidGhanaPhone(element.value)
             ) {
@@ -892,7 +981,7 @@ function initializeCheckoutValidation() {
                     "Enter a valid Ghana phone number."
                 );
             } else if (
-                element === emailElement &&
+                element === email &&
                 element.value.trim() &&
                 !isValidEmail(element.value)
             ) {
@@ -902,10 +991,6 @@ function initializeCheckoutValidation() {
             } else {
                 element.setCustomValidity("");
             }
-        });
-
-        element.addEventListener("input", () => {
-            element.setCustomValidity("");
         });
     });
 
@@ -920,7 +1005,7 @@ function initializeCheckoutValidation() {
 function getPaystackAuthorizationURL(response) {
     const data = getResponseData(response);
 
-    const possibleURLs = [
+    const candidates = [
         response?.authorization_url,
         response?.authorizationUrl,
         data?.authorization_url,
@@ -929,7 +1014,7 @@ function getPaystackAuthorizationURL(response) {
         data?.data?.authorizationUrl
     ];
 
-    return possibleURLs.find(
+    return candidates.find(
         value => typeof value === "string" && value.trim()
     ) || "";
 }
@@ -938,15 +1023,12 @@ function isSafePaystackURL(value) {
     try {
         const url = new URL(value);
 
-        if (url.protocol !== "https:") {
-            return false;
-        }
-
-        const hostname = url.hostname.toLowerCase();
-
         return (
-            hostname === "paystack.com" ||
-            hostname.endsWith(".paystack.com")
+            url.protocol === "https:" &&
+            (
+                url.hostname === "paystack.com" ||
+                url.hostname.endsWith(".paystack.com")
+            )
         );
     } catch (error) {
         return false;
@@ -956,11 +1038,11 @@ function isSafePaystackURL(value) {
 async function initializePayment(event) {
     event.preventDefault();
 
-    clearCheckoutMessage();
-
     if (paymentInProgress) {
         return;
     }
+
+    clearCheckoutMessage();
 
     if (!validateCheckout(true)) {
         updatePaymentButton();
@@ -994,9 +1076,9 @@ async function initializePayment(event) {
                     bundle: selectedBundle.size,
 
                     /*
-                     * Compatibility field only.
-                     * The backend must calculate and verify the
-                     * correct price from its own trusted price table.
+                     * Compatibility only.
+                     * The backend must calculate the real price
+                     * from its own trusted price table.
                      */
                     amount: selectedBundle.price
                 })
@@ -1039,11 +1121,9 @@ async function initializePayment(event) {
 function initializeCheckoutForm() {
     const form = getElement("checkoutForm");
 
-    if (!form) {
-        return;
+    if (form) {
+        form.addEventListener("submit", initializePayment);
     }
-
-    form.addEventListener("submit", initializePayment);
 }
 
 
@@ -1051,8 +1131,8 @@ function initializeCheckoutForm() {
    14. WEBSITE SETTINGS
 ========================================================= */
 
-function getSettingValue(settings, possibleKeys, fallback = "") {
-    for (const key of possibleKeys) {
+function getSettingValue(settings, keys, fallback = "") {
+    for (const key of keys) {
         const value = settings?.[key];
 
         if (value !== undefined && value !== null) {
@@ -1066,19 +1146,15 @@ function getSettingValue(settings, possibleKeys, fallback = "") {
 function parseNetworkAvailability(settings) {
     const raw = settings?.networkAvailability;
 
-    if (!raw || typeof raw !== "object") {
-        return {
-            MTN: true,
-            TELECEL: true,
-            AIRTELTIGO: true
-        };
-    }
-
     const result = {
         MTN: true,
         TELECEL: true,
         AIRTELTIGO: true
     };
+
+    if (!raw || typeof raw !== "object") {
+        return result;
+    }
 
     Object.entries(raw).forEach(([key, value]) => {
         const network = normalizeNetwork(key);
@@ -1089,10 +1165,7 @@ function parseNetworkAvailability(settings) {
 
         if (typeof value === "boolean") {
             result[network] = value;
-            return;
-        }
-
-        if (value && typeof value === "object") {
+        } else if (value && typeof value === "object") {
             if (typeof value.available === "boolean") {
                 result[network] = value.available;
             } else if (typeof value.enabled === "boolean") {
@@ -1139,14 +1212,13 @@ function applyWebsiteSettings(settings) {
 
     if (
         typeof configuredChannel === "string" &&
-        configuredChannel.startsWith("https://")
+        /^https:\/\/\S+$/i.test(configuredChannel)
     ) {
         whatsappChannel = configuredChannel;
     }
 
     updateWhatsAppLinks();
     updateChannelLinks();
-    updateNetworkTabs();
 
     if (!isNetworkAvailable(activeNetwork)) {
         const firstAvailable = [
@@ -1157,6 +1229,8 @@ function applyWebsiteSettings(settings) {
 
         if (firstAvailable) {
             activeNetwork = firstAvailable;
+        } else {
+            selectedBundle = null;
         }
     }
 
@@ -1167,10 +1241,15 @@ function applyWebsiteSettings(settings) {
         selectedBundle = null;
     }
 
-    const selectedNetworkInput = getElement("selectedNetwork");
+    const networkInput = getElement("selectedNetwork");
+    const sizeInput = getElement("selectedSize");
 
-    if (selectedNetworkInput) {
-        selectedNetworkInput.value = activeNetwork;
+    if (networkInput) {
+        networkInput.value = activeNetwork;
+    }
+
+    if (sizeInput) {
+        sizeInput.value = selectedBundle?.size || "";
     }
 
     updateNetworkTabs();
@@ -1195,9 +1274,7 @@ async function loadWebsiteSettings() {
     try {
         const response = await fetchJSON(
             `${PAYMENT_API}/website-settings`,
-            {
-                method: "GET"
-            }
+            { method: "GET" }
         );
 
         let settings = getResponseData(response);
@@ -1213,14 +1290,10 @@ async function loadWebsiteSettings() {
 
     } catch (error) {
         console.warn(
-            "Could not load website settings. Using default settings.",
+            "Website settings could not be loaded. Default settings will be used.",
             error
         );
 
-        /*
-         * Keep the store usable even if the settings endpoint
-         * is unavailable.
-         */
         updateWhatsAppLinks();
         updateChannelLinks();
         updateNetworkTabs();
@@ -1243,7 +1316,9 @@ function showAnnouncement(message) {
         return;
     }
 
-    if (safelyGetStorage("kielmenAnnouncementSeen") === "true") {
+    if (
+        safelyGetStorage("kielmenAnnouncementSeen") === "true"
+    ) {
         return;
     }
 
@@ -1251,15 +1326,16 @@ function showAnnouncement(message) {
 
     dialog.hidden = false;
 
-    if (typeof dialog.showModal === "function") {
-        if (!dialog.open) {
-            try {
-                dialog.showModal();
-            } catch (error) {
-                dialog.setAttribute("open", "");
-            }
+    if (
+        typeof dialog.showModal === "function" &&
+        !dialog.open
+    ) {
+        try {
+            dialog.showModal();
+        } catch (error) {
+            dialog.setAttribute("open", "");
         }
-    } else {
+    } else if (!dialog.open) {
         dialog.setAttribute("open", "");
     }
 }
@@ -1271,7 +1347,7 @@ function closeAnnouncement() {
         return;
     }
 
-    if (typeof dialog.close === "function" && dialog.open) {
+    if (dialog.open && typeof dialog.close === "function") {
         dialog.close();
     } else {
         dialog.removeAttribute("open");
@@ -1360,6 +1436,29 @@ function getOrderStatus(order) {
     ).replace(/[_-]+/g, " ");
 }
 
+function getOrderStatusClass(status) {
+    const value = String(status).toLowerCase();
+
+    if (
+        value.includes("success") ||
+        value.includes("complete") ||
+        value.includes("delivered") ||
+        value.includes("paid")
+    ) {
+        return "success";
+    }
+
+    if (
+        value.includes("failed") ||
+        value.includes("cancel") ||
+        value.includes("error")
+    ) {
+        return "failed";
+    }
+
+    return "pending";
+}
+
 function renderOrderResults(orders) {
     const container = getElement("trackOrderResults");
 
@@ -1392,11 +1491,11 @@ function renderOrderResults(orders) {
             "Data bundle"
         );
 
-        const status = escapeHTML(
-            getOrderStatus(order)
-        );
+        const statusText = getOrderStatus(order);
+        const status = escapeHTML(statusText);
+        const statusClass = getOrderStatusClass(statusText);
 
-        const orderReference = escapeHTML(
+        const reference = escapeHTML(
             order.reference ||
             order.order_reference ||
             order.orderReference ||
@@ -1404,7 +1503,7 @@ function renderOrderResults(orders) {
             "Not provided"
         );
 
-        const recipientPhone = escapeHTML(
+        const recipient = escapeHTML(
             order.phone ||
             order.customer_phone ||
             order.recipient_phone ||
@@ -1430,14 +1529,17 @@ function renderOrderResults(orders) {
         );
 
         return `
-            <article class="tracking-order-card">
+            <article class="tracking-result">
                 <div class="tracking-order-header">
                     <h3>${network} — ${bundle}</h3>
-                    <span class="order-status">${status}</span>
+
+                    <span class="order-status ${statusClass}">
+                        ${status}
+                    </span>
                 </div>
 
-                <p><strong>Order reference:</strong> ${orderReference}</p>
-                <p><strong>Recipient:</strong> ${recipientPhone}</p>
+                <p><strong>Order reference:</strong> ${reference}</p>
+                <p><strong>Recipient:</strong> ${recipient}</p>
                 <p><strong>Amount:</strong> ${amountText}</p>
                 <p><strong>Date:</strong> ${createdAt}</p>
             </article>
@@ -1450,15 +1552,19 @@ function renderOrderResults(orders) {
 async function trackOrders(event) {
     event.preventDefault();
 
+    if (trackingInProgress) {
+        return;
+    }
+
     clearTrackingMessage();
 
     const phoneElement = getElement("trackPhone");
     const resultsElement = getElement("trackOrderResults");
     const button = getElement("trackOrderButton");
 
-    const phone = phoneElement
-        ? normalizeGhanaPhone(phoneElement.value)
-        : "";
+    const phone = normalizeGhanaPhone(
+        phoneElement?.value || ""
+    );
 
     if (!isValidGhanaPhone(phone)) {
         showTrackingMessage(
@@ -1474,6 +1580,8 @@ async function trackOrders(event) {
         hideElement(resultsElement);
     }
 
+    trackingInProgress = true;
+
     if (button) {
         button.disabled = true;
         button.textContent = "Searching...";
@@ -1487,9 +1595,7 @@ async function trackOrders(event) {
     try {
         const response = await fetchJSON(
             `${PAYMENT_API}/orders-by-phone/${encodeURIComponent(phone)}`,
-            {
-                method: "GET"
-            }
+            { method: "GET" }
         );
 
         const orders = normalizeOrdersResponse(response);
@@ -1507,9 +1613,11 @@ async function trackOrders(event) {
         );
 
     } finally {
+        trackingInProgress = false;
+
         if (button) {
             button.disabled = false;
-            button.textContent = "Track My Orders";
+            button.textContent = "Find My Orders";
         }
     }
 }
@@ -1517,16 +1625,14 @@ async function trackOrders(event) {
 function initializeOrderTracking() {
     const form = getElement("trackOrderForm");
 
-    if (!form) {
-        return;
+    if (form) {
+        form.addEventListener("submit", trackOrders);
     }
-
-    form.addEventListener("submit", trackOrders);
 }
 
 
 /* =========================================================
-   17. BOTTOM NAVIGATION AND SMOOTH SCROLLING
+   17. SMOOTH NAVIGATION
 ========================================================= */
 
 function initializeSmoothNavigation() {
@@ -1564,6 +1670,11 @@ function initializeSmoothNavigation() {
     });
 }
 
+
+/* =========================================================
+   18. BOTTOM NAVIGATION
+========================================================= */
+
 function initializeBottomNavigation() {
     const nav = document.querySelector(".bottom-nav");
 
@@ -1575,12 +1686,12 @@ function initializeBottomNavigation() {
 
     function setActiveSection(sectionId) {
         links.forEach(link => {
-            const href = link.getAttribute("href");
-            const isActive = href === `#${sectionId}`;
+            const active =
+                link.getAttribute("href") === `#${sectionId}`;
 
-            link.classList.toggle("active", isActive);
+            link.classList.toggle("active", active);
 
-            if (isActive) {
+            if (active) {
                 link.setAttribute("aria-current", "location");
             } else {
                 link.removeAttribute("aria-current");
@@ -1629,7 +1740,7 @@ function initializeBottomNavigation() {
 
 
 /* =========================================================
-   18. CURRENT YEAR
+   19. CURRENT YEAR
 ========================================================= */
 
 function initializeCurrentYear() {
@@ -1642,7 +1753,7 @@ function initializeCurrentYear() {
 
 
 /* =========================================================
-   19. GENERAL INITIALIZATION
+   20. GENERAL INITIALIZATION
 ========================================================= */
 
 function initializeDefaultLinks() {
@@ -1652,14 +1763,20 @@ function initializeDefaultLinks() {
 
 function initializeApplication() {
     initializeMobileMenu();
+    initializeDesktopNavigation();
+
     initializeNetworkTabs();
     initializeBundleSearch();
+
     initializeCheckoutValidation();
     initializeCheckoutForm();
+
     initializeOrderTracking();
     initializeAnnouncement();
+
     initializeSmoothNavigation();
     initializeBottomNavigation();
+
     initializeCurrentYear();
     initializeDefaultLinks();
 
@@ -1677,4 +1794,4 @@ if (document.readyState === "loading") {
     );
 } else {
     initializeApplication();
-                                              }
+}
