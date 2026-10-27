@@ -1262,3 +1262,173 @@ span {
 }
 
 /* END OF KIELMEN 636 DATAPLUG STYLESHEET */
+/* ==========================================
+   KIELMEN 636 DATAPLUG
+   FIX DARK CARDS AND BLACK TEXT
+   ADD THIS AT THE BOTTOM OF style.css
+   ========================================== */
+
+/* General page text */
+body,
+main,
+section {
+  color: #111111;
+}
+
+/* Fix dark agent, help and tracking cards */
+.agent-section,
+.agent-card,
+.checkout-section,
+.checkout-card,
+#checkout,
+.order-tracking,
+.track-order-section,
+#trackOrderForm,
+.help-section,
+.support-section {
+  background: #ffffff !important;
+  color: #111111 !important;
+  border: 1px solid #e5e7eb;
+}
+
+/* Make headings clearly visible */
+.agent-section h1,
+.agent-section h2,
+.agent-section h3,
+.agent-card h1,
+.agent-card h2,
+.agent-card h3,
+.checkout-section h1,
+.checkout-section h2,
+.checkout-card h1,
+.checkout-card h2,
+#checkout h1,
+#checkout h2,
+.order-tracking h1,
+.order-tracking h2,
+.track-order-section h1,
+.track-order-section h2,
+.help-section h1,
+.help-section h2,
+.support-section h1,
+.support-section h2 {
+  color: #000000 !important;
+}
+
+/* Make paragraphs readable */
+.agent-section p,
+.agent-card p,
+.checkout-section p,
+.checkout-card p,
+#checkout p,
+.order-tracking p,
+.track-order-section p,
+.help-section p,
+.support-section p {
+  color: #222222 !important;
+}
+
+/* Labels and form text */
+label {
+  color: #111111 !important;
+}
+
+input,
+select,
+textarea {
+  background: #ffffff !important;
+  color: #111111 !important;
+  border: 1px solid #d1d5db;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6b7280 !important;
+  opacity: 1;
+}
+
+/* Buttons remain readable */
+.btn-primary,
+.primary-button,
+#paymentButton,
+.payment-button,
+button[type="submit"] {
+  color: #111111 !important;
+}
+
+/* Secondary buttons */
+.btn-secondary,
+.agent-section .btn,
+.agent-card .btn {
+  background: #f3f4f6;
+  color: #111111 !important;
+  border: 1px solid #d1d5db;
+}
+
+/* Network bundle cards */
+.bundle-card[data-network="MTN"] {
+  background: #ffcc00 !important;
+  border-color: #eab308 !important;
+  color: #111111 !important;
+}
+
+.bundle-card[data-network="TELECEL"] {
+  background: #ed1c24 !important;
+  border-color: #b91c1c !important;
+  color: #ffffff !important;
+}
+
+.bundle-card[data-network="AIRTELTIGO"] {
+  background: #1688ff !important;
+  border-color: #1d4ed8 !important;
+  color: #ffffff !important;
+}
+
+/* Bundle sizes */
+.bundle-card[data-network="MTN"] .bundle-size,
+.bundle-card[data-network="MTN"] .bundle-price,
+.bundle-card[data-network="MTN"] .bundle-label {
+  color: #111111 !important;
+}
+
+.bundle-card[data-network="TELECEL"] .bundle-size,
+.bundle-card[data-network="TELECEL"] .bundle-price,
+.bundle-card[data-network="TELECEL"] .bundle-label {
+  color: #ffffff !important;
+}
+
+.bundle-card[data-network="AIRTELTIGO"] .bundle-size,
+.bundle-card[data-network="AIRTELTIGO"] .bundle-price,
+.bundle-card[data-network="AIRTELTIGO"] .bundle-label {
+  color: #ffffff !important;
+}
+
+/* Selected bundle */
+.bundle-card.selected {
+  outline: 3px solid #111111;
+  outline-offset: 2px;
+}
+
+/* Order results */
+.order-result {
+  background: #ffffff !important;
+  color: #111111 !important;
+}
+
+.order-result p {
+  background: #f3f4f6 !important;
+  color: #222222 !important;
+}
+
+.order-result strong {
+  color: #111111 !important;
+}
+
+/* Keep footer readable */
+footer,
+.site-footer {
+  background: #ffffff !important;
+  color: #222222 !important;
+}
+
+/* END OF VISIBILITY FIX */
