@@ -2171,3 +2171,101 @@ a:focus:not(:focus-visible) {
         padding-left: 12px;
     }
    }
+/* =========================================================
+   KIELMEN 636 DATAPLUG
+   FIX: BUNDLE CARD COLOURS AND HEADINGS
+========================================================= */
+
+/* Restore network-coloured card borders */
+
+.bundle-card[data-network="MTN"] {
+    border-top: 5px solid var(--mtn-yellow);
+}
+
+.bundle-card[data-network="TELECEL"] {
+    border-top: 5px solid var(--telecel-red);
+}
+
+.bundle-card[data-network="AIRTELTIGO"] {
+    border-top: 5px solid var(--airtel-blue);
+}
+
+/* Keep the network name and card heading aligned */
+
+.bundle-card .bundle-card-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 5px;
+
+    margin: 0 0 14px;
+}
+
+/* Style the network label */
+
+.bundle-card .bundle-network {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 4px 7px;
+
+    font-size: 0.72rem;
+    font-weight: 900;
+}
+
+/* Keep DATA BUNDLE heading compact */
+
+.bundle-card .bundle-card-heading h3,
+.bundle-card .bundle-card-heading h4 {
+    margin: 0;
+
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+/* Keep the bundle size prominent */
+
+.bundle-card .bundle-size {
+    margin: 0 0 10px;
+
+    font-size: 1.15rem;
+    font-weight: 900;
+}
+
+/* Keep the selling price prominent */
+
+.bundle-card .bundle-price {
+    margin: 0 0 16px;
+
+    font-size: 1.2rem;
+    font-weight: 900;
+}
+
+/* Ensure the Buy Bundle button remains at the bottom */
+
+.bundle-card button,
+.bundle-card .buy-button {
+    margin-top: auto;
+}
+
+/* Maintain readable card content on small phones */
+
+@media (max-width: 380px) {
+    .bundle-card {
+        padding: 11px 8px;
+    }
+
+    .bundle-card .bundle-card-heading h3,
+    .bundle-card .bundle-card-heading h4 {
+        font-size: 0.72rem;
+    }
+
+    .bundle-card .bundle-size {
+        font-size: 1.05rem;
+    }
+
+    .bundle-card .bundle-price {
+        font-size: 1.05rem;
+    }
+}
