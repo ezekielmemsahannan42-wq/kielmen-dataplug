@@ -1524,3 +1524,97 @@ grid-template-columns: repeat(5, minmax(0, 1fr));
 padding: 40px;
 }
    }
+/* ===== KIELMEN 636 MOBILE HEADER FIX ===== */
+
+@media (max-width: 899px) {
+.site-header {
+position: sticky;
+top: 0;
+z-index: 1000;
+width: 100%;
+}
+
+.header-container {
+width: 100%;
+min-height: 72px;
+padding: 10px 12px;
+display: flex;
+flex-direction: row;
+align-items: center;
+justify-content: space-between;
+gap: 8px;
+}
+
+.brand,
+.site-brand,
+.logo-container {
+flex: 1 1 auto;
+min-width: 0;
+display: flex;
+align-items: center;
+gap: 7px;
+}
+
+.brand-name,
+.site-title,
+.logo-text {
+font-size: 0.95rem;
+line-height: 1.2;
+overflow-wrap: normal;
+word-break: normal;
+}
+
+.brand img,
+.site-logo,
+.logo-container img {
+width: 34px;
+height: 34px;
+flex-shrink: 0;
+}
+
+.header-actions {
+flex: 0 0 auto;
+display: flex;
+align-items: center;
+justify-content: flex-end;
+gap: 8px;
+}
+
+.whatsapp-header,
+.header-whatsapp {
+min-height: 40px;
+padding: 8px 12px;
+font-size: 0.82rem;
+}
+
+#menuButton,
+.menu-button {
+width: 42px;
+height: 42px;
+flex-shrink: 0;
+}
+
+.home-container {
+width: 100%;
+padding: 20px 14px 35px;
+}
+}
+
+@media (max-width: 380px) {
+.header-container {
+padding: 8px;
+gap: 5px;
+}
+
+.brand-name,
+.site-title,
+.logo-text {
+font-size: 0.82rem;
+}
+
+.whatsapp-header,
+.header-whatsapp {
+padding: 7px 9px;
+font-size: 0.75rem;
+}
+}
