@@ -1052,8 +1052,11 @@ function initializeWebsite() {
   initializeOrderTracking();
 
   /*
-   * Start with MTN unless it has been disabled.
-   */
+ * Keep the website interactive while settings load.
+ * Start with MTN if available; otherwise use another
+ * available network.
+ */
+try {
   const firstNetwork = getFirstAvailableNetwork();
 
   if (firstNetwork) {
@@ -1061,12 +1064,34 @@ function initializeWebsite() {
   } else {
     applyAvailableNetworks();
   }
+} catch (error) {
+  console.error("Network initialization error:", error);
+
+  // Safe fallback: keep MTN selectable.
+  const mtnTab = document.querySelector(
+    '.network-tab[data-network="MTN"]'
+  );
+
+  if (mtnTab) {
+    mtnTab.hidden = false;
+    mtnTab.disabled = false;
+    selectNetwork("MTN");
+  }
+}
 
   /*
-   * Load settings after the page has initialized.
-   * Failure to load settings does not stop the page.
+   * Load website settings safely.
+   * Settings errors must not freeze the website.
    */
-  loadPublicWebsiteSettings();
+  try {
+    if (typeof loadPublicWebsiteSettings === "function") {
+      Promise.resolve(loadPublicWebsiteSettings()).catch(error => {
+        console.error("Website settings could not load:", error);
+      });
+    }
+  } catch (error) {
+    console.error("Website settings error:", error);
+  }
 }
 
 if (document.readyState === "loading") {
