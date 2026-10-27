@@ -1,1459 +1,1680 @@
 "use strict";
 
 /* =========================================================
-KIELMEN 636 DATAPLUG
-FILE 3: script.js
+   KIELMEN 636 DATAPLUG
+   FILE 3: script.js
 
-Features:
+   Features:
+   - Responsive mobile navigation
+   - Network tabs and bundle cards
+   - Bundle search
+   - Checkout and Paystack redirect
+   - Website settings and network availability
+   - Announcement dialog
+   - WhatsApp support and channel links
+   - Order tracking
+   - Bottom navigation
+   - Current year
 
-- Mobile menu
-- Network tabs and bundle cards
-- Bundle search
-- Checkout and Paystack redirect
-- Website settings and network availability
-- Announcement dialog
-- WhatsApp support
-- Order tracking
-- Bottom navigation
+   Backend:
+   https://kielmen-dataplug-payment-api.onrender.com
 
-Backend:
-https://kielmen-dataplug-payment-api.onrender.com
+   SECURITY:
+   The backend MUST validate bundle prices independently.
+   Never rely on the amount sent by the browser.
 ========================================================= */
 
-/* =========================================================
 
-1. CONFIGURATION
-   ========================================================= */
+/* =========================================================
+   1. CONFIGURATION
+========================================================= */
 
 const PAYMENT_API =
-"https://kielmen-dataplug-payment-api.onrender.com";
+    "https://kielmen-dataplug-payment-api.onrender.com";
 
-const WHATSAPP_SUPPORT_NUMBER = "233533878548";
+const DEFAULT_WHATSAPP_NUMBER = "233533878548";
 
 const DEFAULT_WHATSAPP_CHANNEL =
-"https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S";
+    "https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S";
+
 
 /* =========================================================
-2. CUSTOMER-FACING BUNDLE PRICES
-
-IMPORTANT:
-The backend must independently validate the bundle,
-network and price before accepting a payment.
-Never rely on browser-side prices for payment security.
+   2. DEFAULT BUNDLE PRICES
 ========================================================= */
 
-const PRODUCTS = {
-MTN: [
-{ size: "1GB", price: 4.70 },
-{ size: "2GB", price: 9.70 },
-{ size: "3GB", price: 14.50 },
-{ size: "4GB", price: 20.00 },
-{ size: "5GB", price: 26.00 },
-{ size: "6GB", price: 32.00 },
-{ size: "8GB", price: 43.00 },
-{ size: "10GB", price: 49.00 },
-{ size: "15GB", price: 69.00 },
-{ size: "20GB", price: 99.00 },
-{ size: "25GB", price: 140.00 },
-{ size: "30GB", price: 155.00 },
-{ size: "40GB", price: 199.00 },
-{ size: "50GB", price: 240.00 }
-],
+const DEFAULT_PRODUCTS = {
+    MTN: [
+        { size: "1GB", price: 4.70 },
+        { size: "2GB", price: 9.70 },
+        { size: "3GB", price: 14.50 },
+        { size: "4GB", price: 20.00 },
+        { size: "5GB", price: 26.00 },
+        { size: "6GB", price: 32.00 },
+        { size: "8GB", price: 43.00 },
+        { size: "10GB", price: 49.00 },
+        { size: "15GB", price: 69.00 },
+        { size: "20GB", price: 99.00 },
+        { size: "25GB", price: 140.00 },
+        { size: "30GB", price: 155.00 },
+        { size: "40GB", price: 199.00 },
+        { size: "50GB", price: 240.00 }
+    ],
 
-TELECEL: [
-{ size: "10GB", price: 45.00 },
-{ size: "15GB", price: 62.00 },
-{ size: "20GB", price: 82.00 },
-{ size: "25GB", price: 101.00 },
-{ size: "30GB", price: 124.00 },
-{ size: "40GB", price: 170.00 },
-{ size: "50GB", price: 210.00 },
-{ size: "100GB", price: 420.00 }
-],
+    TELECEL: [
+        { size: "10GB", price: 45.00 },
+        { size: "15GB", price: 62.00 },
+        { size: "20GB", price: 82.00 },
+        { size: "25GB", price: 101.00 },
+        { size: "30GB", price: 124.00 },
+        { size: "40GB", price: 170.00 },
+        { size: "50GB", price: 210.00 },
+        { size: "100GB", price: 420.00 }
+    ],
 
-AIRTELTIGO: [
-{ size: "1GB", price: 5.00 },
-{ size: "2GB", price: 9.20 },
-{ size: "5GB", price: 22.00 },
-{ size: "10GB", price: 41.00 },
-{ size: "20GB", price: 78.00 },
-{ size: "30GB", price: 115.00 },
-{ size: "50GB", price: 188.00 }
-]
+    AIRTELTIGO: [
+        { size: "1GB", price: 5.00 },
+        { size: "2GB", price: 9.20 },
+        { size: "5GB", price: 22.00 },
+        { size: "10GB", price: 41.00 },
+        { size: "20GB", price: 78.00 },
+        { size: "30GB", price: 115.00 },
+        { size: "50GB", price: 188.00 }
+    ]
 };
 
+
 /* =========================================================
-3. WEBSITE STATE
+   3. APPLICATION STATE
 ========================================================= */
 
 let activeNetwork = "MTN";
 let selectedBundle = null;
-let websiteSettings = {};
 let paymentInProgress = false;
-let trackingInProgress = false;
 
-const networkAvailability = {
-MTN: true,
-TELECEL: true,
-AIRTELTIGO: true
+let networkAvailability = {
+    MTN: true,
+    TELECEL: true,
+    AIRTELTIGO: true
 };
 
+let websiteSettings = {};
+
+let whatsappNumber = DEFAULT_WHATSAPP_NUMBER;
+let whatsappChannel = DEFAULT_WHATSAPP_CHANNEL;
+
+
 /* =========================================================
-4. GENERAL HELPERS
+   4. DOM HELPERS
 ========================================================= */
 
-function byId(id) {
-return document.getElementById(id);
+function getElement(id) {
+    return document.getElementById(id);
+}
+
+function queryAll(selector, parent = document) {
+    return Array.from(parent.querySelectorAll(selector));
+}
+
+function setText(element, value) {
+    if (element) {
+        element.textContent = String(value ?? "");
+    }
+}
+
+function showElement(element) {
+    if (element) {
+        element.hidden = false;
+    }
+}
+
+function hideElement(element) {
+    if (element) {
+        element.hidden = true;
+    }
 }
 
 function normalizeNetwork(network) {
-const value = String(network || "")
-.trim()
-.toUpperCase()
-.replace(/[\s_-]+/g, "");
+    const value = String(network || "")
+        .trim()
+        .toUpperCase()
+        .replace(/[\s_-]+/g, "");
 
-if (value === "MTN") return "MTN";
+    if (value === "MTN") {
+        return "MTN";
+    }
 
-if (
-value === "TELECEL" ||
-value === "VODAFONE"
-) {
-return "TELECEL";
+    if (value === "TELECEL" || value === "VODAFONE") {
+        return "TELECEL";
+    }
+
+    if (
+        value === "AIRTELTIGO" ||
+        value === "AIRTEL" ||
+        value === "TIGO"
+    ) {
+        return "AIRTELTIGO";
+    }
+
+    return "";
 }
 
-if (
-value === "AIRTELTIGO" ||
-value === "AIRTELTIGOSMART" ||
-value === "AIRTEL"
-) {
-return "AIRTELTIGO";
-}
-
-return "";
-}
-
-function formatMoney(amount) {
-const value = Number(amount);
-
-if (!Number.isFinite(value)) {
-return "GH₵0.00";
-}
-
-return "GH₵" + value.toFixed(2);
-}
-
-function escapeHTML(value) {
-return String(value ?? "").replace(
-/[&<>"']/g,
-character => ({
-"&": "&",
-"<": "<",
-">": ">",
-'"': """,
-"'": "'"
-})[character]
-);
-}
-
-function validGhanaPhone(phone) {
-const digits = String(phone || "").replace(/\D/g, "");
-
-if (/^0\d{9}$/.test(digits)) {
-return true;
-}
-
-if (/^233\d{9}$/.test(digits)) {
-return true;
-}
-
-return false;
+function normalizePhone(phone) {
+    return String(phone || "").replace(/\D/g, "");
 }
 
 function normalizeGhanaPhone(phone) {
-let digits = String(phone || "").replace(/\D/g, "");
+    let value = normalizePhone(phone);
 
-if (digits.startsWith("233") && digits.length === 12) {
-return "0" + digits.slice(3);
+    if (value.startsWith("233") && value.length === 12) {
+        value = "0" + value.slice(3);
+    }
+
+    return value;
 }
 
-return digits;
+function isValidGhanaPhone(phone) {
+    const value = normalizeGhanaPhone(phone);
+
+    return /^0\d{9}$/.test(value);
 }
 
-function showMessage(element, message, type = "info") {
-if (!element) return;
+function isValidEmail(email) {
+    const value = String(email || "").trim();
 
-element.textContent = message;
-element.classList.remove("success", "error", "info");
-element.classList.add(type);
-element.hidden = false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
-function hideMessage(element) {
-if (!element) return;
+function formatMoney(amount) {
+    const value = Number(amount);
 
-element.hidden = true;
-element.textContent = "";
-element.classList.remove("success", "error", "info");
+    if (!Number.isFinite(value)) {
+        return "GH₵0.00";
+    }
+
+    return "GH₵" + value.toFixed(2);
 }
 
-function setButtonLoading(button, loading, loadingText = "Please wait...") {
-if (!button) return;
+function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => {
+        const entities = {
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;"
+        };
 
-if (loading) {
-if (!button.dataset.originalText) {
-button.dataset.originalText = button.textContent;
+        return entities[character];
+    });
 }
 
-button.disabled = true;
-button.textContent = loadingText;
-
-} else {
-button.disabled = false;
-
-if (button.dataset.originalText) {
-  button.textContent = button.dataset.originalText;
-  delete button.dataset.originalText;
+function safelyGetStorage(key) {
+    try {
+        return sessionStorage.getItem(key);
+    } catch (error) {
+        return null;
+    }
 }
 
+function safelySetStorage(key, value) {
+    try {
+        sessionStorage.setItem(key, value);
+    } catch (error) {
+        // The website can continue if browser storage is unavailable.
+    }
 }
-}
+
+
+/* =========================================================
+   5. API HELPERS
+========================================================= */
 
 async function fetchJSON(url, options = {}) {
-const response = await fetch(url, {
-...options,
-headers: {
-Accept: "application/json",
-...(options.body ? { "Content-Type": "application/json" } : {}),
-...(options.headers || {})
-}
-});
+    const requestOptions = {
+        ...options,
+        headers: {
+            Accept: "application/json",
+            ...(options.headers || {})
+        }
+    };
 
-let data;
+    const response = await fetch(url, requestOptions);
 
-try {
-data = await response.json();
-} catch {
-data = {};
+    const rawText = await response.text();
+
+    let result = {};
+
+    if (rawText) {
+        try {
+            result = JSON.parse(rawText);
+        } catch (error) {
+            throw new Error(
+                "The server returned an invalid response. Please try again."
+            );
+        }
+    }
+
+    if (!response.ok) {
+        const message =
+            result.message ||
+            result.error ||
+            `Request failed with status ${response.status}.`;
+
+        throw new Error(message);
+    }
+
+    return result;
 }
 
-if (!response.ok) {
-throw new Error(
-data.message ||
-data.error ||
-"Request failed with status ${response.status}"
-);
+function getResponseData(response) {
+    if (!response || typeof response !== "object") {
+        return {};
+    }
+
+    if (
+        response.data &&
+        typeof response.data === "object"
+    ) {
+        return response.data;
+    }
+
+    return response;
 }
 
-return data;
-}
 
 /* =========================================================
-5. WHATSAPP HELPERS
+   6. STATUS MESSAGES
 ========================================================= */
 
-function getSupportNumber() {
-const configured =
-websiteSettings.supportWhatsApp ||
-websiteSettings.whatsappNumber ||
-websiteSettings.supportPhone ||
-"";
+function showCheckoutMessage(message, type = "info") {
+    const element = getElement("checkoutMessage");
 
-const digits = String(configured).replace(/\D/g, "");
+    if (!element) {
+        return;
+    }
 
-return digits || WHATSAPP_SUPPORT_NUMBER;
+    setText(element, message);
+    element.classList.remove("success", "error", "info");
+    element.classList.add(type);
+    showElement(element);
 }
 
-function getWhatsAppChannel() {
-return (
-websiteSettings.whatsappChannel ||
-websiteSettings.channelUrl ||
-DEFAULT_WHATSAPP_CHANNEL
-);
+function clearCheckoutMessage() {
+    const element = getElement("checkoutMessage");
+
+    if (!element) {
+        return;
+    }
+
+    setText(element, "");
+    element.classList.remove("success", "error", "info");
+    hideElement(element);
 }
 
-function openWhatsApp(message = "") {
-const number = getSupportNumber();
+function showTrackingMessage(message, type = "info") {
+    const element = getElement("trackOrderMessage");
 
-const url =
-"https://wa.me/" +
-number +
-(message ? "?text=" + encodeURIComponent(message) : "");
+    if (!element) {
+        return;
+    }
 
-window.open(url, "_blank", "noopener,noreferrer");
+    setText(element, message);
+    element.classList.remove("success", "error", "info");
+    element.classList.add(type);
+    showElement(element);
 }
 
-function updateWhatsAppLinks() {
-const supportNumber = getSupportNumber();
-const channel = getWhatsAppChannel();
+function clearTrackingMessage() {
+    const element = getElement("trackOrderMessage");
 
-document.querySelectorAll(".whatsapp-float").forEach(link => {
-link.href = "https://wa.me/" + supportNumber;
-link.target = "_blank";
-link.rel = "noopener noreferrer";
-link.setAttribute("aria-label", "Chat with us on WhatsApp");
-});
+    if (!element) {
+        return;
+    }
 
-document.querySelectorAll(
-".whatsapp-header, .header-whatsapp"
-).forEach(link => {
-link.href = "https://wa.me/" + supportNumber;
-link.target = "_blank";
-link.rel = "noopener noreferrer";
-});
-
-const channelLink = byId("announcementChannelLink");
-
-if (channelLink) {
-channelLink.href = channel;
-channelLink.target = "_blank";
-channelLink.rel = "noopener noreferrer";
+    setText(element, "");
+    element.classList.remove("success", "error", "info");
+    hideElement(element);
 }
 
-const supportDisplay = byId("supportPhoneDisplay");
-
-if (supportDisplay) {
-supportDisplay.textContent = supportNumber;
-}
-
-document.querySelectorAll("[data-whatsapp-support]").forEach(element => {
-element.addEventListener("click", event => {
-event.preventDefault();
-openWhatsApp();
-});
-});
-}
 
 /* =========================================================
-6. MOBILE MENU
+   7. MOBILE MENU
 ========================================================= */
 
-function setMenuOpen(open) {
-const menu = byId("mobileMenu");
-const button = byId("menuButton");
-const icon = byId("menuIcon");
+function setMenuOpen(shouldOpen) {
+    const menu = getElement("mobileMenu");
+    const button = getElement("menuButton");
+    const icon = getElement("menuIcon");
 
-if (!menu || !button) return;
+    if (!menu || !button) {
+        return;
+    }
 
-if (window.matchMedia("(min-width: 900px)").matches) {
-menu.hidden = true;
-menu.classList.remove("open");
-button.setAttribute("aria-expanded", "false");
+    menu.hidden = !shouldOpen;
+    menu.classList.toggle("open", shouldOpen);
 
-if (icon) icon.textContent = "☰";
+    button.setAttribute(
+        "aria-expanded",
+        shouldOpen ? "true" : "false"
+    );
 
-return;
+    button.setAttribute(
+        "aria-label",
+        shouldOpen ? "Close navigation menu" : "Open navigation menu"
+    );
 
-}
-
-menu.hidden = !open;
-menu.classList.toggle("open", open);
-button.setAttribute("aria-expanded", String(open));
-
-if (icon) {
-icon.textContent = open ? "✕" : "☰";
-}
+    if (icon) {
+        icon.textContent = shouldOpen ? "✕" : "☰";
+    }
 }
 
 function initializeMobileMenu() {
-const menu = byId("mobileMenu");
-const button = byId("menuButton");
+    const menu = getElement("mobileMenu");
+    const button = getElement("menuButton");
 
-if (!menu || !button) return;
+    if (!menu || !button) {
+        return;
+    }
 
-menu.hidden = true;
-menu.classList.remove("open");
-button.setAttribute("aria-expanded", "false");
+    setMenuOpen(false);
 
-button.addEventListener("click", event => {
-event.preventDefault();
-event.stopPropagation();
+    button.addEventListener("click", event => {
+        event.preventDefault();
 
-setMenuOpen(menu.hidden || !menu.classList.contains("open"));
+        const shouldOpen = menu.hidden;
 
-});
+        setMenuOpen(shouldOpen);
+    });
 
-menu.querySelectorAll("a").forEach(link => {
-link.addEventListener("click", () => {
-setMenuOpen(false);
-});
-});
+    queryAll("#mobileMenu a").forEach(link => {
+        link.addEventListener("click", () => {
+            setMenuOpen(false);
+        });
+    });
 
-document.addEventListener("click", event => {
-if (
-!menu.hidden &&
-!menu.contains(event.target) &&
-!button.contains(event.target)
-) {
-setMenuOpen(false);
+    document.addEventListener("click", event => {
+        const clickedInsideMenu = menu.contains(event.target);
+        const clickedButton = button.contains(event.target);
+
+        if (!clickedInsideMenu && !clickedButton) {
+            setMenuOpen(false);
+        }
+    });
+
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+            setMenuOpen(false);
+        }
+    });
 }
-});
 
-document.addEventListener("keydown", event => {
-if (event.key === "Escape") {
-setMenuOpen(false);
-}
-});
-
-window.addEventListener("resize", () => {
-if (window.matchMedia("(min-width: 900px)").matches) {
-setMenuOpen(false);
-}
-});
-}
 
 /* =========================================================
-7. BUNDLE AVAILABILITY
+   8. WHATSAPP AND CHANNEL LINKS
+========================================================= */
+
+function cleanWhatsAppNumber(number) {
+    return normalizePhone(number);
+}
+
+function getWhatsAppDisplayNumber(number) {
+    const value = cleanWhatsAppNumber(number);
+
+    if (value.startsWith("233") && value.length === 12) {
+        return "0" + value.slice(3);
+    }
+
+    return value;
+}
+
+function updateWhatsAppLinks() {
+    const cleanNumber = cleanWhatsAppNumber(whatsappNumber);
+
+    if (!cleanNumber) {
+        return;
+    }
+
+    const contactURL = `https://wa.me/${cleanNumber}`;
+
+    queryAll("[data-whatsapp-contact]").forEach(link => {
+        link.href = contactURL;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+    });
+
+    const displayNumber = getWhatsAppDisplayNumber(cleanNumber);
+
+    const displayElement = getElement("supportPhoneDisplay");
+
+    if (displayElement) {
+        setText(displayElement, displayNumber);
+    }
+}
+
+function updateChannelLinks() {
+    if (!whatsappChannel) {
+        return;
+    }
+
+    queryAll("[data-channel-link]").forEach(link => {
+        link.href = whatsappChannel;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+    });
+}
+
+
+/* =========================================================
+   9. NETWORK TABS
 ========================================================= */
 
 function isNetworkAvailable(network) {
-return networkAvailability[normalizeNetwork(network)] !== false;
+    return networkAvailability[network] !== false;
 }
 
-function applyNetworkAvailability(settings) {
-const availability =
-settings.networkAvailability ||
-settings.networks ||
-{};
+function updateNetworkTabs() {
+    queryAll(".network-tab").forEach(tab => {
+        const network = normalizeNetwork(
+            tab.dataset.network
+        );
 
-Object.keys(networkAvailability).forEach(network => {
-let value = availability[network];
+        const active = network === activeNetwork;
+        const available = isNetworkAvailable(network);
 
-if (value === undefined) {
-  value = availability[network.toLowerCase()];
-}
+        tab.setAttribute(
+            "aria-pressed",
+            active ? "true" : "false"
+        );
 
-if (value && typeof value === "object") {
-  if (typeof value.available === "boolean") {
-    value = value.available;
-  } else if (typeof value.enabled === "boolean") {
-    value = value.enabled;
-  } else {
-    value = true;
-  }
-}
+        tab.disabled = !available;
+        tab.classList.toggle("active", active);
+        tab.classList.toggle("unavailable", !available);
 
-if (typeof value === "boolean") {
-  networkAvailability[network] = value;
-} else if (typeof value === "string") {
-  networkAvailability[network] =
-    !["false", "off", "disabled", "unavailable"].includes(
-      value.toLowerCase()
-    );
-}
-
-});
-}
-
-/* =========================================================
-8. NETWORK TAB MANAGEMENT
-========================================================= */
-
-function initializeNetworkTabs() {
-document.querySelectorAll(".network-tab").forEach(tab => {
-tab.addEventListener("click", () => {
-const network = normalizeNetwork(tab.dataset.network);
-
-  if (!network) return;
-
-  selectNetwork(network);
-});
-
-});
+        if (!available) {
+            tab.setAttribute("aria-label", `${network} is temporarily unavailable`);
+        } else {
+            tab.removeAttribute("aria-label");
+        }
+    });
 }
 
 function selectNetwork(network) {
-const normalized = normalizeNetwork(network);
+    const normalized = normalizeNetwork(network);
 
-if (!normalized || !PRODUCTS[normalized]) return;
+    if (!normalized) {
+        return;
+    }
 
-activeNetwork = normalized;
-selectedBundle = null;
+    if (!isNetworkAvailable(normalized)) {
+        showCheckoutMessage(
+            `${normalized} bundles are temporarily unavailable. Please choose another network.`,
+            "error"
+        );
 
-document.querySelectorAll(".network-tab").forEach(tab => {
-const active =
-normalizeNetwork(tab.dataset.network) === normalized;
+        return;
+    }
 
-tab.classList.toggle("active", active);
-tab.setAttribute("aria-selected", String(active));
+    activeNetwork = normalized;
+    selectedBundle = null;
 
-});
+    const selectedNetworkInput = getElement("selectedNetwork");
+    const selectedSizeInput = getElement("selectedSize");
 
-const hiddenNetwork = byId("selectedNetwork");
-const hiddenSize = byId("selectedSize");
+    if (selectedNetworkInput) {
+        selectedNetworkInput.value = activeNetwork;
+    }
 
-if (hiddenNetwork) hiddenNetwork.value = "";
-if (hiddenSize) hiddenSize.value = "";
+    if (selectedSizeInput) {
+        selectedSizeInput.value = "";
+    }
 
-updateSelectedSummary();
-updatePaymentButton();
-renderBundles();
-
-const message = byId("checkoutMessage");
-hideMessage(message);
+    clearCheckoutMessage();
+    updateNetworkTabs();
+    renderBundles();
+    updateSelectedSummary();
+    updatePaymentButton();
 }
 
-/* Allow compatibility with HTML that calls selectNetwork(). */
-window.selectNetwork = selectNetwork;
+function initializeNetworkTabs() {
+    queryAll(".network-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+            selectNetwork(tab.dataset.network);
+        });
+    });
 
-/* =========================================================
-9. BUNDLE SEARCH
-========================================================= */
-
-function initializeBundleSearch() {
-const search = byId("bundleSearch");
-
-if (!search) return;
-
-search.addEventListener("input", renderBundles);
+    updateNetworkTabs();
 }
 
+
 /* =========================================================
-10. RENDER BUNDLE CARDS
+   10. BUNDLE SEARCH AND RENDERING
 ========================================================= */
+
+function getProductsForNetwork(network) {
+    const products = DEFAULT_PRODUCTS[network];
+
+    if (!Array.isArray(products)) {
+        return [];
+    }
+
+    return products;
+}
 
 function renderBundles() {
-const grid = byId("bundleGrid");
-const count = byId("resultCount");
-const search = byId("bundleSearch");
+    const grid = getElement("bundleGrid");
+    const searchInput = getElement("bundleSearch");
+    const resultCount = getElement("resultCount");
 
-if (!grid) return;
+    if (!grid) {
+        return;
+    }
 
-const query = String(search?.value || "")
-.trim()
-.toLowerCase();
+    const searchTerm = searchInput
+        ? searchInput.value.trim().toLowerCase()
+        : "";
 
-const products = PRODUCTS[activeNetwork] || [];
+    const products = getProductsForNetwork(activeNetwork);
 
-const filteredProducts = products.filter(product => {
-const text = "${product.size} ${activeNetwork} ${product.price}"
-.toLowerCase();
+    if (!isNetworkAvailable(activeNetwork)) {
+        grid.innerHTML = `
+            <div class="empty-state">
+                <h3>Network temporarily unavailable</h3>
+                <p>Please choose another network or check back later.</p>
+            </div>
+        `;
 
-return text.includes(query);
+        setText(resultCount, "0 packages available");
+        return;
+    }
 
-});
+    const filteredProducts = products.filter(product => {
+        const searchableText =
+            `${product.size} ${activeNetwork} ${product.price}`.toLowerCase();
 
-if (count) {
-count.textContent =
-"${filteredProducts.length} package" +
-(filteredProducts.length === 1 ? "" : "s") +
-" available";
+        return searchableText.includes(searchTerm);
+    });
+
+    if (resultCount) {
+        setText(
+            resultCount,
+            `${filteredProducts.length} package${filteredProducts.length === 1 ? "" : "s"} available`
+        );
+    }
+
+    if (filteredProducts.length === 0) {
+        grid.innerHTML = `
+            <div class="empty-state">
+                <h3>No bundles found</h3>
+                <p>Try a different search or select another network.</p>
+            </div>
+        `;
+
+        return;
+    }
+
+    grid.innerHTML = filteredProducts.map(product => {
+        const isSelected =
+            selectedBundle &&
+            selectedBundle.network === activeNetwork &&
+            selectedBundle.size === product.size;
+
+        const networkClass = activeNetwork.toLowerCase();
+
+        return `
+            <article class="bundle-card ${networkClass} ${isSelected ? "selected" : ""}">
+                <div class="bundle-card-top">
+                    <span class="bundle-network">${escapeHTML(activeNetwork)}</span>
+                    <span class="bundle-badge">DATA BUNDLE</span>
+                </div>
+
+                <div class="bundle-size">${escapeHTML(product.size)}</div>
+
+                <div class="bundle-price">${formatMoney(product.price)}</div>
+
+                <button
+                    type="button"
+                    class="bundle-buy-button"
+                    data-buy-network="${escapeHTML(activeNetwork)}"
+                    data-buy-size="${escapeHTML(product.size)}"
+                    aria-label="Buy ${escapeHTML(product.size)} ${escapeHTML(activeNetwork)} bundle for ${formatMoney(product.price)}"
+                >
+                    ${isSelected ? "Selected ✓" : "Buy Bundle"}
+                </button>
+            </article>
+        `;
+    }).join("");
+
+    queryAll("[data-buy-network]", grid).forEach(button => {
+        button.addEventListener("click", () => {
+            const network = normalizeNetwork(
+                button.dataset.buyNetwork
+            );
+
+            const size = String(
+                button.dataset.buySize || ""
+            );
+
+            chooseBundle(network, size);
+        });
+    });
 }
 
-if (!filteredProducts.length) {
-grid.innerHTML =
-'<div class="no-results">No bundles match your search.</div>';
-return;
+function initializeBundleSearch() {
+    const searchInput = getElement("bundleSearch");
+
+    if (!searchInput) {
+        return;
+    }
+
+    searchInput.addEventListener("input", renderBundles);
 }
 
-grid.innerHTML = filteredProducts.map(product => {
-const available = isNetworkAvailable(activeNetwork);
-
-return `
-  <article class="bundle-card"
-    data-network="${escapeHTML(activeNetwork)}">
-
-    <span class="bundle-network">
-      ${escapeHTML(activeNetwork)}
-    </span>
-
-    <h3 class="bundle-size">
-      ${escapeHTML(product.size)}
-    </h3>
-
-    <p>Data bundle</p>
-
-    <p class="bundle-price">
-      ${formatMoney(product.price)}
-    </p>
-
-    <button
-      type="button"
-      class="buy-button"
-      data-buy-network="${escapeHTML(activeNetwork)}"
-      data-buy-size="${escapeHTML(product.size)}"
-      ${available ? "" : "disabled"}
-    >
-      ${available ? "Buy Bundle" : "Temporarily Unavailable"}
-    </button>
-  </article>
-`;
-
-}).join("");
-
-grid.querySelectorAll("[data-buy-size]").forEach(button => {
-button.addEventListener("click", () => {
-chooseBundle(
-button.dataset.buyNetwork,
-button.dataset.buySize
-);
-});
-});
-}
 
 /* =========================================================
-11. SELECT A BUNDLE
+   11. SELECTING A BUNDLE
 ========================================================= */
 
 function chooseBundle(network, size) {
-const normalized = normalizeNetwork(network);
+    const normalizedNetwork = normalizeNetwork(network);
 
-if (!normalized || !PRODUCTS[normalized]) return;
+    if (!normalizedNetwork || !isNetworkAvailable(normalizedNetwork)) {
+        showCheckoutMessage(
+            "This network is currently unavailable. Please choose another one.",
+            "error"
+        );
 
-if (!isNetworkAvailable(normalized)) {
-const message = byId("checkoutMessage");
+        return;
+    }
 
-showMessage(
-  message,
-  `${normalized} bundles are temporarily unavailable. Please try again later.`,
-  "error"
-);
+    const products = getProductsForNetwork(normalizedNetwork);
 
-return;
+    const product = products.find(item => item.size === size);
 
+    if (!product) {
+        showCheckoutMessage(
+            "That bundle could not be found. Please select another package.",
+            "error"
+        );
+
+        return;
+    }
+
+    activeNetwork = normalizedNetwork;
+
+    selectedBundle = {
+        network: normalizedNetwork,
+        size: product.size,
+        price: Number(product.price)
+    };
+
+    const selectedNetworkInput = getElement("selectedNetwork");
+    const selectedSizeInput = getElement("selectedSize");
+
+    if (selectedNetworkInput) {
+        selectedNetworkInput.value = selectedBundle.network;
+    }
+
+    if (selectedSizeInput) {
+        selectedSizeInput.value = selectedBundle.size;
+    }
+
+    clearCheckoutMessage();
+
+    updateNetworkTabs();
+    renderBundles();
+    updateSelectedSummary();
+    updatePaymentButton();
+
+    const checkout = getElement("checkout");
+
+    if (checkout) {
+        checkout.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    }
 }
-
-const bundle = PRODUCTS[normalized].find(
-product => product.size === String(size)
-);
-
-if (!bundle) {
-showMessage(
-byId("checkoutMessage"),
-"We could not find that bundle. Please select it again.",
-"error"
-);
-
-return;
-
-}
-
-activeNetwork = normalized;
-
-selectedBundle = {
-network: normalized,
-size: bundle.size,
-price: bundle.price
-};
-
-const networkInput = byId("selectedNetwork");
-const sizeInput = byId("selectedSize");
-
-if (networkInput) networkInput.value = normalized;
-if (sizeInput) sizeInput.value = bundle.size;
-
-document.querySelectorAll(".network-tab").forEach(tab => {
-const active =
-normalizeNetwork(tab.dataset.network) === normalized;
-
-tab.classList.toggle("active", active);
-tab.setAttribute("aria-selected", String(active));
-
-});
-
-updateSelectedSummary();
-updatePaymentButton();
-hideMessage(byId("checkoutMessage"));
-
-const checkout = byId("checkout");
-
-if (checkout) {
-checkout.scrollIntoView({
-behavior: "smooth",
-block: "start"
-});
-}
-}
-
-window.chooseBundle = chooseBundle;
-
-/* =========================================================
-12. CHECKOUT SUMMARY
-========================================================= */
 
 function updateSelectedSummary() {
-const bundleDisplay = byId("selectedBundle");
-const priceDisplay = byId("selectedPrice");
+    const selectedBundleElement = getElement("selectedBundle");
+    const selectedPriceElement = getElement("selectedPrice");
 
-if (bundleDisplay) {
-bundleDisplay.textContent = selectedBundle
-? "${selectedBundle.network} ${selectedBundle.size}"
-: "No bundle selected";
+    if (!selectedBundle) {
+        setText(
+            selectedBundleElement,
+            "No bundle selected"
+        );
+
+        setText(
+            selectedPriceElement,
+            "GH₵0.00"
+        );
+
+        return;
+    }
+
+    setText(
+        selectedBundleElement,
+        `${selectedBundle.network} ${selectedBundle.size}`
+    );
+
+    setText(
+        selectedPriceElement,
+        formatMoney(selectedBundle.price)
+    );
 }
 
-if (priceDisplay) {
-priceDisplay.textContent = selectedBundle
-? formatMoney(selectedBundle.price)
-: "GH₵0.00";
+
+/* =========================================================
+   12. CHECKOUT VALIDATION
+========================================================= */
+
+function getCheckoutValues() {
+    const phoneElement = getElement("customerPhone");
+    const emailElement = getElement("customerEmail");
+
+    return {
+        phone: phoneElement
+            ? normalizeGhanaPhone(phoneElement.value)
+            : "",
+
+        email: emailElement
+            ? emailElement.value.trim()
+            : ""
+    };
 }
+
+function validateCheckout(showMessage = false) {
+    if (!selectedBundle) {
+        if (showMessage) {
+            showCheckoutMessage(
+                "Please select a data bundle first.",
+                "error"
+            );
+        }
+
+        return false;
+    }
+
+    if (!isNetworkAvailable(selectedBundle.network)) {
+        if (showMessage) {
+            showCheckoutMessage(
+                "This network is temporarily unavailable.",
+                "error"
+            );
+        }
+
+        return false;
+    }
+
+    const { phone, email } = getCheckoutValues();
+
+    if (!isValidGhanaPhone(phone)) {
+        if (showMessage) {
+            showCheckoutMessage(
+                "Enter a valid Ghana phone number, for example 0241234567.",
+                "error"
+            );
+        }
+
+        return false;
+    }
+
+    if (!isValidEmail(email)) {
+        if (showMessage) {
+            showCheckoutMessage(
+                "Enter a valid email address for your payment.",
+                "error"
+            );
+        }
+
+        return false;
+    }
+
+    return true;
 }
 
 function updatePaymentButton() {
-const button = byId("paymentButton");
+    const button = getElement("paymentButton");
 
-if (!button) return;
+    if (!button) {
+        return;
+    }
 
-const phone = byId("customerPhone")?.value.trim() || "";
-const email = byId("customerEmail")?.value.trim() || "";
+    if (paymentInProgress) {
+        button.disabled = true;
+        button.textContent = "Processing...";
+        return;
+    }
 
-const validPhone = validGhanaPhone(phone);
-const validEmail =
-/^[^\s@]+@[^\s@]+.[^\s@]+$/.test(email);
+    if (!selectedBundle) {
+        button.disabled = true;
+        button.textContent = "Select a Bundle First";
+        return;
+    }
 
-button.disabled = !(
-selectedBundle &&
-validPhone &&
-validEmail &&
-!paymentInProgress &&
-isNetworkAvailable(selectedBundle.network)
-);
+    const { phone, email } = getCheckoutValues();
+
+    const validPhone = isValidGhanaPhone(phone);
+    const validEmail = isValidEmail(email);
+
+    const valid =
+        validPhone &&
+        validEmail &&
+        isNetworkAvailable(selectedBundle.network);
+
+    button.disabled = !valid;
+    button.textContent = valid
+        ? `Pay ${formatMoney(selectedBundle.price)} Securely`
+        : "Enter Your Details";
 }
+
+function initializeCheckoutValidation() {
+    const phoneElement = getElement("customerPhone");
+    const emailElement = getElement("customerEmail");
+
+    [phoneElement, emailElement].forEach(element => {
+        if (!element) {
+            return;
+        }
+
+        element.addEventListener("input", () => {
+            updatePaymentButton();
+        });
+
+        element.addEventListener("blur", () => {
+            if (
+                element === phoneElement &&
+                element.value.trim() &&
+                !isValidGhanaPhone(element.value)
+            ) {
+                element.setCustomValidity(
+                    "Enter a valid Ghana phone number."
+                );
+            } else if (
+                element === emailElement &&
+                element.value.trim() &&
+                !isValidEmail(element.value)
+            ) {
+                element.setCustomValidity(
+                    "Enter a valid email address."
+                );
+            } else {
+                element.setCustomValidity("");
+            }
+        });
+
+        element.addEventListener("input", () => {
+            element.setCustomValidity("");
+        });
+    });
+
+    updatePaymentButton();
+}
+
 
 /* =========================================================
-13. CHECKOUT FORM VALIDATION
+   13. PAYSTACK CHECKOUT
 ========================================================= */
 
-function validateCheckout() {
-const phone = byId("customerPhone")?.value.trim() || "";
-const email = byId("customerEmail")?.value.trim() || "";
-const message = byId("checkoutMessage");
+function getPaystackAuthorizationURL(response) {
+    const data = getResponseData(response);
 
-if (!selectedBundle) {
-showMessage(
-message,
-"Please select a data bundle before continuing.",
-"error"
-);
+    const possibleURLs = [
+        response?.authorization_url,
+        response?.authorizationUrl,
+        data?.authorization_url,
+        data?.authorizationUrl,
+        data?.data?.authorization_url,
+        data?.data?.authorizationUrl
+    ];
 
-return false;
-
+    return possibleURLs.find(
+        value => typeof value === "string" && value.trim()
+    ) || "";
 }
 
-if (!isNetworkAvailable(selectedBundle.network)) {
-showMessage(
-message,
-"This network is temporarily unavailable. Please select another network.",
-"error"
-);
+function isSafePaystackURL(value) {
+    try {
+        const url = new URL(value);
 
-return false;
+        if (url.protocol !== "https:") {
+            return false;
+        }
 
+        const hostname = url.hostname.toLowerCase();
+
+        return (
+            hostname === "paystack.com" ||
+            hostname.endsWith(".paystack.com")
+        );
+    } catch (error) {
+        return false;
+    }
 }
-
-if (!validGhanaPhone(phone)) {
-showMessage(
-message,
-"Enter a valid Ghana phone number, for example 0241234567.",
-"error"
-);
-
-byId("customerPhone")?.focus();
-
-return false;
-
-}
-
-if (!/^[^\s@]+@[^\s@]+.[^\s@]+$/.test(email)) {
-showMessage(
-message,
-"Enter a valid email address.",
-"error"
-);
-
-byId("customerEmail")?.focus();
-
-return false;
-
-}
-
-return true;
-}
-
-/* =========================================================
-14. PAYSTACK CHECKOUT
-========================================================= */
 
 async function initializePayment(event) {
-if (event) event.preventDefault();
+    event.preventDefault();
 
-if (paymentInProgress) return;
+    clearCheckoutMessage();
 
-const form = byId("checkoutForm");
-const button = byId("paymentButton");
-const message = byId("checkoutMessage");
+    if (paymentInProgress) {
+        return;
+    }
 
-if (!form || !button) return;
+    if (!validateCheckout(true)) {
+        updatePaymentButton();
+        return;
+    }
 
-if (!validateCheckout()) return;
+    const { phone, email } = getCheckoutValues();
 
-const phone = normalizeGhanaPhone(
-byId("customerPhone").value.trim()
-);
+    paymentInProgress = true;
+    updatePaymentButton();
 
-const email = byId("customerEmail").value.trim();
-
-const network = selectedBundle.network;
-const bundle = selectedBundle.size;
-
-paymentInProgress = true;
-button.disabled = true;
-button.textContent = "Connecting to Paystack...";
-
-showMessage(
-message,
-"Please wait while we prepare your secure payment.",
-"info"
-);
-
-try {
-/*
-The browser sends the selected bundle information.
-
-  IMPORTANT:
-  Your backend must look up the correct price from its own
-  trusted price table. It must not trust the browser's amount.
-*/
-
-const data = await fetchJSON(
-  `${PAYMENT_API}/initialize-payment`,
-  {
-    method: "POST",
-    body: JSON.stringify({
-      phone,
-      email,
-      network,
-      bundle,
-
-      /*
-        Sent for compatibility with an existing backend.
-        The backend must independently calculate and validate
-        the amount before initializing the transaction.
-      */
-      amount: selectedBundle.price
-    })
-  }
-);
-
-const paymentURL =
-  data.authorization_url ||
-  data.authorizationUrl ||
-  data.data?.authorization_url ||
-  data.data?.authorizationUrl;
-
-if (
-  !data.success &&
-  !paymentURL
-) {
-  throw new Error(
-    data.message ||
-    data.error ||
-    "We could not initialize your payment."
-  );
-}
-
-if (!paymentURL) {
-  throw new Error(
-    "The payment service did not return a checkout link. Please contact support."
-  );
-}
-
-let parsedURL;
-
-try {
-  parsedURL = new URL(paymentURL);
-} catch {
-  throw new Error("The payment link returned by the server is invalid.");
-}
-
-const validPaystackHost =
-  parsedURL.hostname === "paystack.com" ||
-  parsedURL.hostname.endsWith(".paystack.com");
-
-if (
-  parsedURL.protocol !== "https:" ||
-  !validPaystackHost
-) {
-  throw new Error(
-    "The payment service returned an unexpected checkout address. Please contact support."
-  );
-}
-
-showMessage(
-  message,
-  "Payment page ready. Redirecting to Paystack...",
-  "success"
-);
-
-window.location.assign(parsedURL.href);
-
-} catch (error) {
-console.error("Payment initialization error:", error);
-
-showMessage(
-  message,
-  error.message ||
-  "Payment could not be started. Please check your connection and try again.",
-  "error"
-);
-
-paymentInProgress = false;
-updatePaymentButton();
-button.textContent = "Pay Securely";
-
-}
-}
-
-function initializeCheckout() {
-const form = byId("checkoutForm");
-
-if (!form) return;
-
-form.addEventListener("submit", initializePayment);
-
-["customerPhone", "customerEmail"].forEach(id => {
-const input = byId(id);
-
-if (!input) return;
-
-input.addEventListener("input", updatePaymentButton);
-input.addEventListener("change", updatePaymentButton);
-
-});
-
-updateSelectedSummary();
-updatePaymentButton();
-}
-
-/* =========================================================
-15. ORDER TRACKING
-========================================================= */
-
-/*
-This uses the existing /orders-by-phone/{phone} route.
-The backend must expose that endpoint and return the orders
-associated with the submitted phone number.
-*/
-
-async function trackOrders(event) {
-if (event) event.preventDefault();
-
-if (trackingInProgress) return;
-
-const form = byId("trackOrderForm");
-const phoneInput = byId("trackPhone");
-const button = byId("trackOrderButton");
-const message = byId("trackOrderMessage");
-const results = byId("trackOrderResults");
-
-if (!form || !phoneInput || !button || !results) return;
-
-const phone = normalizeGhanaPhone(phoneInput.value.trim());
-
-if (!validGhanaPhone(phone)) {
-showMessage(
-message,
-"Enter a valid Ghana phone number to track your order.",
-"error"
-);
-
-phoneInput.focus();
-return;
-
-}
-
-trackingInProgress = true;
-setButtonLoading(button, true, "Searching...");
-hideMessage(message);
-results.replaceChildren();
-
-showMessage(
-message,
-"Checking your orders. Please wait...",
-"info"
-);
-
-try {
-const data = await fetchJSON(
-"${PAYMENT_API}/orders-by-phone/${encodeURIComponent(phone)}",
-{
-method: "GET"
-}
-);
-
-const orders = Array.isArray(data)
-  ? data
-  : (
-      data.orders ||
-      data.data?.orders ||
-      data.data ||
-      []
+    showCheckoutMessage(
+        "Connecting to Paystack. Please wait and do not close this page.",
+        "info"
     );
 
-if (!Array.isArray(orders) || orders.length === 0) {
-  showMessage(
-    message,
-    data.message ||
-    "No orders were found for this phone number. Check the number and try again.",
-    "info"
-  );
+    try {
+        const response = await fetchJSON(
+            `${PAYMENT_API}/initialize-payment`,
+            {
+                method: "POST",
 
-  return;
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    phone,
+                    email,
+                    network: selectedBundle.network,
+                    bundle: selectedBundle.size,
+
+                    /*
+                     * Compatibility field only.
+                     * The backend must calculate and verify the
+                     * correct price from its own trusted price table.
+                     */
+                    amount: selectedBundle.price
+                })
+            }
+        );
+
+        const authorizationURL =
+            getPaystackAuthorizationURL(response);
+
+        if (
+            !authorizationURL ||
+            !isSafePaystackURL(authorizationURL)
+        ) {
+            throw new Error(
+                "The payment link could not be verified. Please contact support."
+            );
+        }
+
+        showCheckoutMessage(
+            "Payment page ready. Redirecting to Paystack...",
+            "success"
+        );
+
+        window.location.assign(authorizationURL);
+
+    } catch (error) {
+        console.error("Payment initialization error:", error);
+
+        showCheckoutMessage(
+            error.message ||
+            "We could not start your payment. Please try again.",
+            "error"
+        );
+
+        paymentInProgress = false;
+        updatePaymentButton();
+    }
 }
 
-showMessage(
-  message,
-  `Found ${orders.length} order${orders.length === 1 ? "" : "s"}.`,
-  "success"
-);
+function initializeCheckoutForm() {
+    const form = getElement("checkoutForm");
 
-results.innerHTML = orders.map(order => {
-  const network = escapeHTML(
-    order.network || order.supplier_network || "Data bundle"
-  );
+    if (!form) {
+        return;
+    }
 
-  const bundle = escapeHTML(
-    order.bundle ||
-    order.size ||
-    order.bundle_size ||
-    order.data_bundle ||
-    "Not provided"
-  );
-
-  const status = escapeHTML(
-    order.status ||
-    order.delivery_status ||
-    "Processing"
-  );
-
-  const reference = escapeHTML(
-    order.reference ||
-    order.payment_reference ||
-    order.order_reference ||
-    order.id ||
-    "Unavailable"
-  );
-
-  const amountValue =
-    order.amount ??
-    order.price ??
-    order.total_amount;
-
-  const amount = amountValue !== undefined &&
-    amountValue !== null &&
-    amountValue !== ""
-      ? formatMoney(Number(amountValue))
-      : "Unavailable";
-
-  const createdAt =
-    order.created_at ||
-    order.createdAt ||
-    order.created ||
-    "";
-
-  const dateText = createdAt
-    ? escapeHTML(String(createdAt))
-    : "Unavailable";
-
-  return `
-    <article class="order-result">
-      <h3>${network} — ${bundle}</h3>
-
-      <p>
-        <strong>Order reference:</strong>
-        ${reference}
-      </p>
-
-      <p>
-        <strong>Amount:</strong>
-        ${escapeHTML(amount)}
-      </p>
-
-      <p>
-        <strong>Status:</strong>
-        <span class="order-status">
-          ${status}
-        </span>
-      </p>
-
-      <p>
-        <strong>Order date:</strong>
-        ${dateText}
-      </p>
-    </article>
-  `;
-}).join("");
-
-} catch (error) {
-console.error("Order tracking error:", error);
-
-showMessage(
-  message,
-  error.message ||
-  "We could not retrieve your orders. Please try again later.",
-  "error"
-);
-
-} finally {
-trackingInProgress = false;
-setButtonLoading(button, false);
+    form.addEventListener("submit", initializePayment);
 }
+
+
+/* =========================================================
+   14. WEBSITE SETTINGS
+========================================================= */
+
+function getSettingValue(settings, possibleKeys, fallback = "") {
+    for (const key of possibleKeys) {
+        const value = settings?.[key];
+
+        if (value !== undefined && value !== null) {
+            return value;
+        }
+    }
+
+    return fallback;
+}
+
+function parseNetworkAvailability(settings) {
+    const raw = settings?.networkAvailability;
+
+    if (!raw || typeof raw !== "object") {
+        return {
+            MTN: true,
+            TELECEL: true,
+            AIRTELTIGO: true
+        };
+    }
+
+    const result = {
+        MTN: true,
+        TELECEL: true,
+        AIRTELTIGO: true
+    };
+
+    Object.entries(raw).forEach(([key, value]) => {
+        const network = normalizeNetwork(key);
+
+        if (!network) {
+            return;
+        }
+
+        if (typeof value === "boolean") {
+            result[network] = value;
+            return;
+        }
+
+        if (value && typeof value === "object") {
+            if (typeof value.available === "boolean") {
+                result[network] = value.available;
+            } else if (typeof value.enabled === "boolean") {
+                result[network] = value.enabled;
+            }
+        }
+    });
+
+    return result;
+}
+
+function isAnnouncementEnabled(settings) {
+    const value = getSettingValue(
+        settings,
+        ["announcementEnabled", "showAnnouncement"],
+        false
+    );
+
+    return value === true || value === "true" || value === 1;
+}
+
+function applyWebsiteSettings(settings) {
+    websiteSettings = settings || {};
+
+    networkAvailability = parseNetworkAvailability(
+        websiteSettings
+    );
+
+    const configuredWhatsApp = getSettingValue(
+        websiteSettings,
+        ["supportWhatsApp", "whatsappNumber", "supportPhone"],
+        DEFAULT_WHATSAPP_NUMBER
+    );
+
+    if (configuredWhatsApp) {
+        whatsappNumber = String(configuredWhatsApp);
+    }
+
+    const configuredChannel = getSettingValue(
+        websiteSettings,
+        ["whatsappChannel", "channelUrl"],
+        DEFAULT_WHATSAPP_CHANNEL
+    );
+
+    if (
+        typeof configuredChannel === "string" &&
+        configuredChannel.startsWith("https://")
+    ) {
+        whatsappChannel = configuredChannel;
+    }
+
+    updateWhatsAppLinks();
+    updateChannelLinks();
+    updateNetworkTabs();
+
+    if (!isNetworkAvailable(activeNetwork)) {
+        const firstAvailable = [
+            "MTN",
+            "TELECEL",
+            "AIRTELTIGO"
+        ].find(isNetworkAvailable);
+
+        if (firstAvailable) {
+            activeNetwork = firstAvailable;
+        }
+    }
+
+    if (
+        selectedBundle &&
+        !isNetworkAvailable(selectedBundle.network)
+    ) {
+        selectedBundle = null;
+    }
+
+    const selectedNetworkInput = getElement("selectedNetwork");
+
+    if (selectedNetworkInput) {
+        selectedNetworkInput.value = activeNetwork;
+    }
+
+    updateNetworkTabs();
+    renderBundles();
+    updateSelectedSummary();
+    updatePaymentButton();
+
+    if (isAnnouncementEnabled(websiteSettings)) {
+        const message = getSettingValue(
+            websiteSettings,
+            ["announcement", "announcementMessage", "notice"],
+            ""
+        );
+
+        if (message) {
+            showAnnouncement(String(message));
+        }
+    }
+}
+
+async function loadWebsiteSettings() {
+    try {
+        const response = await fetchJSON(
+            `${PAYMENT_API}/website-settings`,
+            {
+                method: "GET"
+            }
+        );
+
+        let settings = getResponseData(response);
+
+        if (
+            settings.settings &&
+            typeof settings.settings === "object"
+        ) {
+            settings = settings.settings;
+        }
+
+        applyWebsiteSettings(settings);
+
+    } catch (error) {
+        console.warn(
+            "Could not load website settings. Using default settings.",
+            error
+        );
+
+        /*
+         * Keep the store usable even if the settings endpoint
+         * is unavailable.
+         */
+        updateWhatsAppLinks();
+        updateChannelLinks();
+        updateNetworkTabs();
+        renderBundles();
+        updateSelectedSummary();
+        updatePaymentButton();
+    }
+}
+
+
+/* =========================================================
+   15. ANNOUNCEMENT DIALOG
+========================================================= */
+
+function showAnnouncement(message) {
+    const dialog = getElement("announcement");
+    const messageElement = getElement("announcementMessage");
+
+    if (!dialog || !messageElement || !message) {
+        return;
+    }
+
+    if (safelyGetStorage("kielmenAnnouncementSeen") === "true") {
+        return;
+    }
+
+    setText(messageElement, message);
+
+    dialog.hidden = false;
+
+    if (typeof dialog.showModal === "function") {
+        if (!dialog.open) {
+            try {
+                dialog.showModal();
+            } catch (error) {
+                dialog.setAttribute("open", "");
+            }
+        }
+    } else {
+        dialog.setAttribute("open", "");
+    }
+}
+
+function closeAnnouncement() {
+    const dialog = getElement("announcement");
+
+    if (!dialog) {
+        return;
+    }
+
+    if (typeof dialog.close === "function" && dialog.open) {
+        dialog.close();
+    } else {
+        dialog.removeAttribute("open");
+    }
+
+    dialog.hidden = true;
+
+    safelySetStorage("kielmenAnnouncementSeen", "true");
+}
+
+function initializeAnnouncement() {
+    const dialog = getElement("announcement");
+    const closeButton = getElement("continueShopping");
+
+    if (!dialog) {
+        return;
+    }
+
+    if (closeButton) {
+        closeButton.addEventListener("click", closeAnnouncement);
+    }
+
+    dialog.addEventListener("click", event => {
+        if (event.target === dialog) {
+            closeAnnouncement();
+        }
+    });
+
+    dialog.addEventListener("close", () => {
+        dialog.hidden = true;
+    });
+}
+
+
+/* =========================================================
+   16. ORDER TRACKING
+========================================================= */
+
+function normalizeOrdersResponse(response) {
+    if (Array.isArray(response)) {
+        return response;
+    }
+
+    if (Array.isArray(response?.orders)) {
+        return response.orders;
+    }
+
+    if (Array.isArray(response?.data)) {
+        return response.data;
+    }
+
+    if (Array.isArray(response?.data?.orders)) {
+        return response.data.orders;
+    }
+
+    if (Array.isArray(response?.data?.data?.orders)) {
+        return response.data.data.orders;
+    }
+
+    return [];
+}
+
+function formatOrderDate(value) {
+    if (!value) {
+        return "Date unavailable";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return String(value);
+    }
+
+    return date.toLocaleString("en-GH", {
+        dateStyle: "medium",
+        timeStyle: "short"
+    });
+}
+
+function getOrderStatus(order) {
+    return String(
+        order.status ||
+        order.payment_status ||
+        order.delivery_status ||
+        "Pending"
+    ).replace(/[_-]+/g, " ");
+}
+
+function renderOrderResults(orders) {
+    const container = getElement("trackOrderResults");
+
+    if (!container) {
+        return;
+    }
+
+    if (!orders.length) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <h3>No orders found</h3>
+                <p>No orders were found for that phone number.</p>
+                <p>Check the number and try again.</p>
+            </div>
+        `;
+
+        showElement(container);
+        return;
+    }
+
+    container.innerHTML = orders.map(order => {
+        const network = escapeHTML(
+            order.network || "Unknown network"
+        );
+
+        const bundle = escapeHTML(
+            order.bundle ||
+            order.size ||
+            order.package ||
+            "Data bundle"
+        );
+
+        const status = escapeHTML(
+            getOrderStatus(order)
+        );
+
+        const orderReference = escapeHTML(
+            order.reference ||
+            order.order_reference ||
+            order.orderReference ||
+            order.id ||
+            "Not provided"
+        );
+
+        const recipientPhone = escapeHTML(
+            order.phone ||
+            order.customer_phone ||
+            order.recipient_phone ||
+            "Not provided"
+        );
+
+        const amount = Number(
+            order.amount ??
+            order.price ??
+            order.total_amount
+        );
+
+        const amountText = Number.isFinite(amount)
+            ? formatMoney(amount)
+            : "Not available";
+
+        const createdAt = escapeHTML(
+            formatOrderDate(
+                order.created_at ||
+                order.createdAt ||
+                order.date
+            )
+        );
+
+        return `
+            <article class="tracking-order-card">
+                <div class="tracking-order-header">
+                    <h3>${network} — ${bundle}</h3>
+                    <span class="order-status">${status}</span>
+                </div>
+
+                <p><strong>Order reference:</strong> ${orderReference}</p>
+                <p><strong>Recipient:</strong> ${recipientPhone}</p>
+                <p><strong>Amount:</strong> ${amountText}</p>
+                <p><strong>Date:</strong> ${createdAt}</p>
+            </article>
+        `;
+    }).join("");
+
+    showElement(container);
+}
+
+async function trackOrders(event) {
+    event.preventDefault();
+
+    clearTrackingMessage();
+
+    const phoneElement = getElement("trackPhone");
+    const resultsElement = getElement("trackOrderResults");
+    const button = getElement("trackOrderButton");
+
+    const phone = phoneElement
+        ? normalizeGhanaPhone(phoneElement.value)
+        : "";
+
+    if (!isValidGhanaPhone(phone)) {
+        showTrackingMessage(
+            "Enter a valid Ghana phone number, for example 0241234567.",
+            "error"
+        );
+
+        return;
+    }
+
+    if (resultsElement) {
+        resultsElement.innerHTML = "";
+        hideElement(resultsElement);
+    }
+
+    if (button) {
+        button.disabled = true;
+        button.textContent = "Searching...";
+    }
+
+    showTrackingMessage(
+        "Checking your orders. Please wait...",
+        "info"
+    );
+
+    try {
+        const response = await fetchJSON(
+            `${PAYMENT_API}/orders-by-phone/${encodeURIComponent(phone)}`,
+            {
+                method: "GET"
+            }
+        );
+
+        const orders = normalizeOrdersResponse(response);
+
+        clearTrackingMessage();
+        renderOrderResults(orders);
+
+    } catch (error) {
+        console.error("Order tracking error:", error);
+
+        showTrackingMessage(
+            error.message ||
+            "We could not retrieve your orders. Please try again later.",
+            "error"
+        );
+
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = "Track My Orders";
+        }
+    }
 }
 
 function initializeOrderTracking() {
-const form = byId("trackOrderForm");
+    const form = getElement("trackOrderForm");
 
-if (!form) return;
-
-form.addEventListener("submit", trackOrders);
-}
-
-/* =========================================================
-16. WEBSITE SETTINGS
-========================================================= */
-
-async function loadWebsiteSettings() {
-try {
-const data = await fetchJSON(
-"${PAYMENT_API}/website-settings",
-{ method: "GET" }
-);
-
-websiteSettings = data.settings || data.data || data || {};
-
-applyNetworkAvailability(websiteSettings);
-applyWebsiteSettings();
-updateWhatsAppLinks();
-renderBundles();
-updatePaymentButton();
-
-} catch (error) {
-/*
-If settings cannot be retrieved, the website continues
-using the default bundle list and default contact details.
-*/
-console.warn(
-"Website settings could not be loaded. Using defaults.",
-error
-);
-
-updateWhatsAppLinks();
-renderBundles();
-
-}
-}
-
-function applyWebsiteSettings() {
-/*
-Optional settings supported here:
-- announcementEnabled
-- announcement
-- announcementMessage
-- whatsappChannel
-- channelUrl
-- supportWhatsApp
-- whatsappNumber
-- supportPhone
-- networkAvailability
-*/
-
-updateWhatsAppLinks();
-
-const availability = websiteSettings.networkAvailability || {};
-
-Object.keys(networkAvailability).forEach(network => {
-const value =
-availability[network] ??
-availability[network.toLowerCase()];
-
-const tab = document.querySelector(
-  `.network-tab[data-network="${network}"]`
-);
-
-if (!tab) return;
-
-const available = networkAvailability[network];
-
-tab.setAttribute(
-  "aria-label",
-  available
-    ? `${network} bundles`
-    : `${network} bundles temporarily unavailable`
-);
-
-if (value === false) {
-  tab.title = "Temporarily unavailable";
-} else {
-  tab.removeAttribute("title");
-}
-
-});
-
-updateAnnouncement();
-}
-
-/* =========================================================
-17. ANNOUNCEMENT DIALOG
-========================================================= */
-
-function updateAnnouncement() {
-const dialog = byId("announcement");
-const message = byId("announcementMessage");
-const channelLink = byId("announcementChannelLink");
-const closeButton = byId("continueShopping");
-
-if (!dialog) return;
-
-const announcementText =
-websiteSettings.announcementMessage ||
-websiteSettings.announcement ||
-websiteSettings.notice ||
-"";
-
-const explicitlyEnabled =
-websiteSettings.announcementEnabled === true ||
-websiteSettings.showAnnouncement === true;
-
-const explicitlyDisabled =
-websiteSettings.announcementEnabled === false ||
-websiteSettings.showAnnouncement === false;
-
-if (
-!announcementText ||
-explicitlyDisabled ||
-(!explicitlyEnabled && !announcementText)
-) {
-if (dialog.open && typeof dialog.close === "function") {
-dialog.close();
-}
-
-dialog.hidden = true;
-return;
-
-}
-
-if (message) {
-message.textContent = String(announcementText);
-}
-
-if (channelLink) {
-channelLink.href = getWhatsAppChannel();
-}
-
-if (closeButton && !closeButton.dataset.listenerAdded) {
-closeButton.dataset.listenerAdded = "true";
-
-closeButton.addEventListener("click", () => {
-  if (typeof dialog.close === "function" && dialog.open) {
-    dialog.close();
-  }
-
-  dialog.hidden = true;
-});
-
-}
-
-/*
-Display the announcement only once per browser session.
-If the browser does not support dialog, leave it hidden
-instead of breaking the rest of the website.
-*/
-
-const sessionKey = "kielmen_announcement_seen";
-
-if (sessionStorage.getItem(sessionKey) === "true") {
-return;
-}
-
-if (typeof dialog.showModal === "function") {
-dialog.hidden = false;
-
-if (!dialog.open) {
-  dialog.showModal();
-}
-
-sessionStorage.setItem(sessionKey, "true");
-
-}
-}
-
-/* =========================================================
-18. BOTTOM NAVIGATION
-========================================================= */
-
-function initializeBottomNavigation() {
-const links = document.querySelectorAll(
-".bottom-nav a[href^='#']"
-);
-
-if (!links.length) return;
-
-links.forEach(link => {
-link.addEventListener("click", event => {
-const targetId = link.getAttribute("href").slice(1);
-const target = byId(targetId);
-
-  if (!target) return;
-
-  event.preventDefault();
-
-  target.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
-
-  links.forEach(item => {
-    item.classList.remove("active");
-    item.removeAttribute("aria-current");
-  });
-
-  link.classList.add("active");
-  link.setAttribute("aria-current", "page");
-
-  history.replaceState(null, "", `#${targetId}`);
-});
-
-});
-
-const trackedSections = [];
-
-links.forEach(link => {
-const targetId = link.getAttribute("href").slice(1);
-const section = byId(targetId);
-
-if (section) {
-  trackedSections.push({ link, section });
-}
-
-});
-
-if ("IntersectionObserver" in window) {
-const observer = new IntersectionObserver(entries => {
-const visible = entries
-.filter(entry => entry.isIntersecting)
-.sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-
-  if (!visible) return;
-
-  const current = trackedSections.find(
-    item => item.section === visible.target
-  );
-
-  if (!current) return;
-
-  trackedSections.forEach(item => {
-    const active = item.link === current.link;
-
-    item.link.classList.toggle("active", active);
-
-    if (active) {
-      item.link.setAttribute("aria-current", "page");
-    } else {
-      item.link.removeAttribute("aria-current");
+    if (!form) {
+        return;
     }
-  });
 
-}, {
-  rootMargin: "-20% 0px -60% 0px",
-  threshold: [0, 0.25, 0.5]
-});
-
-trackedSections.forEach(item => observer.observe(item.section));
-
+    form.addEventListener("submit", trackOrders);
 }
-}
+
 
 /* =========================================================
-19. GENERAL INTERNAL NAVIGATION
+   17. BOTTOM NAVIGATION AND SMOOTH SCROLLING
 ========================================================= */
 
 function initializeSmoothNavigation() {
-document.querySelectorAll('a[href^="#"]').forEach(link => {
-if (link.closest(".bottom-nav")) return;
-if (link.closest("#mobileMenu")) return;
+    queryAll('a[href^="#"]').forEach(link => {
+        link.addEventListener("click", event => {
+            const href = link.getAttribute("href");
 
-link.addEventListener("click", event => {
-  const href = link.getAttribute("href");
+            if (!href || href === "#") {
+                return;
+            }
 
-  if (!href || href === "#") return;
+            let target;
 
-  const target = byId(href.slice(1));
+            try {
+                target = document.querySelector(href);
+            } catch (error) {
+                return;
+            }
 
-  if (!target) return;
+            if (!target) {
+                return;
+            }
 
-  event.preventDefault();
+            event.preventDefault();
 
-  target.scrollIntoView({
-    behavior: "smooth",
-    block: "start"
-  });
+            target.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
 
-  if (history.replaceState) {
-    history.replaceState(null, "", href);
-  }
-});
-
-});
+            if (link.closest("#mobileMenu")) {
+                setMenuOpen(false);
+            }
+        });
+    });
 }
+
+function initializeBottomNavigation() {
+    const nav = document.querySelector(".bottom-nav");
+
+    if (!nav) {
+        return;
+    }
+
+    const links = queryAll("a", nav);
+
+    function setActiveSection(sectionId) {
+        links.forEach(link => {
+            const href = link.getAttribute("href");
+            const isActive = href === `#${sectionId}`;
+
+            link.classList.toggle("active", isActive);
+
+            if (isActive) {
+                link.setAttribute("aria-current", "location");
+            } else {
+                link.removeAttribute("aria-current");
+            }
+        });
+    }
+
+    links.forEach(link => {
+        link.addEventListener("click", () => {
+            const href = link.getAttribute("href");
+
+            if (href && href.startsWith("#")) {
+                setActiveSection(href.slice(1));
+            }
+        });
+    });
+
+    if ("IntersectionObserver" in window) {
+        const sections = [
+            "bundles",
+            "checkout",
+            "help-section"
+        ]
+            .map(getElement)
+            .filter(Boolean);
+
+        const observer = new IntersectionObserver(entries => {
+            const visibleEntries = entries
+                .filter(entry => entry.isIntersecting)
+                .sort(
+                    (a, b) =>
+                        b.intersectionRatio - a.intersectionRatio
+                );
+
+            if (visibleEntries.length) {
+                setActiveSection(visibleEntries[0].target.id);
+            }
+        }, {
+            rootMargin: "-20% 0px -55% 0px",
+            threshold: [0.1, 0.25, 0.5]
+        });
+
+        sections.forEach(section => observer.observe(section));
+    }
+}
+
 
 /* =========================================================
-20. FORM SAFETY
+   18. CURRENT YEAR
 ========================================================= */
 
-function preventUnexpectedFormSubmission() {
-document.querySelectorAll("form").forEach(form => {
-if (
-form.id === "checkoutForm" ||
-form.id === "trackOrderForm"
-) {
-return;
+function initializeCurrentYear() {
+    const yearElement = getElement("currentYear");
+
+    if (yearElement) {
+        setText(yearElement, new Date().getFullYear());
+    }
 }
 
-/*
-  Do not interfere with forms that have their own
-  explicit submit handler.
-*/
-
-});
-}
 
 /* =========================================================
-21. INITIALIZE WEBSITE
+   19. GENERAL INITIALIZATION
 ========================================================= */
 
-async function initializeWebsite() {
-initializeMobileMenu();
-initializeNetworkTabs();
-initializeBundleSearch();
-initializeCheckout();
-initializeOrderTracking();
-initializeBottomNavigation();
-initializeSmoothNavigation();
-preventUnexpectedFormSubmission();
-
-updateSelectedSummary();
-renderBundles();
-updateWhatsAppLinks();
-
-/*
-Load server-managed availability and announcements
-after the initial page is usable.
-*/
-
-await loadWebsiteSettings();
-
-updateSelectedSummary();
-updatePaymentButton();
+function initializeDefaultLinks() {
+    updateWhatsAppLinks();
+    updateChannelLinks();
 }
 
-/* =========================================================
-22. START
-========================================================= */
+function initializeApplication() {
+    initializeMobileMenu();
+    initializeNetworkTabs();
+    initializeBundleSearch();
+    initializeCheckoutValidation();
+    initializeCheckoutForm();
+    initializeOrderTracking();
+    initializeAnnouncement();
+    initializeSmoothNavigation();
+    initializeBottomNavigation();
+    initializeCurrentYear();
+    initializeDefaultLinks();
+
+    renderBundles();
+    updateSelectedSummary();
+    updatePaymentButton();
+
+    loadWebsiteSettings();
+}
 
 if (document.readyState === "loading") {
-document.addEventListener(
-"DOMContentLoaded",
-initializeWebsite,
-{ once: true }
-);
+    document.addEventListener(
+        "DOMContentLoaded",
+        initializeApplication
+    );
 } else {
-initializeWebsite();
-}
+    initializeApplication();
+                                              }
