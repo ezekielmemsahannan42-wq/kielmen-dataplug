@@ -1,818 +1,1054 @@
 /* =========================================================
-KIELMEN 636 DATAPLUG
-FILE 2: style.css
-Responsive mobile, tablet and desktop styling
+   KIELMEN 636 DATAPLUG
+   FILE 2: style.css
+   Responsive mobile, tablet and desktop styling
 ========================================================= */
 
-/* =========================================================
 
-1. GLOBAL SETTINGS
-   ========================================================= */
+/* =========================================================
+   1. GLOBAL SETTINGS
+========================================================= */
 
 :root {
---primary: #111827;
---secondary: #374151;
---muted: #6b7280;
---background: #f5f7fb;
---surface: #ffffff;
---border: #e5e7eb;
+    --primary: #111827;
+    --secondary: #374151;
+    --muted: #6b7280;
+    --background: #f5f7fb;
+    --surface: #ffffff;
+    --border: #e5e7eb;
 
---mtn-yellow: #ffcc00;
---mtn-dark: #171717;
---telecel-red: #e60023;
---airtel-blue: #0755c9;
+    --mtn-yellow: #ffcc00;
+    --mtn-dark: #171717;
+    --telecel-red: #e60023;
+    --airtel-blue: #0755c9;
 
---success: #15803d;
---success-light: #dcfce7;
---danger: #b91c1c;
---danger-light: #fee2e2;
+    --success: #15803d;
+    --success-light: #dcfce7;
+    --danger: #b91c1c;
+    --danger-light: #fee2e2;
 
---whatsapp: #25d366;
---whatsapp-dark: #128c4a;
+    --whatsapp: #25d366;
+    --whatsapp-dark: #128c4a;
 
---shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
---shadow-hover: 0 14px 30px rgba(15, 23, 42, 0.14);
+    --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    --shadow-hover: 0 14px 30px rgba(15, 23, 42, 0.14);
 
---radius: 16px;
---small-radius: 10px;
+    --radius: 16px;
+    --small-radius: 10px;
 
---content-width: 1150px;
+    --content-width: 1150px;
 }
 
 *,
 *::before,
 *::after {
-box-sizing: border-box;
+    box-sizing: border-box;
 }
 
 html {
-scroll-behavior: smooth;
-scroll-padding-top: 90px;
--webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+    scroll-padding-top: 100px;
+    -webkit-text-size-adjust: 100%;
 }
 
 body {
-margin: 0;
-padding: 0;
-width: 100%;
-min-width: 0;
-overflow-x: hidden;
-font-family: Arial, Helvetica, sans-serif;
-font-size: 16px;
-line-height: 1.6;
-color: var(--primary);
-background: var(--background);
--webkit-font-smoothing: antialiased;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+
+    color: var(--primary);
+    background: var(--background);
+
+    -webkit-font-smoothing: antialiased;
 }
 
 button,
 input,
 select,
 textarea {
-font: inherit;
+    font: inherit;
 }
 
 button {
-cursor: pointer;
+    cursor: pointer;
 }
 
 button:disabled {
-cursor: not-allowed;
-opacity: 0.65;
+    cursor: not-allowed;
+    opacity: 0.65;
 }
 
 a {
-color: inherit;
-text-decoration: none;
+    color: inherit;
+    text-decoration: none;
 }
 
 img {
-display: block;
-max-width: 100%;
-height: auto;
+    display: block;
+    max-width: 100%;
+    height: auto;
 }
 
 [hidden] {
-display: none !important;
+    display: none !important;
 }
 
 section[id] {
-scroll-margin-top: 90px;
+    scroll-margin-top: 100px;
 }
 
 .visually-hidden {
-position: absolute !important;
-width: 1px !important;
-height: 1px !important;
-padding: 0 !important;
-margin: -1px !important;
-overflow: hidden !important;
-clip: rect(0, 0, 0, 0) !important;
-white-space: nowrap !important;
-border: 0 !important;
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
 }
 
+
 /* =========================================================
-2. HEADER
-Matches File 1: .site-header and .header-inner
+   2. HEADER
 ========================================================= */
 
 .site-header {
-position: sticky;
-top: 0;
-z-index: 1000;
-width: 100%;
-margin: 0;
-padding: 0;
-background: rgba(255, 255, 255, 0.98);
-border-bottom: 1px solid var(--border);
-box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
-backdrop-filter: blur(12px);
--webkit-backdrop-filter: blur(12px);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+
+    width: 100%;
+    margin: 0;
+    padding: 0;
+
+    background: rgba(255, 255, 255, 0.98);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .header-inner {
-width: 100%;
-max-width: var(--content-width);
-min-height: 70px;
-margin: 0 auto;
-padding: 9px 16px;
-display: flex;
-flex-direction: row;
-align-items: center;
-justify-content: space-between;
-gap: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+    max-width: 1440px;
+    min-height: 70px;
+
+    margin: 0 auto;
+    padding: 9px 16px;
+    gap: 12px;
 }
 
-/* Brand and logo */
+
+/* =========================================================
+   3. BRAND AND LOGO
+========================================================= */
 
 .header-brand {
-display: flex;
-flex: 1 1 auto;
-align-items: center;
-gap: 9px;
-min-width: 0;
-max-width: 100%;
-color: var(--primary);
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+
+    gap: 9px;
+    min-width: 0;
+    max-width: 100%;
+
+    color: var(--primary);
 }
 
 .header-logo {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-flex: 0 0 40px;
-width: 40px;
-height: 40px;
-border-radius: 12px;
-background: #fff5bf;
-font-size: 1.45rem;
-line-height: 1;
+    display: inline-flex;
+    flex: 0 0 40px;
+    align-items: center;
+    justify-content: center;
+
+    width: 40px;
+    height: 40px;
+
+    border-radius: 12px;
+    background: #fff5bf;
+
+    font-size: 1.45rem;
+    line-height: 1;
 }
 
 .header-brand .brand-name {
-display: flex;
-flex-direction: column;
-justify-content: center;
-min-width: 0;
-margin: 0;
-color: #111827;
-font-size: 0.96rem;
-font-weight: 900;
-line-height: 1.15;
-letter-spacing: -0.025em;
-white-space: nowrap;
-overflow-wrap: normal;
-word-break: normal;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    min-width: 0;
+    margin: 0;
+
+    color: #111827;
+
+    font-size: 0.96rem;
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
 }
 
 .header-brand .brand-name span {
-display: block;
+    display: block;
 }
 
-/* Header action buttons */
+
+/* =========================================================
+   4. HEADER ACTIONS
+========================================================= */
 
 .header-actions {
-display: flex;
-flex: 0 0 auto;
-flex-direction: row;
-align-items: center;
-justify-content: flex-end;
-gap: 9px;
-min-width: 0;
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 9px;
+    min-width: 0;
 }
 
 .header-whatsapp {
-display: inline-flex;
-flex: 0 0 auto;
-align-items: center;
-justify-content: center;
-gap: 7px;
-min-height: 40px;
-padding: 8px 12px;
-border: 0;
-border-radius: 999px;
-color: #ffffff;
-background: var(--whatsapp-dark);
-font-size: 0.83rem;
-font-weight: 800;
-line-height: 1.1;
-white-space: nowrap;
-transition: background 0.2s ease, transform 0.2s ease;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+
+    gap: 7px;
+    min-height: 40px;
+    padding: 8px 12px;
+
+    border: 0;
+    border-radius: 999px;
+
+    color: #ffffff;
+    background: var(--whatsapp-dark);
+
+    font-size: 0.83rem;
+    font-weight: 800;
+    line-height: 1.1;
+
+    white-space: nowrap;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
 }
 
 .header-whatsapp:hover {
-color: #ffffff;
-background: #0c713b;
-transform: translateY(-1px);
+    color: #ffffff;
+    background: #0c713b;
+    transform: translateY(-1px);
 }
 
 .whatsapp-icon {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-width: 15px;
-height: 15px;
-border: 2px solid currentColor;
-border-radius: 50%;
-font-size: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 15px;
+    height: 15px;
+
+    border: 2px solid currentColor;
+    border-radius: 50%;
+
+    font-size: 0;
 }
 
+
 /* =========================================================
-3. HAMBURGER BUTTON
+   5. DESKTOP NAVIGATION
+   Visible on laptops and desktop screens.
+   Hidden on mobile and smaller tablets.
+========================================================= */
+
+.desktop-nav {
+    display: none;
+}
+
+.desktop-nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 42px;
+    padding: 9px 11px;
+
+    border-radius: 9px;
+
+    color: #374151;
+    background: transparent;
+
+    font-size: 0.88rem;
+    font-weight: 800;
+    line-height: 1.3;
+
+    white-space: nowrap;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease;
+}
+
+.desktop-nav-link:hover {
+    color: #111827;
+    background: #f3f4f6;
+}
+
+.desktop-nav-link.active {
+    color: #111827;
+    background: #f3f4f6;
+}
+
+
+/* =========================================================
+   6. HAMBURGER BUTTON
 ========================================================= */
 
 .menu-button,
 #menuButton {
-display: inline-flex;
-flex: 0 0 42px;
-align-items: center;
-justify-content: center;
-width: 42px;
-height: 42px;
-margin: 0;
-padding: 0;
-border: 1px solid #d1d5db;
-border-radius: 11px;
-color: #111827;
-background: #ffffff;
-font-size: 1.5rem;
-line-height: 1;
-box-shadow: none;
-transition: background 0.2s ease, border-color 0.2s ease;
+    display: inline-flex;
+    flex: 0 0 42px;
+    align-items: center;
+    justify-content: center;
+
+    width: 42px;
+    height: 42px;
+
+    margin: 0;
+    padding: 0;
+
+    border: 1px solid #d1d5db;
+    border-radius: 11px;
+
+    color: #111827;
+    background: #ffffff;
+
+    font-size: 1.5rem;
+    line-height: 1;
+
+    box-shadow: none;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
 }
 
 .menu-button:hover,
 #menuButton:hover {
-background: #f3f4f6;
-border-color: #9ca3af;
+    background: #f3f4f6;
+    border-color: #9ca3af;
 }
 
 #menuIcon {
-display: inline-block;
-line-height: 1;
+    display: inline-block;
+    line-height: 1;
 }
 
+
 /* =========================================================
-4. MOBILE NAVIGATION MENU
-JavaScript toggles .open and the hidden attribute.
+   7. MOBILE NAVIGATION MENU
 ========================================================= */
 
 .mobile-menu,
 #mobileMenu {
-display: none;
-position: absolute;
-top: 100%;
-right: 12px;
-left: 12px;
-z-index: 1100;
-width: auto;
-max-width: 480px;
-max-height: calc(100dvh - 100px);
-margin: 0 auto;
-padding: 9px;
-overflow-x: hidden;
-overflow-y: auto;
-border: 1px solid var(--border);
-border-radius: 15px;
-color: #111827;
-background: #ffffff;
-box-shadow: var(--shadow-hover);
-overscroll-behavior: contain;
+    display: none;
+
+    position: absolute;
+    top: 100%;
+    right: 12px;
+    left: 12px;
+
+    z-index: 1100;
+
+    width: auto;
+    max-width: 480px;
+    max-height: calc(100vh - 100px);
+    max-height: calc(100dvh - 100px);
+
+    margin: 0 auto;
+    padding: 9px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    border: 1px solid var(--border);
+    border-radius: 15px;
+
+    color: #111827;
+    background: #ffffff;
+
+    box-shadow: var(--shadow-hover);
+
+    overscroll-behavior: contain;
 }
 
 .mobile-menu.open,
 #mobileMenu.open {
-display: flex;
-flex-direction: column;
-gap: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .mobile-menu[hidden],
 #mobileMenu[hidden] {
-display: none !important;
+    display: none !important;
 }
 
 .mobile-menu a,
 #mobileMenu a {
-display: flex;
-align-items: center;
-gap: 11px;
-width: 100%;
-min-height: 46px;
-margin: 0;
-padding: 11px 13px;
-border-radius: 10px;
-color: #111827;
-background: transparent;
-font-size: 0.93rem;
-font-weight: 700;
-line-height: 1.35;
-overflow-wrap: anywhere;
-transition: background 0.2s ease;
+    display: flex;
+    align-items: center;
+
+    gap: 11px;
+    width: 100%;
+    min-height: 46px;
+
+    margin: 0;
+    padding: 11px 13px;
+
+    border-radius: 10px;
+
+    color: #111827;
+    background: transparent;
+
+    font-size: 0.93rem;
+    font-weight: 700;
+    line-height: 1.35;
+
+    overflow-wrap: anywhere;
+
+    transition: background 0.2s ease;
 }
 
 .mobile-menu a:hover,
 #mobileMenu a:hover {
-color: #111827;
-background: #f3f4f6;
+    color: #111827;
+    background: #f3f4f6;
 }
 
 .mobile-menu a:active,
 #mobileMenu a:active {
-background: #e5e7eb;
+    background: #e5e7eb;
 }
 
+
 /* =========================================================
-5. MAIN CONTENT LAYOUT
+   8. MAIN CONTENT LAYOUT
 ========================================================= */
 
 main {
-display: block;
-width: 100%;
-min-width: 0;
+    display: block;
+    width: 100%;
+    min-width: 0;
 }
 
 .home-container {
-width: min(var(--content-width), calc(100% - 32px));
-margin: 0 auto;
-padding: 22px 0 35px;
+    width: min(var(--content-width), calc(100% - 32px));
+
+    margin: 0 auto;
+    padding: 22px 0 35px;
 }
 
 section {
-min-width: 0;
-margin-top: 28px;
+    min-width: 0;
+    margin-top: 28px;
 }
 
 .section-heading {
-margin: 0 0 8px;
-color: var(--primary);
-font-size: clamp(1.4rem, 4vw, 2rem);
-font-weight: 900;
-line-height: 1.25;
+    margin: 0 0 8px;
+
+    color: var(--primary);
+
+    font-size: clamp(1.4rem, 4vw, 2rem);
+    font-weight: 900;
+    line-height: 1.25;
 }
 
 .section-description {
-margin: 0 0 18px;
-color: var(--muted);
-font-size: 0.94rem;
-line-height: 1.6;
+    margin: 0 0 18px;
+
+    color: var(--muted);
+
+    font-size: 0.94rem;
+    line-height: 1.6;
 }
 
+
 /* =========================================================
-6. WELCOME BANNER
+   9. WELCOME BANNER
 ========================================================= */
 
 .welcome-banner {
-position: relative;
-overflow: hidden;
-margin-top: 0;
-padding: 26px 22px;
-border: 1px solid #f0d66a;
-border-radius: var(--radius);
-background: linear-gradient(135deg, #fff9db 0%, #ffffff 76%);
-box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+
+    margin-top: 0;
+    padding: 26px 22px;
+
+    border: 1px solid #f0d66a;
+    border-radius: var(--radius);
+
+    background: linear-gradient(
+        135deg,
+        #fff9db 0%,
+        #ffffff 76%
+    );
+
+    box-shadow: var(--shadow);
 }
 
 .welcome-label {
-margin: 0 0 12px;
-color: #755900;
-font-size: 0.75rem;
-font-weight: 900;
-letter-spacing: 0.07em;
+    margin: 0 0 12px;
+
+    color: #755900;
+
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 0.07em;
 }
 
 .welcome-banner h1 {
-max-width: 720px;
-margin: 0 0 14px;
-color: #111827;
-font-size: clamp(1.9rem, 7vw, 3.1rem);
-font-weight: 900;
-line-height: 1.12;
-letter-spacing: -0.04em;
+    max-width: 720px;
+
+    margin: 0 0 14px;
+
+    color: #111827;
+
+    font-size: clamp(1.9rem, 7vw, 3.1rem);
+    font-weight: 900;
+    line-height: 1.12;
+    letter-spacing: -0.04em;
 }
 
 .welcome-banner h1 span {
-display: block;
-color: #8a6500;
+    display: block;
+    color: #8a6500;
 }
 
 .welcome-description {
-max-width: 700px;
-margin: 0 0 20px;
-color: #374151;
-font-size: 0.96rem;
-line-height: 1.7;
+    max-width: 700px;
+
+    margin: 0 0 20px;
+
+    color: #374151;
+
+    font-size: 0.96rem;
+    line-height: 1.7;
 }
 
 .shop-button {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-gap: 9px;
-min-height: 47px;
-padding: 12px 19px;
-border-radius: 12px;
-color: #111111;
-background: var(--mtn-yellow);
-font-weight: 900;
-transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+    min-height: 47px;
+
+    padding: 12px 19px;
+
+    border-radius: 12px;
+
+    color: #111111;
+    background: var(--mtn-yellow);
+
+    font-weight: 900;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .shop-button:hover {
-color: #111111;
-transform: translateY(-2px);
-box-shadow: 0 7px 17px rgba(0, 0, 0, 0.12);
+    color: #111111;
+    transform: translateY(-2px);
+
+    box-shadow: 0 7px 17px rgba(0, 0, 0, 0.12);
 }
 
-/* Service trust labels */
+
+/* =========================================================
+   10. TRUST LABELS
+========================================================= */
 
 .trust-row {
-display: flex;
-flex-wrap: wrap;
-align-items: center;
-gap: 8px;
-margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+
+    gap: 8px;
+    margin-top: 20px;
 }
 
 .trust-item {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-min-height: 32px;
-padding: 6px 10px;
-border: 1px solid #e5e7eb;
-border-radius: 999px;
-color: #374151;
-background: #ffffff;
-font-size: 0.75rem;
-font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 32px;
+    padding: 6px 10px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 999px;
+
+    color: #374151;
+    background: #ffffff;
+
+    font-size: 0.75rem;
+    font-weight: 800;
 }
 
 .mtn-trust {
-border-color: #f1d86a;
+    border-color: #f1d86a;
 }
 
 .telecel-trust {
-border-color: #f4b7bf;
+    border-color: #f4b7bf;
 }
 
 .airteltigo-trust {
-border-color: #b8d1ff;
+    border-color: #b8d1ff;
 }
 
 .paystack-trust {
-border-color: #d1d5db;
+    border-color: #d1d5db;
 }
 
+
 /* =========================================================
-7. NETWORK TABS
+   11. NETWORK TABS
 ========================================================= */
 
 .network-tabs {
-display: grid;
-grid-template-columns: repeat(3, minmax(0, 1fr));
-gap: 8px;
-margin: 20px 0 18px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 8px;
+    margin: 20px 0 18px;
 }
 
 .network-tab {
-display: flex;
-align-items: center;
-justify-content: center;
-min-width: 0;
-min-height: 48px;
-padding: 9px 5px;
-border: 2px solid transparent;
-border-radius: 11px;
-color: #111827;
-background: #ffffff;
-box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05);
-font-size: 0.78rem;
-font-weight: 900;
-text-align: center;
-overflow-wrap: anywhere;
-transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 0;
+    min-height: 48px;
+
+    padding: 9px 5px;
+
+    border: 2px solid transparent;
+    border-radius: 11px;
+
+    color: #111827;
+    background: #ffffff;
+
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.05);
+
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-align: center;
+
+    overflow-wrap: anywhere;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .network-tab:hover {
-transform: translateY(-1px);
-box-shadow: var(--shadow);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
 }
 
 .network-tab.active,
 .network-tab[aria-pressed="true"] {
-border-color: #111827;
-box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.08);
+    border-color: #111827;
+    box-shadow: 0 0 0 2px rgba(17, 24, 39, 0.08);
 }
 
 .network-tab[data-network="MTN"] {
-color: #111111;
-background: var(--mtn-yellow);
+    color: #111111;
+    background: var(--mtn-yellow);
 }
 
 .network-tab[data-network="TELECEL"] {
-color: #ffffff;
-background: var(--telecel-red);
+    color: #ffffff;
+    background: var(--telecel-red);
 }
 
 .network-tab[data-network="AIRTELTIGO"] {
-color: #ffffff;
-background: var(--airtel-blue);
+    color: #ffffff;
+    background: var(--airtel-blue);
 }
 
+.network-tab:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+    transform: none;
+}
+
+
 /* =========================================================
-8. SEARCH AND BUNDLE COUNT
+   12. SEARCH AND BUNDLE COUNT
 ========================================================= */
 
 .bundle-search-container {
-width: 100%;
-margin: 18px 0 12px;
+    width: 100%;
+    margin: 18px 0 12px;
 }
 
 .search-input,
 #bundleSearch {
-display: block;
-width: 100%;
-min-width: 0;
-min-height: 48px;
-margin: 0;
-padding: 12px 15px;
-border: 1px solid #d1d5db;
-border-radius: 12px;
-outline: none;
-color: var(--primary);
-background: #ffffff;
-appearance: none;
-transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    display: block;
+
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+
+    margin: 0;
+    padding: 12px 15px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 12px;
+
+    outline: none;
+
+    color: var(--primary);
+    background: #ffffff;
+
+    appearance: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .search-input:focus,
 #bundleSearch:focus {
-border-color: #2563eb;
-box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    border-color: #2563eb;
+
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .result-count,
 #resultCount {
-margin: 0 0 14px;
-color: var(--muted);
-font-size: 0.86rem;
+    margin: 0 0 14px;
+
+    color: var(--muted);
+
+    font-size: 0.86rem;
 }
 
+
 /* =========================================================
-9. BUNDLE GRID AND CARDS
+   13. BUNDLE GRID AND CARDS
 ========================================================= */
 
 .bundle-grid,
 #bundleGrid {
-display: grid;
-grid-template-columns: repeat(2, minmax(0, 1fr));
-align-items: stretch;
-gap: 12px;
-width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+
+    gap: 12px;
+    width: 100%;
 }
 
 .bundle-card {
-display: flex;
-flex-direction: column;
-min-width: 0;
-padding: 14px 11px;
-border: 1px solid var(--border);
-border-top: 4px solid #d1d5db;
-border-radius: 13px;
-background: #ffffff;
-box-shadow: 0 4px 12px rgba(15, 23, 42, 0.045);
-transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+
+    min-width: 0;
+    padding: 14px 11px;
+
+    border: 1px solid var(--border);
+    border-top: 4px solid #d1d5db;
+    border-radius: 13px;
+
+    background: #ffffff;
+
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.045);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .bundle-card:hover {
-transform: translateY(-2px);
-box-shadow: var(--shadow);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
 }
 
 .bundle-card h3,
 .bundle-card h4 {
-margin: 0 0 8px;
-color: var(--primary);
-font-size: 1.08rem;
-font-weight: 900;
+    margin: 0 0 8px;
+
+    color: var(--primary);
+
+    font-size: 1.08rem;
+    font-weight: 900;
 }
 
 .bundle-card p {
-margin: 0 0 8px;
-color: var(--secondary);
-font-size: 0.85rem;
+    margin: 0 0 8px;
+
+    color: var(--secondary);
+
+    font-size: 0.85rem;
 }
 
 .bundle-card .bundle-size {
-margin: 0 0 7px;
-font-size: 1.12rem;
-font-weight: 900;
+    margin: 0 0 7px;
+
+    font-size: 1.12rem;
+    font-weight: 900;
 }
 
 .bundle-card .bundle-price {
-margin: 0 0 14px;
-color: var(--primary);
-font-size: 1.15rem;
-font-weight: 900;
-overflow-wrap: anywhere;
+    margin: 0 0 14px;
+
+    color: var(--primary);
+
+    font-size: 1.15rem;
+    font-weight: 900;
+
+    overflow-wrap: anywhere;
 }
 
 .bundle-network {
-display: inline-flex;
-align-self: flex-start;
-align-items: center;
-justify-content: center;
-margin-bottom: 10px;
-padding: 4px 8px;
-border-radius: 999px;
-font-size: 0.67rem;
-font-weight: 900;
-letter-spacing: 0.02em;
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 10px;
+    padding: 4px 8px;
+
+    border-radius: 999px;
+
+    font-size: 0.67rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
 }
 
 .bundle-card button,
 .bundle-card .buy-button {
-display: flex;
-align-items: center;
-justify-content: center;
-width: 100%;
-min-width: 0;
-min-height: 42px;
-margin-top: auto;
-padding: 9px 7px;
-border: 0;
-border-radius: 9px;
-color: #ffffff;
-background: var(--primary);
-font-size: 0.8rem;
-font-weight: 900;
-text-align: center;
-overflow-wrap: anywhere;
-transition: opacity 0.2s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+
+    margin-top: auto;
+    padding: 9px 7px;
+
+    border: 0;
+    border-radius: 9px;
+
+    color: #ffffff;
+    background: var(--primary);
+
+    font-size: 0.8rem;
+    font-weight: 900;
+    text-align: center;
+
+    overflow-wrap: anywhere;
+
+    transition:
+        opacity 0.2s ease,
+        transform 0.2s ease;
 }
 
 .bundle-card button:hover,
 .bundle-card .buy-button:hover {
-opacity: 0.88;
-transform: translateY(-1px);
+    opacity: 0.88;
+    transform: translateY(-1px);
+}
+
+.bundle-card.selected {
+    outline: 2px solid #16a34a;
+    outline-offset: 2px;
 }
 
 /* MTN cards */
 
 .bundle-card[data-network="MTN"] {
-border-top-color: var(--mtn-yellow);
+    border-top-color: var(--mtn-yellow);
 }
 
 .bundle-card[data-network="MTN"] .bundle-network,
 .bundle-card[data-network="MTN"] button,
 .bundle-card[data-network="MTN"] .buy-button {
-color: #111111;
-background: var(--mtn-yellow);
+    color: #111111;
+    background: var(--mtn-yellow);
 }
 
 /* Telecel cards */
 
 .bundle-card[data-network="TELECEL"] {
-border-top-color: var(--telecel-red);
+    border-top-color: var(--telecel-red);
 }
 
 .bundle-card[data-network="TELECEL"] .bundle-network,
 .bundle-card[data-network="TELECEL"] button,
 .bundle-card[data-network="TELECEL"] .buy-button {
-color: #ffffff;
-background: var(--telecel-red);
+    color: #ffffff;
+    background: var(--telecel-red);
 }
 
 /* AirtelTigo cards */
 
 .bundle-card[data-network="AIRTELTIGO"] {
-border-top-color: var(--airtel-blue);
+    border-top-color: var(--airtel-blue);
 }
 
 .bundle-card[data-network="AIRTELTIGO"] .bundle-network,
 .bundle-card[data-network="AIRTELTIGO"] button,
 .bundle-card[data-network="AIRTELTIGO"] .buy-button {
-color: #ffffff;
-background: var(--airtel-blue);
+    color: #ffffff;
+    background: var(--airtel-blue);
 }
 
 .bundle-card button:disabled,
 .bundle-card .buy-button:disabled {
-cursor: not-allowed;
-opacity: 0.5;
-transform: none;
+    cursor: not-allowed;
+    opacity: 0.5;
+    transform: none;
 }
 
-/* Empty search state */
+/* Empty states */
 
 .no-results,
 .empty-state,
 .loading-state {
-grid-column: 1 / -1;
-padding: 22px 15px;
-border: 1px dashed #d1d5db;
-border-radius: 12px;
-color: var(--muted);
-background: #ffffff;
-text-align: center;
+    grid-column: 1 / -1;
+
+    padding: 22px 15px;
+
+    border: 1px dashed #d1d5db;
+    border-radius: 12px;
+
+    color: var(--muted);
+    background: #ffffff;
+
+    text-align: center;
 }
 
+
 /* =========================================================
-10. CHECKOUT
+   14. CHECKOUT
 ========================================================= */
 
 .checkout-card {
-width: 100%;
-min-width: 0;
-padding: 21px;
-border: 1px solid var(--border);
-border-radius: var(--radius);
-background: #ffffff;
-box-shadow: var(--shadow);
+    width: 100%;
+    min-width: 0;
+
+    padding: 21px;
+
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+
+    background: #ffffff;
+
+    box-shadow: var(--shadow);
 }
 
 .checkout-card h2 {
-margin: 0 0 8px;
-color: var(--primary);
-font-size: 1.45rem;
-font-weight: 900;
-line-height: 1.3;
+    margin: 0 0 8px;
+
+    color: var(--primary);
+
+    font-size: 1.45rem;
+    font-weight: 900;
+    line-height: 1.3;
 }
 
 .selected-summary {
-display: flex;
-flex-direction: column;
-gap: 10px;
-margin: 17px 0;
-padding: 15px;
-border: 1px dashed #cbd5e1;
-border-radius: 12px;
-background: #f9fafb;
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+    margin: 17px 0;
+    padding: 15px;
+
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+
+    background: #f9fafb;
 }
 
 .summary-row {
-display: flex;
-align-items: flex-start;
-justify-content: space-between;
-gap: 12px;
-color: var(--secondary);
-font-size: 0.89rem;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    color: var(--secondary);
+    font-size: 0.89rem;
 }
 
 .summary-row strong {
-max-width: 60%;
-color: var(--primary);
-text-align: right;
-overflow-wrap: anywhere;
+    max-width: 60%;
+
+    color: var(--primary);
+
+    text-align: right;
+    overflow-wrap: anywhere;
 }
 
 #selectedPrice {
-font-size: 1.12rem;
-font-weight: 900;
+    font-size: 1.12rem;
+    font-weight: 900;
 }
 
 #checkoutForm {
-display: flex;
-flex-direction: column;
-gap: 15px;
-width: 100%;
-min-width: 0;
-margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+
+    gap: 15px;
+
+    width: 100%;
+    min-width: 0;
+
+    margin-top: 14px;
 }
 
 .field {
-display: flex;
-flex-direction: column;
-gap: 7px;
-width: 100%;
-min-width: 0;
+    display: flex;
+    flex-direction: column;
+
+    gap: 7px;
+
+    width: 100%;
+    min-width: 0;
 }
 
 .field label {
-color: var(--primary);
-font-size: 0.9rem;
-font-weight: 800;
+    color: var(--primary);
+
+    font-size: 0.9rem;
+    font-weight: 800;
 }
 
 .field input,
@@ -821,18 +1057,26 @@ font-weight: 800;
 #customerPhone,
 #customerEmail,
 #trackPhone {
-display: block;
-width: 100%;
-min-width: 0;
-min-height: 48px;
-margin: 0;
-padding: 12px 14px;
-border: 1px solid #d1d5db;
-border-radius: 11px;
-outline: none;
-color: var(--primary);
-background: #ffffff;
-transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    display: block;
+
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+
+    margin: 0;
+    padding: 12px 14px;
+
+    border: 1px solid #d1d5db;
+    border-radius: 11px;
+
+    outline: none;
+
+    color: var(--primary);
+    background: #ffffff;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .field input:focus,
@@ -841,830 +1085,1089 @@ transition: border-color 0.2s ease, box-shadow 0.2s ease;
 #customerPhone:focus,
 #customerEmail:focus,
 #trackPhone:focus {
-border-color: #2563eb;
-box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    border-color: #2563eb;
+
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .field-help {
-color: var(--muted);
-font-size: 0.78rem;
-line-height: 1.5;
+    color: var(--muted);
+
+    font-size: 0.78rem;
+    line-height: 1.5;
 }
 
 .pay-button,
 #paymentButton {
-display: flex;
-align-items: center;
-justify-content: center;
-width: 100%;
-min-height: 50px;
-padding: 12px 16px;
-border: 0;
-border-radius: 12px;
-color: #111111;
-background: var(--mtn-yellow);
-font-size: 0.96rem;
-font-weight: 900;
-text-align: center;
-transition: background 0.2s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-height: 50px;
+
+    padding: 12px 16px;
+
+    border: 0;
+    border-radius: 12px;
+
+    color: #111111;
+    background: var(--mtn-yellow);
+
+    font-size: 0.96rem;
+    font-weight: 900;
+    text-align: center;
+
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
 }
 
 .pay-button:hover,
 #paymentButton:hover {
-background: #f2c000;
-transform: translateY(-1px);
+    background: #f2c000;
+    transform: translateY(-1px);
 }
 
 #paymentButton:disabled {
-color: #6b7280;
-background: #e5e7eb;
-box-shadow: none;
-transform: none;
+    color: #6b7280;
+    background: #e5e7eb;
+
+    box-shadow: none;
+    transform: none;
 }
 
 .payment-note {
-margin: 0;
-color: var(--muted);
-font-size: 0.8rem;
-line-height: 1.6;
+    margin: 0;
+
+    color: var(--muted);
+
+    font-size: 0.8rem;
+    line-height: 1.6;
 }
 
+
 /* =========================================================
-11. FEEDBACK MESSAGES
+   15. FEEDBACK MESSAGES
 ========================================================= */
 
 .form-message,
 #checkoutMessage,
 .tracking-message,
 #trackOrderMessage {
-margin-top: 10px;
-padding: 12px 14px;
-border-radius: 10px;
-color: var(--secondary);
-background: #f3f4f6;
-font-size: 0.87rem;
-overflow-wrap: anywhere;
+    margin-top: 10px;
+    padding: 12px 14px;
+
+    border-radius: 10px;
+
+    color: var(--secondary);
+    background: #f3f4f6;
+
+    font-size: 0.87rem;
+    overflow-wrap: anywhere;
 }
 
 .form-message.success,
 #checkoutMessage.success,
 .tracking-message.success,
 #trackOrderMessage.success {
-color: #166534;
-background: var(--success-light);
+    color: #166534;
+    background: var(--success-light);
 }
 
 .form-message.error,
 #checkoutMessage.error,
 .tracking-message.error,
 #trackOrderMessage.error {
-color: #991b1b;
-background: var(--danger-light);
+    color: #991b1b;
+    background: var(--danger-light);
 }
 
 .form-message.info,
 #checkoutMessage.info,
 .tracking-message.info,
 #trackOrderMessage.info {
-color: #1e40af;
-background: #dbeafe;
+    color: #1e40af;
+    background: #dbeafe;
 }
 
+
 /* =========================================================
-12. AGENT SECTION
+   16. AGENT SECTION
 ========================================================= */
 
 .agent-box {
-display: flex;
-flex-direction: column;
-gap: 10px;
-width: 100%;
-min-width: 0;
-padding: 21px;
-border: 1px solid #dbeafe;
-border-radius: var(--radius);
-background: linear-gradient(135deg, #eff6ff, #ffffff);
-box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+
+    width: 100%;
+    min-width: 0;
+
+    padding: 21px;
+
+    border: 1px solid #dbeafe;
+    border-radius: var(--radius);
+
+    background: linear-gradient(135deg, #eff6ff, #ffffff);
+
+    box-shadow: var(--shadow);
 }
 
 .agent-box h2 {
-margin: 0 0 4px;
-color: var(--primary);
-font-size: 1.4rem;
-font-weight: 900;
-line-height: 1.3;
+    margin: 0 0 4px;
+
+    color: var(--primary);
+
+    font-size: 1.4rem;
+    font-weight: 900;
+    line-height: 1.3;
 }
 
 .agent-box p {
-margin: 0 0 8px;
-color: var(--secondary);
-font-size: 0.94rem;
+    margin: 0 0 8px;
+
+    color: var(--secondary);
+
+    font-size: 0.94rem;
 }
 
 .agent-actions {
-display: flex;
-flex-direction: column;
-gap: 10px;
-margin-top: 5px;
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+    margin-top: 5px;
 }
 
 .agent-action-button {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-min-height: 46px;
-padding: 12px 15px;
-border: 1px solid var(--primary);
-border-radius: 11px;
-color: #ffffff;
-background: var(--primary);
-font-size: 0.88rem;
-font-weight: 800;
-text-align: center;
-transition: background 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 46px;
+    padding: 12px 15px;
+
+    border: 1px solid var(--primary);
+    border-radius: 11px;
+
+    color: #ffffff;
+    background: var(--primary);
+
+    font-size: 0.88rem;
+    font-weight: 800;
+    text-align: center;
+
+    transition: background 0.2s ease;
 }
 
 .agent-action-button:hover {
-color: #ffffff;
-background: #374151;
+    color: #ffffff;
+    background: #374151;
 }
 
 .agent-action-button.secondary-action {
-border-color: #d1d5db;
-color: var(--primary);
-background: #ffffff;
+    border-color: #d1d5db;
+
+    color: var(--primary);
+    background: #ffffff;
 }
 
 .agent-action-button.secondary-action:hover {
-background: #f3f4f6;
+    background: #f3f4f6;
 }
 
+
 /* =========================================================
-13. ORDER TRACKING
+   17. ORDER TRACKING
 ========================================================= */
 
 .tracking-box {
-background: #ffffff;
+    background: #ffffff;
 }
 
 #trackOrderForm {
-display: flex;
-flex-direction: column;
-gap: 13px;
-width: 100%;
-margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+
+    gap: 13px;
+
+    width: 100%;
+    margin-top: 8px;
 }
 
 .tracking-button,
 #trackOrderButton {
-display: flex;
-align-items: center;
-justify-content: center;
-width: 100%;
-min-height: 47px;
-padding: 11px 15px;
-border: 0;
-border-radius: 11px;
-color: #ffffff;
-background: var(--primary);
-font-weight: 900;
-text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-height: 47px;
+
+    padding: 11px 15px;
+
+    border: 0;
+    border-radius: 11px;
+
+    color: #ffffff;
+    background: var(--primary);
+
+    font-weight: 900;
+    text-align: center;
 }
 
 .tracking-button:hover,
 #trackOrderButton:hover {
-background: #374151;
+    background: #374151;
 }
 
 #trackOrderButton:disabled {
-opacity: 0.6;
+    opacity: 0.6;
 }
 
 .tracking-results,
 #trackOrderResults {
-display: grid;
-gap: 12px;
-width: 100%;
-margin-top: 14px;
+    display: grid;
+
+    gap: 12px;
+
+    width: 100%;
+    margin-top: 14px;
 }
 
 .order-result,
-.tracking-result {
-min-width: 0;
-padding: 14px;
-border: 1px solid var(--border);
-border-radius: 12px;
-background: #f9fafb;
-overflow-wrap: anywhere;
+.tracking-result,
+.tracking-order-card {
+    min-width: 0;
+    padding: 14px;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    background: #f9fafb;
+
+    overflow-wrap: anywhere;
 }
 
 .order-result h3,
-.tracking-result h3 {
-margin: 0 0 9px;
-color: var(--primary);
-font-size: 1rem;
+.tracking-result h3,
+.tracking-order-card h3 {
+    margin: 0 0 9px;
+
+    color: var(--primary);
+
+    font-size: 1rem;
 }
 
 .order-result p,
-.tracking-result p {
-margin: 5px 0;
-color: var(--secondary);
-font-size: 0.86rem;
+.tracking-result p,
+.tracking-order-card p {
+    margin: 5px 0;
+
+    color: var(--secondary);
+
+    font-size: 0.86rem;
+}
+
+.tracking-order-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    flex-wrap: wrap;
+    gap: 8px;
+
+    margin-bottom: 10px;
 }
 
 .order-status,
 .status-badge {
-display: inline-flex;
-align-items: center;
-padding: 4px 9px;
-border-radius: 999px;
-color: #1f2937;
-background: #e5e7eb;
-font-size: 0.75rem;
-font-weight: 800;
-text-transform: capitalize;
+    display: inline-flex;
+    align-items: center;
+
+    padding: 4px 9px;
+
+    border-radius: 999px;
+
+    color: #1f2937;
+    background: #e5e7eb;
+
+    font-size: 0.75rem;
+    font-weight: 800;
+    text-transform: capitalize;
 }
 
 .order-status.success,
 .status-badge.success {
-color: #166534;
-background: var(--success-light);
+    color: #166534;
+    background: var(--success-light);
 }
 
 .order-status.pending,
 .status-badge.pending {
-color: #92400e;
-background: #fef3c7;
+    color: #92400e;
+    background: #fef3c7;
 }
 
 .order-status.failed,
 .status-badge.failed {
-color: #991b1b;
-background: var(--danger-light);
+    color: #991b1b;
+    background: var(--danger-light);
 }
 
 .support-note {
-margin-top: 12px !important;
+    margin-top: 12px !important;
 }
 
 .support-note a {
-color: #075985;
-font-weight: 800;
-text-decoration: underline;
-text-underline-offset: 3px;
+    color: #075985;
+
+    font-weight: 800;
+
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
+
 /* =========================================================
-14. SUPPORT SECTION
+   18. SUPPORT SECTION
 ========================================================= */
 
 .help-box {
-border-color: #bbf7d0;
-background: #ffffff;
+    border-color: #bbf7d0;
+    background: #ffffff;
 }
 
 .support-actions {
-display: flex;
-flex-direction: column;
-gap: 10px;
-margin: 7px 0;
+    display: flex;
+    flex-direction: column;
+
+    gap: 10px;
+    margin: 7px 0;
 }
 
 .support-button {
-display: inline-flex;
-align-items: center;
-justify-content: center;
-min-width: 0;
-min-height: 46px;
-padding: 11px 14px;
-border-radius: 11px;
-color: #ffffff;
-background: var(--whatsapp-dark);
-font-size: 0.86rem;
-font-weight: 800;
-text-align: center;
-overflow-wrap: anywhere;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 0;
+    min-height: 46px;
+
+    padding: 11px 14px;
+
+    border-radius: 11px;
+
+    color: #ffffff;
+    background: var(--whatsapp-dark);
+
+    font-size: 0.86rem;
+    font-weight: 800;
+    text-align: center;
+
+    overflow-wrap: anywhere;
 }
 
 .support-button:hover {
-color: #ffffff;
-background: #0c713b;
+    color: #ffffff;
+    background: #0c713b;
 }
 
 .support-button.channel-button {
-color: #ffffff;
-background: #075985;
+    color: #ffffff;
+    background: #075985;
 }
 
 .support-button.channel-button:hover {
-background: #064568;
+    background: #064568;
 }
 
 .support-phone {
-margin-top: 8px !important;
-font-weight: 700;
-overflow-wrap: anywhere;
+    margin-top: 8px !important;
+
+    font-weight: 700;
+    overflow-wrap: anywhere;
 }
 
 .support-phone a,
 #supportPhoneDisplay {
-color: #075985;
-font-weight: 900;
-text-decoration: underline;
-text-underline-offset: 3px;
+    color: #075985;
+
+    font-weight: 900;
+
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
 
+
 /* =========================================================
-15. FLOATING WHATSAPP BUTTON
+   19. FLOATING WHATSAPP BUTTON
 ========================================================= */
 
 .whatsapp-float {
-position: fixed;
-right: 14px;
-bottom: calc(76px + env(safe-area-inset-bottom));
-z-index: 900;
-display: inline-flex;
-align-items: center;
-justify-content: center;
-width: 52px;
-height: 52px;
-border: 0;
-border-radius: 50%;
-color: #ffffff;
-background: var(--whatsapp);
-box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-font-size: 1.6rem;
-line-height: 1;
-transition: transform 0.2s ease, box-shadow 0.2s ease;
+    position: fixed;
+
+    right: 14px;
+    bottom: calc(76px + env(safe-area-inset-bottom));
+
+    z-index: 900;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 52px;
+    height: 52px;
+
+    border: 0;
+    border-radius: 50%;
+
+    color: #ffffff;
+    background: var(--whatsapp);
+
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+
+    font-size: 1.6rem;
+    line-height: 1;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .whatsapp-float:hover {
-color: #ffffff;
-transform: translateY(-2px);
-box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+    color: #ffffff;
+
+    transform: translateY(-2px);
+
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
 }
 
+
 /* =========================================================
-16. MOBILE BOTTOM NAVIGATION
+   20. MOBILE BOTTOM NAVIGATION
 ========================================================= */
 
 .bottom-nav {
-position: fixed;
-right: 0;
-bottom: 0;
-left: 0;
-z-index: 950;
-display: grid;
-grid-template-columns: repeat(3, minmax(0, 1fr));
-gap: 4px;
-width: 100%;
-min-height: 62px;
-padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
-border-top: 1px solid var(--border);
-background: rgba(255, 255, 255, 0.98);
-box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.06);
-backdrop-filter: blur(12px);
--webkit-backdrop-filter: blur(12px);
+    position: fixed;
+
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    z-index: 950;
+
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    gap: 4px;
+
+    width: 100%;
+    min-height: 62px;
+
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+
+    border-top: 1px solid var(--border);
+
+    background: rgba(255, 255, 255, 0.98);
+
+    box-shadow: 0 -4px 18px rgba(15, 23, 42, 0.06);
+
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
 }
 
 .bottom-nav a {
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-gap: 3px;
-min-width: 0;
-min-height: 46px;
-padding: 5px 3px;
-border-radius: 10px;
-color: #6b7280;
-font-size: 0.72rem;
-font-weight: 800;
-line-height: 1.2;
-text-align: center;
-transition: color 0.2s ease, background 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 3px;
+
+    min-width: 0;
+    min-height: 46px;
+
+    padding: 5px 3px;
+
+    border-radius: 10px;
+
+    color: #6b7280;
+
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: center;
+
+    transition:
+        color 0.2s ease,
+        background 0.2s ease;
 }
 
 .bottom-nav a.active,
 .bottom-nav a[aria-current="page"] {
-color: #111827;
-background: #f3f4f6;
+    color: #111827;
+    background: #f3f4f6;
 }
 
 .bottom-nav a:hover {
-color: #111827;
-background: #f9fafb;
+    color: #111827;
+    background: #f9fafb;
 }
 
 .bottom-nav .nav-icon {
-font-size: 1.08rem;
-line-height: 1.2;
+    font-size: 1.08rem;
+    line-height: 1.2;
 }
-
-/* Keep the floating WhatsApp button above bottom navigation. */
 
 body {
-padding-bottom: calc(66px + env(safe-area-inset-bottom));
+    padding-bottom: calc(66px + env(safe-area-inset-bottom));
 }
 
+
 /* =========================================================
-17. ANNOUNCEMENT DIALOG
+   21. ANNOUNCEMENT DIALOG
 ========================================================= */
 
 .announcement {
-width: calc(100% - 32px);
-max-width: 460px;
-max-height: calc(100dvh - 40px);
-margin: auto;
-padding: 23px;
-overflow-x: hidden;
-overflow-y: auto;
-border: 0;
-border-radius: 18px;
-color: var(--primary);
-background: #ffffff;
-box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
+    width: calc(100% - 32px);
+    max-width: 460px;
+
+    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
+
+    margin: auto;
+    padding: 23px;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    border: 0;
+    border-radius: 18px;
+
+    color: var(--primary);
+    background: #ffffff;
+
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.25);
 }
 
 .announcement::backdrop {
-background: rgba(15, 23, 42, 0.62);
-backdrop-filter: blur(3px);
+    background: rgba(15, 23, 42, 0.62);
+    backdrop-filter: blur(3px);
 }
 
 .announcement[hidden] {
-display: none !important;
+    display: none !important;
 }
 
 .announcement h2 {
-margin: 0 0 12px;
-font-size: 1.35rem;
-font-weight: 900;
-line-height: 1.3;
+    margin: 0 0 12px;
+
+    font-size: 1.35rem;
+    font-weight: 900;
+    line-height: 1.3;
 }
 
 .announcement p {
-margin: 0 0 16px;
-color: var(--secondary);
-overflow-wrap: anywhere;
+    margin: 0 0 16px;
+
+    color: var(--secondary);
+
+    overflow-wrap: anywhere;
 }
 
 .announcement-channel-link,
 #announcementChannelLink {
-display: flex;
-align-items: center;
-justify-content: center;
-width: 100%;
-min-height: 46px;
-margin: 10px 0;
-padding: 11px 14px;
-border-radius: 11px;
-color: #ffffff;
-background: var(--whatsapp-dark);
-font-size: 0.87rem;
-font-weight: 900;
-text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-height: 46px;
+
+    margin: 10px 0;
+    padding: 11px 14px;
+
+    border-radius: 11px;
+
+    color: #ffffff;
+    background: var(--whatsapp-dark);
+
+    font-size: 0.87rem;
+    font-weight: 900;
+    text-align: center;
 }
 
 .announcement-channel-link:hover,
 #announcementChannelLink:hover {
-color: #ffffff;
-background: #0c713b;
+    color: #ffffff;
+    background: #0c713b;
 }
 
 .announcement-close-button,
 #continueShopping {
-display: flex;
-align-items: center;
-justify-content: center;
-width: 100%;
-min-height: 46px;
-margin-top: 10px;
-padding: 11px 14px;
-border: 0;
-border-radius: 11px;
-color: var(--primary);
-background: #f3f4f6;
-font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    min-height: 46px;
+
+    margin-top: 10px;
+    padding: 11px 14px;
+
+    border: 0;
+    border-radius: 11px;
+
+    color: var(--primary);
+    background: #f3f4f6;
+
+    font-weight: 800;
 }
 
 .announcement-close-button:hover,
 #continueShopping:hover {
-background: #e5e7eb;
+    background: #e5e7eb;
 }
 
+
 /* =========================================================
-18. FOOTER
+   22. FOOTER
 ========================================================= */
 
 .site-footer {
-width: 100%;
-margin-top: 28px;
-padding: 24px 16px 24px;
-border-top: 1px solid var(--border);
-color: var(--muted);
-background: #ffffff;
-text-align: center;
-font-size: 0.83rem;
+    width: 100%;
+
+    margin-top: 28px;
+    padding: 24px 16px;
+
+    border-top: 1px solid var(--border);
+
+    color: var(--muted);
+    background: #ffffff;
+
+    text-align: center;
+    font-size: 0.83rem;
 }
 
 .site-footer strong {
-color: var(--primary);
-font-size: 0.95rem;
+    color: var(--primary);
+    font-size: 0.95rem;
 }
 
 .site-footer p {
-margin: 6px 0;
+    margin: 6px 0;
 }
 
+
 /* =========================================================
-19. ACCESSIBILITY AND FOCUS
+   23. ACCESSIBILITY AND FOCUS
 ========================================================= */
 
 :focus-visible {
-outline: 3px solid #2563eb;
-outline-offset: 3px;
+    outline: 3px solid #2563eb;
+    outline-offset: 3px;
 }
 
 button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) {
-outline: none;
+    outline: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-html {
-scroll-behavior: auto;
+    html {
+        scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
 }
 
-*,
-*::before,
-*::after {
-scroll-behavior: auto !important;
-animation-duration: 0.01ms !important;
-animation-iteration-count: 1 !important;
-transition-duration: 0.01ms !important;
-}
-}
 
 /* =========================================================
-20. VERY SMALL MOBILE SCREENS
+   24. VERY SMALL MOBILE SCREENS
 ========================================================= */
 
 @media (max-width: 380px) {
-.header-inner {
-min-height: 64px;
-padding: 8px 9px;
-gap: 6px;
+
+    .header-inner {
+        min-height: 64px;
+        padding: 8px 9px;
+        gap: 6px;
+    }
+
+    .header-brand {
+        gap: 6px;
+    }
+
+    .header-logo {
+        flex-basis: 34px;
+        width: 34px;
+        height: 34px;
+
+        border-radius: 9px;
+
+        font-size: 1.2rem;
+    }
+
+    .header-brand .brand-name {
+        font-size: 0.78rem;
+        letter-spacing: -0.03em;
+    }
+
+    .header-actions {
+        gap: 6px;
+    }
+
+    .header-whatsapp {
+        min-height: 36px;
+        padding: 7px 8px;
+        gap: 5px;
+
+        font-size: 0.72rem;
+    }
+
+    .whatsapp-icon {
+        width: 12px;
+        height: 12px;
+    }
+
+    .menu-button,
+    #menuButton {
+        flex-basis: 38px;
+        width: 38px;
+        height: 38px;
+
+        border-radius: 9px;
+
+        font-size: 1.35rem;
+    }
+
+    .home-container {
+        width: calc(100% - 22px);
+        padding-top: 15px;
+    }
+
+    .welcome-banner {
+        padding: 20px 15px;
+    }
+
+    .welcome-banner h1 {
+        font-size: 1.85rem;
+    }
+
+    .network-tabs {
+        gap: 5px;
+    }
+
+    .network-tab {
+        padding: 8px 3px;
+        font-size: 0.69rem;
+    }
+
+    .bundle-grid,
+    #bundleGrid {
+        gap: 8px;
+    }
+
+    .bundle-card {
+        padding: 11px 8px;
+    }
+
+    .bundle-card .bundle-price {
+        font-size: 1.05rem;
+    }
+
+    .bundle-card button,
+    .bundle-card .buy-button {
+        font-size: 0.74rem;
+    }
+
+    .checkout-card,
+    .agent-box {
+        padding: 16px;
+    }
+
+    .trust-row {
+        gap: 6px;
+    }
+
+    .trust-item {
+        padding: 5px 8px;
+        font-size: 0.69rem;
+    }
 }
 
-.header-brand {
-gap: 6px;
-}
-
-.header-logo {
-flex-basis: 34px;
-width: 34px;
-height: 34px;
-border-radius: 9px;
-font-size: 1.2rem;
-}
-
-.header-brand .brand-name {
-font-size: 0.78rem;
-letter-spacing: -0.03em;
-}
-
-.header-actions {
-gap: 6px;
-}
-
-.header-whatsapp {
-min-height: 36px;
-padding: 7px 8px;
-gap: 5px;
-font-size: 0.72rem;
-}
-
-.whatsapp-icon {
-width: 12px;
-height: 12px;
-}
-
-.menu-button,
-#menuButton {
-flex-basis: 38px;
-width: 38px;
-height: 38px;
-border-radius: 9px;
-font-size: 1.35rem;
-}
-
-.home-container {
-width: calc(100% - 22px);
-padding-top: 15px;
-}
-
-.welcome-banner {
-padding: 20px 15px;
-}
-
-.welcome-banner h1 {
-font-size: 1.85rem;
-}
-
-.network-tabs {
-gap: 5px;
-}
-
-.network-tab {
-padding: 8px 3px;
-font-size: 0.69rem;
-}
-
-.bundle-grid,
-#bundleGrid {
-gap: 8px;
-}
-
-.bundle-card {
-padding: 11px 8px;
-}
-
-.bundle-card .bundle-price {
-font-size: 1.05rem;
-}
-
-.bundle-card button,
-.bundle-card .buy-button {
-font-size: 0.74rem;
-}
-
-.checkout-card,
-.agent-box {
-padding: 16px;
-}
-
-.trust-row {
-gap: 6px;
-}
-
-.trust-item {
-padding: 5px 8px;
-font-size: 0.69rem;
-}
-}
 
 /* =========================================================
-21. TABLETS
+   25. TABLETS
 ========================================================= */
 
 @media (min-width: 600px) {
-.header-inner {
-min-height: 76px;
-padding-right: 22px;
-padding-left: 22px;
+
+    .header-inner {
+        min-height: 76px;
+        padding-right: 22px;
+        padding-left: 22px;
+    }
+
+    .header-brand .brand-name {
+        font-size: 1.02rem;
+    }
+
+    .home-container {
+        padding-top: 28px;
+        padding-bottom: 42px;
+    }
+
+    .welcome-banner {
+        padding: 34px;
+    }
+
+    .bundle-search-container {
+        max-width: 480px;
+    }
+
+    .bundle-grid,
+    #bundleGrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .checkout-card,
+    .agent-box {
+        padding: 26px;
+    }
+
+    .agent-actions,
+    .support-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .agent-action-button,
+    .support-button {
+        flex: 1 1 180px;
+    }
+
+    .whatsapp-float {
+        right: 20px;
+        bottom: 82px;
+
+        width: 56px;
+        height: 56px;
+    }
 }
 
-.header-brand .brand-name {
-font-size: 1.02rem;
-}
-
-.home-container {
-padding-top: 28px;
-padding-bottom: 42px;
-}
-
-.welcome-banner {
-padding: 34px;
-}
-
-.bundle-search-container {
-max-width: 480px;
-}
-
-.bundle-grid,
-#bundleGrid {
-grid-template-columns: repeat(3, minmax(0, 1fr));
-gap: 16px;
-}
-
-.checkout-card,
-.agent-box {
-padding: 26px;
-}
-
-.agent-actions,
-.support-actions {
-flex-direction: row;
-flex-wrap: wrap;
-}
-
-.agent-action-button,
-.support-button {
-flex: 1 1 180px;
-}
-
-.whatsapp-float {
-right: 20px;
-bottom: 82px;
-width: 56px;
-height: 56px;
-}
-}
 
 /* =========================================================
-22. DESKTOP AND LAPTOP
+   26. DESKTOP AND LAPTOP NAVIGATION
 ========================================================= */
 
 @media (min-width: 900px) {
-body {
-padding-bottom: 0;
+
+    body {
+        padding-bottom: 0;
+    }
+
+    .header-inner {
+        width: 100%;
+        max-width: 1440px;
+
+        min-height: 82px;
+
+        margin: 0 auto;
+        padding: 12px 24px;
+
+        gap: 20px;
+    }
+
+    .header-brand {
+        flex: 0 0 auto;
+        max-width: 230px;
+        gap: 10px;
+    }
+
+    .header-logo {
+        flex-basis: 44px;
+        width: 44px;
+        height: 44px;
+    }
+
+    .header-brand .brand-name {
+        font-size: 1rem;
+    }
+
+    .desktop-nav {
+        display: flex;
+        flex: 1 1 auto;
+        align-items: center;
+        justify-content: center;
+
+        gap: 4px;
+        min-width: 0;
+    }
+
+    .desktop-nav-link {
+        padding: 9px 10px;
+        font-size: 0.83rem;
+    }
+
+    .header-actions {
+        flex: 0 0 auto;
+        gap: 10px;
+    }
+
+    .header-whatsapp {
+        min-height: 42px;
+        padding: 10px 15px;
+        font-size: 0.84rem;
+    }
+
+    .menu-button,
+    #menuButton {
+        display: none !important;
+    }
+
+    .mobile-menu,
+    #mobileMenu {
+        display: none !important;
+    }
+
+    .home-container {
+        width: min(var(--content-width), calc(100% - 48px));
+
+        padding-top: 34px;
+        padding-bottom: 48px;
+    }
+
+    .welcome-banner {
+        padding: 42px;
+    }
+
+    .bundle-grid,
+    #bundleGrid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .checkout-card {
+        max-width: 760px;
+
+        margin-right: auto;
+        margin-left: auto;
+
+        padding: 30px;
+    }
+
+    #trackOrderForm {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: end;
+
+        gap: 14px;
+    }
+
+    #trackOrderForm .field {
+        min-width: 0;
+    }
+
+    #trackOrderButton {
+        width: auto;
+        min-width: 160px;
+    }
+
+    .bottom-nav {
+        display: none;
+    }
+
+    .whatsapp-float {
+        right: 24px;
+        bottom: 24px;
+
+        width: 60px;
+        height: 60px;
+    }
+
+    .site-footer {
+        padding-bottom: 28px;
+    }
 }
 
-.header-inner {
-min-height: 78px;
-padding: 12px 24px;
-}
-
-.header-brand .brand-name {
-font-size: 1.05rem;
-}
-
-.menu-button,
-#menuButton {
-display: none;
-}
-
-.mobile-menu,
-#mobileMenu {
-display: none !important;
-}
-
-.home-container {
-padding-top: 34px;
-padding-bottom: 48px;
-}
-
-.welcome-banner {
-padding: 42px;
-}
-
-.bundle-grid,
-#bundleGrid {
-grid-template-columns: repeat(4, minmax(0, 1fr));
-gap: 18px;
-}
-
-.checkout-card {
-max-width: 760px;
-margin-right: auto;
-margin-left: auto;
-padding: 30px;
-}
-
-#trackOrderForm {
-display: grid;
-grid-template-columns: minmax(0, 1fr) auto;
-align-items: end;
-gap: 14px;
-}
-
-#trackOrderForm .field {
-min-width: 0;
-}
-
-#trackOrderButton {
-width: auto;
-min-width: 160px;
-}
-
-.bottom-nav {
-display: none;
-}
-
-.whatsapp-float {
-right: 24px;
-bottom: 24px;
-width: 60px;
-height: 60px;
-}
-
-.site-footer {
-padding-bottom: 28px;
-}
-}
 
 /* =========================================================
-23. LARGE DESKTOP SCREENS
+   27. COMPACT LAPTOP NAVIGATION
+   Prevents the five navigation links from being squeezed.
+========================================================= */
+
+@media (min-width: 900px) and (max-width: 1100px) {
+
+    .header-inner {
+        padding-right: 14px;
+        padding-left: 14px;
+        gap: 10px;
+    }
+
+    .header-brand {
+        gap: 7px;
+    }
+
+    .header-brand .brand-name {
+        font-size: 0.86rem;
+    }
+
+    .header-logo {
+        flex-basis: 38px;
+        width: 38px;
+        height: 38px;
+    }
+
+    .desktop-nav {
+        gap: 0;
+    }
+
+    .desktop-nav-link {
+        padding: 8px 6px;
+        font-size: 0.75rem;
+    }
+
+    .header-whatsapp {
+        padding: 9px 10px;
+        font-size: 0.76rem;
+    }
+}
+
+
+/* =========================================================
+   28. LARGE DESKTOP SCREENS
 ========================================================= */
 
 @media (min-width: 1200px) {
-.bundle-grid,
-#bundleGrid {
-grid-template-columns: repeat(5, minmax(0, 1fr));
-}
 
-.header-inner {
-padding-right: 0;
-padding-left: 0;
-}
+    .bundle-grid,
+    #bundleGrid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .header-inner {
+        padding-right: 24px;
+        padding-left: 24px;
+    }
+
+    .desktop-nav {
+        gap: 6px;
+    }
+
+    .desktop-nav-link {
+        padding-right: 12px;
+        padding-left: 12px;
+    }
    }
