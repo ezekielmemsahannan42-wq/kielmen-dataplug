@@ -5,138 +5,376 @@
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18536771634"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag(){window.dataLayer.push(arguments);}
     gtag('js', new Date());
     gtag('config', 'AW-18536771634');
   </script>
 
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#080a0f">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Buy MTN, Telecel and AirtelTigo data bundles from Kielmen 636 Dataplug.">
+  <meta name="robots" content="index, follow">
 
   <title>Kielmen 636 Dataplug | Buy Data Bundles</title>
 
-  <meta name="description"
-    content="Buy MTN, Telecel and AirtelTigo data bundles from Kielmen 636 Dataplug.">
-
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 
   <style>
     :root {
-      --site-primary: #d4a017;
-      --site-background: #030712;
-      --site-accent: #16a34a;
-      --site-text: #ffffff;
+      --site-primary: #ffcc00;
+      --site-background: #ffffff;
+      --site-accent: #087f5b;
+      --site-text: #111827;
+      --site-muted: #4b5563;
+      --site-border: #e5e7eb;
+
+      --mtn: #ffcc00;
+      --telecel: #ed1c24;
+      --airteltigo: #1688ff;
+
+      --site-card: #ffffff;
+      --site-input: #ffffff;
+
+      --site-shadow: 0 5px 18px rgba(0, 0, 0, .06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 100px;
     }
 
     body {
+      margin: 0;
+      padding-bottom: calc(88px + env(safe-area-inset-bottom));
       background: var(--site-background);
       color: var(--site-text);
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
+
+    body, button, input, select {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    button, input, select {
+      font-size: 16px;
+    }
+
+    button, a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: .6;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    #bundles,
+    #checkout,
+    #track-order,
+    #agent-section,
+    #help-section {
+      scroll-margin-top: 100px;
+    }
+
+    /* HEADER */
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(255, 255, 255, .98);
+      color: #111827;
+      border-bottom: 1px solid var(--site-border);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .035);
+      backdrop-filter: blur(12px);
+    }
+
+    .site-header a {
+      text-decoration: none;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      max-width: 1150px;
+      margin: auto;
+      padding: 12px 16px;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      color: #111827;
+      font-weight: 900;
+      line-height: 1.35;
+    }
+
+    .header-logo {
+      display: grid;
+      place-items: center;
+      flex: 0 0 46px;
+      width: 46px;
+      height: 46px;
+      border: 2px solid #087f5b;
+      border-radius: 14px;
+      background: #ffffff;
+      font-size: 23px;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .header-whatsapp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 9px 12px;
+      border: 1px solid #087f5b;
+      border-radius: 12px;
+      background: #087f5b;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .header-whatsapp:hover {
+      background: #066747;
+    }
+
+    .menu-button {
+      display: grid;
+      place-items: center;
+      width: 46px;
+      height: 46px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      background: #f3f4f6;
+      color: #111827;
+      font-size: 25px;
+    }
+
+    .mobile-menu {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 8px 16px 16px;
+      background: #ffffff;
+    }
+
+    .mobile-menu a {
+      display: block;
+      margin: 3px 0;
+      padding: 13px;
+      border-radius: 10px;
+      color: #111827;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .mobile-menu a:hover,
+    .mobile-menu a:focus-visible {
+      background: #f3f4f6;
+    }
+
+    /* PAGE LAYOUT */
 
     .home-container {
       width: min(1100px, 100%);
       margin: auto;
-      padding: 20px;
+      padding: 18px 14px;
     }
 
     .welcome-banner {
-      padding: 30px 20px;
-      margin: 20px 0;
-      border: 1px solid #333842;
+      padding: 28px 20px;
+      margin: 18px 0 28px;
+      border: 1px solid #e5e7eb;
       border-radius: 22px;
-      background: linear-gradient(135deg, #171a22, #0c0e13);
+      background: linear-gradient(135deg, #f0fdf4, #ffffff);
+      color: #111827;
+      box-shadow: var(--site-shadow);
     }
 
     .welcome-banner h1 {
       margin: 0 0 12px;
-      font-size: clamp(28px, 6vw, 44px);
-      line-height: 1.15;
+      color: #111827;
+      font-size: clamp(29px, 6vw, 44px);
+      line-height: 1.2;
+      overflow-wrap: anywhere;
     }
 
     .welcome-banner h1 span {
-      color: var(--site-primary);
+      color: #087f5b;
     }
 
     .welcome-banner p {
-      color: #b8beca;
-      margin-bottom: 20px;
+      color: #374151;
+      margin: 0 0 18px;
+    }
+
+    .shop-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 48px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      background: #087f5b;
+      color: #ffffff;
+      font-weight: 900;
+      text-decoration: none;
     }
 
     .trust-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 9px;
       margin-top: 20px;
     }
 
     .trust-item {
       padding: 8px 12px;
-      border: 1px solid #343944;
+      border: 1px solid #d1d5db;
       border-radius: 30px;
-      background: #171a20;
-      color: #e5e7eb;
+      background: #ffffff;
+      color: #1f2937;
       font-size: 13px;
+      font-weight: 700;
     }
 
     .section-heading {
-      margin: 30px 0 8px;
+      margin: 28px 0 8px;
+      color: #111827;
       font-size: 25px;
+      line-height: 1.3;
     }
 
     .section-description {
       margin-top: 0;
-      color: #9ca3af;
+      color: #4b5563;
     }
+
+    /* NETWORK TABS */
 
     .network-tabs {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
+      gap: 9px;
       margin: 22px 0;
     }
 
     .network-tab {
-      min-height: 54px;
+      min-width: 0;
+      min-height: 58px;
       padding: 10px 5px;
-      border: 2px solid #383b44;
+      border: 2px solid #d1d5db;
       border-radius: 13px;
-      background: #191b21;
-      color: #f9fafb;
-      font-weight: 800;
-      cursor: pointer;
+      background: #ffffff;
+      color: #111827;
+      font-weight: 900;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+      transition: transform .15s, box-shadow .15s;
     }
 
-    .network-tab[hidden] {
-      display: none !important;
+    .network-tab:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: var(--site-shadow);
     }
 
     .network-tab[data-network="MTN"] {
-      border-color: #8a6b00;
-    }
-
-    .network-tab[data-network="TELECEL"] {
-      border-color: #8a2930;
-    }
-
-    .network-tab[data-network="AIRTELTIGO"] {
-      border-color: #2459a0;
+      border-color: #d4a900;
+      background: #fff8cc;
+      color: #422006;
     }
 
     .network-tab[data-network="MTN"].active {
+      border-color: #a16207;
       background: #ffcc00;
-      color: #111;
+      color: #111827;
+    }
+
+    .network-tab[data-network="TELECEL"] {
+      border-color: #fca5a5;
+      background: #fef2f2;
+      color: #991b1b;
     }
 
     .network-tab[data-network="TELECEL"].active {
+      border-color: #b91c1c;
       background: #ed1c24;
-      color: white;
+      color: #ffffff;
+    }
+
+    .network-tab[data-network="AIRTELTIGO"] {
+      border-color: #93c5fd;
+      background: #eff6ff;
+      color: #1e40af;
     }
 
     .network-tab[data-network="AIRTELTIGO"].active {
+      border-color: #1d4ed8;
       background: #1688ff;
-      color: white;
+      color: #ffffff;
     }
+
+    /* BUNDLE SEARCH */
+
+    .search-input {
+      display: block;
+      width: 100%;
+      min-height: 52px;
+      padding: 13px 14px;
+      margin: 10px 0;
+      border: 1px solid #d1d5db;
+      border-radius: 13px;
+      background: #ffffff;
+      color: #111827;
+      outline: none;
+    }
+
+    .search-input::placeholder {
+      color: #6b7280;
+      opacity: 1;
+    }
+
+    .search-input:focus {
+      border-color: #ca8a04;
+      box-shadow: 0 0 0 3px rgba(255, 204, 0, .2);
+    }
+
+    #resultCount {
+      color: #4b5563 !important;
+    }
+
+    /* BUNDLE GRID */
 
     .bundle-grid {
       display: grid;
@@ -150,76 +388,105 @@
       justify-content: center;
       align-items: center;
       gap: 7px;
-      min-height: 120px;
+      min-width: 0;
+      min-height: 130px;
       padding: 15px 8px;
-      border: 1px solid #3a3d45;
+      border: 2px solid #d1d5db;
       border-radius: 18px;
-      background: #22242a;
-      color: #fff;
+      background: #ffffff;
+      color: #111827;
       text-align: center;
       cursor: pointer;
+      overflow-wrap: anywhere;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .055);
+      transition: transform .15s, box-shadow .15s;
     }
 
-    .bundle-card:hover,
+    .bundle-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, .1);
+    }
+
     .bundle-card.selected {
-      border: 2px solid var(--site-primary);
-      background: #302b19;
+      outline: 3px solid #087f5b;
+      outline-offset: 2px;
+    }
+
+    /* Network colours on bundle cards.
+       These work when script.js sets data-network. */
+
+    .bundle-card[data-network="MTN"] {
+      border-color: #eab308;
+      background: #ffdf00;
+      color: #422006;
+    }
+
+    .bundle-card[data-network="TELECEL"] {
+      border-color: #f87171;
+      background: #fee2e2;
+      color: #7f1d1d;
+    }
+
+    .bundle-card[data-network="AIRTELTIGO"] {
+      border-color: #60a5fa;
+      background: #dbeafe;
+      color: #1e3a8a;
     }
 
     .bundle-size {
-      font-size: 28px;
+      color: inherit;
+      font-size: clamp(23px, 5vw, 29px);
       font-weight: 900;
-      line-height: 1.2;
-    }
-
-    .bundle-price,
-    .selected-summary strong {
-      color: var(--site-primary);
+      line-height: 1.25;
+      overflow-wrap: anywhere;
     }
 
     .bundle-price {
+      color: inherit;
       font-size: 19px;
-      font-weight: 850;
+      font-weight: 900;
+      overflow-wrap: anywhere;
     }
 
     .bundle-label {
-      color: #d1d5db;
+      color: inherit;
       font-size: 13px;
+      font-weight: 700;
     }
 
-    .search-input {
-      width: 100%;
-      min-height: 54px;
-      padding: 14px;
-      margin: 10px 0;
-      border: 1px solid #414550;
-      border-radius: 14px;
-      background: #15171c;
-      color: white;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
+    /* CHECKOUT */
 
     .checkout-card {
       margin-top: 30px;
-      padding: 22px;
-      border: 1px solid #343944;
+      padding: 22px 16px;
+      border: 1px solid #e5e7eb;
       border-radius: 20px;
-      background: #101217;
+      background: #ffffff;
+      color: #111827;
+      box-shadow: var(--site-shadow);
       scroll-margin-top: 100px;
     }
 
     .checkout-card h2 {
       margin-top: 0;
+      color: #111827;
       font-size: 27px;
+      line-height: 1.3;
     }
 
     .selected-summary {
       padding: 15px;
       margin-bottom: 20px;
-      border: 1px solid #383b44;
+      border: 1px solid #e5e7eb;
       border-radius: 13px;
-      background: #191b21;
+      background: #f9fafb;
+      color: #111827;
+      overflow-wrap: anywhere;
+    }
+
+    .selected-summary strong {
+      color: #166534;
+      overflow-wrap: anywhere;
     }
 
     .field {
@@ -229,37 +496,57 @@
     .field label {
       display: block;
       margin-bottom: 7px;
-      font-weight: 700;
+      color: #111827;
+      font-weight: 800;
     }
 
     .field input,
     .field select {
+      display: block;
       width: 100%;
       min-height: 51px;
       padding: 12px;
-      border: 1px solid #414550;
+      border: 1px solid #d1d5db;
       border-radius: 12px;
-      background: #181a20;
-      color: white;
-      font-size: 16px;
-      box-sizing: border-box;
+      background: #ffffff;
+      color: #111827;
+      outline: none;
+    }
+
+    .field input::placeholder {
+      color: #6b7280;
+      opacity: 1;
+    }
+
+    .field input:focus,
+    .field select:focus {
+      border-color: #ca8a04;
+      box-shadow: 0 0 0 3px rgba(255, 204, 0, .2);
     }
 
     .pay-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 100%;
       min-height: 54px;
       padding: 14px;
-      border: none;
+      border: 0;
       border-radius: 13px;
-      background: var(--site-primary);
-      color: #111;
+      background: #ffcc00;
+      color: #111827;
       font-size: 17px;
       font-weight: 900;
-      cursor: pointer;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .pay-button:hover:not(:disabled) {
+      background: #f0b900;
     }
 
     .pay-button:disabled {
-      opacity: 0.65;
+      opacity: .65;
       cursor: not-allowed;
     }
 
@@ -267,58 +554,127 @@
       margin-top: 14px;
       padding: 12px;
       border-radius: 10px;
+      color: #374151;
       overflow-wrap: anywhere;
     }
 
     .payment-note {
-      color: #aeb4c0;
+      color: #4b5563;
       font-size: 13px;
-      line-height: 1.6;
+      line-height: 1.7;
     }
+
+    /* INFORMATION BOXES */
 
     .agent-box {
-      margin-top: 30px;
-      padding: 22px;
-      border: 1px solid #383b44;
+      margin-top: 25px;
+      padding: 22px 17px;
+      border: 1px solid #e5e7eb;
       border-radius: 18px;
-      background: #15171c;
+      background: #ffffff;
+      color: #111827;
+      box-shadow: var(--site-shadow);
+      overflow-wrap: anywhere;
     }
 
-    .agent-box a {
+    .agent-box h2 {
+      margin-top: 0;
+      color: #111827;
+      font-size: 25px;
+      line-height: 1.35;
+    }
+
+    .agent-box p {
+      color: #374151;
+    }
+
+    .agent-box a:not([data-whatsapp-contact]) {
       display: inline-flex;
       justify-content: center;
       margin: 8px 8px 0 0;
       padding: 12px 16px;
       border-radius: 11px;
-      background: #252832;
-      color: white;
+      background: #f3f4f6;
+      color: #111827;
+      font-weight: 800;
+      text-decoration: none;
+      overflow-wrap: anywhere;
+    }
+
+    .agent-box a[data-whatsapp-contact] {
+      color: #087f5b;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    #trackOrderForm {
+      display: grid;
+      gap: 12px;
+    }
+
+    #trackOrderForm label {
+      color: #111827;
       font-weight: 800;
     }
 
+    #trackPhone {
+      width: 100%;
+      min-height: 50px;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
+      background: #ffffff;
+      color: #111827;
+    }
+
+    #trackOrderButton {
+      min-height: 50px;
+      padding: 12px;
+      border: 0;
+      border-radius: 12px;
+      background: #087f5b;
+      color: #ffffff;
+      font-weight: 900;
+    }
+
+    #trackOrderMessage,
+    #trackOrderResults {
+      margin-top: 14px;
+      color: #374151;
+      overflow-wrap: anywhere;
+    }
+
+    /* WHATSAPP FLOAT */
+
     .whatsapp-float {
       position: fixed;
-      right: 17px;
-      bottom: 95px;
+      right: 16px;
+      bottom: calc(100px + env(safe-area-inset-bottom));
       z-index: 900;
       display: grid;
       place-items: center;
-      width: 60px;
-      height: 60px;
+      width: 58px;
+      height: 58px;
       border: 2px solid #07883f;
       border-radius: 50%;
       background: #087a31;
-      color: white;
+      color: #ffffff;
       font-size: 25px;
-      box-shadow: 0 5px 20px #0008;
+      text-decoration: none;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, .2);
     }
+
+    /* ANNOUNCEMENT */
 
     .announcement {
       width: min(430px, calc(100% - 28px));
+      max-height: min(80vh, 650px);
       padding: 25px;
-      border: 1px solid #424650;
+      border: 1px solid #d1d5db;
       border-radius: 22px;
-      background: #15171d;
-      color: white;
+      background: #ffffff;
+      color: #111827;
+      overflow-y: auto;
     }
 
     .announcement[hidden] {
@@ -326,16 +682,17 @@
     }
 
     .announcement::backdrop {
-      background: #000b;
+      background: rgba(0, 0, 0, .65);
     }
 
     .announcement h2 {
       margin-top: 0;
+      color: #111827;
     }
 
     .announcement p {
-      color: #c5cad4;
-      line-height: 1.6;
+      color: #374151;
+      line-height: 1.7;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
@@ -345,25 +702,27 @@
       display: flex;
       justify-content: center;
       width: 100%;
+      min-height: 46px;
       padding: 13px;
       margin-top: 12px;
       border: 0;
       border-radius: 11px;
       font-weight: 800;
       text-align: center;
-      box-sizing: border-box;
+      text-decoration: none;
     }
 
     .announcement a {
-      background: #128c4a;
-      color: white;
+      background: #087f5b;
+      color: #ffffff;
     }
 
     .announcement button {
-      background: #292c34;
-      color: white;
-      cursor: pointer;
+      background: #f3f4f6;
+      color: #111827;
     }
+
+    /* MOBILE BOTTOM NAVIGATION */
 
     .bottom-nav {
       position: fixed;
@@ -372,52 +731,92 @@
       left: 0;
       z-index: 950;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      padding: 9px 8px calc(9px + env(safe-area-inset-bottom));
-      border-top: 1px solid #333640;
-      background: #08090df5;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+      border-top: 1px solid #e5e7eb;
+      background: rgba(255, 255, 255, .98);
+      box-shadow: 0 -4px 14px rgba(0, 0, 0, .045);
+      backdrop-filter: blur(12px);
     }
 
     .bottom-nav a {
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       gap: 3px;
+      min-width: 0;
+      min-height: 48px;
       padding: 4px;
-      color: #a1a1aa;
+      border-radius: 10px;
+      color: #374151;
       font-size: 12px;
       font-weight: 800;
+      text-decoration: none;
     }
 
     .bottom-nav span {
       font-size: 21px;
+      line-height: 1.3;
     }
 
-    .bottom-nav .active {
-      color: var(--site-accent);
+    .bottom-nav a.active {
+      background: #f0fdf4;
+      color: #087f5b;
     }
+
+    /* FOOTER */
 
     .site-footer {
       margin-top: 35px;
-      padding: 30px 20px 100px;
-      border-top: 1px solid #333640;
-      color: #9ca3af;
+      padding: 28px 20px calc(105px + env(safe-area-inset-bottom));
+      border-top: 1px solid #e5e7eb;
+      background: #f9fafb;
+      color: #4b5563;
       text-align: center;
     }
 
+    .site-footer strong {
+      color: #111827;
+    }
+
+    /* DESKTOP */
+
     @media (min-width: 650px) {
+      .home-container {
+        padding: 25px 22px;
+      }
+
       .bundle-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .checkout-card,
+      .agent-box {
+        padding: 25px;
+      }
+
+      .welcome-banner {
+        padding: 38px 30px;
       }
     }
 
     @media (min-width: 950px) {
-      .bundle-grid {
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+      body {
+        padding-bottom: 0;
+      }
+
+      .header-inner {
+        padding-right: 24px;
+        padding-left: 24px;
       }
 
       .home-container {
         padding: 30px;
+      }
+
+      .bundle-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
       .bottom-nav {
@@ -425,7 +824,78 @@
       }
 
       .whatsapp-float {
-        bottom: 25px;
+        bottom: 24px;
+      }
+
+      .site-footer {
+        padding-bottom: 30px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .header-inner {
+        padding: 10px;
+        gap: 7px;
+      }
+
+      .header-brand {
+        gap: 7px;
+        font-size: 14px;
+      }
+
+      .header-logo {
+        width: 39px;
+        height: 39px;
+        flex-basis: 39px;
+      }
+
+      .header-whatsapp {
+        padding: 8px;
+        font-size: 11px;
+      }
+
+      .menu-button {
+        width: 42px;
+        height: 42px;
+      }
+
+      .home-container {
+        padding-right: 11px;
+        padding-left: 11px;
+      }
+
+      .welcome-banner {
+        padding: 22px 15px;
+      }
+
+      .network-tabs {
+        gap: 5px;
+      }
+
+      .network-tab {
+        font-size: 12px;
+      }
+
+      .bundle-grid {
+        gap: 9px;
+      }
+
+      .bundle-card {
+        padding-right: 5px;
+        padding-left: 5px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
       }
     }
   </style>
@@ -434,58 +904,63 @@
 <body>
 
 <header class="site-header">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 20px;">
-    <a href="index.html" style="display:flex;align-items:center;gap:10px;font-weight:900;font-size:19px;">
-      <span style="display:grid;place-items:center;width:48px;height:48px;border:2px solid #07883f;border-radius:14px;">📶</span>
+  <div class="header-inner">
+
+    <a href="index.html" class="header-brand">
+      <span class="header-logo" aria-hidden="true">📶</span>
       <span>KIELMEN 636<br>DATAPLUG</span>
     </a>
 
-    <div style="display:flex;align-items:center;gap:8px;">
-      <a data-whatsapp-contact href="https://wa.me/233533878548"
-         target="_blank" rel="noopener noreferrer"
-         style="padding:11px;border:1px solid #383b44;border-radius:12px;">
-        WhatsApp
-      </a>
+    <div class="header-actions">
+      <a
+        data-whatsapp-contact
+        class="header-whatsapp"
+        href="https://wa.me/233533878548"
+        target="_blank"
+        rel="noopener noreferrer"
+      >WhatsApp</a>
 
-      <button id="menuButton" type="button" aria-label="Open menu"
+      <button
+        id="menuButton"
+        class="menu-button"
+        type="button"
+        aria-label="Open menu"
         aria-expanded="false"
-        style="width:48px;height:48px;border:1px solid #383b44;border-radius:13px;background:#20232a;color:white;font-size:25px;">
-        ☰
-      </button>
+        aria-controls="mobileMenu"
+      >☰</button>
     </div>
   </div>
 
-  <nav id="mobileMenu" class="mobile-menu"
-    style="display:none;padding:12px 20px 18px;background:#111318;"
-    aria-label="Main navigation">
-
-    <a href="index.html" style="display:block;padding:14px;border-bottom:1px solid #333;">🏠 Home</a>
-    <a href="#bundles" style="display:block;padding:14px;border-bottom:1px solid #333;">🛒 Buy Data Bundles</a>
-    <a href="#checkout" style="display:block;padding:14px;border-bottom:1px solid #333;">💳 Checkout</a>
-    <a href="#track-order" style="display:block;padding:14px;border-bottom:1px solid #333;">📦 Track Your Order</a>
-    <a href="#agent-section" style="display:block;padding:14px;border-bottom:1px solid #333;">🤝 Become an Agent</a>
-    <a href="agent-login.html" style="display:block;padding:14px;border-bottom:1px solid #333;">🔐 Agent Sign In</a>
+  <nav id="mobileMenu" class="mobile-menu" aria-label="Main navigation" hidden>
+    <a href="index.html">🏠 Home</a>
+    <a href="#bundles">🛒 Buy Data Bundles</a>
+    <a href="#checkout">💳 Checkout</a>
+    <a href="#track-order">📦 Track Your Order</a>
+    <a href="#agent-section">🤝 Become an Agent</a>
+    <a href="agent-login.html">🔐 Agent Sign In</a>
     <a data-whatsapp-contact href="https://wa.me/233533878548"
-       target="_blank" rel="noopener noreferrer" style="display:block;padding:14px;">
-      💬 Contact Support
-    </a>
+       target="_blank" rel="noopener noreferrer">💬 Contact Support</a>
   </nav>
 </header>
 
 <main class="home-container">
 
   <section class="welcome-banner">
-    <p style="margin:0 0 8px;">WELCOME TO KIELMEN 636 DATAPLUG</p>
-    <h1>Buy Your Data.<br><span>Fast and Convenient.</span></h1>
-    <p>Select your network and bundle, enter the recipient's phone number, and proceed to payment.</p>
+    <p style="margin:0 0 8px;font-weight:800;">
+      WELCOME TO KIELMEN 636 DATAPLUG
+    </p>
 
-    <a href="#bundles"
-       style="display:inline-flex;padding:13px 19px;border-radius:12px;background:var(--site-primary);color:#111;font-weight:900;">
-      🛒 Shop Data Bundles
-    </a>
+    <h1>Buy Your Data.<br><span>Fast and Convenient.</span></h1>
+
+    <p>
+      Select your network and bundle, enter the recipient's phone number,
+      and proceed to payment.
+    </p>
+
+    <a href="#bundles" class="shop-button">🛒 Shop Data Bundles</a>
 
     <div class="trust-row">
-      <span class="trust-item">📱 MTN</span>
+      <span class="trust-item">🟡 MTN</span>
       <span class="trust-item">🔴 Telecel</span>
       <span class="trust-item">🔵 AirtelTigo</span>
       <span class="trust-item">💳 Paystack Checkout</span>
@@ -494,19 +969,47 @@
 
   <section id="bundles">
     <h2 class="section-heading">Choose Your Data Bundle</h2>
-    <p class="section-description">Select a network, then choose the bundle you need.</p>
+
+    <p class="section-description">
+      Select a network, then choose the bundle you need.
+    </p>
 
     <div class="network-tabs" role="group" aria-label="Select network">
-      <button class="network-tab active" data-network="MTN" type="button">🟡 MTN</button>
-      <button class="network-tab" data-network="TELECEL" type="button">🔴 TELECEL</button>
-      <button class="network-tab" data-network="AIRTELTIGO" type="button">🔵 AIRTELTIGO</button>
+      <button
+        class="network-tab active"
+        data-network="MTN"
+        type="button"
+        aria-pressed="true"
+      >🟡 MTN</button>
+
+      <button
+        class="network-tab"
+        data-network="TELECEL"
+        type="button"
+        aria-pressed="false"
+      >🔴 TELECEL</button>
+
+      <button
+        class="network-tab"
+        data-network="AIRTELTIGO"
+        type="button"
+        aria-pressed="false"
+      >🔵 AIRTELTIGO</button>
     </div>
 
-    <input id="bundleSearch" class="search-input" type="search"
-      placeholder="🔎 Search bundle size or price..."
-      aria-label="Search data bundles">
+    <label for="bundleSearch" hidden>Search data bundles</label>
 
-    <p id="resultCount" style="color:#9ca3af;" aria-live="polite">Loading bundles...</p>
+    <input
+      id="bundleSearch"
+      class="search-input"
+      type="search"
+      placeholder="🔎 Search bundle size or price..."
+      aria-label="Search data bundles"
+      autocomplete="off"
+    >
+
+    <p id="resultCount" aria-live="polite">Loading bundles...</p>
+
     <div id="bundleGrid" class="bundle-grid" aria-live="polite"></div>
   </section>
 
@@ -514,24 +1017,47 @@
     <h2>Complete Your Order</h2>
 
     <div class="selected-summary">
-      <div>Selected bundle: <strong id="selectedBundle">Choose a bundle above</strong></div>
-      <div style="margin-top:8px;">Amount: <strong id="selectedPrice">GH₵0.00</strong></div>
+      <div>
+        Selected bundle:
+        <strong id="selectedBundle">Choose a bundle above</strong>
+      </div>
+
+      <div style="margin-top:8px;">
+        Amount:
+        <strong id="selectedPrice">GH₵0.00</strong>
+      </div>
     </div>
 
     <form id="checkoutForm">
       <div class="field">
         <label for="customerPhone">Recipient phone number</label>
-        <input id="customerPhone" name="phone" type="tel"
-          inputmode="tel" autocomplete="tel"
-          placeholder="e.g. 0241234567" required>
+
+        <input
+          id="customerPhone"
+          name="phone"
+          type="tel"
+          inputmode="tel"
+          autocomplete="tel"
+          placeholder="e.g. 0241234567"
+          required
+        >
       </div>
 
       <div class="field">
         <label for="customerEmail">Email address</label>
-        <input id="customerEmail" name="email" type="email"
-          inputmode="email" autocomplete="email"
-          placeholder="Enter your email address" maxlength="254" required>
-        <small style="display:block;color:#aeb4c0;margin-top:6px;">
+
+        <input
+          id="customerEmail"
+          name="email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          maxlength="254"
+          placeholder="Enter your email address"
+          required
+        >
+
+        <small style="display:block;color:#4b5563;margin-top:6px;">
           Enter your email to receive your Paystack payment receipt.
         </small>
       </div>
@@ -543,58 +1069,91 @@
         Continue to Paystack
       </button>
 
-      <div id="checkoutMessage" class="form-message" role="status" aria-live="polite"></div>
+      <div
+        id="checkoutMessage"
+        class="form-message"
+        role="status"
+        aria-live="polite"
+      ></div>
 
       <p class="payment-note">
         You will be redirected to Paystack to complete payment.
         Check the network, bundle size and recipient number before paying.
-        A successful payment does not by itself guarantee data delivery;
-        delivery must be confirmed by the supplier.
+        If your payment succeeds but delivery is delayed, contact support
+        before paying again.
       </p>
     </form>
   </section>
 
   <section class="agent-box" id="agent-section">
     <h2>🤝 Become a Kielmen Data Agent</h2>
+
     <p>
-      Interested in selling data bundles?
-      Join Kielmen 636 Dataplug and start your own data business.
-      Register today to apply for an agent account.
+      Interested in selling data bundles? Join Kielmen 636 Dataplug
+      and start your own data business. Register today to apply
+      for an agent account.
     </p>
+
     <a href="agent-register.html">Become an Agent / Sign Up</a>
   </section>
 
-  <section class="agent-box">
+  <section class="agent-box" id="help-section">
     <h2>Need Help?</h2>
-    <p>Contact our support team on WhatsApp if you have questions about your order.</p>
 
-    <a data-whatsapp-contact href="https://wa.me/233533878548"
-       target="_blank" rel="noopener noreferrer">Chat with Support</a>
+    <p>
+      Contact our support team on WhatsApp if you have questions
+      about your order.
+    </p>
 
-    <a data-channel-link href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
-       target="_blank" rel="noopener noreferrer">Join WhatsApp Channel</a>
+    <a data-whatsapp-contact
+       href="https://wa.me/233533878548"
+       target="_blank"
+       rel="noopener noreferrer">Chat with Support</a>
 
-    <p>Support number:
+    <a data-channel-link
+       href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
+       target="_blank"
+       rel="noopener noreferrer">Join WhatsApp Channel</a>
+
+    <p>
+      Support number:
       <a id="supportPhoneDisplay" href="tel:+233533878548">0533878548</a>
     </p>
   </section>
 
   <section class="agent-box" id="track-order">
     <h2>📦 Track Your Order</h2>
+
     <p>Enter the phone number used to receive your data.</p>
 
     <form id="trackOrderForm">
-      <label for="trackPhone">Recipient Phone Number</label>
-      <input id="trackPhone" type="tel" placeholder="0241234567" required>
-      <button type="submit" id="trackOrderButton">Find My Orders</button>
+      <div class="field">
+        <label for="trackPhone">Recipient Phone Number</label>
+
+        <input
+          id="trackPhone"
+          type="tel"
+          inputmode="tel"
+          autocomplete="tel"
+          placeholder="0241234567"
+          required
+        >
+      </div>
+
+      <button type="submit" id="trackOrderButton">
+        Find My Orders
+      </button>
     </form>
 
     <div id="trackOrderMessage" role="status" aria-live="polite"></div>
     <div id="trackOrderResults"></div>
 
-    <p>Need help?
-      <a data-whatsapp-contact href="https://wa.me/233533878548"
-         target="_blank" rel="noopener noreferrer">Contact us on WhatsApp</a>
+    <p>
+      Need help?
+      <a data-whatsapp-contact
+         href="https://wa.me/233533878548"
+         target="_blank"
+         rel="noopener noreferrer">Contact us on WhatsApp</a>
     </p>
   </section>
 
@@ -602,46 +1161,56 @@
 
 <footer class="site-footer">
   <strong>KIELMEN 636 DATAPLUG</strong>
+
   <p>MTN • Telecel • AirtelTigo Data Bundles</p>
   <p>© <span id="currentYear"></span> Kielmen 636 Dataplug</p>
   <p>Payments are processed through Paystack.</p>
 </footer>
 
-<a class="whatsapp-float" data-whatsapp-contact
-   href="https://wa.me/233533878548" target="_blank"
-   rel="noopener noreferrer" aria-label="Contact Kielmen on WhatsApp">☎</a>
+<a
+  class="whatsapp-float"
+  data-whatsapp-contact
+  href="https://wa.me/233533878548"
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label="Contact Kielmen on WhatsApp"
+>☎</a>
 
 <nav class="bottom-nav" aria-label="Quick navigation">
-  <a href="#bundles" class="active"><span>🛒</span>Buy</a>
-  <a href="#checkout"><span>💳</span>Checkout</a>
-  <a data-whatsapp-contact href="https://wa.me/233533878548"
-     target="_blank" rel="noopener noreferrer"><span>💬</span>Help</a>
+  <a href="#bundles" class="active" data-section="bundles">
+    <span>🛒</span>Buy
+  </a>
+
+  <a href="#checkout" data-section="checkout">
+    <span>💳</span>Checkout
+  </a>
+
+  <a href="#help-section" data-section="help-section">
+    <span>💬</span>Help
+  </a>
 </nav>
 
 <dialog id="announcement" class="announcement" hidden>
   <h2>📢 Kielmen 636 Dataplug</h2>
+
   <p id="announcementMessage"></p>
-  <a id="announcementChannelLink" data-channel-link
-     href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
-     target="_blank" rel="noopener noreferrer">📣 Join WhatsApp Channel</a>
-  <button id="continueShopping" type="button">Continue to Buy Data</button>
+
+  <a
+    id="announcementChannelLink"
+    data-channel-link
+    href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
+    target="_blank"
+    rel="noopener noreferrer"
+  >📣 Join WhatsApp Channel</a>
+
+  <button id="continueShopping" type="button">
+    Continue to Buy Data
+  </button>
 </dialog>
 
-<!-- Keep this file: it handles bundle selection, checkout and order tracking. -->
-<script src="script.js?v=8"></script>
+<!-- Keep your existing checkout and bundle logic. -->
+<script src="script.js?v=9"></script>
 
-<script>
-(() => {
-  "use strict";
-
-  const year = document.getElementById("currentYear");
-  if (year) year.textContent = new Date().getFullYear();
-
-  
-})();
-</script>
-
-<!-- KIELMEN 636 DATAPLUG: SAFE WEBSITE SETTINGS -->
 <script>
 (() => {
   "use strict";
@@ -653,12 +1222,14 @@
     contactNumber: "0533878548",
     announcement: "",
     announcementEnabled: false,
+
     colours: {
-      primary: "#d4a017",
-      background: "#030712",
-      accent: "#16a34a",
-      text: "#ffffff"
+      primary: "#ffcc00",
+      background: "#ffffff",
+      accent: "#087f5b",
+      text: "#111827"
     },
+
     networkAvailability: {
       MTN: true,
       TELECEL: true,
@@ -676,9 +1247,15 @@
 
   const $ = id => document.getElementById(id);
 
-  /* ----------------------------------
-     SAFE SESSION STORAGE
-  ---------------------------------- */
+  /* YEAR */
+
+  const year = $("currentYear");
+
+  if (year) {
+    year.textContent = new Date().getFullYear();
+  }
+
+  /* SAFE SESSION STORAGE */
 
   function sessionGet(key) {
     try {
@@ -694,9 +1271,254 @@
     } catch (_) {}
   }
 
-  /* ----------------------------------
-     APPLY WEBSITE COLOURS
-  ---------------------------------- */
+  /* MENU: FIXED */
+
+  function openMenu() {
+    const menu = $("mobileMenu");
+    const button = $("menuButton");
+
+    if (!menu || !button) return;
+
+    menu.hidden = false;
+    menu.style.display = "block";
+
+    button.textContent = "✕";
+    button.setAttribute("aria-expanded", "true");
+    button.setAttribute("aria-label", "Close menu");
+  }
+
+  function closeMenu() {
+    const menu = $("mobileMenu");
+    const button = $("menuButton");
+
+    if (!menu || !button) return;
+
+    menu.hidden = true;
+    menu.style.display = "none";
+
+    button.textContent = "☰";
+    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-label", "Open menu");
+  }
+
+  function setupMenu() {
+    const menu = $("mobileMenu");
+    const button = $("menuButton");
+
+    if (!menu || !button) return;
+
+    closeMenu();
+
+    button.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const expanded =
+        button.getAttribute("aria-expanded") === "true";
+
+      if (expanded) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    menu.querySelectorAll("a[href^='#']").forEach(link => {
+      link.addEventListener("click", event => {
+        event.preventDefault();
+
+        const targetId = link.getAttribute("href").slice(1);
+
+        closeMenu();
+        navigateTo(targetId);
+      });
+    });
+
+    menu.querySelectorAll("a:not([href^='#'])").forEach(link => {
+      link.addEventListener("click", closeMenu);
+    });
+
+    document.addEventListener("click", event => {
+      if (
+        !menu.contains(event.target) &&
+        !button.contains(event.target)
+      ) {
+        closeMenu();
+      }
+    });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        closeMenu();
+      }
+    });
+  }
+
+  /* NAVIGATION: FIXED */
+
+  function navigateTo(id) {
+    const target = $(id);
+
+    if (!target) {
+      console.warn("Navigation target not found:", id);
+      return;
+    }
+
+    target.scrollIntoView({
+      behavior: window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches ? "auto" : "smooth",
+      block: "start"
+    });
+
+    updateActiveNavigation(id);
+  }
+
+  function updateActiveNavigation(id) {
+    document.querySelectorAll(".bottom-nav a[data-section]").forEach(link => {
+      const active = link.dataset.section === id;
+
+      link.classList.toggle("active", active);
+
+      if (active) {
+        link.setAttribute("aria-current", "location");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    });
+  }
+
+  function setupBottomNavigation() {
+    document.querySelectorAll(".bottom-nav a[href^='#']").forEach(link => {
+      link.addEventListener("click", event => {
+        event.preventDefault();
+
+        const id = link.getAttribute("href").slice(1);
+        navigateTo(id);
+      });
+    });
+  }
+
+  /* NETWORK BUTTON STATE */
+
+  function applyNetworkAvailability() {
+    const tabs = Array.from(
+      document.querySelectorAll(".network-tab[data-network]")
+    );
+
+    const availability = settings.networkAvailability || {};
+
+    tabs.forEach(tab => {
+      const network = String(tab.dataset.network || "").toUpperCase();
+
+      if (!Object.prototype.hasOwnProperty.call(
+        DEFAULTS.networkAvailability,
+        network
+      )) {
+        return;
+      }
+
+      const available = availability[network] !== false;
+
+      tab.hidden = !available;
+      tab.disabled = !available;
+      tab.setAttribute("aria-disabled", available ? "false" : "true");
+
+      if (!available) {
+        tab.classList.remove("active");
+        tab.setAttribute("aria-pressed", "false");
+      }
+    });
+
+    const availableTabs = tabs.filter(tab => {
+      const network = String(tab.dataset.network || "").toUpperCase();
+
+      return (
+        Object.prototype.hasOwnProperty.call(
+          DEFAULTS.networkAvailability,
+          network
+        ) &&
+        availability[network] !== false
+      );
+    });
+
+    const paymentButton = $("paymentButton");
+
+    if (!availableTabs.length) {
+      if (paymentButton) {
+        paymentButton.disabled = true;
+      }
+
+      const grid = $("bundleGrid");
+
+      if (grid) {
+        grid.replaceChildren();
+
+        const message = document.createElement("p");
+        message.textContent =
+          "All networks are temporarily unavailable. Please check again later.";
+
+        grid.appendChild(message);
+      }
+
+      const count = $("resultCount");
+
+      if (count) {
+        count.textContent = "No networks currently available.";
+      }
+
+      return;
+    }
+
+    /*
+     * Do not trigger tab.click() from this function.
+     * The main script owns selection and bundle rendering.
+     * A preferred network is exposed for script.js to read.
+     */
+    const selectedNetwork = $("selectedNetwork");
+
+    const currentNetwork = String(
+      selectedNetwork?.value || ""
+    ).toUpperCase();
+
+    const currentAvailable = availableTabs.some(tab =>
+      String(tab.dataset.network).toUpperCase() === currentNetwork
+    );
+
+    if (!currentAvailable) {
+      const firstNetwork = String(
+        availableTabs[0].dataset.network
+      ).toUpperCase();
+
+      window.kielmenPreferredNetwork = firstNetwork;
+
+      if (selectedNetwork) {
+        selectedNetwork.value = firstNetwork;
+      }
+
+      availableTabs.forEach(tab => {
+        const active =
+          String(tab.dataset.network).toUpperCase() === firstNetwork;
+
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+
+      /*
+       * If script.js provides a public network selection function,
+       * use it. Otherwise, do not create duplicate click events.
+       */
+      if (typeof window.selectNetwork === "function") {
+        try {
+          window.selectNetwork(firstNetwork);
+        } catch (error) {
+          console.warn("Network selection callback failed:", error);
+        }
+      }
+    }
+  }
+
+  /* SETTINGS COLOURS */
 
   function applyColours() {
     const root = document.documentElement;
@@ -730,9 +1552,7 @@
     );
   }
 
-  /* ----------------------------------
-     WHATSAPP LINKS
-  ---------------------------------- */
+  /* CONTACT NUMBER */
 
   function normalisePhone(value) {
     let digits = String(value || "").replace(/\D/g, "");
@@ -741,10 +1561,8 @@
       digits = digits.slice(2);
     }
 
-    if (digits.startsWith("0")) {
+    if (digits.startsWith("0") && digits.length === 10) {
       digits = "233" + digits.slice(1);
-    } else if (!digits.startsWith("233")) {
-      digits = "233" + digits;
     }
 
     return digits;
@@ -764,13 +1582,15 @@
     try {
       const url = new URL(settings.whatsappLink);
 
+      const allowedHosts = [
+        "whatsapp.com",
+        "www.whatsapp.com",
+        "chat.whatsapp.com"
+      ];
+
       if (
         url.protocol === "https:" &&
-        [
-          "whatsapp.com",
-          "www.whatsapp.com",
-          "chat.whatsapp.com"
-        ].includes(url.hostname)
+        allowedHosts.includes(url.hostname)
       ) {
         return url.href;
       }
@@ -805,49 +1625,36 @@
       phoneDisplay.textContent =
         settings.contactNumber || DEFAULTS.contactNumber;
 
-      if (phoneDisplay.tagName === "A") {
-        phoneDisplay.href = "tel:+" + normalisePhone(settings.contactNumber);
-      }
+      phoneDisplay.href = "tel:+" + normalisePhone(
+        settings.contactNumber
+      );
     }
   }
 
-  /* ----------------------------------
-     ANNOUNCEMENT
-  ---------------------------------- */
+  /* ANNOUNCEMENT POPUP */
 
   function applyAnnouncement() {
     const dialog = $("announcement");
     const message = $("announcementMessage");
 
-    if (!dialog) return;
+    if (!dialog || !message) return;
 
     const enabled =
       settings.announcementEnabled === true &&
       String(settings.announcement || "").trim().length > 0;
 
     if (!enabled) {
-      if (dialog.open) {
-        try {
-          dialog.close();
-        } catch (_) {}
+      if (dialog.open && typeof dialog.close === "function") {
+        dialog.close();
       }
 
       dialog.hidden = true;
-      dialog.style.display = "none";
       return;
     }
 
-    if (message) {
-      message.textContent = String(settings.announcement).trim();
-    }
-
+    message.textContent = String(settings.announcement).trim();
     dialog.hidden = false;
-    dialog.style.display = "";
 
-    /*
-     * The popup is shown only once per browser session.
-     * It is never opened when the owner disables it.
-     */
     if (sessionGet("kielmenAnnouncementDismissed") === "yes") {
       return;
     }
@@ -871,11 +1678,9 @@
       if (typeof dialog.showModal === "function" && !dialog.open) {
         try {
           dialog.showModal();
-        } catch (_) {
-          dialog.style.display = "block";
+        } catch (error) {
+          console.warn("Could not open announcement dialog:", error);
         }
-      } else {
-        dialog.style.display = "block";
       }
     }, 700);
 
@@ -883,9 +1688,9 @@
 
     if (
       closeButton &&
-      closeButton.dataset.settingsCloseBound !== "yes"
+      closeButton.dataset.bound !== "yes"
     ) {
-      closeButton.dataset.settingsCloseBound = "yes";
+      closeButton.dataset.bound = "yes";
 
       closeButton.addEventListener("click", () => {
         sessionSet("kielmenAnnouncementDismissed", "yes");
@@ -894,146 +1699,51 @@
           dialog.close();
         } else {
           dialog.hidden = true;
-          dialog.style.display = "none";
         }
       });
     }
-  }
 
-  /* ----------------------------------
-     NETWORK AVAILABILITY
-  ---------------------------------- */
-
-  function applyNetworkAvailability() {
-    const tabs = Array.from(
-      document.querySelectorAll(".network-tab[data-network]")
-    );
-
-    const availability = settings.networkAvailability || {};
-
-    tabs.forEach(tab => {
-      const network = String(tab.dataset.network || "").toUpperCase();
-
-      if (!Object.prototype.hasOwnProperty.call(DEFAULTS.networkAvailability, network)) {
-        return;
-      }
-
-      /*
-       * Only an explicit false disables a network.
-       */
-      const available = availability[network] !== false;
-
-      tab.hidden = !available;
-      tab.disabled = !available;
-      tab.setAttribute("aria-disabled", available ? "false" : "true");
-
-      if (!available) {
-        tab.classList.remove("active");
+    dialog.addEventListener("click", event => {
+      if (event.target === dialog) {
+        sessionSet("kielmenAnnouncementDismissed", "yes");
+        dialog.close();
       }
     });
-
-    const availableTabs = tabs.filter(tab => {
-      const network = String(tab.dataset.network || "").toUpperCase();
-
-      return (
-        Object.prototype.hasOwnProperty.call(
-          DEFAULTS.networkAvailability,
-          network
-        ) &&
-        availability[network] !== false
-      );
-    });
-
-    const paymentButton = $("paymentButton");
-    const checkoutMessage = $("checkoutMessage");
-    const bundleGrid = $("bundleGrid");
-    const resultCount = $("resultCount");
-
-    if (availableTabs.length === 0) {
-      if (paymentButton) paymentButton.disabled = true;
-
-      if (checkoutMessage) {
-        checkoutMessage.textContent =
-          "All networks are temporarily unavailable. Please check again later.";
-      }
-
-      if (bundleGrid) {
-        bundleGrid.replaceChildren();
-
-        const notice = document.createElement("p");
-        notice.textContent =
-          "All data bundle networks are temporarily unavailable.";
-
-        bundleGrid.appendChild(notice);
-      }
-
-      if (resultCount) {
-        resultCount.textContent = "No networks currently available.";
-      }
-
-      return;
-    }
-
-    /*
-     * IMPORTANT:
-     * Do not call tab.click() here.
-     *
-     * script.js owns network selection and bundle rendering.
-     * Calling click() during settings initialization can trigger
-     * multiple handlers and interfere with the selected network.
-     */
-    const selectedNetwork = $("selectedNetwork");
-    const currentNetwork = String(
-      selectedNetwork?.value || "MTN"
-    ).toUpperCase();
-
-    const currentAvailable = availableTabs.some(
-      tab => String(tab.dataset.network).toUpperCase() === currentNetwork
-    );
-
-    if (!currentAvailable) {
-      const fallbackNetwork = String(
-        availableTabs[0].dataset.network
-      ).toUpperCase();
-
-      if (selectedNetwork) {
-        selectedNetwork.value = fallbackNetwork;
-      }
-
-      /*
-       * Tell script.js which network to use without dispatching
-       * another click event.
-       */
-      window.kielmenPreferredNetwork = fallbackNetwork;
-    }
-
-    if (paymentButton) {
-      paymentButton.disabled = false;
-    }
   }
 
-  /* ----------------------------------
-     LOAD SETTINGS FROM BACKEND
-  ---------------------------------- */
+  /* LOAD PUBLIC WEBSITE SETTINGS */
 
   async function loadSettings() {
     try {
-      const response = await fetch(API + "/website-settings", {
-        method: "GET",
-        cache: "no-store",
-        headers: {
-          Accept: "application/json"
-        }
-      });
+      const controller = new AbortController();
+
+      const timeout = setTimeout(() => {
+        controller.abort();
+      }, 8000);
+
+      let response;
+
+      try {
+        response = await fetch(API + "/website-settings", {
+          method: "GET",
+          cache: "no-store",
+          headers: {
+            Accept: "application/json"
+          },
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
 
       if (!response.ok) {
-        throw new Error("HTTP " + response.status);
+        throw new Error("Settings request failed: " + response.status);
       }
 
       const result = await response.json();
 
       if (!result.success || !result.settings) {
-        throw new Error("Invalid website settings response");
+        throw new Error("The server returned invalid website settings.");
       }
 
       const saved = result.settings;
@@ -1053,11 +1763,8 @@
         }
       };
     } catch (error) {
-      /*
-       * A settings API failure must not block the website.
-       */
       console.warn(
-        "Website settings could not be loaded. Using defaults.",
+        "Website settings unavailable. Using safe defaults.",
         error
       );
 
@@ -1076,11 +1783,16 @@
     applyAnnouncement();
   }
 
-  /* ----------------------------------
-     INITIALIZE
-  ---------------------------------- */
+  /* START */
 
   function start() {
+    setupMenu();
+    setupBottomNavigation();
+
+    /*
+     * Keep settings loading separate from script.js.
+     * If the settings endpoint fails, the store can still load.
+     */
     loadSettings();
   }
 
@@ -1090,8 +1802,7 @@
     start();
   }
 })();
-      </script>
-    
+</script>
 
 </body>
-      </html>
+  </html>
