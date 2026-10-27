@@ -185,24 +185,38 @@
             enter the recipient's phone number, and proceed to payment.
         </p>
 
-        <!-- WELCOME ACTIONS: SHOP + AGENT SIGN-IN -->
+        <!-- WELCOME ACTIONS: SHOP + AGENT CARD -->
         <div class="welcome-actions">
 
+            <!-- SHOP DATA BUTTON -->
             <a href="#bundles" class="shop-button">
                 <span aria-hidden="true">🛒</span>
                 <span>Shop Data Bundles</span>
             </a>
 
+            <!-- AGENT REGISTRATION AND SIGN-IN BOX -->
             <a
                 href="agent-register.html"
                 class="welcome-agent-button"
+                aria-label="Become an agent or access agent sign-in"
             >
-                <span aria-hidden="true">🤝</span>
-                <span>Become an Agent / Sign In</span>
+                <span class="agent-button-icon" aria-hidden="true">
+                    🤝
+                </span>
+
+                <span class="agent-button-text">
+                    <strong>Become an Agent</strong>
+                    <small>Already an agent? Sign In</small>
+                </span>
+
+                <span class="agent-button-arrow" aria-hidden="true">
+                    ›
+                </span>
             </a>
 
         </div>
 
+        <!-- TRUST LABELS -->
         <div class="trust-row" aria-label="Available services">
 
             <span class="trust-item mtn-trust">
@@ -684,4 +698,4 @@
 <script src="script.js?v=12" defer></script>
 
 </body>
-    </html>
+</html>
