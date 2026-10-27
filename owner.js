@@ -3,18 +3,23 @@
 /* =========================================
    KIELMEN 636 DATAPLUG — OWNER DASHBOARD
 
-   Features:
+   FEATURES:
    - Owner login and logout
-   - Statistics
-   - Orders and delivery retry
+   - Business statistics
+   - Customer orders and delivery retry
    - Agent management and details
    - Agent rankings
-   - Withdrawals
+   - Withdrawal management
    - SMS campaigns
-   - Agent password-reset management
+   - Password-reset management
+   - Website Settings
+   - WhatsApp link and contact number
+   - Announcement message and visibility
+   - Website colours
+   - Network availability
 
-   IMPORTANT:
-   The backend must implement all matching routes.
+   BACKEND:
+   https://kielmen-dataplug-payment-api.onrender.com
 ========================================= */
 
 const OWNER_API =
@@ -31,6 +36,7 @@ let dashboardLoading = false;
 let smsCampaignRunning = false;
 let loginRunning = false;
 let logoutRunning = false;
+let resetCodeExpiryTimer = null;
 
 /* =========================================
    GENERAL HELPERS
@@ -144,7 +150,7 @@ function hideLogin() {
 /* =========================================
    API REQUEST HELPER
 
-   Returns parsed JSON, NOT a Fetch Response.
+   Returns parsed JSON, not a Fetch Response.
 ========================================= */
 
 async function apiRequest(path, options = {}) {
@@ -255,7 +261,6 @@ function showLogin(messageText = "") {
         border-radius:16px;
         box-sizing:border-box;
       ">
-
         <h1 style="color:#eab308;font-size:25px">
           KIELMEN 636 DATAPLUG
         </h1>
@@ -339,17 +344,13 @@ function showLogin(messageText = "") {
 async function handleLogin(event) {
   event.preventDefault();
 
-  if (loginRunning) {
-    return;
-  }
+  if (loginRunning) return;
 
   const passwordInput = byId("ownerPassword");
   const message = byId("ownerLoginMessage");
   const button = byId("ownerLoginButton");
 
-  if (!passwordInput || !message || !button) {
-    return;
-  }
+  if (!passwordInput || !message || !button) return;
 
   const password = passwordInput.value;
 
@@ -385,8 +386,7 @@ async function handleLogin(event) {
     if (!data.success || !data.token) {
       throw new Error(
         data.message ||
-        "The server did not return a valid login token. " +
-        "Check the /owner/login backend route."
+        "The server did not return a valid login token."
       );
     }
 
@@ -424,6 +424,225 @@ async function handleLogin(event) {
     loginRunning = false;
     button.disabled = false;
     button.textContent = "Log In";
+  }
+}
+
+/* =========================================
+   WEBSITE SETTINGS
+========================================= */
+
+function showWebsiteSettingsMessage(message, isError = false) {
+  const element = byId("websiteSettingsMessage");
+
+  if (!element) return;
+
+  element.textContent = String(message || "");
+  element.style.color = isError ? "#f87171" : "#86efac";
+}
+
+async function loadWebsiteSettings() {
+  if (!ownerToken) {
+    showWebsiteSettingsMessage(
+      "Please log in to load website settings.",
+      true
+    );
+    return;
+  }
+
+  try {
+    showWebsiteSettingsMessage("Loading website settings...");
+
+    const result = await ownerRequest("/owner/website-settings");
+
+    if (!result || !result.success || !result.settings) {
+      throw new Error(
+        result?.message || "Unable to load website settings."
+      );
+    }
+
+    const settings = result.settings;
+    const colours = settings.colours || {};
+    const networks = settings.networkAvailability || {};
+
+    const fields = {
+      settingsWhatsappLink: settings.whatsappLink || "",
+      settingsContactNumber: settings.contactNumber || "",
+      settingsAnnouncement: settings.announcement || "",
+      settingsAnnouncementEnabled:
+        settings.announcementEnabled === true,
+      settingsPrimaryColour: colours.primary || "#d4a017",
+      settingsBackgroundColour: colours.background || "#030712",
+      settingsAccentColour: colours.accent || "#16a34a",
+      settingsTextColour: colours.text || "#ffffff",
+      settingsMtnEnabled: networks.MTN !== false,
+      settingsTelecelEnabled: networks.TELECEL !== false,
+      settingsAirtelTigoEnabled: networks.AIRTELTIGO !== false
+    };
+
+    for (const [id, value] of Object.entries(fields)) {
+      const element = byId(id);
+
+      if (!element) continue;
+
+      if (element.type === "checkbox") {
+        element.checked = value;
+      } else {
+        element.value = value;
+      }
+    }
+
+    showWebsiteSettingsMessage(
+      "Website settings loaded successfully."
+    );
+  } catch (error) {
+    console.error("Load website settings error:", error);
+
+    showWebsiteSettingsMessage(
+      error.message || "Could not load website settings.",
+      true
+    );
+
+    throw error;
+  }
+}
+
+async function saveWebsiteSettings(event) {
+  event.preventDefault();
+
+  if (!ownerToken) {
+    showWebsiteSettingsMessage(
+      "Please log in before saving website settings.",
+      true
+    );
+    return;
+  }
+
+  const saveButton = byId("saveWebsiteSettings");
+
+  const requiredIds = [
+    "settingsWhatsappLink",
+    "settingsContactNumber",
+    "settingsAnnouncement",
+    "settingsAnnouncementEnabled",
+    "settingsPrimaryColour",
+    "settingsBackgroundColour",
+    "settingsAccentColour",
+    "settingsTextColour",
+    "settingsMtnEnabled",
+    "settingsTelecelEnabled",
+    "settingsAirtelTigoEnabled"
+  ];
+
+  const missingFields = requiredIds.filter(id => !byId(id));
+
+  if (missingFields.length) {
+    showWebsiteSettingsMessage(
+      "Website Settings HTML is missing: " +
+      missingFields.join(", "),
+      true
+    );
+    return;
+  }
+
+  const settings = {
+    whatsappLink: byId("settingsWhatsappLink").value.trim(),
+
+    contactNumber: byId("settingsContactNumber").value.trim(),
+
+    announcement: byId("settingsAnnouncement").value.trim(),
+
+    announcementEnabled:
+      byId("settingsAnnouncementEnabled").checked,
+
+    colours: {
+      primary: byId("settingsPrimaryColour").value,
+      background: byId("settingsBackgroundColour").value,
+      accent: byId("settingsAccentColour").value,
+      text: byId("settingsTextColour").value
+    },
+
+    networkAvailability: {
+      MTN: byId("settingsMtnEnabled").checked,
+      TELECEL: byId("settingsTelecelEnabled").checked,
+      AIRTELTIGO: byId("settingsAirtelTigoEnabled").checked
+    }
+  };
+
+  if (!settings.contactNumber) {
+    showWebsiteSettingsMessage(
+      "Please enter your customer support number.",
+      true
+    );
+    return;
+  }
+
+  if (settings.announcement.length > 1000) {
+    showWebsiteSettingsMessage(
+      "The announcement cannot exceed 1,000 characters.",
+      true
+    );
+    return;
+  }
+
+  if (
+    settings.whatsappLink &&
+    !/^https:\/\/(chat\.whatsapp\.com\/|whatsapp\.com\/|wa\.me\/)/i.test(
+      settings.whatsappLink
+    )
+  ) {
+    showWebsiteSettingsMessage(
+      "Enter a valid WhatsApp link beginning with https://.",
+      true
+    );
+    return;
+  }
+
+  try {
+    if (saveButton) {
+      saveButton.disabled = true;
+      saveButton.textContent = "Saving...";
+    }
+
+    showWebsiteSettingsMessage("Saving website settings...");
+
+    const result = await ownerRequest("/owner/website-settings", {
+      method: "PUT",
+      body: JSON.stringify(settings)
+    });
+
+    if (!result || !result.success) {
+      throw new Error(
+        result?.message || "Could not save website settings."
+      );
+    }
+
+    showWebsiteSettingsMessage(
+      "Website settings saved successfully."
+    );
+
+    // Reload the values actually stored by the backend.
+    await loadWebsiteSettings();
+  } catch (error) {
+    console.error("Save website settings error:", error);
+
+    showWebsiteSettingsMessage(
+      error.message || "Could not save website settings.",
+      true
+    );
+  } finally {
+    if (saveButton) {
+      saveButton.disabled = false;
+      saveButton.textContent = "Save Website Settings";
+    }
+  }
+}
+
+function initializeWebsiteSettings() {
+  const form = byId("websiteSettingsForm");
+
+  if (form && !form.dataset.ownerBound) {
+    form.dataset.ownerBound = "true";
+    form.addEventListener("submit", saveWebsiteSettings);
   }
 }
 
@@ -506,15 +725,12 @@ async function loadStatistics() {
 
 /* =========================================
    AGENT RANKINGS
-   GET /owner/agents/rankings
 ========================================= */
 
 async function loadAgentRankings() {
   const tbody = byId("agentRankingsBody");
 
-  if (!tbody) {
-    return;
-  }
+  if (!tbody) return;
 
   tbody.innerHTML =
     '<tr><td colspan="6">Loading agent rankings...</td></tr>';
@@ -561,37 +777,24 @@ async function loadAgentRankings() {
 
 /* =========================================
    CUSTOMER ORDERS
-   GET /owner/orders
 ========================================= */
 
 async function loadOrders() {
   const tbody = byId("ordersTableBody");
 
-  if (!tbody) {
-    return;
-  }
+  if (!tbody) return;
 
   tbody.innerHTML =
     '<tr><td colspan="8">Loading orders...</td></tr>';
 
   const params = new URLSearchParams();
 
-  const search =
-    byId("orderSearch")?.value.trim() || "";
+  const search = byId("orderSearch")?.value.trim() || "";
+  const paymentStatus = byId("orderPaymentFilter")?.value || "";
+  const deliveryStatus = byId("orderDeliveryFilter")?.value || "";
 
-  const paymentStatus =
-    byId("orderPaymentFilter")?.value || "";
-
-  const deliveryStatus =
-    byId("orderDeliveryFilter")?.value || "";
-
-  if (search) {
-    params.set("search", search);
-  }
-
-  if (paymentStatus) {
-    params.set("status", paymentStatus);
-  }
+  if (search) params.set("search", search);
+  if (paymentStatus) params.set("status", paymentStatus);
 
   if (deliveryStatus) {
     params.set("delivery_status", deliveryStatus);
@@ -619,17 +822,13 @@ async function loadOrders() {
     }
 
     tbody.innerHTML = orders.map(order => {
-      const payment = String(
-        order.status || ""
-      ).toLowerCase();
-
+      const payment = String(order.status || "").toLowerCase();
       const delivery = String(
         order.delivery_status || ""
       ).toLowerCase();
 
       const canRetry =
-        payment === "paid" &&
-        delivery === "failed";
+        payment === "paid" && delivery === "failed";
 
       return `
         <tr>
@@ -647,14 +846,8 @@ async function loadOrders() {
                   <button
                     type="button"
                     class="button"
-                    style="
-                      background:#ca8a04;
-                      color:#030712;
-                      padding:9px 12px;
-                    "
-                    data-retry-delivery="${escapeHTML(
-                      order.reference
-                    )}"
+                    style="background:#ca8a04;color:#030712;padding:9px 12px;"
+                    data-retry-delivery="${escapeHTML(order.reference)}"
                   >
                     Retry Delivery
                   </button>
@@ -667,9 +860,7 @@ async function loadOrders() {
     }).join("");
   } catch (error) {
     tbody.innerHTML = `
-      <tr>
-        <td colspan="8">${escapeHTML(error.message)}</td>
-      </tr>
+      <tr><td colspan="8">${escapeHTML(error.message)}</td></tr>
     `;
 
     throw error;
@@ -690,14 +881,12 @@ async function retryOrderDelivery(reference, button) {
     "Retry delivery for this order?\n\n" +
     "Reference: " + reference + "\n\n" +
     "The customer has already paid. No new payment will be taken.\n\n" +
-    "Confirm that DataMart did not already accept the original purchase. " +
-    "A retry could risk duplicate delivery if the supplier processed it " +
-    "despite the earlier error.\n\nContinue?"
+    "Check whether the supplier accepted the original purchase first. " +
+    "Retrying could cause duplicate delivery if the original request " +
+    "was processed despite an earlier error.\n\nContinue?"
   );
 
-  if (!confirmed) {
-    return;
-  }
+  if (!confirmed) return;
 
   if (button) {
     button.disabled = true;
@@ -719,7 +908,7 @@ async function retryOrderDelivery(reference, button) {
 
     showMessage(
       data.message ||
-      "Retry request processed. Check the order delivery status."
+      "Retry request processed. Check the delivery status."
     );
 
     await loadOrders();
@@ -740,15 +929,12 @@ async function retryOrderDelivery(reference, button) {
 
 /* =========================================
    AGENT MANAGEMENT
-   GET /owner/agents
 ========================================= */
 
 async function loadAgents() {
   const tbody = byId("agentsTableBody");
 
-  if (!tbody) {
-    return;
-  }
+  if (!tbody) return;
 
   tbody.innerHTML =
     '<tr><td colspan="7">Loading agents...</td></tr>';
@@ -808,9 +994,7 @@ async function loadAgents() {
     `).join("");
   } catch (error) {
     tbody.innerHTML = `
-      <tr>
-        <td colspan="7">${escapeHTML(error.message)}</td>
-      </tr>
+      <tr><td colspan="7">${escapeHTML(error.message)}</td></tr>
     `;
 
     throw error;
@@ -824,9 +1008,7 @@ async function loadAgents() {
 async function loadAgentDetails(id) {
   const panel = byId("agentDetails");
 
-  if (!panel) {
-    return;
-  }
+  if (!panel) return;
 
   panel.textContent = "Loading agent details...";
 
@@ -934,15 +1116,12 @@ async function loadAgentDetails(id) {
 
 /* =========================================
    WITHDRAWAL MANAGEMENT
-   GET /owner/withdrawals
 ========================================= */
 
 async function loadWithdrawals() {
   const tbody = byId("withdrawalsTableBody");
 
-  if (!tbody) {
-    return;
-  }
+  if (!tbody) return;
 
   tbody.innerHTML =
     '<tr><td colspan="7">Loading withdrawals...</td></tr>';
@@ -1015,9 +1194,7 @@ async function loadWithdrawals() {
     }).join("");
   } catch (error) {
     tbody.innerHTML = `
-      <tr>
-        <td colspan="7">${escapeHTML(error.message)}</td>
-      </tr>
+      <tr><td colspan="7">${escapeHTML(error.message)}</td></tr>
     `;
 
     throw error;
@@ -1027,7 +1204,7 @@ async function loadWithdrawals() {
 /* =========================================
    UPDATE WITHDRAWAL STATUS
 
-   This only updates the status.
+   This updates the status only.
    It does not send Mobile Money.
 ========================================= */
 
@@ -1036,9 +1213,7 @@ async function updateWithdrawalStatus(id, status) {
     ? "Have you already sent this money successfully through Mobile Money?"
     : "Are you sure you want to reject this withdrawal?";
 
-  if (!window.confirm(promptMessage)) {
-    return;
-  }
+  if (!window.confirm(promptMessage)) return;
 
   try {
     const data = await ownerRequest(
@@ -1123,16 +1298,13 @@ function updateSmsRecipientCount() {
 
 /* =========================================
    SMS CONTACT FILE UPLOAD
-   Supports TXT and CSV
 ========================================= */
 
 async function handleSmsFileUpload(event) {
   const input = event.target;
   const file = input.files && input.files[0];
 
-  if (!file) {
-    return;
-  }
+  if (!file) return;
 
   const recipientsBox = byId("smsRecipients");
   const statusBox = byId("smsCampaignStatus");
@@ -1244,9 +1416,7 @@ function estimateSmsCampaign() {
   const status = byId("smsCampaignStatus");
   const recipients = updateSmsRecipientCount();
 
-  if (!status) {
-    return null;
-  }
+  if (!status) return null;
 
   if (!message) {
     status.textContent = "Please enter your SMS message.";
@@ -1293,21 +1463,16 @@ function estimateSmsCampaign() {
 
 /* =========================================
    SEND SMS CAMPAIGN
-   POST /owner/sms/send
 ========================================= */
 
 async function sendSmsCampaign() {
-  if (smsCampaignRunning) {
-    return;
-  }
+  if (smsCampaignRunning) return;
 
   const status = byId("smsCampaignStatus");
   const sendButton = byId("sendSmsCampaign");
   const estimateButton = byId("estimateSmsCost");
 
-  if (!status || !sendButton) {
-    return;
-  }
+  if (!status || !sendButton) return;
 
   if (!ownerToken) {
     status.textContent =
@@ -1319,9 +1484,7 @@ async function sendSmsCampaign() {
 
   const campaign = estimateSmsCampaign();
 
-  if (!campaign) {
-    return;
-  }
+  if (!campaign) return;
 
   const consentConfirmed = window.confirm(
     `Send this SMS campaign?\n\n` +
@@ -1331,9 +1494,7 @@ async function sendSmsCampaign() {
     "SMS charges may apply. Continue?"
   );
 
-  if (!consentConfirmed) {
-    return;
-  }
+  if (!consentConfirmed) return;
 
   smsCampaignRunning = true;
   sendButton.disabled = true;
@@ -1372,8 +1533,7 @@ async function sendSmsCampaign() {
         data = await ownerRequest("/owner/sms/send", {
           method: "POST",
           headers: {
-            "Idempotency-Key":
-              `${campaignId}-${batchNumber}`
+            "Idempotency-Key": `${campaignId}-${batchNumber}`
           },
           body: JSON.stringify({
             message: campaign.message,
@@ -1404,9 +1564,7 @@ async function sendSmsCampaign() {
         break;
       }
 
-      accepted += Number(
-        data.recipientCount ?? batch.length
-      );
+      accepted += Number(data.recipientCount ?? batch.length);
 
       status.textContent =
         `Progress: ${batchNumber}/${campaign.batches} batches accepted. ` +
@@ -1485,24 +1643,7 @@ function initializeSmsCampaign() {
 
 /* =========================================
    PASSWORD RESET MANAGEMENT
-
-   Expected HTML IDs:
-   - passwordResetRequestsBody
-   - passwordResetMessage
-   - refreshPasswordResets
-   - passwordResetCodePanel
-   - passwordResetGeneratedCode
-   - passwordResetCodeExpiry
-   - copyPasswordResetCode
-   - closePasswordResetCode
-
-   Expected backend routes:
-   GET   /owner/password-reset/requests
-   PATCH /owner/password-reset/requests/:id
-   POST  /owner/password-reset/requests/:id/code
 ========================================= */
-
-let resetCodeExpiryTimer = null;
 
 function showPasswordResetMessage(message, isError = false) {
   const element = byId("passwordResetMessage");
@@ -1514,15 +1655,11 @@ function showPasswordResetMessage(message, isError = false) {
 
   element.textContent = String(message || "");
 
-  element.style.color = isError
-    ? "#dc2626"
-    : "#16a34a";
+  element.style.color = isError ? "#dc2626" : "#16a34a";
 }
 
 function formatResetDate(value) {
-  if (!value) {
-    return "Unknown";
-  }
+  if (!value) return "Unknown";
 
   const date = new Date(value);
 
@@ -1570,9 +1707,7 @@ function displayResetCode(code, expiresAt) {
     : new Date(Date.now() + 10 * 60 * 1000);
 
   function updateCountdown() {
-    if (!expiryElement) {
-      return;
-    }
+    if (!expiryElement) return;
 
     const remaining = expiryDate.getTime() - Date.now();
 
@@ -1600,10 +1735,7 @@ function displayResetCode(code, expiresAt) {
 async function loadPasswordResetRequests() {
   const tbody = byId("passwordResetRequestsBody");
 
-  // This dashboard section is optional on pages that do not contain it.
-  if (!tbody) {
-    return;
-  }
+  if (!tbody) return;
 
   if (!ownerToken) {
     tbody.innerHTML =
@@ -1691,9 +1823,7 @@ async function loadPasswordResetRequests() {
     );
   } catch (error) {
     tbody.innerHTML = `
-      <tr>
-        <td colspan="6">${escapeHTML(error.message)}</td>
-      </tr>
+      <tr><td colspan="6">${escapeHTML(error.message)}</td></tr>
     `;
 
     showPasswordResetMessage(
@@ -1716,9 +1846,7 @@ async function reviewPasswordResetRequest(id, status) {
     return;
   }
 
-  const action = status === "approved"
-    ? "approve"
-    : "reject";
+  const action = status === "approved" ? "approve" : "reject";
 
   if (!window.confirm(
     `Are you sure you want to ${action} this password-reset request?`
@@ -1762,8 +1890,8 @@ async function generatePasswordResetCode(id, button = null) {
 
   if (!window.confirm(
     "Generate a one-time password-reset code for this approved agent?\n\n" +
-    "The code should expire after 10 minutes. Give it only to the " +
-    "verified agent through their registered contact channel."
+    "Give the code only to the verified agent through their registered " +
+    "contact channel."
   )) {
     return;
   }
@@ -1915,6 +2043,8 @@ function initializePasswordResetManagement() {
 
 /* =========================================
    DASHBOARD REFRESH
+
+   Includes Website Settings.
 ========================================= */
 
 async function loadDashboard() {
@@ -1923,9 +2053,7 @@ async function loadDashboard() {
     return;
   }
 
-  if (dashboardLoading) {
-    return;
-  }
+  if (dashboardLoading) return;
 
   dashboardLoading = true;
   showMessage("Refreshing dashboard...");
@@ -1937,7 +2065,8 @@ async function loadDashboard() {
       loadAgents(),
       loadWithdrawals(),
       loadAgentRankings(),
-      loadPasswordResetRequests()
+      loadPasswordResetRequests(),
+      loadWebsiteSettings()
     ]);
 
     const names = [
@@ -1946,7 +2075,8 @@ async function loadDashboard() {
       "Agents",
       "Withdrawals",
       "Agent Rankings",
-      "Password Reset Requests"
+      "Password Reset Requests",
+      "Website Settings"
     ];
 
     const failures = results
@@ -2003,9 +2133,7 @@ async function startDashboard() {
 ========================================= */
 
 async function logoutOwner() {
-  if (logoutRunning) {
-    return;
-  }
+  if (logoutRunning) return;
 
   logoutRunning = true;
 
@@ -2046,9 +2174,7 @@ function initializeOwnerDashboard() {
   );
 
   navLinks.forEach(link => {
-    if (link.dataset.ownerBound) {
-      return;
-    }
+    if (link.dataset.ownerBound) return;
 
     link.dataset.ownerBound = "true";
 
@@ -2061,6 +2187,7 @@ function initializeOwnerDashboard() {
     });
   });
 
+  // Owner logout.
   const logoutButton = byId("ownerLogoutButton");
 
   if (logoutButton && !logoutButton.dataset.ownerBound) {
@@ -2068,6 +2195,7 @@ function initializeOwnerDashboard() {
     logoutButton.addEventListener("click", logoutOwner);
   }
 
+  // Dashboard refresh.
   const refreshButton = byId("refreshDashboard");
 
   if (refreshButton && !refreshButton.dataset.ownerBound) {
@@ -2080,6 +2208,7 @@ function initializeOwnerDashboard() {
     });
   }
 
+  // Search orders.
   const searchOrdersButton = byId("searchOrders");
 
   if (
@@ -2095,6 +2224,7 @@ function initializeOwnerDashboard() {
     });
   }
 
+  // Retry delivery.
   const ordersBody = byId("ordersTableBody");
 
   if (ordersBody && !ordersBody.dataset.ownerBound) {
@@ -2105,9 +2235,7 @@ function initializeOwnerDashboard() {
         "[data-retry-delivery]"
       );
 
-      if (!button || button.disabled) {
-        return;
-      }
+      if (!button || button.disabled) return;
 
       retryOrderDelivery(
         button.dataset.retryDelivery,
@@ -2116,6 +2244,7 @@ function initializeOwnerDashboard() {
     });
   }
 
+  // Search orders with Enter.
   const orderSearch = byId("orderSearch");
 
   if (orderSearch && !orderSearch.dataset.ownerBound) {
@@ -2132,6 +2261,7 @@ function initializeOwnerDashboard() {
     });
   }
 
+  // Search agents.
   const agentSearch = byId("agentSearch");
 
   if (agentSearch && !agentSearch.dataset.ownerBound) {
@@ -2144,6 +2274,7 @@ function initializeOwnerDashboard() {
     });
   }
 
+  // Agent details.
   const agentsBody = byId("agentsTableBody");
 
   if (agentsBody && !agentsBody.dataset.ownerBound) {
@@ -2160,6 +2291,7 @@ function initializeOwnerDashboard() {
     });
   }
 
+  // Withdrawal actions.
   const withdrawalsBody = byId("withdrawalsTableBody");
 
   if (
@@ -2193,9 +2325,16 @@ function initializeOwnerDashboard() {
     });
   }
 
+  // Website Settings form.
+  initializeWebsiteSettings();
+
+  // SMS campaign handlers.
   initializeSmsCampaign();
+
+  // Password-reset handlers.
   initializePasswordResetManagement();
 
+  // Restore session or show login.
   ownerToken = getSavedToken();
 
   if (ownerToken) {
@@ -2219,4 +2358,4 @@ if (document.readyState === "loading") {
   );
 } else {
   initializeOwnerDashboard();
-}
+   }
