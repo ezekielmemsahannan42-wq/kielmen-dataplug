@@ -1833,7 +1833,7 @@ const slug = String(req.params.slug || "")
 .trim()
 .toLowerCase();
 
-if (!/^[a-z0-9_]{1,100}$/.test(slug)) {
+if (!/^[a-z0-9_-]{1,100}$/.test(slug)) {
   return res.status(400).json({
     success: false,
     message: "Invalid store link."
