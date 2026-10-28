@@ -249,6 +249,7 @@
 
     .btn-row .btn {
       flex: 1;
+      min-width: 0;
     }
 
     .notice {
@@ -320,6 +321,7 @@
       overflow-wrap: anywhere;
       font-size: 13px;
       line-height: 1.6;
+      user-select: text;
     }
 
     .badge {
@@ -340,6 +342,7 @@
     }
 
     /* ORDER SEARCH */
+
     .order-search {
       display: flex;
       align-items: center;
@@ -538,6 +541,7 @@
 <main class="container" id="dashboard" hidden>
 
   <!-- HOME -->
+
   <section class="page active" id="home">
 
     <div class="welcome">
@@ -558,6 +562,7 @@
     </div>
 
     <!-- PERFORMANCE OVERVIEW PRESERVED -->
+
     <h2 class="section-title">Performance Overview</h2>
 
     <div class="stats">
@@ -655,6 +660,7 @@
   </section>
 
   <!-- STORE -->
+
   <section class="page" id="store">
 
     <h1>My Store</h1>
@@ -668,19 +674,22 @@
       <div class="field">
         <label for="businessName">Business Name</label>
         <input id="businessName" maxlength="100"
-          placeholder="Your business name" autocomplete="organization">
+          placeholder="Your business name"
+          autocomplete="organization">
       </div>
 
       <div class="field">
         <label for="agentName">Agent Name</label>
         <input id="agentName" maxlength="100"
-          placeholder="Your full name" autocomplete="name">
+          placeholder="Your full name"
+          autocomplete="name">
       </div>
 
       <div class="field">
         <label for="agentPhone">Business Phone</label>
         <input id="agentPhone" type="tel" inputmode="tel"
-          maxlength="15" placeholder="0241234567" autocomplete="tel">
+          maxlength="15" placeholder="0241234567"
+          autocomplete="tel">
       </div>
 
       <div class="field">
@@ -732,6 +741,7 @@
   </section>
 
   <!-- PRICES -->
+
   <section class="page" id="prices">
 
     <h1>My Selling Prices</h1>
@@ -779,6 +789,7 @@
   </section>
 
   <!-- ORDERS -->
+
   <section class="page" id="orders">
 
     <h1>Orders & Payments</h1>
@@ -825,6 +836,7 @@
   </section>
 
   <!-- PROFILE -->
+
   <section class="page" id="profile">
 
     <h1>My Profile</h1>
@@ -896,6 +908,7 @@
   </section>
 
   <!-- WITHDRAWALS: PRESERVED -->
+
   <section class="page" id="withdrawals">
 
     <h1>Withdraw Earnings</h1>
@@ -1064,19 +1077,13 @@ const AGENT_API =
 
 const LOGIN_PAGE = "agent-login.html";
 
-const PUBLIC_SITE =
-  "https://kielmen.com";
+const PUBLIC_SITE = "https://kielmen.com";
 
 const STORAGE = {
   profile: "k636_agent_profile_v1",
   prices: "k636_agent_prices_v1"
 };
 
-/*
- * Fallback values only.
- * The dashboard attempts to load authoritative prices from
- * the authenticated backend before allowing price changes.
- */
 const BASE_PRICES = {
   MTN: {
     "1GB": 4.50,
@@ -1213,9 +1220,7 @@ function normalisePriceMap(rawPrices) {
       values.forEach(function (item) {
         if (!item) return;
 
-        const bundle = String(
-          item.bundle || item.size || ""
-        );
+        const bundle = String(item.bundle || item.size || "");
 
         const price = Number(
           item.sellingPrice ??
@@ -1445,7 +1450,7 @@ async function agentLogout() {
         }
       });
     }
-  } catch (error) {
+  } catch {
     console.warn("Sign-out request could not reach the server.");
   } finally {
     sessionStorage.removeItem("k636_agent_token");
@@ -1478,7 +1483,12 @@ function showPage(pageId) {
     const active = button.dataset.page === pageId;
 
     button.classList.toggle("active", active);
-    button.setAttribute("aria-current", active ? "page" : "false");
+
+    if (active) {
+      button.setAttribute("aria-current", "page");
+    } else {
+      button.removeAttribute("aria-current");
+    }
   });
 
   if (pageId === "prices") {
@@ -1558,17 +1568,6 @@ function getBasePrice(network, bundle) {
   return Number(BASE_PRICES[normalizedNetwork]?.[bundle] ?? 0);
 }
 
-function getSavedPrice(network, bundle) {
-  const normalizedNetwork = normaliseNetwork(network);
-
-  if (!normalizedNetwork) return null;
-
-  const saved = agentPrices[normalizedNetwork] || {};
-  const value = Number(saved[bundle]);
-
-  return Number.isFinite(value) ? value : null;
-}
-
 function renderPrices() {
   const networkSelect = document.getElementById("priceNetwork");
   const rows = document.getElementById("priceRows");
@@ -1591,7 +1590,8 @@ function renderPrices() {
   const bundles = Object.keys(BASE_PRICES[network] || {});
 
   if (bundles.length === 0) {
-    message.textContent = "No bundle prices are configured for this network.";
+    message.textContent =
+      "No bundle prices are configured for this network.";
     return;
   }
 
@@ -1654,7 +1654,6 @@ async function loadPrices() {
     }
 
     const prices = {};
-
     const receivedPrices = data.result.prices;
 
     if (Array.isArray(receivedPrices)) {
@@ -1703,11 +1702,11 @@ async function loadPrices() {
     serverPricesAvailable = true;
 
     writeStorage(STORAGE.prices, prices);
-
     renderPrices();
 
     if (message) {
-      message.textContent = "Your prices have been loaded from the server.";
+      message.textContent =
+        "Your prices have been loaded from the server.";
     }
 
     return prices;
@@ -1736,7 +1735,8 @@ async function savePrices() {
   const message = document.getElementById("priceMessage");
 
   if (!token) {
-    message.textContent = "Your session has expired. Please sign in again.";
+    message.textContent =
+      "Your session has expired. Please sign in again.";
     return;
   }
 
@@ -1809,12 +1809,15 @@ async function savePrices() {
 
     message.textContent =
       "Your selling prices were saved successfully.";
+    message.className = "message success";
 
   } catch (error) {
     console.error("Save prices error:", error);
 
     message.textContent =
       error.message || "Unable to save your prices.";
+    message.className = "message error";
+
   } finally {
     button.disabled = false;
     button.textContent = "Save My Prices";
@@ -1835,6 +1838,43 @@ function loadProfileForm() {
 
   document.getElementById("storeDescription").value =
     profile.storeDescription || "";
+}
+
+/*
+ * CREATE THE BRAND-NAME STORE URL.
+ *
+ * Example:
+ * "One Time Data"     -> https://kielmen.com/one-time-data
+ * "Berlinda Data Hub" -> https://kielmen.com/berlinda-data-hub
+ *
+ * The business name is converted to a URL-friendly slug.
+ */
+
+function getStoreURL() {
+  const brandName =
+    document.getElementById("businessName")?.value.trim() ||
+    profile.businessName ||
+    agent?.business_name ||
+    agent?.businessName ||
+    "";
+
+  if (!brandName.trim()) {
+    return "";
+  }
+
+  const slug = brandName
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  if (!slug) {
+    return "";
+  }
+
+  return PUBLIC_SITE + "/" + slug;
 }
 
 async function saveStore() {
@@ -1860,9 +1900,11 @@ async function saveStore() {
     return;
   }
 
+  const normalizedPhone = agentPhone.replace(/\s+/g, "");
+
   if (
-    agentPhone &&
-    !/^(0\d{9}|233\d{9})$/.test(agentPhone.replace(/\s+/g, ""))
+    normalizedPhone &&
+    !/^(0\d{9}|233\d{9})$/.test(normalizedPhone)
   ) {
     message.textContent =
       "Enter a valid Ghana phone number, for example 0241234567.";
@@ -1870,12 +1912,6 @@ async function saveStore() {
     return;
   }
 
-  /*
-   * This sends the profile to the existing backend route.
-   * The server must support the PATCH method and these fields.
-   * If the backend rejects the request, the page will report it
-   * instead of pretending the server saved the information.
-   */
   button.disabled = true;
   button.textContent = "Saving...";
   message.textContent = "Saving your store details...";
@@ -1886,7 +1922,7 @@ async function saveStore() {
       body: JSON.stringify({
         businessName,
         fullName: agentName,
-        phone: agentPhone,
+        phone: normalizedPhone,
         storeDescription
       })
     });
@@ -1905,7 +1941,7 @@ async function saveStore() {
     profile = {
       businessName,
       agentName,
-      agentPhone,
+      agentPhone: normalizedPhone,
       storeDescription
     };
 
@@ -1913,7 +1949,17 @@ async function saveStore() {
 
     if (data.result.agent) {
       agent = data.result.agent;
-      sessionStorage.setItem("k636_agent", JSON.stringify(agent));
+
+      sessionStorage.setItem(
+        "k636_agent",
+        JSON.stringify(agent)
+      );
+    } else if (agent) {
+      agent.business_name = businessName;
+      agent.businessName = businessName;
+      agent.full_name = agentName;
+      agent.phone = normalizedPhone;
+      agent.store_description = storeDescription;
     }
 
     document.getElementById("profileBusiness").textContent =
@@ -1923,11 +1969,16 @@ async function saveStore() {
       agentName;
 
     document.getElementById("profilePhone").textContent =
-      agentPhone || "Not provided";
+      normalizedPhone || "Not provided";
 
+    /*
+     * Update the shared link after saving the brand name.
+     */
     renderStoreLink();
 
-    message.textContent = "Your store details have been saved.";
+    message.textContent =
+      "Your store details have been saved successfully.";
+
     message.className = "message success";
 
   } catch (error) {
@@ -1938,63 +1989,39 @@ async function saveStore() {
       error.message;
 
     message.className = "message error";
+
   } finally {
     button.disabled = false;
     button.textContent = "Save Store Details";
   }
 }
 
-function getAgentCode() {
-  let agentData = agent || {};
-
-  try {
-    const storedAgent = JSON.parse(
-      sessionStorage.getItem("k636_agent") || "{}"
-    );
-
-    agentData = {
-      ...storedAgent,
-      ...agentData
-    };
-  } catch {
-    // Continue with the authenticated agent object.
-  }
-
-  return String(
-    agentData.agent_code ||
-    agentData.agentCode ||
-    agentData.code ||
-    ""
-  ).trim();
-}
-
-function getStoreURL() {
-  const code = getAgentCode();
-
-  if (!code) {
-    return "";
-  }
-
-  /*
-   * Use the main website and pass the agent code expected by
-   * the agent store page.
-   */
-  return PUBLIC_SITE +
-    "/agent-store.html?code=" +
-    encodeURIComponent(code);
-}
-
 function renderStoreLink() {
   const linkElement = document.getElementById("storeLink");
+  const message = document.getElementById("storeLinkMessage");
+
+  if (!linkElement) return;
+
   const link = getStoreURL();
 
   if (!link) {
     linkElement.textContent =
-      "Your agent code is unavailable. Please sign in again.";
+      "Enter your business name and save your store details to generate your link.";
+
+    if (message) {
+      message.textContent = "";
+    }
+
     return;
   }
 
   linkElement.textContent = link;
+
+  if (message) {
+    message.textContent =
+      "Your brand-name store link is ready.";
+    message.className = "message success";
+  }
 }
 
 async function copyStoreLink() {
@@ -2003,18 +2030,26 @@ async function copyStoreLink() {
 
   if (!link) {
     message.textContent =
-      "Your agent code could not be found. Please sign in again.";
+      "Enter your business name and save your store details first.";
+    message.className = "message error";
     return;
   }
 
   try {
     await navigator.clipboard.writeText(link);
-    message.textContent = "Store link copied successfully.";
+
+    message.textContent =
+      "Store link copied successfully.";
+
     message.className = "message success";
+
   } catch {
     window.prompt("Copy your store link:", link);
+
     message.textContent =
       "If the link was not copied automatically, copy it from the box above.";
+
+    message.className = "message";
   }
 }
 
@@ -2024,12 +2059,16 @@ async function shareStore() {
 
   if (!link) {
     message.textContent =
-      "Your agent code could not be found. Please sign in again.";
+      "Enter your business name and save your store details first.";
+
+    message.className = "message error";
     return;
   }
 
   const businessName =
-    profile.businessName || "My Data Store";
+    document.getElementById("businessName").value.trim() ||
+    profile.businessName ||
+    "My Data Store";
 
   const shareText =
     "Order your data bundles from " +
@@ -2046,6 +2085,8 @@ async function shareStore() {
       });
 
       message.textContent = "Store sharing opened.";
+      message.className = "message success";
+
     } catch (error) {
       if (error.name !== "AbortError") {
         window.prompt("Copy your store link:", link);
@@ -2064,8 +2105,10 @@ async function shareStore() {
 
 async function loadOrders() {
   const target = document.getElementById("ordersList");
-  const refreshButton = document.getElementById("refreshOrdersButton");
-  const countElement = document.getElementById("orderCount");
+  const refreshButton =
+    document.getElementById("refreshOrdersButton");
+  const countElement =
+    document.getElementById("orderCount");
 
   target.textContent = "Loading orders from the server...";
 
@@ -2085,7 +2128,8 @@ async function loadOrders() {
       data.result.success !== true
     ) {
       throw new Error(
-        data.result?.message || "The server did not return your orders."
+        data.result?.message ||
+        "The server did not return your orders."
       );
     }
 
@@ -2294,17 +2338,20 @@ function renderRecentOrders() {
 }
 
 /* PERFORMANCE OVERVIEW
-   Original statistic elements and display logic are preserved. */
+   Preserved as requested. */
 
 async function loadStats() {
   const ordersElement = document.getElementById("ordersStat");
   const profitElement = document.getElementById("profitStat");
   const salesElement = document.getElementById("salesStat");
   const customersElement = document.getElementById("customersStat");
+
   const confirmedElement =
     document.getElementById("confirmedProfitStat");
+
   const pendingProfitElement =
     document.getElementById("pendingDeliveryProfitStat");
+
   const pendingNoteElement =
     document.getElementById("pendingDeliveryNote");
 
@@ -2314,7 +2361,8 @@ async function loadStats() {
     if (!data.response.ok) {
       throw new Error(
         data.result?.message ||
-        "Statistics request failed with HTTP " + data.response.status
+        "Statistics request failed with HTTP " +
+        data.response.status
       );
     }
 
@@ -2409,20 +2457,30 @@ async function loadStats() {
 
 /* =========================================================
    WITHDRAWAL FUNCTIONS
-   PRESERVED FROM YOUR EXISTING DASHBOARD.
+   PRESERVED AS REQUESTED.
    ========================================================= */
 
 async function loadWithdrawals() {
-  const balanceElement = document.getElementById("availableBalance");
-  const todayElement = document.getElementById("todayProfit");
-  const pendingElement = document.getElementById("pendingWithdrawals");
-  const historyElement = document.getElementById("withdrawalHistory");
-  const messageElement = document.getElementById("withdrawMessage");
+  const balanceElement =
+    document.getElementById("availableBalance");
+
+  const todayElement =
+    document.getElementById("todayProfit");
+
+  const pendingElement =
+    document.getElementById("pendingWithdrawals");
+
+  const historyElement =
+    document.getElementById("withdrawalHistory");
+
+  const messageElement =
+    document.getElementById("withdrawMessage");
 
   const token = sessionStorage.getItem("k636_agent_token");
 
   if (!token) {
-    const message = "Your session has expired. Please sign in again.";
+    const message =
+      "Your session has expired. Please sign in again.";
 
     if (messageElement) messageElement.textContent = message;
     if (historyElement) historyElement.textContent = message;
@@ -2575,11 +2633,20 @@ async function loadWithdrawals() {
 }
 
 async function submitWithdrawal() {
-  const amountInput = document.getElementById("withdrawAmount");
-  const providerInput = document.getElementById("withdrawProvider");
-  const phoneInput = document.getElementById("withdrawPhone");
-  const button = document.getElementById("withdrawSubmit");
-  const message = document.getElementById("withdrawMessage");
+  const amountInput =
+    document.getElementById("withdrawAmount");
+
+  const providerInput =
+    document.getElementById("withdrawProvider");
+
+  const phoneInput =
+    document.getElementById("withdrawPhone");
+
+  const button =
+    document.getElementById("withdrawSubmit");
+
+  const message =
+    document.getElementById("withdrawMessage");
 
   const amount = Number(amountInput.value);
   const provider = providerInput.value;
@@ -2648,6 +2715,7 @@ async function submitWithdrawal() {
     message.textContent =
       error.message ||
       "Unable to submit your withdrawal request. Please try again.";
+
   } finally {
     button.disabled = false;
     button.textContent = "Request Withdrawal";
