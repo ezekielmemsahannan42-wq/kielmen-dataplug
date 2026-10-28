@@ -420,7 +420,8 @@ async function createOrdersTable() {
   `);
     }
 
-async function createAgentTables() {
+async function createAgentTables()
+await createAgentStoreSlugHistoryTable();{
   await pool.query(`
     CREATE TABLE IF NOT EXISTS agents (
       id BIGSERIAL PRIMARY KEY,
@@ -514,6 +515,17 @@ async function createAgentTables() {
   await pool.query(`
     CREATE INDEX IF NOT EXISTS agents_status_idx
     ON agents(status)
+  `);
+}
+async function createAgentStoreSlugHistoryTable() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS agent_store_slug_history (
+      id SERIAL PRIMARY KEY,
+      agent_id BIGINT NOT NULL
+        REFERENCES agents(id) ON DELETE CASCADE,
+      store_slug VARCHAR(100) NOT NULL UNIQUE,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 }
   // ============================================================
@@ -1562,45 +1574,113 @@ app.put(
         });
       }
 
-      const result = await pool.query(
-        `
-          UPDATE agents
-          SET
-            full_name = $1,
-            business_name = $2,
-            email = $3,
-            phone = $4,
-            whatsapp_number = $5,
-            whatsapp_channel = $6,
-            social_link = $7,
-            store_description = $8,
-            updated_at = NOW()
-          WHERE id = $9
-          RETURNING
-            id,
-            agent_code,
-            full_name,
-            business_name,
-            email,
-            phone,
-            store_slug,
-            store_description,
-            whatsapp_number,
-            whatsapp_channel,
-            social_link
-        `,
-        [
-          fullName,
-          businessName,
-          email,
-          phone,
-          whatsappNumber,
-          whatsappChannel,
-          socialLink,
-          description,
-          req.agentId
-        ]
-      );
+      const newStoreSlug = createStoreSlug(businessName);
+
+if (!newStoreSlug) {
+  return res.status(400).json({
+    success: false,
+    message: "Please enter a valid business name for your store link."
+  });
+}
+
+const client = await pool.connect();
+
+let result;
+
+try {
+  await client.query("BEGIN");
+
+  const currentResult = await client.query(
+    `SELECT id, store_slug
+     FROM agents
+     WHERE id = $1
+     FOR UPDATE`,
+    [req.agentId]
+  );
+
+  if (!currentResult.rowCount) {
+    await client.query("ROLLBACK");
+    return res.status(404).json({
+      success: false,
+      message: "Agent account not found."
+    });
+  }
+
+  const currentSlug = currentResult.rows[0].store_slug;
+
+  const slugCheck = await client.query(
+    `SELECT id
+     FROM agents
+     WHERE store_slug = $1 AND id <> $2`,
+    [newStoreSlug, req.agentId]
+  );
+
+  if (slugCheck.rowCount) {
+    await client.query("ROLLBACK");
+    return res.status(409).json({
+      success: false,
+      message: "That store link is already being used. Please choose another business name."
+    });
+  }
+
+  if (currentSlug && currentSlug !== newStoreSlug) {
+    await client.query(
+      `INSERT INTO agent_store_slug_history (agent_id, store_slug)
+       VALUES ($1, $2)
+       ON CONFLICT (store_slug) DO NOTHING`,
+      [req.agentId, currentSlug]
+    );
+  }
+
+  result = await client.query(
+    `
+      UPDATE agents
+      SET
+        full_name = $1,
+        business_name = $2,
+        store_slug = $3,
+        email = $4,
+        phone = $5,
+        whatsapp_number = $6,
+        whatsapp_channel = $7,
+        social_link = $8,
+        store_description = $9,
+        updated_at = NOW()
+      WHERE id = $10
+      RETURNING
+        id,
+        agent_code,
+        full_name,
+        business_name,
+        email,
+        phone,
+        store_slug,
+        store_description,
+        whatsapp_number,
+        whatsapp_channel,
+        social_link
+    `,
+    [
+      fullName,
+      businessName,
+      newStoreSlug,
+      email,
+      phone,
+      whatsappNumber,
+      whatsappChannel,
+      socialLink,
+      description,
+      req.agentId
+    ]
+  );
+
+  await client.query("COMMIT");
+} catch (error) {
+  await client.query("ROLLBACK");
+  throw error;
+} finally {
+  client.release();
+}
 
       if (!result.rowCount) {
         return res.status(404).json({
