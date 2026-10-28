@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,27 +6,26 @@
   <title>Opening Agent Store | Kielmen 636 Dataplug</title>
 </head>
 <body>
-  <p id="message">Opening agent store. Please wait...</p>
-
-  <script>
+  <p id="message">Opening agent store. Please wait...</p>  <script>
     (async function () {
-      const originalPath = window.location.pathname;
+      const message = document.getElementById("message");
 
-      let path;
+      let slug;
 
       try {
-        path = decodeURIComponent(originalPath)
+        slug = decodeURIComponent(window.location.pathname)
           .replace(/^\/+|\/+$/g, "");
-      } catch {
-        path = originalPath.replace(/^\/+|\/+$/g, "");
+      } catch (error) {
+        message.textContent = "Invalid store link.";
+        return;
       }
 
-      if (path.startsWith("agents/")) {
-        path = path.slice("agents/".length);
+      // Support links such as /agents/one-time-data.
+      if (slug.startsWith("agents/")) {
+        slug = slug.slice("agents/".length);
       }
 
-      const reserved = new Set([
-        "",
+      const reservedPages = new Set([
         "index.html",
         "agent-store.html",
         "404.html",
@@ -42,42 +40,50 @@
       ]);
 
       if (
-        !path ||
-        path.includes("/") ||
-        path.includes("\\") ||
-        !/^[a-zA-Z0-9_-]+$/.test(path) ||
-        reserved.has(path.toLowerCase())
+        !slug ||
+        slug.includes("/") ||
+        slug.includes("\\") ||
+        !/^[a-zA-Z0-9_-]{1,100}$/.test(slug) ||
+        reservedPages.has(slug.toLowerCase())
       ) {
-        document.getElementById("message").textContent =
+        message.textContent =
           "This page was not found. Please check the agent store link.";
         return;
       }
 
       try {
         const response = await fetch("/agent-store.html", {
-          cache: "no-cache"
+          cache: "no-store"
         });
 
         if (!response.ok) {
-          throw new Error("Could not load agent-store.html");
+          throw new Error(
+            "Could not load agent-store.html. HTTP " + response.status
+          );
         }
 
         let html = await response.text();
 
+        // Set the store slug before the storefront's own scripts run.
         const slugScript =
           "<script>window.__KIELMEN_STORE_SLUG__=" +
-          JSON.stringify(path.toLowerCase()) +
-          ";<" + "/script>";
+          JSON.stringify(slug.toLowerCase()) +
+          ";<\/script>";
 
-        if (/<head(?:\s[^>]*)?>/i.test(html)) {
-          html = html.replace(
-            /<head(?:\s[^>]*)?>/i,
-            match => match + slugScript
-          );
-        } else {
+        const headPattern = /<head(?:\s[^>]*)?>/i;
+
+        if (!headPattern.test(html)) {
           throw new Error("The storefront HTML has no head element.");
         }
 
+        html = html.replace(
+          headPattern,
+          function (headTag) {
+            return headTag + slugScript;
+          }
+        );
+
+        // Load the storefront while retaining the clean URL.
         document.open();
         document.write(html);
         document.close();
@@ -85,10 +91,9 @@
       } catch (error) {
         console.error("Agent store routing error:", error);
 
-        document.getElementById("message").textContent =
+        message.textContent =
           "The agent store could not be opened. Please refresh and try again.";
       }
     })();
-  </script>
-</body>
+  </script></body>
 </html>
