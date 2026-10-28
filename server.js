@@ -1836,39 +1836,50 @@ app.post(
 // ============================================================
 // 10. PUBLIC AGENT STOREFRONT
 // ============================================================
-// TEMPORARY DIAGNOSTIC — REMOVE AFTER FIXING THE STORE LINK
+// TEMPORARY DIAGNOSTIC — remove after fixing the store link
 app.get("/debug-agent-store/:slug", async (req, res) => {
   try {
-    const slug = String(req.params.slug || "")
+    const search = String(req.params.slug || "")
       .trim()
       .toLowerCase();
 
-    const result = await pool.query(
-      `
-        SELECT
-          agent_code,
-          business_name,
-          store_slug,
-          status
-        FROM agents
-        WHERE LOWER(COALESCE(store_slug, '')) = $1
-           OR LOWER(COALESCE(business_name, '')) = $1
-        ORDER BY id DESC
-        LIMIT 10
-      `,
-      [slug]
-    );
+    const result = await pool.query(`
+      SELECT
+        agent_code,
+        business_name,
+        store_slug,
+        status
+      FROM agents
+      ORDER BY id DESC
+      LIMIT 100
+    `);
+
+    const agents = result.rows.map(agent => ({
+      agentCode: agent.agent_code,
+      businessName: agent.business_name,
+      storeSlug: agent.store_slug,
+      status: agent.status
+    }));
 
     return res.json({
       success: true,
-      agents: result.rows
+      searchedSlug: search,
+      totalAgents: agents.length,
+      matchingAgents: agents.filter(agent =>
+        String(agent.storeSlug || "").toLowerCase() === search ||
+        String(agent.businessName || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "") === search
+      ),
+      agents
     });
   } catch (error) {
     console.error("Agent store diagnostic:", error.message);
 
     return res.status(500).json({
       success: false,
-      message: "Diagnostic query failed."
+      message: "Diagnostic failed. Check Render logs."
     });
   }
 });
