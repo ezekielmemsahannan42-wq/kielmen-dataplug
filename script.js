@@ -1383,7 +1383,19 @@ function initializeAnnouncement() {
 
 
 /* =========================================================
-   16. ORDER TRACKING
+   16. ORDER TRACKING — KIELMEN 636 DATAPLUG
+
+   Features:
+   - Separate payment and delivery statuses
+   - Paid / Not Paid
+   - Processing / On Hold / Delivered / Delivery Failed
+   - Order reference, recipient, amount and date
+   - Copy all order details
+   - Safe handling of unknown payment statuses
+
+   IMPORTANT:
+   The backend must return actual payment and delivery statuses.
+   Never assume payment succeeded or failed based on delivery status.
 ========================================================= */
 
 function normalizeOrdersResponse(response) {
@@ -1410,6 +1422,11 @@ function normalizeOrdersResponse(response) {
     return [];
 }
 
+
+/* ---------------------------------------------------------
+   DATE FORMATTING
+--------------------------------------------------------- */
+
 function formatOrderDate(value) {
     if (!value) {
         return "Date unavailable";
@@ -1427,37 +1444,276 @@ function formatOrderDate(value) {
     });
 }
 
-function getOrderStatus(order) {
-    return String(
-        order.status ||
-        order.payment_status ||
-        order.delivery_status ||
-        "Pending"
-    ).replace(/[_-]+/g, " ");
-}
 
-function getOrderStatusClass(status) {
-    const value = String(status).toLowerCase();
+/* ---------------------------------------------------------
+   READ PAYMENT STATUS
+
+   Only explicit payment information determines whether
+   an order is Paid or Not Paid.
+--------------------------------------------------------- */
+
+function getPaymentStatus(order) {
+    const raw = String(
+        order.paymentStatus ??
+        order.payment_status ??
+        order.paymentState ??
+        order.payment_state ??
+        ""
+    ).trim().toLowerCase();
 
     if (
-        value.includes("success") ||
-        value.includes("complete") ||
-        value.includes("delivered") ||
-        value.includes("paid")
+        [
+            "paid",
+            "success",
+            "successful",
+            "succeeded",
+            "complete",
+            "completed",
+            "verified"
+        ].includes(raw)
     ) {
-        return "success";
+        return {
+            label: "Paid",
+            className: "success"
+        };
     }
 
     if (
-        value.includes("failed") ||
-        value.includes("cancel") ||
-        value.includes("error")
+        [
+            "not_paid",
+            "not paid",
+            "unpaid",
+            "failed",
+            "cancelled",
+            "canceled",
+            "abandoned",
+            "expired"
+        ].includes(raw)
     ) {
-        return "failed";
+        return {
+            label: "Not Paid",
+            className: "failed"
+        };
     }
 
-    return "pending";
+    if (
+        [
+            "pending",
+            "processing",
+            "ongoing",
+            "initiated",
+            "awaiting_payment",
+            "awaiting payment"
+        ].includes(raw)
+    ) {
+        return {
+            label: "Pending",
+            className: "pending"
+        };
+    }
+
+    // Do not guess if the backend did not return a clear status.
+    return {
+        label: "Payment Status Unavailable",
+        className: "unknown"
+    };
 }
+
+
+/* ---------------------------------------------------------
+   READ DELIVERY STATUS
+
+   Delivery status is independent of payment status.
+--------------------------------------------------------- */
+
+function getDeliveryStatus(order) {
+    const raw = String(
+        order.deliveryStatus ??
+        order.delivery_status ??
+        order.supplierStatus ??
+        order.supplier_status ??
+        order.deliveryState ??
+        order.delivery_state ??
+        ""
+    ).trim().toLowerCase();
+
+    if (
+        [
+            "delivered",
+            "delivery_success",
+            "delivery_successful",
+            "success",
+            "successful"
+        ].includes(raw)
+    ) {
+        return {
+            label: "Delivered",
+            className: "success",
+            description:
+                "The data supplier has reported successful delivery."
+        };
+    }
+
+    if (
+        [
+            "on_hold",
+            "on hold",
+            "hold",
+            "held",
+            "verifying",
+            "verification",
+            "awaiting_verification",
+            "awaiting verification"
+        ].includes(raw)
+    ) {
+        return {
+            label: "On Hold",
+            className: "pending",
+            description:
+                "This order is awaiting further verification or resolution. Check the latest status before taking action."
+        };
+    }
+
+    if (
+        [
+            "processing",
+            "in_progress",
+            "in progress",
+            "queued",
+            "accepted",
+            "submitted",
+            "pending"
+        ].includes(raw)
+    ) {
+        return {
+            label: "Processing",
+            className: "processing",
+            description:
+                "Your order is being processed. Check again for the latest delivery status."
+        };
+    }
+
+    if (
+        [
+            "failed",
+            "delivery_failed",
+            "delivery failed",
+            "rejected",
+            "error"
+        ].includes(raw)
+    ) {
+        return {
+            label: "Delivery Failed",
+            className: "failed",
+            description:
+                "The delivery attempt was reported as unsuccessful. Please contact support for assistance."
+        };
+    }
+
+    if (
+        [
+            "cancelled",
+            "canceled"
+        ].includes(raw)
+    ) {
+        return {
+            label: "Cancelled",
+            className: "failed",
+            description:
+                "This order has been marked as cancelled."
+        };
+    }
+
+    return {
+        label: "Status Unavailable",
+        className: "unknown",
+        description:
+            "The latest delivery status is not available. Please check again later or contact support."
+    };
+}
+
+
+/* ---------------------------------------------------------
+   FORMAT ORDER AMOUNT
+--------------------------------------------------------- */
+
+function getOrderAmount(order) {
+    const rawAmount =
+        order.amount ??
+        order.price ??
+        order.total_amount ??
+        order.totalAmount;
+
+    if (
+        rawAmount === undefined ||
+        rawAmount === null ||
+        rawAmount === ""
+    ) {
+        return "Not available";
+    }
+
+    const amount = Number(rawAmount);
+
+    if (!Number.isFinite(amount) || amount < 0) {
+        return "Not available";
+    }
+
+    return formatMoney(amount);
+}
+
+
+/* ---------------------------------------------------------
+   COPY ORDER DETAILS
+
+   Uses the Clipboard API where available, with a fallback.
+--------------------------------------------------------- */
+
+async function copyOrderDetails(text, button) {
+    const originalText = button.textContent;
+
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+        } else {
+            const temporaryInput = document.createElement("textarea");
+
+            temporaryInput.value = text;
+            temporaryInput.setAttribute("readonly", "");
+            temporaryInput.style.position = "fixed";
+            temporaryInput.style.opacity = "0";
+
+            document.body.appendChild(temporaryInput);
+
+            temporaryInput.select();
+
+            const copied = document.execCommand("copy");
+
+            temporaryInput.remove();
+
+            if (!copied) {
+                throw new Error("Copy was unsuccessful.");
+            }
+        }
+
+        button.textContent = "✓ Copied!";
+        button.classList.add("copied");
+
+    } catch (error) {
+        console.warn("Could not copy order details:", error);
+
+        button.textContent = "Copy unavailable";
+    }
+
+    window.setTimeout(() => {
+        button.textContent = originalText;
+        button.classList.remove("copied");
+    }, 1800);
+}
+
+
+/* ---------------------------------------------------------
+   RENDER TRACKING RESULTS
+--------------------------------------------------------- */
 
 function renderOrderResults(orders) {
     const container = getElement("trackOrderResults");
@@ -1470,8 +1726,12 @@ function renderOrderResults(orders) {
         container.innerHTML = `
             <div class="empty-state">
                 <h3>No orders found</h3>
-                <p>No orders were found for that phone number.</p>
-                <p>Check the number and try again.</p>
+                <p>
+                    We could not find any orders for that phone number.
+                </p>
+                <p>
+                    Check the number and try again.
+                </p>
             </div>
         `;
 
@@ -1479,75 +1739,222 @@ function renderOrderResults(orders) {
         return;
     }
 
-    container.innerHTML = orders.map(order => {
+    container.innerHTML = orders.map((order, index) => {
         const network = escapeHTML(
-            order.network || "Unknown network"
+            normalizeNetwork(order.network) ||
+            order.network ||
+            "Unknown network"
         );
 
         const bundle = escapeHTML(
             order.bundle ||
             order.size ||
             order.package ||
+            order.bundle_size ||
             "Data bundle"
         );
 
-        const statusText = getOrderStatus(order);
-        const status = escapeHTML(statusText);
-        const statusClass = getOrderStatusClass(statusText);
-
-        const reference = escapeHTML(
+        const referenceValue =
             order.reference ||
             order.order_reference ||
             order.orderReference ||
+            order.payment_reference ||
             order.id ||
-            "Not provided"
-        );
+            "Not provided";
 
-        const recipient = escapeHTML(
+        const recipientValue =
             order.phone ||
             order.customer_phone ||
             order.recipient_phone ||
-            "Not provided"
-        );
+            order.recipientPhone ||
+            "Not provided";
 
-        const amount = Number(
-            order.amount ??
-            order.price ??
-            order.total_amount
-        );
+        const reference = escapeHTML(referenceValue);
+        const recipient = escapeHTML(recipientValue);
 
-        const amountText = Number.isFinite(amount)
-            ? formatMoney(amount)
-            : "Not available";
+        const amountText = getOrderAmount(order);
 
         const createdAt = escapeHTML(
             formatOrderDate(
                 order.created_at ||
                 order.createdAt ||
-                order.date
+                order.date ||
+                order.created
             )
         );
 
-        return `
-            <article class="tracking-result">
-                <div class="tracking-order-header">
-                    <h3>${network} — ${bundle}</h3>
+        const payment = getPaymentStatus(order);
+        const delivery = getDeliveryStatus(order);
 
-                    <span class="order-status ${statusClass}">
-                        ${status}
+        const safePaymentLabel = escapeHTML(payment.label);
+        const safeDeliveryLabel = escapeHTML(delivery.label);
+        const safeDeliveryDescription =
+            escapeHTML(delivery.description);
+
+        const copyText = [
+            "KIELMEN 636 DATAPLUG — ORDER DETAILS",
+            `Network: ${network}`,
+            `Bundle: ${bundle}`,
+            `Payment status: ${payment.label}`,
+            `Delivery status: ${delivery.label}`,
+            `Order reference: ${referenceValue}`,
+            `Recipient: ${recipientValue}`,
+            `Amount: ${amountText}`,
+            `Date: ${createdAt}`
+        ].join("\n");
+
+        return `
+            <article
+                class="tracking-result kielmen-order-card"
+                data-order-index="${index}"
+            >
+                <div class="tracking-order-header">
+                    <div class="kielmen-order-title">
+                        <h3>${network} — ${bundle}</h3>
+                        <span class="kielmen-order-amount">
+                            ${escapeHTML(amountText)}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="kielmen-status-row">
+                    <span class="kielmen-status-label">
+                        Payment
+                    </span>
+
+                    <span class="order-status ${payment.className}">
+                        ${safePaymentLabel}
                     </span>
                 </div>
 
-                <p><strong>Order reference:</strong> ${reference}</p>
-                <p><strong>Recipient:</strong> ${recipient}</p>
-                <p><strong>Amount:</strong> ${amountText}</p>
-                <p><strong>Date:</strong> ${createdAt}</p>
+                <div class="kielmen-status-row">
+                    <span class="kielmen-status-label">
+                        Delivery
+                    </span>
+
+                    <span class="order-status ${delivery.className}">
+                        ${safeDeliveryLabel}
+                    </span>
+                </div>
+
+                <div class="kielmen-order-detail">
+                    <span class="kielmen-detail-label">
+                        Order reference
+                    </span>
+
+                    <span class="kielmen-detail-value">
+                        ${reference}
+                    </span>
+                </div>
+
+                <div class="kielmen-order-detail">
+                    <span class="kielmen-detail-label">
+                        Recipient
+                    </span>
+
+                    <span class="kielmen-detail-value">
+                        ${recipient}
+                    </span>
+                </div>
+
+                <div class="kielmen-order-detail">
+                    <span class="kielmen-detail-label">
+                        Amount
+                    </span>
+
+                    <span class="kielmen-detail-value">
+                        ${escapeHTML(amountText)}
+                    </span>
+                </div>
+
+                <div class="kielmen-order-detail">
+                    <span class="kielmen-detail-label">
+                        Date
+                    </span>
+
+                    <span class="kielmen-detail-value">
+                        ${createdAt}
+                    </span>
+                </div>
+
+                <div class="kielmen-delivery-message ${delivery.className}">
+                    <strong>
+                        ${safeDeliveryLabel}
+                    </strong>
+
+                    <p>${safeDeliveryDescription}</p>
+                </div>
+
+                <button
+                    type="button"
+                    class="kielmen-copy-order-button"
+                    data-copy-order="${index}"
+                >
+                    ▢ Copy All Details
+                </button>
             </article>
         `;
     }).join("");
 
+    queryAll("[data-copy-order]", container).forEach(button => {
+        button.addEventListener("click", () => {
+            const index = Number(button.dataset.copyOrder);
+
+            if (!Number.isInteger(index) || !orders[index]) {
+                return;
+            }
+
+            const order = orders[index];
+
+            const payment = getPaymentStatus(order);
+            const delivery = getDeliveryStatus(order);
+
+            const details = [
+                "KIELMEN 636 DATAPLUG — ORDER DETAILS",
+                `Network: ${order.network || "Unknown network"}`,
+                `Bundle: ${
+                    order.bundle ||
+                    order.size ||
+                    order.package ||
+                    "Data bundle"
+                }`,
+                `Payment status: ${payment.label}`,
+                `Delivery status: ${delivery.label}`,
+                `Order reference: ${
+                    order.reference ||
+                    order.order_reference ||
+                    order.orderReference ||
+                    order.payment_reference ||
+                    order.id ||
+                    "Not provided"
+                }`,
+                `Recipient: ${
+                    order.phone ||
+                    order.customer_phone ||
+                    order.recipient_phone ||
+                    order.recipientPhone ||
+                    "Not provided"
+                }`,
+                `Amount: ${getOrderAmount(order)}`,
+                `Date: ${formatOrderDate(
+                    order.created_at ||
+                    order.createdAt ||
+                    order.date ||
+                    order.created
+                )}`
+            ].join("\n");
+
+            copyOrderDetails(details, button);
+        });
+    });
+
     showElement(container);
 }
+
+
+/* ---------------------------------------------------------
+   FIND ORDERS BY PHONE NUMBER
+--------------------------------------------------------- */
 
 async function trackOrders(event) {
     event.preventDefault();
@@ -1621,6 +2028,11 @@ async function trackOrders(event) {
         }
     }
 }
+
+
+/* ---------------------------------------------------------
+   INITIALIZE ORDER TRACKING
+--------------------------------------------------------- */
 
 function initializeOrderTracking() {
     const form = getElement("trackOrderForm");
