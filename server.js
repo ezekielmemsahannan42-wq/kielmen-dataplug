@@ -1756,6 +1756,42 @@ app.post(
 // ============================================================
 // 10. PUBLIC AGENT STOREFRONT
 // ============================================================
+// TEMPORARY DIAGNOSTIC — REMOVE AFTER FIXING THE STORE LINK
+app.get("/debug-agent-store/:slug", async (req, res) => {
+  try {
+    const slug = String(req.params.slug || "")
+      .trim()
+      .toLowerCase();
+
+    const result = await pool.query(
+      `
+        SELECT
+          agent_code,
+          business_name,
+          store_slug,
+          status
+        FROM agents
+        WHERE LOWER(COALESCE(store_slug, '')) = $1
+           OR LOWER(COALESCE(business_name, '')) = $1
+        ORDER BY id DESC
+        LIMIT 10
+      `,
+      [slug]
+    );
+
+    return res.json({
+      success: true,
+      agents: result.rows
+    });
+  } catch (error) {
+    console.error("Agent store diagnostic:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Diagnostic query failed."
+    });
+  }
+});
 
 app.get("/agents/store/:code", async (req, res) => {
   try {
@@ -1827,6 +1863,7 @@ app.get("/agents/store/:code", async (req, res) => {
     });
   }
 });
+
 app.get("/agents/store-by-slug/:slug", async (req, res) => {
 try {
 const slug = String(req.params.slug || "")
