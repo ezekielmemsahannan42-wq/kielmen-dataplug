@@ -1,9 +1,11 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#111827">
-<title>Kielmen 636 | Agent Dashboard</title><style>
+<title>Kielmen 636 | Agent Dashboard</title>
+<style>
 :root{
   --bg:#f4f6fa;
   --surface:#fff;
@@ -430,7 +432,11 @@ footer{margin-top:28px;padding:15px;color:#94a3b8;text-align:center;font-size:11
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}
 }
-</style></head><body><header class="topbar">
+</style>
+</head>
+<body>
+
+<header class="topbar">
   <div class="top-left">
     <button class="menu-toggle" id="menuToggle" type="button"
       aria-label="Open navigation menu" aria-expanded="false">☰</button>
@@ -445,44 +451,78 @@ footer{margin-top:28px;padding:15px;color:#94a3b8;text-align:center;font-size:11
   <div class="top-actions">
     <span class="top-status">● Agent Dashboard</span>
   </div>
-</header><div class="sidebar-overlay" id="sidebarOverlay" hidden></div><aside class="sidebar" id="sidebar" aria-label="Agent navigation">
-  <div class="sidebar-caption">Main Menu</div>  <button class="side-link active" data-page="home" type="button">
+</header>
+
+<div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+
+<aside class="sidebar" id="sidebar" aria-label="Agent navigation">
+  <div class="sidebar-caption">Main Menu</div>
+
+  <button class="side-link active" data-page="home" type="button">
     <span class="side-icon">⌂</span>Overview
-  </button>  <button class="side-link" data-page="profile" type="button">
+  </button>
+
+  <button class="side-link" data-page="profile" type="button">
     <span class="side-icon">◎</span>Account Information
-  </button>  <button class="side-link" data-page="store" type="button">
+  </button>
+
+  <button class="side-link" data-page="store" type="button">
     <span class="side-icon">▣</span>My Store
-  </button>  <button class="side-link" data-page="prices" type="button">
+  </button>
+
+  <button class="side-link" data-page="prices" type="button">
     <span class="side-icon">₵</span>My Selling Prices
-  </button>  <button class="side-link" data-page="orders" type="button">
+  </button>
+
+  <button class="side-link" data-page="orders" type="button">
     <span class="side-icon">▤</span>Orders & Payments
-  </button>  <div class="side-divider"></div>
-  <div class="sidebar-caption">Account Settings</div><button class="side-group-title" id="settingsToggle" type="button"
-aria-expanded="true">
-<span>⚙️ Settings</span><span id="settingsArrow">⌄</span>
-</button>
+  </button>
+
+  <div class="side-divider"></div>
+  <div class="sidebar-caption">Account Settings</div>
+
+  <button class="side-group-title" id="settingsToggle" type="button" aria-expanded="true">
+    <span>⚙️ Settings</span><span id="settingsArrow">⌄</span>
+  </button>
 
   <div class="side-submenu" id="settingsSubmenu">
     <button class="side-link" data-page="passwordSettings" type="button">
       <span class="side-icon">🔒</span>Change Password
     </button>
+
     <button class="side-link" data-page="phoneSettings" type="button">
       <span class="side-icon">📱</span>Phone Number
     </button>
+
     <button class="side-link" data-page="communitySettings" type="button">
       <span class="side-icon">💬</span>WhatsApp Group / Channel
     </button>
-  </div>  <button class="side-link" data-page="announcements" type="button">
+  </div>
+
+  <button class="side-link" data-page="announcements" type="button">
     <span class="side-icon">📢</span>Announcements
-  </button>  <div class="side-divider"></div>  <button class="side-link" data-page="withdrawals" type="button">
+  </button>
+
+  <div class="side-divider"></div>
+
+  <button class="side-link" data-page="withdrawals" type="button">
     <span class="side-icon">💰</span>Withdraw Earnings
-  </button>  <button class="side-link" id="sideSignOut" type="button">
+  </button>
+
+  <button class="side-link" id="sideSignOut" type="button">
     <span class="side-icon">↪</span>Sign Out
   </button>
-</aside><div id="pageMessage" role="status" aria-live="polite">
+</aside>
+
+<div id="pageMessage" role="status" aria-live="polite">
   <strong>Checking your account...</strong>
   <p>Please wait while we verify your agent login.</p>
-</div><main class="container" id="dashboard" hidden>  <!-- OVERVIEW -->  <section class="page active" id="home">
+</div>
+
+<main class="container" id="dashboard" hidden>
+
+  <!-- OVERVIEW -->
+  <section class="page active" id="home">
     <div class="welcome">
       <div class="welcome-content">
         <h1 id="welcomeName">Welcome, Agent!</h1>
@@ -491,69 +531,100 @@ aria-expanded="true">
         <br>
         <button class="btn" type="button" onclick="agentLogout()">Sign Out</button>
       </div>
-    </div><h2 class="section-title">Performance Overview</h2>
-<div class="stats">
-  <div class="card">
-    <div class="stat-label">Total Orders</div>
-    <div class="stat-value" id="ordersStat">—</div>
-    <div class="stat-note">Server order records</div>
-  </div>
-  <div class="card">
-    <div class="stat-label">Estimated Profit</div>
-    <div class="stat-value green" id="profitStat">—</div>
-    <div class="stat-note">Estimated margin from paid orders. Delivery may still be pending.</div>
-  </div>
-  <div class="card">
-    <div class="stat-label">Confirmed Profit</div>
-    <div class="stat-value green" id="confirmedProfitStat">—</div>
-    <div class="stat-note">Profit from successfully delivered orders.</div>
-  </div>
-  <div class="card">
-    <div class="stat-label">Pending Delivery Profit</div>
-    <div class="stat-value gold" id="pendingDeliveryProfitStat">—</div>
-    <div class="stat-note" id="pendingDeliveryNote">Calculating orders awaiting delivery...</div>
-  </div>
-  <div class="card">
-    <div class="stat-label">Total Sales</div>
-    <div class="stat-value" id="salesStat">—</div>
-    <div class="stat-note">Recorded sales</div>
-  </div>
-  <div class="card">
-    <div class="stat-label">Customers</div>
-    <div class="stat-value" id="customersStat">—</div>
-    <div class="stat-note">Recorded customers</div>
-  </div>
-</div>
-
-<h2 class="section-title">Your Data Store</h2>
-<div class="card">
-  <div class="network-grid">
-    <button class="network mtn" type="button" onclick="selectNetwork('MTN')"><span>🟡</span>MTN</button>
-    <button class="network telecel" type="button" onclick="selectNetwork('Telecel')"><span>🔴</span>Telecel</button>
-    <button class="network at" type="button" onclick="selectNetwork('AirtelTigo')"><span>🔵</span>AirtelTigo</button>
-  </div>
-  <p class="stat-note">Select a network to view your selling prices.</p>
-  <button class="btn btn-primary btn-block" type="button" onclick="showPage('prices')">Manage My Prices</button>
-</div>
-
-<h2 class="section-title">Recent Orders</h2>
-<div class="card">
-  <div id="recentOrders" class="message">Loading order information...</div>
-  <button class="btn btn-block" type="button" onclick="showPage('orders')">View All Orders</button>
-</div>
-
-  </section>  <!-- STORE -->  <section class="page" id="store">
-    <div class="page-heading">
-      <div><h1>My Store</h1><p>Manage your storefront and share your store link.</p></div>
     </div>
+
+    <h2 class="section-title">Performance Overview</h2>
+
+    <div class="stats">
+      <div class="card">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value" id="ordersStat">—</div>
+        <div class="stat-note">Server order records</div>
+      </div>
+
+      <div class="card">
+        <div class="stat-label">Estimated Profit</div>
+        <div class="stat-value green" id="profitStat">—</div>
+        <div class="stat-note">Estimated margin from paid orders. Delivery may still be pending.</div>
+      </div>
+
+      <div class="card">
+        <div class="stat-label">Confirmed Profit</div>
+        <div class="stat-value green" id="confirmedProfitStat">—</div>
+        <div class="stat-note">Profit from successfully delivered orders.</div>
+      </div>
+
+      <div class="card">
+        <div class="stat-label">Pending Delivery Profit</div>
+        <div class="stat-value gold" id="pendingDeliveryProfitStat">—</div>
+        <div class="stat-note" id="pendingDeliveryNote">Calculating orders awaiting delivery...</div>
+      </div>
+
+      <div class="card">
+        <div class="stat-label">Total Sales</div>
+        <div class="stat-value" id="salesStat">—</div>
+        <div class="stat-note">Recorded sales</div>
+      </div>
+
+      <div class="card">
+        <div class="stat-label">Customers</div>
+        <div class="stat-value" id="customersStat">—</div>
+        <div class="stat-note">Recorded customers</div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Your Data Store</h2>
     <div class="card">
-      <div class="field"><label for="businessName">Business Name</label><input id="businessName" maxlength="100" placeholder="Your business name" autocomplete="organization"></div>
-      <div class="field"><label for="agentName">Agent Name</label><input id="agentName" maxlength="100" placeholder="Your full name" autocomplete="name"></div>
-      <div class="field"><label for="agentPhone">Business Phone</label><input id="agentPhone" type="tel" inputmode="tel" maxlength="15" placeholder="0241234567" autocomplete="tel"></div>
-      <div class="field"><label for="storeDescription">Store Description</label><input id="storeDescription" maxlength="120" placeholder="Affordable data bundles"></div>
+      <div class="network-grid">
+        <button class="network mtn" type="button" onclick="selectNetwork('MTN')"><span>🟡</span>MTN</button>
+        <button class="network telecel" type="button" onclick="selectNetwork('Telecel')"><span>🔴</span>Telecel</button>
+        <button class="network at" type="button" onclick="selectNetwork('AirtelTigo')"><span>🔵</span>AirtelTigo</button>
+      </div>
+      <p class="stat-note">Select a network to view your selling prices.</p>
+      <button class="btn btn-primary btn-block" type="button" onclick="showPage('prices')">Manage My Prices</button>
+    </div>
+
+    <h2 class="section-title">Recent Orders</h2>
+    <div class="card">
+      <div id="recentOrders" class="message">Loading order information...</div>
+      <button class="btn btn-block" type="button" onclick="showPage('orders')">View All Orders</button>
+    </div>
+  </section>
+
+  <!-- STORE -->
+  <section class="page" id="store">
+    <div class="page-heading">
+      <div>
+        <h1>My Store</h1>
+        <p>Manage your storefront and share your store link.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label for="businessName">Business Name</label>
+        <input id="businessName" maxlength="100" placeholder="Your business name" autocomplete="organization">
+      </div>
+
+      <div class="field">
+        <label for="agentName">Agent Name</label>
+        <input id="agentName" maxlength="100" placeholder="Your full name" autocomplete="name">
+      </div>
+
+      <div class="field">
+        <label for="agentPhone">Business Phone</label>
+        <input id="agentPhone" type="tel" inputmode="tel" maxlength="15" placeholder="0241234567" autocomplete="tel">
+      </div>
+
+      <div class="field">
+        <label for="storeDescription">Store Description</label>
+        <input id="storeDescription" maxlength="120" placeholder="Affordable data bundles">
+      </div>
+
       <button class="btn btn-primary btn-block" id="saveStoreButton" type="button" onclick="saveStore()">Save Store Details</button>
       <p id="storeMessage" class="message" aria-live="polite">Your store information is loaded from your agent profile.</p>
     </div>
+
     <div class="card">
       <h3>Share Your Store</h3>
       <p class="stat-note">Give customers your unique store link.</p>
@@ -564,8 +635,17 @@ aria-expanded="true">
       </div>
       <p id="storeLinkMessage" class="message" aria-live="polite"></p>
     </div>
-  </section>  <!-- PRICES -->  <section class="page" id="prices">
-    <div class="page-heading"><div><h1>My Selling Prices</h1><p>Manage the prices customers see in your store.</p></div></div>
+  </section>
+
+  <!-- PRICES -->
+  <section class="page" id="prices">
+    <div class="page-heading">
+      <div>
+        <h1>My Selling Prices</h1>
+        <p>Manage the prices customers see in your store.</p>
+      </div>
+    </div>
+
     <div class="card">
       <div class="field">
         <label for="priceNetwork">Select Network</label>
@@ -575,30 +655,54 @@ aria-expanded="true">
           <option value="AirtelTigo">AirtelTigo</option>
         </select>
       </div>
+
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Bundle</th><th>Base Price</th><th>Selling Price</th></tr></thead>
+          <thead>
+            <tr><th>Bundle</th><th>Base Price</th><th>Selling Price</th></tr>
+          </thead>
           <tbody id="priceRows"></tbody>
         </table>
       </div>
+
       <button class="btn btn-primary btn-block" id="savePricesButton" type="button" onclick="savePrices()">Save My Prices</button>
       <p id="priceMessage" class="message" aria-live="polite"></p>
     </div>
-  </section>  <!-- ORDERS -->  <section class="page" id="orders">
-    <div class="page-heading"><div><h1>Orders & Payments</h1><p>Review the orders returned for your agent account.</p></div></div>
+  </section>
+
+  <!-- ORDERS -->
+  <section class="page" id="orders">
+    <div class="page-heading">
+      <div>
+        <h1>Orders & Payments</h1>
+        <p>Review the orders returned for your agent account.</p>
+      </div>
+    </div>
+
     <div class="card">
       <div class="notice">Search only filters orders returned to your authenticated agent account.</div>
       <button class="btn btn-primary btn-block" id="refreshOrdersButton" type="button" onclick="loadOrders()">↻ Refresh Orders</button>
+
       <div class="order-search">
         <span class="search-icon" aria-hidden="true">⌕</span>
         <input type="search" id="orderSearch" placeholder="Search phone, reference, network..." aria-label="Search orders" autocomplete="off">
         <button type="button" id="clearOrderSearch">Clear</button>
       </div>
+
       <p class="order-count" id="orderCount" aria-live="polite">Loading orders...</p>
       <div id="ordersList" class="message">Loading orders...</div>
     </div>
-  </section>  <!-- ACCOUNT INFORMATION -->  <section class="page" id="profile">
-    <div class="page-heading"><div><h1>Account Information</h1><p>View your agent account details.</p></div></div>
+  </section>
+
+  <!-- ACCOUNT INFORMATION -->
+  <section class="page" id="profile">
+    <div class="page-heading">
+      <div>
+        <h1>Account Information</h1>
+        <p>View your agent account details.</p>
+      </div>
+    </div>
+
     <div class="card">
       <div class="profile-line"><div class="profile-label">Full Name</div><div class="profile-value" id="profileAgent">Loading...</div></div>
       <div class="profile-line"><div class="profile-label">Business Name</div><div class="profile-value" id="profileBusiness">Loading...</div></div>
@@ -606,91 +710,197 @@ aria-expanded="true">
       <div class="profile-line"><div class="profile-label">Email</div><div class="profile-value" id="profileEmail">Loading...</div></div>
       <div class="profile-line"><div class="profile-label">Agent Code</div><div class="profile-value" id="profileCode">Loading...</div></div>
       <div class="profile-line"><div class="profile-label">Account Status</div><div class="profile-value"><span id="profileStatus" class="badge">Loading...</span></div></div>
+
       <div class="btn-row" style="margin-top:18px">
         <button class="btn btn-primary" type="button" onclick="showPage('store')">Edit Store Profile</button>
         <button class="btn" type="button" onclick="showPage('passwordSettings')">Security Settings</button>
       </div>
     </div>
-  </section>  <!-- SETTINGS: PASSWORD -->  <section class="page" id="passwordSettings">
-    <div class="page-heading"><div><h1>Change Password</h1><p>Keep your agent account secure.</p></div></div>
+  </section>
+
+  <!-- SETTINGS: PASSWORD -->
+  <section class="page" id="passwordSettings">
+    <div class="page-heading">
+      <div>
+        <h1>Change Password</h1>
+        <p>Keep your agent account secure.</p>
+      </div>
+    </div>
+
     <div class="card">
       <div class="notice">Use a strong password and never share it with anyone. The server must support the password-change endpoint for this feature to work.</div>
+
       <form id="passwordForm">
-        <div class="field"><label for="currentPassword">Current Password</label><input id="currentPassword" type="password" autocomplete="current-password" required maxlength="128"></div>
-        <div class="field"><label for="newPassword">New Password</label><input id="newPassword" type="password" autocomplete="new-password" required minlength="8" maxlength="128"><div class="stat-note">Use at least 8 characters.</div></div>
-        <div class="field"><label for="confirmPassword">Confirm New Password</label><input id="confirmPassword" type="password" autocomplete="new-password" required minlength="8" maxlength="128"></div>
+        <div class="field">
+          <label for="currentPassword">Current Password</label>
+          <input id="currentPassword" type="password" autocomplete="current-password" required maxlength="128">
+        </div>
+
+        <div class="field">
+          <label for="newPassword">New Password</label>
+          <input id="newPassword" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
+          <div class="stat-note">Use at least 12 characters.</div>
+        </div>
+
+        <div class="field">
+          <label for="confirmPassword">Confirm New Password</label>
+          <input id="confirmPassword" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
+        </div>
+
         <button class="btn btn-primary btn-block" id="passwordSubmit" type="submit">Update Password</button>
         <p id="passwordMessage" class="message" aria-live="polite"></p>
       </form>
     </div>
-  </section>  <!-- SETTINGS: PHONE -->  <section class="page" id="phoneSettings">
-    <div class="page-heading"><div><h1>Phone Number</h1><p>Manage the contact number associated with your account.</p></div></div>
+  </section>
+
+  <!-- SETTINGS: PHONE -->
+  <section class="page" id="phoneSettings">
+    <div class="page-heading">
+      <div>
+        <h1>Phone Number</h1>
+        <p>Manage the contact number associated with your account.</p>
+      </div>
+    </div>
+
     <div class="card">
       <div class="notice">Your number is account information. This form updates it only if your backend supports the relevant profile-update endpoint.</div>
+
       <form id="phoneForm">
-        <div class="field"><label for="settingsPhone">New Phone Number</label><input id="settingsPhone" type="tel" inputmode="tel" maxlength="15" autocomplete="tel" placeholder="0241234567" required></div>
+        <div class="field">
+          <label for="settingsPhone">New Phone Number</label>
+          <input id="settingsPhone" type="tel" inputmode="tel" maxlength="15" autocomplete="tel" placeholder="0241234567" required>
+        </div>
+
         <button class="btn btn-primary btn-block" id="phoneSubmit" type="submit">Update Phone Number</button>
         <p id="phoneMessage" class="message" aria-live="polite"></p>
       </form>
     </div>
-  </section>  <!-- SETTINGS: WHATSAPP -->  <section class="page" id="communitySettings">
-    <div class="page-heading"><div><h1>WhatsApp Community Link</h1><p>Add your customer group or channel link.</p></div></div>
+  </section>
+
+  <!-- SETTINGS: WHATSAPP -->
+  <section class="page" id="communitySettings">
+    <div class="page-heading">
+      <div>
+        <h1>WhatsApp Community Link</h1>
+        <p>Add your customer group or channel link.</p>
+      </div>
+    </div>
+
     <div class="card">
       <div class="notice">Save a valid WhatsApp group or channel link to your agent profile. If the server doesn't support storing this setting yet, the dashboard will tell you.</div>
+
       <form id="communityForm">
         <div class="field">
           <label for="whatsappLink">WhatsApp Group / Channel Link</label>
           <input id="whatsappLink" type="url" maxlength="500" placeholder="https://chat.whatsapp.com/..." autocomplete="url">
         </div>
+
         <div class="field">
           <label for="whatsappLabel">Link Description</label>
           <input id="whatsappLabel" maxlength="100" placeholder="Join my data deals and announcements">
         </div>
+
         <button class="btn btn-primary btn-block" id="communitySubmit" type="submit">Save WhatsApp Link</button>
         <p id="communityMessage" class="message" aria-live="polite"></p>
         <div id="communityPreview" class="share-link" hidden></div>
       </form>
     </div>
-  </section>  <!-- ANNOUNCEMENTS -->  <section class="page" id="announcements">
-    <div class="page-heading"><div><h1>Announcements</h1><p>Important updates for Kielmen 636 agents.</p></div></div>
+  </section>
+
+  <!-- ANNOUNCEMENTS -->
+  <section class="page" id="announcements">
+    <div class="page-heading">
+      <div>
+        <h1>Announcements</h1>
+        <p>Important updates for Kielmen 636 agents.</p>
+      </div>
+    </div>
+
     <div class="card">
       <div class="notice">Announcements are loaded from the server when a compatible announcements endpoint is available.</div>
       <button class="btn btn-primary btn-block" id="refreshAnnouncements" type="button" onclick="loadAnnouncements()">↻ Refresh Announcements</button>
       <div id="announcementsList" class="message" aria-live="polite">Loading announcements...</div>
     </div>
-  </section>  <!-- WITHDRAWALS: KEEP EXISTING FLOW AND ENDPOINTS -->  <section class="page" id="withdrawals">
-    <div class="page-heading"><div><h1>Withdraw Earnings</h1><p>Withdraw eligible earnings to your Mobile Money account.</p></div></div>
-    <p class="stat-note">Today's profits become available the following day.</p><div class="stats">
-  <div class="card"><div class="stat-label">Available Balance</div><div class="stat-value green" id="availableBalance">GH₵0.00</div><div class="stat-note">Available for withdrawal now.</div></div>
-  <div class="card"><div class="stat-label">Today's Profit</div><div class="stat-value" id="todayProfit">GH₵0.00</div><div class="stat-note">Available for withdrawal tomorrow.</div></div>
-  <div class="card"><div class="stat-label">Pending Withdrawals</div><div class="stat-value gold" id="pendingWithdrawals">GH₵0.00</div><div class="stat-note">Requests awaiting processing.</div></div>
-</div>
+  </section>
 
-<div class="card">
-  <h3>Request a Withdrawal</h3>
-  <div class="notice">Minimum withdrawal: GH₵0.10. There is no maximum withdrawal limit provided your available balance covers the request. Today's profit becomes withdrawable the following day.</div>
-  <div class="field"><label for="withdrawAmount">Amount (GH₵)</label><input type="number" id="withdrawAmount" min="0.10" step="0.01" placeholder="e.g. 50.00"></div>
-  <div class="field"><label for="withdrawProvider">Mobile Money Provider</label><select id="withdrawProvider"><option value="MTN">MTN MoMo</option><option value="TELECEL">Telecel Cash</option><option value="AIRTELTIGO">AirtelTigo Money</option></select></div>
-  <div class="field"><label for="withdrawPhone">Mobile Money Number</label><input type="tel" id="withdrawPhone" inputmode="tel" maxlength="15" placeholder="0241234567"></div>
-  <button class="btn btn-primary btn-block" id="withdrawSubmit" type="button" onclick="submitWithdrawal()">Request Withdrawal</button>
-  <p id="withdrawMessage" class="message" aria-live="polite"></p>
-</div>
+  <!-- WITHDRAWALS: EXISTING FLOW -->
+  <section class="page" id="withdrawals">
+    <div class="page-heading">
+      <div>
+        <h1>Withdraw Earnings</h1>
+        <p>Withdraw eligible earnings to your Mobile Money account.</p>
+      </div>
+    </div>
 
-<div class="card">
-  <h3>Withdrawal History</h3>
-  <button class="btn btn-block" type="button" onclick="loadWithdrawals()">Refresh Balance & History</button>
-  <div id="withdrawalHistory" class="message">Loading withdrawal history...</div>
-</div>
+    <p class="stat-note">Today's profits become available the following day.</p>
 
-  </section>  <footer>Kielmen 636 Dataplug · Agent Dashboard</footer>
-</main><nav class="bottom-nav" id="bottomNav" hidden aria-label="Quick navigation">
+    <div class="stats">
+      <div class="card">
+        <div class="stat-label">Available Balance</div>
+        <div class="stat-value green" id="availableBalance">GH₵0.00</div>
+        <div class="stat-note">Available for withdrawal now.</div>
+      </div>
+
+      <div class="card">
+        <div class="stat-label">Today's Profit</div>
+        <div class="stat-value" id="todayProfit">GH₵0.00</div>
+        <div class="stat-note">Available for withdrawal tomorrow.</div>
+      </div>
+
+      <div class="card">
+        <div class="stat-label">Pending Withdrawals</div>
+        <div class="stat-value gold" id="pendingWithdrawals">GH₵0.00</div>
+        <div class="stat-note">Requests awaiting processing.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Request a Withdrawal</h3>
+      <div class="notice">Minimum withdrawal: GH₵0.10. There is no maximum withdrawal limit provided your available balance covers the request. Today's profit becomes withdrawable the following day.</div>
+
+      <div class="field">
+        <label for="withdrawAmount">Amount (GH₵)</label>
+        <input type="number" id="withdrawAmount" min="0.10" step="0.01" placeholder="e.g. 50.00">
+      </div>
+
+      <div class="field">
+        <label for="withdrawProvider">Mobile Money Provider</label>
+        <select id="withdrawProvider">
+          <option value="MTN">MTN MoMo</option>
+          <option value="TELECEL">Telecel Cash</option>
+          <option value="AIRTELTIGO">AirtelTigo Money</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="withdrawPhone">Mobile Money Number</label>
+        <input type="tel" id="withdrawPhone" inputmode="tel" maxlength="15" placeholder="0241234567">
+      </div>
+
+      <button class="btn btn-primary btn-block" id="withdrawSubmit" type="button" onclick="submitWithdrawal()">Request Withdrawal</button>
+      <p id="withdrawMessage" class="message" aria-live="polite"></p>
+    </div>
+
+    <div class="card">
+      <h3>Withdrawal History</h3>
+      <button class="btn btn-block" type="button" onclick="loadWithdrawals()">Refresh Balance & History</button>
+      <div id="withdrawalHistory" class="message">Loading withdrawal history...</div>
+    </div>
+  </section>
+
+  <footer>Kielmen 636 Dataplug · Agent Dashboard</footer>
+</main>
+
+<nav class="bottom-nav" id="bottomNav" hidden aria-label="Quick navigation">
   <button class="nav-btn active" data-page="home" type="button"><span class="icon">⌂</span>Overview</button>
   <button class="nav-btn" data-page="store" type="button"><span class="icon">▣</span>Store</button>
   <button class="nav-btn" data-page="prices" type="button"><span class="icon">₵</span>Prices</button>
   <button class="nav-btn" data-page="orders" type="button"><span class="icon">▤</span>Orders</button>
   <button class="nav-btn" data-page="profile" type="button"><span class="icon">◎</span>Account</button>
   <button class="nav-btn" data-page="withdrawals" type="button"><span class="icon">💰</span>Withdraw</button>
-</nav><script>
+</nav>
+
+<script>
 "use strict";
 
 const AGENT_API = "https://kielmen-dataplug-payment-api.onrender.com";
@@ -734,16 +944,25 @@ function readStorage(key,fallback){
     return saved?JSON.parse(saved):fallback;
   }catch{return fallback}
 }
+
 function writeStorage(key,value){
-  try{localStorage.setItem(key,JSON.stringify(value));return true}catch{return false}
+  try{
+    localStorage.setItem(key,JSON.stringify(value));
+    return true;
+  }catch{
+    return false;
+  }
 }
+
 function money(value){
   const amount=Number(value);
   return Number.isFinite(amount)?"GH₵"+amount.toFixed(2):"GH₵0.00";
 }
+
 function escapeHTML(value){
   return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
+
 function normaliseNetwork(value){
   const network=String(value??"").toUpperCase().replace(/[^A-Z]/g,"");
   if(network==="MTN")return "MTN";
@@ -751,13 +970,17 @@ function normaliseNetwork(value){
   if(network==="AIRTELTIGO"||network==="AIRTELTIGHO"||network==="AT")return "AirtelTigo";
   return null;
 }
+
 function normalisePriceMap(raw){
   const out={};
   if(!raw||typeof raw!=="object")return out;
+
   Object.entries(raw).forEach(([networkKey,values])=>{
     const network=normaliseNetwork(networkKey);
     if(!network||!values||typeof values!=="object")return;
+
     out[network]={};
+
     if(Array.isArray(values)){
       values.forEach(item=>{
         if(!item)return;
@@ -772,16 +995,26 @@ function normalisePriceMap(raw){
       });
     }
   });
+
   return out;
 }
+
 function setMessage(title,detail,showLoginButton){
   const box=document.getElementById("pageMessage");
   box.replaceChildren();
-  const h=document.createElement("strong");h.textContent=title;box.appendChild(h);
-  const p=document.createElement("p");p.textContent=detail;box.appendChild(p);
+
+  const h=document.createElement("strong");
+  h.textContent=title;
+  box.appendChild(h);
+
+  const p=document.createElement("p");
+  p.textContent=detail;
+  box.appendChild(p);
+
   if(showLoginButton){
     const b=document.createElement("button");
-    b.className="btn btn-primary";b.textContent="Return to Sign In";
+    b.className="btn btn-primary";
+    b.textContent="Return to Sign In";
     b.addEventListener("click",()=>window.location.href=LOGIN_PAGE);
     box.appendChild(b);
   }
@@ -790,16 +1023,25 @@ function setMessage(title,detail,showLoginButton){
 async function apiRequest(path,options={}){
   const token=sessionStorage.getItem("k636_agent_token");
   const headers={Accept:"application/json",...(options.headers||{})};
+
   if(token)headers.Authorization="Bearer "+token;
   if(options.body&&!headers["Content-Type"])headers["Content-Type"]="application/json";
 
   let response;
-  try{response=await fetch(AGENT_API+path,{...options,headers})}
-  catch{throw new Error("Could not connect to the server. Check your internet connection.")}
+
+  try{
+    response=await fetch(AGENT_API+path,{...options,headers});
+  }catch{
+    throw new Error("Could not connect to the server. Check your internet connection.");
+  }
 
   let result;
-  try{result=await response.json()}
-  catch{throw new Error("The server returned an invalid response.")}
+
+  try{
+    result=await response.json();
+  }catch{
+    throw new Error("The server returned an invalid response.");
+  }
 
   return {response,result};
 }
@@ -807,21 +1049,27 @@ async function apiRequest(path,options={}){
 /* AUTHENTICATION */
 async function verifyAgent(){
   const token=sessionStorage.getItem("k636_agent_token");
+
   if(!token){
     setMessage("Sign-in required","Please sign in with your approved agent account.",true);
     return;
   }
+
   try{
     const data=await apiRequest("/agents/me");
+
     if(!data.response.ok||!data.result||data.result.success!==true||!data.result.agent){
       sessionStorage.removeItem("k636_agent_token");
       sessionStorage.removeItem("k636_agent");
       setMessage("Your session is invalid or expired","Please sign in again. If your account is awaiting approval, contact the administrator.",true);
       return;
     }
+
     agent=data.result.agent;
     sessionStorage.setItem("k636_agent",JSON.stringify(agent));
+
     displayAgent();
+
     document.getElementById("pageMessage").hidden=true;
     document.getElementById("dashboard").hidden=false;
     document.getElementById("bottomNav").hidden=false;
@@ -832,6 +1080,7 @@ async function verifyAgent(){
       loadStats(),
       loadAnnouncements()
     ]);
+
     loadCommunityForm();
   }catch(error){
     console.error("Agent verification failed:",error);
@@ -843,7 +1092,7 @@ function displayAgent(){
   const fullName=agent.full_name||agent.fullName||agent.name||"Agent";
   const businessName=agent.business_name||agent.businessName||"My Data Store";
   const phone=agent.phone||agent.mobile_number||"";
-  const email=agent.email||"";
+  const email=agent.email||agent.email_address||"";
   const code=agent.agent_code||agent.agentCode||agent.code||"";
   const status=agent.status||agent.account_status||"Active";
 
@@ -863,8 +1112,9 @@ function displayAgent(){
     businessName,
     agentName:fullName,
     agentPhone:phone,
-    storeDescription:agent.store_description||agent.storeDescription||""
+    storeDescription:agent.store_description||agent.storeDescription||agent.description||profile.storeDescription||""
   };
+
   loadProfileForm();
   document.getElementById("settingsPhone").value=phone;
   renderStoreLink();
@@ -872,12 +1122,17 @@ function displayAgent(){
 
 async function agentLogout(){
   const token=sessionStorage.getItem("k636_agent_token");
+
   try{
     if(token){
-      await fetch(AGENT_API+"/agents/logout",{method:"POST",headers:{Authorization:"Bearer "+token}});
+      await fetch(AGENT_API+"/agents/logout",{
+        method:"POST",
+        headers:{Authorization:"Bearer "+token}
+      });
     }
-  }catch(error){console.warn("Sign-out request could not reach the server.",error)}
-  finally{
+  }catch(error){
+    console.warn("Sign-out request could not reach the server.",error);
+  }finally{
     sessionStorage.removeItem("k636_agent_token");
     sessionStorage.removeItem("k636_agent");
     window.location.replace(LOGIN_PAGE);
@@ -894,17 +1149,21 @@ function closeSidebar(){
   overlay.hidden=true;
   menuToggle.setAttribute("aria-expanded","false");
 }
+
 function toggleSidebar(){
   const opening=!sidebar.classList.contains("open");
   sidebar.classList.toggle("open",opening);
   overlay.hidden=!opening;
   menuToggle.setAttribute("aria-expanded",String(opening));
 }
+
 menuToggle.addEventListener("click",toggleSidebar);
 overlay.addEventListener("click",closeSidebar);
+
 document.getElementById("settingsToggle").addEventListener("click",()=>{
   const submenu=document.getElementById("settingsSubmenu");
   const expanded=document.getElementById("settingsToggle").getAttribute("aria-expanded")==="true";
+
   document.getElementById("settingsToggle").setAttribute("aria-expanded",String(!expanded));
   submenu.hidden=expanded;
   document.getElementById("settingsArrow").textContent=expanded?"›":"⌄";
@@ -917,28 +1176,38 @@ const ALLOWED_PAGES=[
 
 function showPage(pageId){
   if(!ALLOWED_PAGES.includes(pageId))return;
-  document.querySelectorAll(".page").forEach(page=>page.classList.toggle("active",page.id===pageId));
+
+  document.querySelectorAll(".page").forEach(page=>{
+    page.classList.toggle("active",page.id===pageId);
+  });
+
   document.querySelectorAll("[data-page]").forEach(button=>{
     const active=button.dataset.page===pageId;
     button.classList.toggle("active",active);
+
     if(active)button.setAttribute("aria-current","page");
     else button.removeAttribute("aria-current");
   });
+
   if(pageId==="prices")renderPrices();
   if(pageId==="withdrawals")loadWithdrawals();
   if(pageId==="orders")renderOrders();
   if(pageId==="announcements")loadAnnouncements();
+
   closeSidebar();
   window.scrollTo({top:0,behavior:"smooth"});
 }
+
 document.querySelectorAll("[data-page]").forEach(button=>{
   button.addEventListener("click",()=>showPage(button.dataset.page));
 });
+
 document.getElementById("sideSignOut").addEventListener("click",agentLogout);
 
 function selectNetwork(network){
   const normalized=normaliseNetwork(network);
   if(!normalized)return;
+
   document.getElementById("priceNetwork").value=normalized;
   renderPrices();
   showPage("prices");
@@ -948,62 +1217,103 @@ function selectNetwork(network){
 function getBasePrice(network,bundle){
   const backendBase=window.agentBasePrices||{};
   const normalized=normaliseNetwork(network);
+
   if(!normalized)return Number(BASE_PRICES[network]?.[bundle]??0);
+
   for(const key of [normalized,normalized.toUpperCase(),normalized.toLowerCase()]){
     const values=backendBase[key];
+
     if(values&&values[bundle]!==undefined){
       const price=Number(values[bundle]);
       if(Number.isFinite(price))return price;
     }
   }
+
   return Number(BASE_PRICES[normalized]?.[bundle]??0);
 }
+
 function renderPrices(){
   const networkSelect=document.getElementById("priceNetwork");
   const rows=document.getElementById("priceRows");
   const message=document.getElementById("priceMessage");
+
   if(!networkSelect||!rows||!message)return;
+
   const network=normaliseNetwork(networkSelect.value);
-  if(!network){rows.replaceChildren();message.textContent="Select a valid network.";return}
+
+  if(!network){
+    rows.replaceChildren();
+    message.textContent="Select a valid network.";
+    return;
+  }
+
   networkSelect.value=network;
   rows.replaceChildren();
+
   const saved=agentPrices[network]||{};
   const bundles=Object.keys(BASE_PRICES[network]||{});
-  if(!bundles.length){message.textContent="No bundle prices are configured for this network.";return}
+
+  if(!bundles.length){
+    message.textContent="No bundle prices are configured for this network.";
+    return;
+  }
 
   bundles.forEach(bundle=>{
     const base=getBasePrice(network,bundle);
     const savedPrice=Number(saved[bundle]);
     const selling=Number.isFinite(savedPrice)&&savedPrice>=base?savedPrice:base;
+
     const row=document.createElement("tr");
-    const bundleCell=document.createElement("td");bundleCell.textContent=bundle;
-    const baseCell=document.createElement("td");baseCell.textContent=money(base);
+
+    const bundleCell=document.createElement("td");
+    bundleCell.textContent=bundle;
+
+    const baseCell=document.createElement("td");
+    baseCell.textContent=money(base);
+
     const priceCell=document.createElement("td");
     const input=document.createElement("input");
-    input.className="price-input";input.type="number";input.min=String(base);
-    input.step="0.01";input.value=selling.toFixed(2);
-    input.dataset.network=network;input.dataset.bundle=bundle;
+
+    input.className="price-input";
+    input.type="number";
+    input.min=String(base);
+    input.step="0.01";
+    input.value=selling.toFixed(2);
+    input.dataset.network=network;
+    input.dataset.bundle=bundle;
     input.setAttribute("aria-label",network+" "+bundle+" selling price");
-    priceCell.appendChild(input);row.append(bundleCell,baseCell,priceCell);rows.appendChild(row);
+
+    priceCell.appendChild(input);
+    row.append(bundleCell,baseCell,priceCell);
+    rows.appendChild(row);
   });
+
   message.textContent=serverPricesAvailable
     ?"Edit your selling prices and select Save My Prices."
     :"Prices could not be confirmed by the server. Reconnect before saving changes.";
 }
+
 async function loadPrices(){
   const message=document.getElementById("priceMessage");
+
   try{
     const data=await apiRequest("/agents/prices");
-    if(!data.response.ok||!data.result||data.result.success!==true)
+
+    if(!data.response.ok||!data.result||data.result.success!==true){
       throw new Error(data.result?.message||"Could not load agent prices.");
+    }
+
     const received=data.result.prices;
     let prices={};
+
     if(Array.isArray(received)){
       received.forEach(item=>{
         if(!item)return;
+
         const network=normaliseNetwork(item.network);
         const bundle=String(item.bundle||item.size||"");
         const price=Number(item.sellingPrice??item.selling_price??item.price);
+
         if(network&&bundle&&Number.isFinite(price)){
           if(!prices[network])prices[network]={};
           prices[network][bundle]=price;
@@ -1012,135 +1322,281 @@ async function loadPrices(){
     }else if(received&&typeof received==="object"){
       prices=normalisePriceMap(received);
     }
+
     agentPrices=prices;
     window.agentSavedPrices=prices;
     window.agentBasePrices=data.result.basePrices||data.result.base_prices||{};
     serverPricesAvailable=true;
+
     writeStorage(STORAGE.prices,prices);
     renderPrices();
+
     if(message)message.textContent="Your prices have been loaded from the server.";
+
     return prices;
   }catch(error){
     serverPricesAvailable=false;
     console.error("Load prices error:",error);
     renderPrices();
-    if(message)message.textContent="Could not confirm prices from the server. "+error.message+" Saving prices is disabled until prices load successfully.";
+
+    if(message){
+      message.textContent="Could not confirm prices from the server. "+error.message+" Saving prices is disabled until prices load successfully.";
+    }
+
     return {};
   }
 }
+
 async function savePrices(){
   const token=sessionStorage.getItem("k636_agent_token");
   const button=document.getElementById("savePricesButton");
   const message=document.getElementById("priceMessage");
-  if(!token){message.textContent="Your session has expired. Please sign in again.";return}
-  if(!serverPricesAvailable){message.textContent="Prices have not been confirmed by the server. Refresh and try again.";return}
+
+  if(!token){
+    message.textContent="Your session has expired. Please sign in again.";
+    return;
+  }
+
+  if(!serverPricesAvailable){
+    message.textContent="Prices have not been confirmed by the server. Refresh and try again.";
+    return;
+  }
+
   const inputs=document.querySelectorAll("#priceRows input[data-network][data-bundle]");
-  const prices=[];let validationError="";
+  const prices=[];
+  let validationError="";
+
   inputs.forEach(input=>{
     const network=normaliseNetwork(input.dataset.network);
     const bundle=input.dataset.bundle;
     const price=Number(input.value);
     const base=getBasePrice(network,bundle);
+
     if(!network||!bundle||input.value.trim()===""||!Number.isFinite(price)||price<base||Math.round(price*100)!==price*100){
-      validationError="Check every price. Prices must be valid, use no more than two decimal places, and meet the minimum price.";return;
+      validationError="Check every price. Prices must be valid, use no more than two decimal places, and meet the minimum price.";
+      return;
     }
+
     prices.push({network,bundle,sellingPrice:price});
   });
-  if(validationError||!prices.length){message.textContent=validationError||"No valid prices were found.";return}
-  button.disabled=true;button.textContent="Saving Prices...";message.textContent="Saving prices to your agent account...";
+
+  if(validationError||!prices.length){
+    message.textContent=validationError||"No valid prices were found.";
+    return;
+  }
+
+  button.disabled=true;
+  button.textContent="Saving Prices...";
+  message.textContent="Saving prices to your agent account...";
+
   try{
-    const data=await apiRequest("/agents/prices",{method:"PUT",body:JSON.stringify({prices})});
-    if(!data.response.ok||!data.result||data.result.success!==true)
+    const data=await apiRequest("/agents/prices",{
+      method:"PUT",
+      body:JSON.stringify({prices})
+    });
+
+    if(!data.response.ok||!data.result||data.result.success!==true){
       throw new Error(data.result?.message||"Unable to save prices.");
+    }
+
     await loadPrices();
+
     message.textContent="Your selling prices were saved successfully.";
     message.className="message success";
   }catch(error){
     console.error("Save prices error:",error);
     message.textContent=error.message||"Unable to save your prices.";
     message.className="message error";
-  }finally{button.disabled=false;button.textContent="Save My Prices"}
+  }finally{
+    button.disabled=false;
+    button.textContent="Save My Prices";
+  }
 }
 
-/* STORE PROFILE — ORIGINAL ENDPOINT PRESERVED */
+/* STORE PROFILE — UPDATED PROFILE REQUEST */
 function loadProfileForm(){
   document.getElementById("businessName").value=profile.businessName||"";
   document.getElementById("agentName").value=profile.agentName||"";
   document.getElementById("agentPhone").value=profile.agentPhone||"";
   document.getElementById("storeDescription").value=profile.storeDescription||"";
 }
+
 function getStoreURL(){
-  const brand=document.getElementById("businessName")?.value.trim()||profile.businessName||agent?.business_name||agent?.businessName||"";
+  const brand=document.getElementById("businessName")?.value.trim()||
+    profile.businessName||
+    agent?.business_name||
+    agent?.businessName||
+    "";
+
   if(!brand.trim())return "";
-  const slug=brand.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"");
+
+  const slug=brand.toLowerCase().trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .replace(/[^a-z0-9]+/g,"-")
+    .replace(/^-+|-+$/g,"");
+
   return slug?PUBLIC_SITE+"/"+slug:"";
 }
+
 async function saveStore(){
   const businessName=document.getElementById("businessName").value.trim();
   const agentName=document.getElementById("agentName").value.trim();
   const agentPhone=document.getElementById("agentPhone").value.trim();
   const storeDescription=document.getElementById("storeDescription").value.trim();
+
   const message=document.getElementById("storeMessage");
   const button=document.getElementById("saveStoreButton");
+
   if(businessName.length<2||agentName.length<2){
-    message.textContent="Enter a valid business name and agent name.";message.className="message error";return;
+    message.textContent="Enter a valid business name and agent name.";
+    message.className="message error";
+    return;
   }
+
   const normalizedPhone=agentPhone.replace(/\s+/g,"");
+
   if(normalizedPhone&&!/^(0\d{9}|233\d{9})$/.test(normalizedPhone)){
-    message.textContent="Enter a valid Ghana phone number, for example 0241234567.";message.className="message error";return;
+    message.textContent="Enter a valid Ghana phone number, for example 0241234567.";
+    message.className="message error";
+    return;
   }
-  button.disabled=true;button.textContent="Saving...";message.textContent="Saving your store details...";
+
+  const email=String(agent?.email||agent?.email_address||"").trim();
+
+  const profilePayload={
+    fullName:agentName,
+    businessName:businessName,
+    email:email,
+    phone:normalizedPhone,
+    description:storeDescription
+  };
+
+  button.disabled=true;
+  button.textContent="Saving...";
+  message.textContent="Saving your store details...";
+
   try{
-    const data=await apiRequest("/agents/profile",{method:"PATCH",body:JSON.stringify({businessName,fullName:agentName,phone:normalizedPhone,storeDescription})});
-    if(!data.response.ok||!data.result||data.result.success!==true)
+    const data=await apiRequest("/agents/profile",{
+      method:"PUT",
+      body:JSON.stringify(profilePayload)
+    });
+
+    if(!data.response.ok||!data.result||data.result.success!==true){
       throw new Error(data.result?.message||"The server did not save your store details.");
-    profile={...profile,businessName,agentName,agentPhone:normalizedPhone,storeDescription};
-    writeStorage(STORAGE.profile,profile);
-    if(data.result.agent)agent=data.result.agent;
-    else if(agent){
-      agent.business_name=businessName;agent.businessName=businessName;
-      agent.full_name=agentName;agent.phone=normalizedPhone;agent.store_description=storeDescription;
     }
-    sessionStorage.setItem("k636_agent",JSON.stringify(agent));
+
+    profile={
+      ...profile,
+      businessName:businessName,
+      agentName:agentName,
+      agentPhone:normalizedPhone,
+      storeDescription:storeDescription
+    };
+
+    writeStorage(STORAGE.profile,profile);
+
+    if(data.result.agent){
+      agent=data.result.agent;
+    }else if(agent){
+      agent={
+        ...agent,
+        business_name:businessName,
+        businessName:businessName,
+        full_name:agentName,
+        fullName:agentName,
+        phone:normalizedPhone,
+        store_description:storeDescription,
+        storeDescription:storeDescription,
+        description:storeDescription
+      };
+    }
+
+    if(agent){
+      sessionStorage.setItem("k636_agent",JSON.stringify(agent));
+    }
+
     displayAgent();
     renderStoreLink();
+
     message.textContent="Your store details have been saved successfully.";
     message.className="message success";
   }catch(error){
     console.error("Store profile save error:",error);
+
     message.textContent="Could not save your store details: "+error.message;
     message.className="message error";
-  }finally{button.disabled=false;button.textContent="Save Store Details"}
+  }finally{
+    button.disabled=false;
+    button.textContent="Save Store Details";
+  }
 }
+
 function renderStoreLink(){
   const element=document.getElementById("storeLink");
   const message=document.getElementById("storeLinkMessage");
+
   if(!element)return;
+
   const link=getStoreURL();
+
   if(!link){
     element.textContent="Enter your business name and save your store details to generate your link.";
+
     if(message)message.textContent="";
+
     return;
   }
+
   element.textContent=link;
-  if(message){message.textContent="Your brand-name store link is ready.";message.className="message success"}
+
+  if(message){
+    message.textContent="Your brand-name store link is ready.";
+    message.className="message success";
+  }
 }
+
 async function copyStoreLink(){
   const link=getStoreURL();
   const message=document.getElementById("storeLinkMessage");
-  if(!link){message.textContent="Enter your business name and save your store details first.";message.className="message error";return}
-  try{await navigator.clipboard.writeText(link);message.textContent="Store link copied successfully.";message.className="message success"}
-  catch{window.prompt("Copy your store link:",link);message.textContent="If the link was not copied automatically, copy it from the box above."}
+
+  if(!link){
+    message.textContent="Enter your business name and save your store details first.";
+    message.className="message error";
+    return;
+  }
+
+  try{
+    await navigator.clipboard.writeText(link);
+    message.textContent="Store link copied successfully.";
+    message.className="message success";
+  }catch{
+    window.prompt("Copy your store link:",link);
+    message.textContent="If the link was not copied automatically, copy it from the box above.";
+  }
 }
+
 async function shareStore(){
   const link=getStoreURL();
   const message=document.getElementById("storeLinkMessage");
-  if(!link){message.textContent="Enter your business name and save your store details first.";message.className="message error";return}
+
+  if(!link){
+    message.textContent="Enter your business name and save your store details first.";
+    message.className="message error";
+    return;
+  }
+
   const name=document.getElementById("businessName").value.trim()||profile.businessName||"My Data Store";
   const text="Order your data bundles from "+name+" using my Kielmen 636 Dataplug store: "+link;
+
   if(navigator.share){
-    try{await navigator.share({title:name,text,url:link});message.textContent="Store sharing opened.";message.className="message success"}
-    catch(error){if(error.name!=="AbortError")window.prompt("Copy your store link:",link)}
+    try{
+      await navigator.share({title:name,text,url:link});
+      message.textContent="Store sharing opened.";
+      message.className="message success";
+    }catch(error){
+      if(error.name!=="AbortError")window.prompt("Copy your store link:",link);
+    }
   }else{
     window.open("https://wa.me/?text="+encodeURIComponent(text),"_blank","noopener,noreferrer");
   }
@@ -1151,21 +1607,40 @@ async function loadOrders(){
   const target=document.getElementById("ordersList");
   const button=document.getElementById("refreshOrdersButton");
   const count=document.getElementById("orderCount");
+
   target.textContent="Loading orders from the server...";
+
   if(count)count.textContent="Loading orders...";
-  button.disabled=true;button.textContent="Loading...";
+
+  button.disabled=true;
+  button.textContent="Loading...";
+
   try{
     const data=await apiRequest("/agents/orders");
-    if(!data.response.ok||!data.result||data.result.success!==true)
+
+    if(!data.response.ok||!data.result||data.result.success!==true){
       throw new Error(data.result?.message||"The server did not return your orders.");
-    orders=Array.isArray(data.result.orders)?data.result.orders:Array.isArray(data.result.data?.orders)?data.result.data.orders:[];
-    renderOrders();renderRecentOrders();
+    }
+
+    orders=Array.isArray(data.result.orders)
+      ?data.result.orders
+      :Array.isArray(data.result.data?.orders)
+        ?data.result.data.orders
+        :[];
+
+    renderOrders();
+    renderRecentOrders();
   }catch(error){
     console.error("Load orders error:",error);
     target.textContent="Unable to load orders: "+error.message;
+
     if(count)count.textContent="Orders unavailable";
-  }finally{button.disabled=false;button.textContent="↻ Refresh Orders"}
+  }finally{
+    button.disabled=false;
+    button.textContent="↻ Refresh Orders";
+  }
 }
+
 function orderSearchFields(order){
   return [
     order.network,order.bundle,order.status,order.payment_status,order.paymentStatus,
@@ -1174,18 +1649,28 @@ function orderSearchFields(order){
     order.transaction_reference,order.supplier_reference
   ];
 }
+
 function renderOrders(){
   const target=document.getElementById("ordersList");
   const search=document.getElementById("orderSearch");
   const count=document.getElementById("orderCount");
+
   if(!target)return;
+
   const term=search?search.value.trim().toLowerCase():"";
-  const filtered=orders.filter(order=>orderSearchFields(order).some(value=>String(value??"").toLowerCase().includes(term)));
+  const filtered=orders.filter(order=>
+    orderSearchFields(order).some(value=>String(value??"").toLowerCase().includes(term))
+  );
+
   if(count)count.textContent=filtered.length+" of "+orders.length+" orders";
+
   if(!filtered.length){
-    target.textContent=term?"No orders match your search. Try another phone number, reference, network, bundle or status.":"No orders were returned for this agent account.";
+    target.textContent=term
+      ?"No orders match your search. Try another phone number, reference, network, bundle or status."
+      :"No orders were returned for this agent account.";
     return;
   }
+
   target.innerHTML=filtered.map(order=>{
     const network=order.network||"Network";
     const bundle=order.bundle||"Bundle";
@@ -1194,22 +1679,67 @@ function renderOrders(){
     const phone=order.phone||order.customer_phone||order.customerPhone||"Not provided";
     const reference=order.reference||order.reference_code||order.transaction_reference||"Not available";
     const amount=order.amount??order.total??0;
-    const date=order.created_at?new Date(order.created_at).toLocaleString("en-GB",{timeZone:"Africa/Accra",day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:true}):"Date unavailable";
-    return `<article class="order-card"><h3>${escapeHTML(network)} · ${escapeHTML(bundle)}</h3><p class="stat-note">Reference: ${escapeHTML(reference)}</p><p class="stat-note">Customer phone: ${escapeHTML(phone)}</p><p class="stat-note">Order date: ${escapeHTML(date)}</p><p>Payment status: <span class="order-status">${escapeHTML(payment)}</span></p><p>Delivery status: <span class="order-status">${escapeHTML(delivery)}</span></p><strong>${money(amount)}</strong></article>`;
-  }).join("");
-}
-function renderRecentOrders(){
-  const target=document.getElementById("recentOrders");
-  if(!target)return;
-  if(!orders.length){target.textContent="No server orders have been returned yet.";return}
-  target.innerHTML=orders.slice(0,3).map(order=>{
-    const reference=order.reference||order.reference_code||order.transaction_reference||"Not available";
-    const date=order.created_at?new Date(order.created_at).toLocaleString("en-GB",{timeZone:"Africa/Accra",day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:true}):"Date unavailable";
-    return `<div class="message"><strong>${escapeHTML(order.network||"Network")} · ${escapeHTML(order.bundle||"Bundle")}</strong><p>Reference: ${escapeHTML(reference)}</p><p>Date: ${escapeHTML(date)}</p><p>Status: ${escapeHTML(order.status||"unknown")}</p><strong>${money(order.amount??order.total??0)}</strong></div>`;
+
+    const date=order.created_at
+      ?new Date(order.created_at).toLocaleString("en-GB",{
+        timeZone:"Africa/Accra",
+        day:"2-digit",
+        month:"short",
+        year:"numeric",
+        hour:"2-digit",
+        minute:"2-digit",
+        hour12:true
+      })
+      :"Date unavailable";
+
+    return `<article class="order-card">
+      <h3>${escapeHTML(network)} · ${escapeHTML(bundle)}</h3>
+      <p class="stat-note">Reference: ${escapeHTML(reference)}</p>
+      <p class="stat-note">Customer phone: ${escapeHTML(phone)}</p>
+      <p class="stat-note">Order date: ${escapeHTML(date)}</p>
+      <p>Payment status: <span class="order-status">${escapeHTML(payment)}</span></p>
+      <p>Delivery status: <span class="order-status">${escapeHTML(delivery)}</span></p>
+      <strong>${money(amount)}</strong>
+    </article>`;
   }).join("");
 }
 
-/* PERFORMANCE OVERVIEW — SAME STATISTICS ENDPOINT AND FIELDS */
+function renderRecentOrders(){
+  const target=document.getElementById("recentOrders");
+
+  if(!target)return;
+
+  if(!orders.length){
+    target.textContent="No server orders have been returned yet.";
+    return;
+  }
+
+  target.innerHTML=orders.slice(0,3).map(order=>{
+    const reference=order.reference||order.reference_code||order.transaction_reference||"Not available";
+
+    const date=order.created_at
+      ?new Date(order.created_at).toLocaleString("en-GB",{
+        timeZone:"Africa/Accra",
+        day:"2-digit",
+        month:"short",
+        year:"numeric",
+        hour:"2-digit",
+        minute:"2-digit",
+        hour12:true
+      })
+      :"Date unavailable";
+
+    return `<div class="message">
+      <strong>${escapeHTML(order.network||"Network")} · ${escapeHTML(order.bundle||"Bundle")}</strong>
+      <p>Reference: ${escapeHTML(reference)}</p>
+      <p>Date: ${escapeHTML(date)}</p>
+      <p>Status: ${escapeHTML(order.status||"unknown")}</p>
+      <strong>${money(order.amount??order.total??0)}</strong>
+    </div>`;
+  }).join("");
+}
+
+/* PERFORMANCE OVERVIEW */
 async function loadStats(){
   const ordersElement=document.getElementById("ordersStat");
   const profitElement=document.getElementById("profitStat");
@@ -1218,11 +1748,20 @@ async function loadStats(){
   const confirmedElement=document.getElementById("confirmedProfitStat");
   const pendingElement=document.getElementById("pendingDeliveryProfitStat");
   const pendingNote=document.getElementById("pendingDeliveryNote");
+
   try{
     const data=await apiRequest("/agents/stats");
-    if(!data.response.ok)throw new Error(data.result?.message||"Statistics request failed with HTTP "+data.response.status);
-    if(!data.result||data.result.success!==true)throw new Error(data.result?.message||"The server did not return successful statistics.");
+
+    if(!data.response.ok){
+      throw new Error(data.result?.message||"Statistics request failed with HTTP "+data.response.status);
+    }
+
+    if(!data.result||data.result.success!==true){
+      throw new Error(data.result?.message||"The server did not return successful statistics.");
+    }
+
     const stats=data.result.stats||data.result;
+
     const totalOrders=Number(stats.totalOrders??stats.total_orders);
     const totalSales=Number(stats.totalSales??stats.total_sales);
     const estimatedProfit=Number(stats.estimatedProfit??stats.estimatedMargin??stats.estimated_margin??stats.totalProfit??stats.total_profit);
@@ -1230,8 +1769,16 @@ async function loadStats(){
     const pendingProfit=Number(stats.pendingDeliveryProfit??stats.pending_delivery_profit);
     const customers=Number(stats.customers??stats.totalCustomers??stats.total_customers);
     const pendingOrders=Number(stats.pendingDeliveryOrders??stats.pending_delivery_orders);
-    const required=[totalOrders,totalSales,estimatedProfit,confirmedProfit,pendingProfit,customers,pendingOrders];
-    if(!required.every(Number.isFinite))throw new Error("The server response is missing one or more statistics. Check the /agents/stats response in server.js.");
+
+    const required=[
+      totalOrders,totalSales,estimatedProfit,confirmedProfit,
+      pendingProfit,customers,pendingOrders
+    ];
+
+    if(!required.every(Number.isFinite)){
+      throw new Error("The server response is missing one or more statistics. Check the /agents/stats response in server.js.");
+    }
+
     ordersElement.textContent=totalOrders;
     salesElement.textContent=money(totalSales);
     profitElement.textContent=money(estimatedProfit);
@@ -1239,17 +1786,22 @@ async function loadStats(){
     pendingElement.textContent=money(pendingProfit);
     customersElement.textContent=customers;
     pendingNote.textContent=pendingOrders+" orders awaiting delivery.";
+
     dashboardStats=stats;
   }catch(error){
     console.error("Agent statistics error:",error);
-    ordersElement.textContent="Error";salesElement.textContent="Error";
-    profitElement.textContent="Unavailable";confirmedElement.textContent="Unavailable";
-    pendingElement.textContent="Unavailable";customersElement.textContent="Error";
+
+    ordersElement.textContent="Error";
+    salesElement.textContent="Error";
+    profitElement.textContent="Unavailable";
+    confirmedElement.textContent="Unavailable";
+    pendingElement.textContent="Unavailable";
+    customersElement.textContent="Error";
     pendingNote.textContent=error.message||"Unable to retrieve statistics.";
   }
 }
 
-/* WITHDRAWAL FUNCTIONS — ENDPOINTS AND PAYLOADS PRESERVED */
+/* WITHDRAWAL FUNCTIONS */
 async function loadWithdrawals(){
   const balanceElement=document.getElementById("availableBalance");
   const todayElement=document.getElementById("todayProfit");
@@ -1257,150 +1809,262 @@ async function loadWithdrawals(){
   const historyElement=document.getElementById("withdrawalHistory");
   const messageElement=document.getElementById("withdrawMessage");
   const token=sessionStorage.getItem("k636_agent_token");
+
   if(!token){
     const message="Your session has expired. Please sign in again.";
+
     if(messageElement)messageElement.textContent=message;
     if(historyElement)historyElement.textContent=message;
+
     return;
   }
+
   if(messageElement)messageElement.textContent="Loading your earnings...";
   if(historyElement)historyElement.textContent="Loading withdrawal history...";
+
   try{
     const balanceData=await apiRequest("/agents/stats");
-    if(!balanceData.response.ok||!balanceData.result||balanceData.result.success!==true)
+
+    if(!balanceData.response.ok||!balanceData.result||balanceData.result.success!==true){
       throw new Error(balanceData.result?.message||"Could not retrieve your earnings.");
+    }
+
     const stats=balanceData.result.stats||balanceData.result;
+
     const available=Number(stats.availableBalance);
     const today=Number(stats.todayProfit??stats.todaysProfit);
     const pending=Number(stats.pendingWithdrawals);
-    if(!Number.isFinite(available)||!Number.isFinite(today)||!Number.isFinite(pending))
+
+    if(!Number.isFinite(available)||!Number.isFinite(today)||!Number.isFinite(pending)){
       throw new Error("The server returned missing or invalid balance values.");
+    }
+
     balanceElement.textContent=money(available);
     todayElement.textContent=money(today);
     pendingElement.textContent=money(pending);
-    if(messageElement)messageElement.textContent="Balances loaded successfully. Today's profit becomes available for withdrawal on the following Ghana calendar day.";
+
+    if(messageElement){
+      messageElement.textContent="Balances loaded successfully. Today's profit becomes available for withdrawal on the following Ghana calendar day.";
+    }
+
     try{
       const historyData=await apiRequest("/agents/withdrawals/history");
-      if(!historyData.response.ok||!historyData.result||historyData.result.success!==true)
+
+      if(!historyData.response.ok||!historyData.result||historyData.result.success!==true){
         throw new Error(historyData.result?.message||"Could not retrieve withdrawal history.");
+      }
+
       const withdrawals=historyData.result.withdrawals;
-      if(!Array.isArray(withdrawals))throw new Error("Invalid withdrawal history response.");
-      if(!withdrawals.length)historyElement.textContent="No withdrawal requests have been recorded yet.";
-      else historyElement.innerHTML=withdrawals.map(item=>{
-        const status=String(item.status||"pending").toLowerCase();
-        const label=status==="paid"?"PAID":status==="rejected"?"REJECTED":status==="approved"?"APPROVED":"PENDING";
-        const color=status==="paid"?"#078454":status==="rejected"?"#dc3545":"#a16207";
-        const date=item.created_at?new Date(item.created_at).toLocaleString("en-GB",{timeZone:"Africa/Accra"}):"Date unavailable";
-        return `<div class="card"><strong>${money(item.amount)}</strong><p class="stat-note">Provider: ${escapeHTML(item.provider||"Not provided")}</p><p class="stat-note">Mobile Money: ${escapeHTML(item.phone||"Not provided")}</p><p>Status: <strong style="color:${color}">${label}</strong></p><p class="stat-note">Date: ${escapeHTML(date)}</p></div>`;
-      }).join("");
+
+      if(!Array.isArray(withdrawals)){
+        throw new Error("Invalid withdrawal history response.");
+      }
+
+      if(!withdrawals.length){
+        historyElement.textContent="No withdrawal requests have been recorded yet.";
+      }else{
+        historyElement.innerHTML=withdrawals.map(item=>{
+          const status=String(item.status||"pending").toLowerCase();
+          const label=status==="paid"?"PAID":status==="rejected"?"REJECTED":status==="approved"?"APPROVED":"PENDING";
+          const color=status==="paid"?"#078454":status==="rejected"?"#dc3545":"#a16207";
+
+          const date=item.created_at
+            ?new Date(item.created_at).toLocaleString("en-GB",{timeZone:"Africa/Accra"})
+            :"Date unavailable";
+
+          return `<div class="card">
+            <strong>${money(item.amount)}</strong>
+            <p class="stat-note">Provider: ${escapeHTML(item.provider||"Not provided")}</p>
+            <p class="stat-note">Mobile Money: ${escapeHTML(item.phone||"Not provided")}</p>
+            <p>Status: <strong style="color:${color}">${label}</strong></p>
+            <p class="stat-note">Date: ${escapeHTML(date)}</p>
+          </div>`;
+        }).join("");
+      }
     }catch(historyError){
       console.error("Withdrawal history error:",historyError);
       historyElement.textContent="Balances loaded, but history could not be loaded: "+historyError.message;
     }
   }catch(error){
     console.error("Withdrawal balance error:",error);
+
     if(messageElement)messageElement.textContent="Unable to load balances: "+error.message;
     if(historyElement)historyElement.textContent="Could not load withdrawal information. Please refresh.";
   }
 }
+
 async function submitWithdrawal(){
   const amountInput=document.getElementById("withdrawAmount");
   const providerInput=document.getElementById("withdrawProvider");
   const phoneInput=document.getElementById("withdrawPhone");
   const button=document.getElementById("withdrawSubmit");
   const message=document.getElementById("withdrawMessage");
+
   const amount=Number(amountInput.value);
   const provider=providerInput.value;
   const phone=phoneInput.value.trim();
   const pesewas=Math.round(amount*100);
+
   if(amountInput.value.trim()===""||!Number.isFinite(amount)||!Number.isSafeInteger(pesewas)||pesewas<10||Math.abs(amount*100-pesewas)>0.000001){
-    message.textContent="Enter a valid withdrawal amount of at least GH₵0.10, using no more than two decimal places.";return;
+    message.textContent="Enter a valid withdrawal amount of at least GH₵0.10, using no more than two decimal places.";
+    return;
   }
-  if(!phone){message.textContent="Please enter your Mobile Money number.";return}
+
+  if(!phone){
+    message.textContent="Please enter your Mobile Money number.";
+    return;
+  }
+
   if(!confirm(`Request ${money(amount)} to ${provider} number ${phone}?`))return;
-  button.disabled=true;button.textContent="Submitting...";message.textContent="Submitting your withdrawal request...";
+
+  button.disabled=true;
+  button.textContent="Submitting...";
+  message.textContent="Submitting your withdrawal request...";
+
   try{
-    const data=await apiRequest("/agents/withdrawals",{method:"POST",body:JSON.stringify({amount:amount,provider:provider,phone:phone})});
-    if(!data.response.ok||!data.result||!data.result.success)
+    const data=await apiRequest("/agents/withdrawals",{
+      method:"POST",
+      body:JSON.stringify({amount:amount,provider:provider,phone:phone})
+    });
+
+    if(!data.response.ok||!data.result||!data.result.success){
       throw new Error(data.result?.message||"Your withdrawal request could not be submitted.");
+    }
+
     message.textContent="✅ Withdrawal request submitted successfully. Status: PENDING. Your request is awaiting payment by the administrator.";
     amountInput.value="";
+
     await loadWithdrawals();
   }catch(error){
     message.textContent=error.message||"Unable to submit your withdrawal request. Please try again.";
-  }finally{button.disabled=false;button.textContent="Request Withdrawal"}
+  }finally{
+    button.disabled=false;
+    button.textContent="Request Withdrawal";
+  }
 }
 
-/* PASSWORD SETTINGS
-   Uses a common endpoint only if it is implemented by the backend. */
+/* PASSWORD SETTINGS — MINIMUM 12 CHARACTERS */
 document.getElementById("passwordForm").addEventListener("submit",async event=>{
   event.preventDefault();
+
   const currentPassword=document.getElementById("currentPassword").value;
   const newPassword=document.getElementById("newPassword").value;
   const confirmPassword=document.getElementById("confirmPassword").value;
   const message=document.getElementById("passwordMessage");
   const button=document.getElementById("passwordSubmit");
-  if(newPassword.length<8){message.textContent="Your new password must contain at least 8 characters.";message.className="message error";return}
-  if(newPassword!==confirmPassword){message.textContent="The new passwords do not match.";message.className="message error";return}
-  if(currentPassword===newPassword){message.textContent="Choose a new password different from your current password.";message.className="message error";return}
-  button.disabled=true;button.textContent="Updating...";
+
+  if(newPassword.length<12){
+    message.textContent="Your new password must contain at least 12 characters.";
+    message.className="message error";
+    return;
+  }
+
+  if(newPassword!==confirmPassword){
+    message.textContent="The new passwords do not match.";
+    message.className="message error";
+    return;
+  }
+
+  if(currentPassword===newPassword){
+    message.textContent="Choose a new password different from your current password.";
+    message.className="message error";
+    return;
+  }
+
+  button.disabled=true;
+  button.textContent="Updating...";
+
   try{
-    const data=await apiRequest("/agents/change-password",{method:"POST",body:JSON.stringify({currentPassword,newPassword})});
-    if(!data.response.ok||!data.result||data.result.success!==true)
+    const data=await apiRequest("/agents/change-password",{
+      method:"POST",
+      body:JSON.stringify({currentPassword,newPassword})
+    });
+
+    if(!data.response.ok||!data.result||data.result.success!==true){
       throw new Error(data.result?.message||"Password update was not accepted by the server.");
+    }
+
     document.getElementById("passwordForm").reset();
+
     message.textContent="Password updated successfully.";
     message.className="message success";
   }catch(error){
     message.textContent=error.message+" If the server reports that this endpoint is unavailable, it must be added to server.js before password changes can work.";
     message.className="message error";
-  }finally{button.disabled=false;button.textContent="Update Password"}
+  }finally{
+    button.disabled=false;
+    button.textContent="Update Password";
+  }
 });
 
-/* PHONE SETTINGS
-   Uses the existing authenticated profile-update endpoint. */
+/* PHONE SETTINGS */
 document.getElementById("phoneForm").addEventListener("submit",async event=>{
   event.preventDefault();
+
   const phone=document.getElementById("settingsPhone").value.trim().replace(/\s+/g,"");
   const message=document.getElementById("phoneMessage");
   const button=document.getElementById("phoneSubmit");
+
   if(!/^(0\d{9}|233\d{9})$/.test(phone)){
     message.textContent="Enter a valid Ghana phone number, for example 0241234567.";
-    message.className="message error";return;
+    message.className="message error";
+    return;
   }
-  button.disabled=true;button.textContent="Updating...";
+
+  button.disabled=true;
+  button.textContent="Updating...";
+
   try{
-    const data=await apiRequest("/agents/profile",{method:"PATCH",body:JSON.stringify({phone})});
-    if(!data.response.ok||!data.result||data.result.success!==true)
+    const data=await apiRequest("/agents/profile",{
+      method:"PATCH",
+      body:JSON.stringify({phone})
+    });
+
+    if(!data.response.ok||!data.result||data.result.success!==true){
       throw new Error(data.result?.message||"Phone number was not updated.");
-    if(data.result.agent)agent=data.result.agent;
-    else if(agent)agent.phone=phone;
+    }
+
+    if(data.result.agent){
+      agent=data.result.agent;
+    }else if(agent){
+      agent.phone=phone;
+    }
+
     profile.agentPhone=phone;
     writeStorage(STORAGE.profile,profile);
     sessionStorage.setItem("k636_agent",JSON.stringify(agent));
+
     displayAgent();
+
     message.textContent="Phone number updated successfully.";
     message.className="message success";
   }catch(error){
     message.textContent="Could not update the phone number: "+error.message;
     message.className="message error";
-  }finally{button.disabled=false;button.textContent="Update Phone Number"}
+  }finally{
+    button.disabled=false;
+    button.textContent="Update Phone Number";
+  }
 });
 
-/* WHATSAPP LINK SETTINGS
-   Persisted by the server when its profile endpoint supports these fields. */
+/* WHATSAPP LINK SETTINGS */
 function loadCommunityForm(){
   const serverLink=agent?.whatsapp_group_link||agent?.whatsapp_channel_link||agent?.whatsappLink||"";
   const serverLabel=agent?.whatsapp_label||agent?.whatsappLabel||"";
+
   if(serverLink)communitySettings.whatsappLink=serverLink;
   if(serverLabel)communitySettings.whatsappLabel=serverLabel;
+
   document.getElementById("whatsappLink").value=communitySettings.whatsappLink||"";
   document.getElementById("whatsappLabel").value=communitySettings.whatsappLabel||"";
+
   renderCommunityPreview();
 }
+
 function renderCommunityPreview(){
   const link=document.getElementById("whatsappLink").value.trim();
   const preview=document.getElementById("communityPreview");
+
   if(/^https:\/\/(chat\.whatsapp\.com\/|whatsapp\.com\/channel\/)/i.test(link)){
     preview.hidden=false;
     preview.innerHTML='<strong>Saved community link</strong><br><a href="'+escapeHTML(link)+'" target="_blank" rel="noopener noreferrer">'+escapeHTML(link)+'</a>';
@@ -1409,79 +2073,123 @@ function renderCommunityPreview(){
     preview.textContent="";
   }
 }
+
 document.getElementById("whatsappLink").addEventListener("input",renderCommunityPreview);
+
 document.getElementById("communityForm").addEventListener("submit",async event=>{
   event.preventDefault();
+
   const link=document.getElementById("whatsappLink").value.trim();
   const label=document.getElementById("whatsappLabel").value.trim();
   const message=document.getElementById("communityMessage");
   const button=document.getElementById("communitySubmit");
+
   if(link&&!/^https:\/\/(chat\.whatsapp\.com\/[A-Za-z0-9]+|whatsapp\.com\/channel\/[A-Za-z0-9]+)/i.test(link)){
     message.textContent="Enter a valid WhatsApp group link (https://chat.whatsapp.com/...) or channel link (https://whatsapp.com/channel/...).";
-    message.className="message error";return;
+    message.className="message error";
+    return;
   }
-  button.disabled=true;button.textContent="Saving...";
+
+  button.disabled=true;
+  button.textContent="Saving...";
+
   try{
-    const data=await apiRequest("/agents/profile",{method:"PATCH",body:JSON.stringify({whatsappLink:link,whatsappLabel:label})});
-    if(!data.response.ok||!data.result||data.result.success!==true)
+    const data=await apiRequest("/agents/profile",{
+      method:"PATCH",
+      body:JSON.stringify({whatsappLink:link,whatsappLabel:label})
+    });
+
+    if(!data.response.ok||!data.result||data.result.success!==true){
       throw new Error(data.result?.message||"The server did not save the WhatsApp settings.");
+    }
+
     if(data.result.agent)agent=data.result.agent;
+
     communitySettings={whatsappLink:link,whatsappLabel:label};
     writeStorage(STORAGE.community,communitySettings);
     sessionStorage.setItem("k636_agent",JSON.stringify(agent));
+
     renderCommunityPreview();
+
     message.textContent="WhatsApp settings saved to your agent profile.";
     message.className="message success";
   }catch(error){
     message.textContent="The WhatsApp link could not be confirmed as saved on the server: "+error.message+" Local browser storage is not used as a substitute for a server save.";
     message.className="message error";
-  }finally{button.disabled=false;button.textContent="Save WhatsApp Link"}
+  }finally{
+    button.disabled=false;
+    button.textContent="Save WhatsApp Link";
+  }
 });
 
-/* ANNOUNCEMENTS
-   Tries common read-only routes and reports clearly if none is available. */
+/* ANNOUNCEMENTS */
 async function loadAnnouncements(){
   const target=document.getElementById("announcementsList");
   const button=document.getElementById("refreshAnnouncements");
+
   if(!target)return;
+
   target.textContent="Loading announcements...";
-  if(button){button.disabled=true;button.textContent="Loading..."}
+
+  if(button){
+    button.disabled=true;
+    button.textContent="Loading...";
+  }
+
   const endpoints=["/announcements","/agents/announcements"];
   let lastError="No supported announcements endpoint was found.";
+
   try{
     for(const endpoint of endpoints){
       try{
         const data=await apiRequest(endpoint);
+
         if(!data.response.ok||!data.result||data.result.success!==true){
           lastError=data.result?.message||"The endpoint "+endpoint+" is not available.";
           continue;
         }
+
         const result=data.result.announcements||data.result.data?.announcements||data.result.data;
+
         if(!Array.isArray(result)){
           lastError="The server response did not contain an announcements list.";
           continue;
         }
+
         announcements=result;
         renderAnnouncements();
         return;
-      }catch(error){lastError=error.message}
+      }catch(error){
+        lastError=error.message;
+      }
     }
+
     target.innerHTML='<div class="empty-state">Announcements are not available right now.<br>'+escapeHTML(lastError)+'<br><br>If your server has no announcements route yet, an announcements endpoint must be added to server.js.</div>';
   }finally{
-    if(button){button.disabled=false;button.textContent="↻ Refresh Announcements"}
+    if(button){
+      button.disabled=false;
+      button.textContent="↻ Refresh Announcements";
+    }
   }
 }
+
 function renderAnnouncements(){
   const target=document.getElementById("announcementsList");
+
   if(!announcements.length){
     target.innerHTML='<div class="empty-state">There are no announcements available at the moment.</div>';
     return;
   }
+
   target.innerHTML=announcements.map(item=>{
     const title=item.title||item.subject||"Kielmen 636 Update";
     const body=item.message||item.body||item.content||"";
     const date=item.created_at||item.createdAt||item.date||"";
-    const formatted=date?new Date(date).toLocaleString("en-GB",{timeZone:"Africa/Accra"}):"";
+
+    const formatted=date
+      ?new Date(date).toLocaleString("en-GB",{timeZone:"Africa/Accra"})
+      :"";
+
     return '<article class="announcement-card"><h3>'+escapeHTML(title)+'</h3><p>'+escapeHTML(body)+'</p><div class="announcement-date">'+escapeHTML(formatted)+'</div></article>';
   }).join("");
 }
@@ -1489,18 +2197,23 @@ function renderAnnouncements(){
 /* SEARCH AND SELECT */
 const orderSearchInput=document.getElementById("orderSearch");
 const clearOrderSearchButton=document.getElementById("clearOrderSearch");
+
 orderSearchInput.addEventListener("input",renderOrders);
+
 clearOrderSearchButton.addEventListener("click",()=>{
   orderSearchInput.value="";
   orderSearchInput.focus();
   renderOrders();
 });
+
 document.getElementById("priceNetwork").addEventListener("change",renderPrices);
+
 document.addEventListener("keydown",event=>{
   if(event.key==="Escape")closeSidebar();
 });
 
 /* START */
 verifyAgent();
-</script></body>
-  </html>
+</script>
+</body>
+          </html>
