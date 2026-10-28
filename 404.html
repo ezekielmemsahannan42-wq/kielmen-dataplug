@@ -1,30 +1,29 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#030712">
-  <meta name="robots" content="noindex, nofollow">
+  <meta name="robots" content="noindex">
   <title>Opening Agent Store | Kielmen 636 Dataplug</title>
 </head>
-<body style="margin:0;padding:30px;background:#030712;color:white;font-family:Arial,sans-serif;text-align:center">
-  <h2>Opening Agent Store...</h2>
-  <p id="message">Please wait while we load the store.</p>  <script>
+<body>
+  <p id="message">Opening agent store. Please wait...</p>
+
+  <script>
     (async function () {
-      const message = document.getElementById("message");
       const originalPath = window.location.pathname;
 
-      let slug;
+      let path;
 
       try {
-        slug = decodeURIComponent(originalPath)
+        path = decodeURIComponent(originalPath)
           .replace(/^\/+|\/+$/g, "");
+      } catch {
+        path = originalPath.replace(/^\/+|\/+$/g, "");
+      }
 
-        if (slug.startsWith("agents/")) {
-          slug = slug.slice("agents/".length);
-        }
-      } catch (error) {
-        message.textContent = "This store link is invalid.";
-        return;
+      if (path.startsWith("agents/")) {
+        path = path.slice("agents/".length);
       }
 
       const reserved = new Set([
@@ -43,13 +42,14 @@
       ]);
 
       if (
-        !slug ||
-        slug.includes("/") ||
-        slug.includes("\\") ||
-        !/^[a-zA-Z0-9_-]+$/.test(slug) ||
-        reserved.has(slug.toLowerCase())
+        !path ||
+        path.includes("/") ||
+        path.includes("\\") ||
+        !/^[a-zA-Z0-9_-]+$/.test(path) ||
+        reserved.has(path.toLowerCase())
       ) {
-        message.textContent = "This page could not be found.";
+        document.getElementById("message").textContent =
+          "This page was not found. Please check the agent store link.";
         return;
       }
 
@@ -59,46 +59,36 @@
         });
 
         if (!response.ok) {
-          throw new Error("Unable to load the agent store.");
+          throw new Error("Could not load agent-store.html");
         }
 
         let html = await response.text();
 
-        /*
-         * Preserve the requested slug and make it available to
-         * the storefront before its existing JavaScript executes.
-         */
-        const routingScript = `
-          <script>
-            (function () {
-              const params = new URLSearchParams(location.search);
-              if (!params.get("store") && !params.get("slug") &&
-                  !params.get("code") && !params.get("agentCode")) {
-                params.set("store", ${JSON.stringify(slug)});
-                history.replaceState(
-                  null,
-                  "",
-                  location.pathname + "?" + params.toString() + location.hash
-                );
-              }
-            })();
-          <\/script>
-        `;
+        const slugScript =
+          "<script>window.__KIELMEN_STORE_SLUG__=" +
+          JSON.stringify(path.toLowerCase()) +
+          ";<" + "/script>";
 
-        html = html.replace(
-          /<head([^>]*)>/i,
-          match => match + routingScript
-        );
+        if (/<head(?:\s[^>]*)?>/i.test(html)) {
+          html = html.replace(
+            /<head(?:\s[^>]*)?>/i,
+            match => match + slugScript
+          );
+        } else {
+          throw new Error("The storefront HTML has no head element.");
+        }
 
         document.open();
         document.write(html);
         document.close();
 
       } catch (error) {
-        console.error(error);
-        message.textContent =
-          "We couldn't open this store. Please refresh and try again.";
+        console.error("Agent store routing error:", error);
+
+        document.getElementById("message").textContent =
+          "The agent store could not be opened. Please refresh and try again.";
       }
     })();
-  </script></body>
+  </script>
+</body>
 </html>
