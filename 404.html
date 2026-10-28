@@ -3,30 +3,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#030712">
+  <meta name="robots" content="noindex, nofollow">
   <title>Opening Agent Store | Kielmen 636 Dataplug</title>
 </head>
 <body style="margin:0;padding:30px;background:#030712;color:white;font-family:Arial,sans-serif;text-align:center">
   <h2>Opening Agent Store...</h2>
-  <p id="message">Please wait.</p>  <script>
+  <p id="message">Please wait while we load the store.</p>  <script>
     (async function () {
-      const originalPath = window.location.pathname;
       const message = document.getElementById("message");
+      const originalPath = window.location.pathname;
 
       let slug;
 
       try {
-        slug = decodeURIComponent(originalPath).replace(/^\/+|\/+$/g, "");
+        slug = decodeURIComponent(originalPath)
+          .replace(/^\/+|\/+$/g, "");
+
+        if (slug.startsWith("agents/")) {
+          slug = slug.slice("agents/".length);
+        }
       } catch (error) {
         message.textContent = "This store link is invalid.";
         return;
       }
 
-      // Support both /agents/store-name and /store-name.
-      if (slug.startsWith("agents/")) {
-        slug = slug.slice("agents/".length);
-      }
-
       const reserved = new Set([
+        "",
         "index.html",
         "agent-store.html",
         "404.html",
@@ -57,26 +59,45 @@
         });
 
         if (!response.ok) {
-          throw new Error("Could not load the storefront.");
+          throw new Error("Unable to load the agent store.");
         }
 
-        const html = await response.text();
+        let html = await response.text();
 
-        // Keep the requested clean URL visible.
-        const cleanURL =
-          originalPath + window.location.search + window.location.hash;
+        /*
+         * Preserve the requested slug and make it available to
+         * the storefront before its existing JavaScript executes.
+         */
+        const routingScript = `
+          <script>
+            (function () {
+              const params = new URLSearchParams(location.search);
+              if (!params.get("store") && !params.get("slug") &&
+                  !params.get("code") && !params.get("agentCode")) {
+                params.set("store", ${JSON.stringify(slug)});
+                history.replaceState(
+                  null,
+                  "",
+                  location.pathname + "?" + params.toString() + location.hash
+                );
+              }
+            })();
+          <\/script>
+        `;
 
-        history.replaceState(null, "", cleanURL);
+        html = html.replace(
+          /<head([^>]*)>/i,
+          match => match + routingScript
+        );
 
-        // Load the existing storefront document.
         document.open();
         document.write(html);
         document.close();
 
-        // The storefront must read the slug from the path.
       } catch (error) {
+        console.error(error);
         message.textContent =
-          "We couldn't open this store. Please check the link and try again.";
+          "We couldn't open this store. Please refresh and try again.";
       }
     })();
   </script></body>
