@@ -302,14 +302,14 @@ async function createOrdersTable() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
-  
-// Record the time an order's data delivery is completed.
+
+  // Ensure columns exist in existing databases.
   await pool.query(`
     ALTER TABLE orders
     ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ
   `);
 
- await pool.query(`
+  await pool.query(`
     ALTER TABLE orders
     ADD COLUMN IF NOT EXISTS delivery_status
     VARCHAR(30) NOT NULL DEFAULT 'not_started'
@@ -335,28 +335,37 @@ async function createOrdersTable() {
     ALTER TABLE orders
     ADD COLUMN IF NOT EXISTS agent_base_price NUMERIC(10,2)
   `);
-  await pool.query(`
-  ALTER TABLE orders
-  ADD COLUMN IF NOT EXISTS delivered_at TIMESTAMPTZ
-`);
 
-await pool.query(`
-  UPDATE orders
-  SET delivered_at = updated_at
-  WHERE delivery_status = 'delivered'
-    AND delivered_at IS NULL
-`);
+  await pool.query(`
+    UPDATE orders
+    SET delivered_at = updated_at
+    WHERE delivery_status = 'delivered'
+      AND delivered_at IS NULL
+  `);
 
   await pool.query(`
     ALTER TABLE orders
     ADD COLUMN IF NOT EXISTS supplier_cost NUMERIC(10,2)
   `);
 
+  // Link orders to agents only after the agents table exists.
+  await pool.query(`
+    ALTER TABLE orders
+    ADD COLUMN IF NOT EXISTS agent_id BIGINT
+    REFERENCES agents(id) ON DELETE SET NULL
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS orders_agent_id_idx
+    ON orders(agent_id)
+  `);
+
   await pool.query(`
     CREATE INDEX IF NOT EXISTS orders_created_at_idx
     ON orders (created_at DESC)
   `);
-      // Generate unique store slugs for existing agents.
+
+  // Generate unique store slugs for existing agents.
   const agentsWithoutSlugs = await pool.query(`
     SELECT id, business_name
     FROM agents
@@ -366,7 +375,8 @@ await pool.query(`
 
   for (const agent of agentsWithoutSlugs.rows) {
     const baseSlug =
-      createStoreSlug(agent.business_name) || `agent_${agent.id}`;
+      createStoreSlug(agent.business_name) ||
+      `agent_${agent.id}`;
 
     let storeSlug = baseSlug;
     let suffix = 2;
@@ -408,7 +418,7 @@ await pool.query(`
     ON agents(store_slug)
     WHERE store_slug IS NOT NULL
   `);
-}
+    }
 
 async function createAgentTables() {
   await pool.query(`
@@ -434,31 +444,31 @@ async function createAgentTables() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
-    // Add the store slug column to existing databases.
-await pool.query(`
-  ALTER TABLE agents
-  ADD COLUMN IF NOT EXISTS store_slug VARCHAR(100)
-`);
 
-// Agent profile contact and social links
-await pool.query(`
-  ALTER TABLE agents
-  ADD COLUMN IF NOT EXISTS whatsapp_number
-  VARCHAR(25) NOT NULL DEFAULT ''
-`);
+  // Add the store slug column to existing databases.
+  await pool.query(`
+    ALTER TABLE agents
+    ADD COLUMN IF NOT EXISTS store_slug VARCHAR(100)
+  `);
 
-await pool.query(`
-  ALTER TABLE agents
-  ADD COLUMN IF NOT EXISTS whatsapp_channel
-  VARCHAR(500) NOT NULL DEFAULT ''
-`);
+  // Agent profile contact and social links.
+  await pool.query(`
+    ALTER TABLE agents
+    ADD COLUMN IF NOT EXISTS whatsapp_number
+    VARCHAR(25) NOT NULL DEFAULT ''
+  `);
 
-await pool.query(`
-  ALTER TABLE agents
-  ADD COLUMN IF NOT EXISTS social_link
-  VARCHAR(500) NOT NULL DEFAULT ''
-`);
-  
+  await pool.query(`
+    ALTER TABLE agents
+    ADD COLUMN IF NOT EXISTS whatsapp_channel
+    VARCHAR(500) NOT NULL DEFAULT ''
+  `);
+
+  await pool.query(`
+    ALTER TABLE agents
+    ADD COLUMN IF NOT EXISTS social_link
+    VARCHAR(500) NOT NULL DEFAULT ''
+  `);
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS agent_prices (
@@ -494,20 +504,11 @@ await pool.query(`
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
-  // Record when an agent's withdrawal request is reviewed.
+
+  // Record when a withdrawal request is reviewed.
   await pool.query(`
     ALTER TABLE agent_withdrawals
     ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ
-  `);
-  await pool.query(`
-    ALTER TABLE orders
-    ADD COLUMN IF NOT EXISTS agent_id BIGINT
-    REFERENCES agents(id) ON DELETE SET NULL
-  `);
-
-  await pool.query(`
-    CREATE INDEX IF NOT EXISTS orders_agent_id_idx
-    ON orders(agent_id)
   `);
 
   await pool.query(`
@@ -515,7 +516,7 @@ await pool.query(`
     ON agents(status)
   `);
 }
-// ============================================================
+  // ============================================================
 // AGENT PASSWORD RESET TABLE
 // ============================================================
 
