@@ -5613,6 +5613,50 @@ async function startServer() {
 await createOrdersTable();
 await createPasswordResetTable();
 await createWebsiteSettingsTable();
+    // TEMPORARY DIAGNOSTIC: Check why an agent store cannot be found
+app.get("/debug-agent-store/:slug", async (req, res) => {
+  try {
+    const slug = String(req.params.slug || "")
+      .trim()
+      .toLowerCase();
+
+    const result = await pool.query(
+      `SELECT
+         agent_code,
+         business_name,
+         store_slug,
+         status
+       FROM agents
+       WHERE LOWER(COALESCE(store_slug, '')) = $1
+          OR LOWER(
+               TRIM(
+                 REGEXP_REPLACE(
+                   COALESCE(business_name, ''),
+                   '[^a-zA-Z0-9]+',
+                   '-',
+                   'g'
+                 ),
+                 '-'
+               )
+             ) = $1
+       LIMIT 10`,
+      [slug]
+    );
+
+    return res.json({
+      success: true,
+      searchedSlug: slug,
+      agents: result.rows
+    });
+  } catch (error) {
+    console.error("Agent store diagnostic error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Diagnostic failed. Check Render logs."
+    });
+  }
+});
 
     app.listen(PORT, () => {
       console.log(
