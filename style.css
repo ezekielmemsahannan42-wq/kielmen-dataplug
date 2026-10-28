@@ -2525,3 +2525,209 @@ gap: 12px;
 outline: 3px solid #2563eb;
 outline-offset: 3px;
    }
+/* =========================================================
+   KIELMEN 636 DATAPLUG — ORDER TRACKING CARD IMPROVEMENTS
+========================================================= */
+
+.kielmen-order-card {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+
+    padding: 17px;
+    border: 1px solid #e5e7eb;
+    border-radius: 17px;
+
+    background: #ffffff;
+    box-shadow: 0 5px 18px rgba(15, 23, 42, 0.055);
+}
+
+.kielmen-order-title {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+}
+
+.kielmen-order-title h3 {
+    margin: 0;
+    font-size: 1.08rem;
+    font-weight: 900;
+    overflow-wrap: anywhere;
+}
+
+.kielmen-order-amount {
+    color: #111827;
+    font-size: 1.12rem;
+    font-weight: 900;
+    white-space: nowrap;
+}
+
+.kielmen-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 9px;
+
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.kielmen-status-label {
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+.kielmen-status-row .order-status {
+    white-space: normal;
+    text-align: center;
+    overflow-wrap: anywhere;
+}
+
+.order-status.processing {
+    color: #1d4ed8;
+    background: #dbeafe;
+}
+
+.order-status.unknown {
+    color: #4b5563;
+    background: #e5e7eb;
+}
+
+.kielmen-order-detail {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+
+    padding: 11px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+
+.kielmen-detail-label {
+    flex: 0 0 auto;
+    color: #6b7280;
+    font-size: 0.84rem;
+    font-weight: 700;
+}
+
+.kielmen-detail-value {
+    min-width: 0;
+    color: #111827;
+    font-size: 0.86rem;
+    font-weight: 800;
+    text-align: right;
+    overflow-wrap: anywhere;
+}
+
+.kielmen-delivery-message {
+    padding: 13px;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+
+    color: #374151;
+    background: #f9fafb;
+}
+
+.kielmen-delivery-message strong {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 0.92rem;
+}
+
+.kielmen-delivery-message p {
+    margin: 0;
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
+.kielmen-delivery-message.success {
+    border-color: #bbf7d0;
+    color: #166534;
+    background: #f0fdf4;
+}
+
+.kielmen-delivery-message.pending {
+    border-color: #fde68a;
+    color: #92400e;
+    background: #fffbeb;
+}
+
+.kielmen-delivery-message.processing {
+    border-color: #bfdbfe;
+    color: #1d4ed8;
+    background: #eff6ff;
+}
+
+.kielmen-delivery-message.failed {
+    border-color: #fecaca;
+    color: #991b1b;
+    background: #fef2f2;
+}
+
+.kielmen-delivery-message.unknown {
+    border-color: #e5e7eb;
+    color: #4b5563;
+    background: #f9fafb;
+}
+
+.kielmen-copy-order-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+
+    width: 100%;
+    min-height: 49px;
+    padding: 12px 15px;
+
+    border: 0;
+    border-radius: 11px;
+
+    color: #ffffff;
+    background: #111827;
+
+    font-size: 0.92rem;
+    font-weight: 900;
+
+    transition: background 0.2s ease;
+}
+
+.kielmen-copy-order-button:hover {
+    background: #374151;
+}
+
+.kielmen-copy-order-button.copied {
+    background: #15803d;
+}
+
+@media (max-width: 380px) {
+    .kielmen-order-card {
+        padding: 13px;
+        gap: 10px;
+    }
+
+    .kielmen-order-title h3 {
+        font-size: 0.98rem;
+    }
+
+    .kielmen-order-amount {
+        font-size: 1rem;
+    }
+
+    .kielmen-order-detail {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .kielmen-detail-label,
+    .kielmen-detail-value {
+        font-size: 0.78rem;
+    }
+}
