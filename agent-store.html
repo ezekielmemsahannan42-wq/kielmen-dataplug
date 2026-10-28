@@ -1215,9 +1215,10 @@
       return data;
     }
 
-    /* FIND AGENT STORE */
+    
+/* FIND AGENT STORE — SUPPORT CLEAN URLS */
 
-    function getStoreIdentifiers() {
+function getStoreIdentifiers() {
   const params = new URLSearchParams(window.location.search);
 
   agentCode = (
@@ -1249,7 +1250,14 @@
     "agent-store.html",
     "index.html",
     "success.html",
-    "404.html"
+    "404.html",
+    "agent-login.html",
+    "agent-register.html",
+    "agent-dashboard.html",
+    "agent-profile.html",
+    "agent-withdrawal.html",
+    "agent-forgot-password.html",
+    "owner-dashboard.html"
   ]);
 
   if (
@@ -1270,6 +1278,7 @@
     }
   }
     }
+    
 
     /* PRICE DATA */
 
