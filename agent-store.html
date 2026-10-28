@@ -1218,52 +1218,57 @@
     /* FIND AGENT STORE */
 
     function getStoreIdentifiers() {
-      const params = new URLSearchParams(window.location.search);
+  const params = new URLSearchParams(window.location.search);
 
-      agentCode = (
-        params.get("code") ||
-        params.get("agentCode") ||
-        ""
-      ).trim().toUpperCase();
+  agentCode = (
+    params.get("code") ||
+    params.get("agentCode") ||
+    ""
+  ).trim().toUpperCase();
 
-      storeSlug = (
-        params.get("slug") ||
-        params.get("store") ||
-        ""
-      ).trim().toLowerCase();
+  const routedSlug = String(
+    window.__KIELMEN_STORE_SLUG__ || ""
+  ).trim().toLowerCase();
 
-      if (agentCode || storeSlug) return;
+  storeSlug = (
+    routedSlug ||
+    params.get("slug") ||
+    params.get("store") ||
+    ""
+  ).trim().toLowerCase();
 
-      const parts = window.location.pathname
-        .split("/")
-        .filter(Boolean);
+  if (agentCode || storeSlug) return;
 
-      const last = parts[parts.length - 1] || "";
+  const parts = window.location.pathname
+    .split("/")
+    .filter(Boolean);
 
-      const ignored = new Set([
-        "agent-store.html",
-        "index.html",
-        "success.html",
-        "404.html"
-      ]);
+  const last = parts[parts.length - 1] || "";
 
-      if (
-        parts.length >= 2 &&
-        parts[parts.length - 2].toLowerCase() === "agents"
-      ) {
-        storeSlug = last.toLowerCase();
-        return;
-      }
+  const ignored = new Set([
+    "agent-store.html",
+    "index.html",
+    "success.html",
+    "404.html"
+  ]);
 
-      if (last && !ignored.has(last.toLowerCase())) {
-        try {
-          storeSlug = decodeURIComponent(last)
-            .trim()
-            .toLowerCase();
-        } catch {
-          storeSlug = last.trim().toLowerCase();
-        }
-      }
+  if (
+    parts.length >= 2 &&
+    parts[parts.length - 2].toLowerCase() === "agents"
+  ) {
+    storeSlug = last.toLowerCase();
+    return;
+  }
+
+  if (last && !ignored.has(last.toLowerCase())) {
+    try {
+      storeSlug = decodeURIComponent(last)
+        .trim()
+        .toLowerCase();
+    } catch {
+      storeSlug = last.trim().toLowerCase();
+    }
+  }
     }
 
     /* PRICE DATA */
