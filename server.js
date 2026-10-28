@@ -420,8 +420,8 @@ async function createOrdersTable() {
   `);
     }
 
-async function createAgentTables()
-await createAgentStoreSlugHistoryTable();{
+async function createAgentTables() {
+  await createAgentStoreSlugHistoryTable();
   await pool.query(`
     CREATE TABLE IF NOT EXISTS agents (
       id BIGSERIAL PRIMARY KEY,
