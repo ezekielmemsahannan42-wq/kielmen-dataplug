@@ -3,33 +3,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#030712">
-  <meta name="robots" content="noindex, nofollow">
   <title>Opening Agent Store | Kielmen 636 Dataplug</title>
 </head>
 <body style="margin:0;padding:30px;background:#030712;color:white;font-family:Arial,sans-serif;text-align:center">
   <h2>Opening Agent Store...</h2>
   <p id="message">Please wait.</p>  <script>
-    (function () {
+    (async function () {
       const originalPath = window.location.pathname;
-      const params = new URLSearchParams(window.location.search);
+      const message = document.getElementById("message");
 
-      let path;
+      let slug;
 
       try {
-        path = decodeURIComponent(originalPath)
-          .replace(/^\/+|\/+$/g, "");
+        slug = decodeURIComponent(originalPath).replace(/^\/+|\/+$/g, "");
       } catch (error) {
-        document.getElementById("message").textContent =
-          "This store link is invalid.";
+        message.textContent = "This store link is invalid.";
         return;
       }
 
-      // Support /agents/kofi and /kofi.
-      if (path.startsWith("agents/")) {
-        path = path.slice("agents/".length);
+      // Support both /agents/store-name and /store-name.
+      if (slug.startsWith("agents/")) {
+        slug = slug.slice("agents/".length);
       }
 
-      // Do not redirect normal website pages.
       const reserved = new Set([
         "index.html",
         "agent-store.html",
@@ -45,25 +41,43 @@
       ]);
 
       if (
-        !path ||
-        path.includes("/") ||
-        path.includes("\\") ||
-        !/^[a-zA-Z0-9_-]+$/.test(path) ||
-        reserved.has(path.toLowerCase())
+        !slug ||
+        slug.includes("/") ||
+        slug.includes("\\") ||
+        !/^[a-zA-Z0-9_-]+$/.test(slug) ||
+        reserved.has(slug.toLowerCase())
       ) {
-        document.getElementById("message").textContent =
-          "This page could not be found.";
+        message.textContent = "This page could not be found.";
         return;
       }
 
-      params.set("store", path);
+      try {
+        const response = await fetch("/agent-store.html", {
+          cache: "no-cache"
+        });
 
-      // Assumes kielmen.com serves the website from its root.
-      window.location.replace(
-        "/agent-store.html?" +
-        params.toString() +
-        window.location.hash
-      );
+        if (!response.ok) {
+          throw new Error("Could not load the storefront.");
+        }
+
+        const html = await response.text();
+
+        // Keep the requested clean URL visible.
+        const cleanURL =
+          originalPath + window.location.search + window.location.hash;
+
+        history.replaceState(null, "", cleanURL);
+
+        // Load the existing storefront document.
+        document.open();
+        document.write(html);
+        document.close();
+
+        // The storefront must read the slug from the path.
+      } catch (error) {
+        message.textContent =
+          "We couldn't open this store. Please check the link and try again.";
+      }
     })();
   </script></body>
 </html>
