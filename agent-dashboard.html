@@ -31,12 +31,23 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    button, input, select {
+    button,
+    input,
+    select {
       font: inherit;
     }
 
     button {
       cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+
+    [hidden] {
+      display: none !important;
     }
 
     .topbar {
@@ -56,6 +67,7 @@
       display: flex;
       align-items: center;
       gap: 11px;
+      min-width: 0;
     }
 
     .brand-logo {
@@ -63,6 +75,7 @@
       place-items: center;
       width: 45px;
       height: 45px;
+      flex-shrink: 0;
       border-radius: 14px;
       background: #050b1e;
       color: var(--green);
@@ -78,6 +91,7 @@
     .online {
       color: var(--green);
       font-size: 12px;
+      white-space: nowrap;
     }
 
     .container {
@@ -141,6 +155,7 @@
       color: var(--muted);
       font-size: 12px;
       line-height: 1.5;
+      overflow-wrap: anywhere;
     }
 
     .green {
@@ -232,6 +247,10 @@
       gap: 9px;
     }
 
+    .btn-row .btn {
+      flex: 1;
+    }
+
     .notice {
       padding: 13px;
       margin: 14px 0;
@@ -251,6 +270,14 @@
       overflow-wrap: anywhere;
     }
 
+    .message.error {
+      color: #ffaaaa;
+    }
+
+    .message.success {
+      color: var(--green);
+    }
+
     .table-wrap {
       overflow-x: auto;
     }
@@ -261,7 +288,8 @@
       border-collapse: collapse;
     }
 
-    th, td {
+    th,
+    td {
       padding: 12px 8px;
       border-bottom: 1px solid var(--border);
       text-align: left;
@@ -274,6 +302,7 @@
 
     .price-input {
       width: 100px;
+      max-width: 100%;
       padding: 9px;
       border: 1px solid var(--border);
       border-radius: 7px;
@@ -290,6 +319,7 @@
       color: var(--green);
       overflow-wrap: anywhere;
       font-size: 13px;
+      line-height: 1.6;
     }
 
     .badge {
@@ -309,6 +339,87 @@
       display: block;
     }
 
+    /* ORDER SEARCH */
+    .order-search {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 15px 0;
+      padding: 0 13px;
+      min-height: 50px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--card2);
+    }
+
+    .search-icon {
+      flex-shrink: 0;
+      color: var(--green);
+      font-size: 24px;
+    }
+
+    .order-search input {
+      width: 100%;
+      min-width: 0;
+      padding: 13px 0;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .order-search input::placeholder {
+      color: var(--muted);
+    }
+
+    .order-search:focus-within {
+      border-color: var(--green);
+      box-shadow: 0 0 0 2px #48c6a325;
+    }
+
+    .order-search button {
+      flex-shrink: 0;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #343634;
+      color: white;
+    }
+
+    .order-count {
+      margin: 10px 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .order-card {
+      padding: 15px;
+      margin: 12px 0;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: var(--card);
+      overflow-wrap: anywhere;
+    }
+
+    .order-card h3 {
+      margin-top: 0;
+    }
+
+    .order-card p {
+      line-height: 1.5;
+    }
+
+    .order-status {
+      display: inline-block;
+      padding: 5px 9px;
+      border-radius: 20px;
+      background: #343634;
+      color: var(--text);
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
+
     .bottom-nav {
       position: fixed;
       right: 0;
@@ -323,6 +434,7 @@
     }
 
     .nav-btn {
+      min-width: 0;
       padding: 7px 1px;
       border: 0;
       background: transparent;
@@ -369,6 +481,37 @@
       .network-grid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
       }
+
+      .container {
+        padding-bottom: 40px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .online {
+        font-size: 10px;
+      }
+
+      .brand {
+        gap: 7px;
+      }
+
+      .brand-logo {
+        width: 39px;
+        height: 39px;
+      }
+
+      .stat-value {
+        font-size: 21px;
+      }
+
+      .nav-btn {
+        font-size: 10px;
+      }
+
+      .nav-btn .icon {
+        font-size: 19px;
+      }
     }
   </style>
 </head>
@@ -414,52 +557,53 @@
       </button>
     </div>
 
+    <!-- PERFORMANCE OVERVIEW PRESERVED -->
     <h2 class="section-title">Performance Overview</h2>
 
     <div class="stats">
 
-  <div class="card">
-    <div class="stat-label">Total Orders</div>
-    <div class="stat-value" id="ordersStat">—</div>
-    <div class="stat-note">Server order records</div>
-  </div>
+      <div class="card">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value" id="ordersStat">—</div>
+        <div class="stat-note">Server order records</div>
+      </div>
 
-  <div class="card">
-    <div class="stat-label">Estimated Profit</div>
-    <div class="stat-value green" id="profitStat">—</div>
-    <div class="stat-note">
-      Estimated margin from paid orders.
-      Delivery may still be pending.
-    </div>
-  </div>
+      <div class="card">
+        <div class="stat-label">Estimated Profit</div>
+        <div class="stat-value green" id="profitStat">—</div>
+        <div class="stat-note">
+          Estimated margin from paid orders.
+          Delivery may still be pending.
+        </div>
+      </div>
 
-  <div class="card">
-    <div class="stat-label">Confirmed Profit</div>
-    <div class="stat-value green" id="confirmedProfitStat">—</div>
-    <div class="stat-note">
-      Profit from successfully delivered orders.
-    </div>
-  </div>
+      <div class="card">
+        <div class="stat-label">Confirmed Profit</div>
+        <div class="stat-value green" id="confirmedProfitStat">—</div>
+        <div class="stat-note">
+          Profit from successfully delivered orders.
+        </div>
+      </div>
 
-  <div class="card">
-    <div class="stat-label">Pending Delivery Profit</div>
-    <div class="stat-value" id="pendingDeliveryProfitStat">—</div>
-    <div class="stat-note" id="pendingDeliveryNote">
-      Calculating orders awaiting delivery...
-    </div>
-  </div>
+      <div class="card">
+        <div class="stat-label">Pending Delivery Profit</div>
+        <div class="stat-value" id="pendingDeliveryProfitStat">—</div>
+        <div class="stat-note" id="pendingDeliveryNote">
+          Calculating orders awaiting delivery...
+        </div>
+      </div>
 
-  <div class="card">
-    <div class="stat-label">Total Sales</div>
-    <div class="stat-value" id="salesStat">—</div>
-    <div class="stat-note">Recorded sales</div>
-  </div>
+      <div class="card">
+        <div class="stat-label">Total Sales</div>
+        <div class="stat-value" id="salesStat">—</div>
+        <div class="stat-note">Recorded sales</div>
+      </div>
 
-  <div class="card">
-    <div class="stat-label">Customers</div>
-    <div class="stat-value" id="customersStat">—</div>
-    <div class="stat-note">Recorded customers</div>
-  </div>
+      <div class="card">
+        <div class="stat-label">Customers</div>
+        <div class="stat-value" id="customersStat">—</div>
+        <div class="stat-note">Recorded customers</div>
+      </div>
 
     </div>
 
@@ -480,7 +624,7 @@
 
         <button class="network at"
           onclick="selectNetwork('AirtelTigo')">
-          <span>🟢</span>AirtelTigo
+          <span>🔵</span>AirtelTigo
         </button>
 
       </div>
@@ -504,7 +648,7 @@
 
       <button class="btn btn-block"
         onclick="showPage('orders')">
-        View Orders
+        View All Orders
       </button>
     </div>
 
@@ -516,27 +660,27 @@
     <h1>My Store</h1>
 
     <p class="stat-note">
-      Manage your business information and storefront preview.
+      Manage your business information and share your agent storefront.
     </p>
 
     <div class="card">
 
       <div class="field">
         <label for="businessName">Business Name</label>
-        <input id="businessName" maxlength="60"
-          placeholder="Your business name">
+        <input id="businessName" maxlength="100"
+          placeholder="Your business name" autocomplete="organization">
       </div>
 
       <div class="field">
         <label for="agentName">Agent Name</label>
-        <input id="agentName" maxlength="60"
-          placeholder="Your full name">
+        <input id="agentName" maxlength="100"
+          placeholder="Your full name" autocomplete="name">
       </div>
 
       <div class="field">
         <label for="agentPhone">Business Phone</label>
-        <input id="agentPhone" inputmode="tel"
-          maxlength="15" placeholder="0XXXXXXXXX">
+        <input id="agentPhone" type="tel" inputmode="tel"
+          maxlength="15" placeholder="0241234567" autocomplete="tel">
       </div>
 
       <div class="field">
@@ -546,12 +690,12 @@
       </div>
 
       <button class="btn btn-primary btn-block"
-        onclick="saveStore()">
+        id="saveStoreButton" onclick="saveStore()">
         Save Store Details
       </button>
 
-      <p id="storeMessage" class="message">
-        Your store details are currently stored in this browser.
+      <p id="storeMessage" class="message" aria-live="polite">
+        Your store information is loaded from your agent profile.
       </p>
 
     </div>
@@ -561,24 +705,27 @@
       <h3>Share Your Store</h3>
 
       <p class="stat-note">
-        This is a storefront preview link, not a separate online shop.
+        Give customers your unique store link so they can order data
+        through your agent store.
       </p>
 
       <div id="storeLink" class="share-link">
-        Save your store details first.
+        Loading your store link...
       </div>
 
       <div class="btn-row">
         <button class="btn btn-primary"
-          onclick="copyStoreLink()">
+          type="button" onclick="copyStoreLink()">
           Copy Link
         </button>
 
         <button class="btn"
-          onclick="shareStore()">
-          Share
+          type="button" onclick="shareStore()">
+          Share Store
         </button>
       </div>
+
+      <p id="storeLinkMessage" class="message" aria-live="polite"></p>
 
     </div>
 
@@ -590,8 +737,8 @@
     <h1>My Selling Prices</h1>
 
     <p class="stat-note">
-      The displayed base prices are sample values. Confirm supplier
-      prices before accepting customer payments.
+      Prices are loaded from your agent account. Your selling prices
+      must satisfy the minimum prices enforced by the server.
     </p>
 
     <div class="card">
@@ -599,7 +746,7 @@
       <div class="field">
         <label for="priceNetwork">Select Network</label>
 
-        <select id="priceNetwork" onchange="renderPrices()">
+        <select id="priceNetwork">
           <option value="MTN">MTN</option>
           <option value="Telecel">Telecel</option>
           <option value="AirtelTigo">AirtelTigo</option>
@@ -621,11 +768,11 @@
       </div>
 
       <button class="btn btn-primary btn-block"
-        onclick="savePrices()">
+        id="savePricesButton" onclick="savePrices()">
         Save My Prices
       </button>
 
-      <p id="priceMessage" class="message"></p>
+      <p id="priceMessage" class="message" aria-live="polite"></p>
 
     </div>
 
@@ -639,14 +786,35 @@
     <div class="card">
 
       <p class="notice">
-        Orders are loaded from the server when the backend endpoint
-        is available. No real customer orders are created by this page.
+        These orders are retrieved from the server. Search only filters
+        the orders returned to your authenticated agent account.
       </p>
 
       <button class="btn btn-primary btn-block"
-        onclick="loadOrders()">
-        Refresh Orders
+        id="refreshOrdersButton" onclick="loadOrders()">
+        ↻ Refresh Orders
       </button>
+
+      <div class="order-search">
+        <span class="search-icon" aria-hidden="true">⌕</span>
+
+        <input
+          type="search"
+          id="orderSearch"
+          placeholder="Search phone, reference, network..."
+          aria-label="Search orders by phone, reference, network, bundle or status"
+          autocomplete="off"
+        >
+
+        <button type="button" id="clearOrderSearch"
+          aria-label="Clear order search">
+          Clear
+        </button>
+      </div>
+
+      <p class="order-count" id="orderCount" aria-live="polite">
+        Loading orders...
+      </p>
 
       <div id="ordersList" class="message">
         Loading orders...
@@ -681,8 +849,18 @@
       </p>
 
       <p>
+        <strong>Email:</strong>
+        <span id="profileEmail">Loading...</span>
+      </p>
+
+      <p>
         <strong>Agent Code:</strong>
         <span id="profileCode">Loading...</span>
+      </p>
+
+      <p>
+        <strong>Account Status:</strong>
+        <span id="profileStatus" class="badge">Loading...</span>
       </p>
 
     </div>
@@ -692,8 +870,9 @@
       <h3>Account Security</h3>
 
       <p class="stat-note">
-        Your account access is verified by the backend. Keep your
-        password private and always sign out when using a shared device.
+        Keep your password private and always sign out when using a
+        shared device. Your login token is stored for this browser
+        session.
       </p>
 
       <button class="btn btn-block"
@@ -716,125 +895,125 @@
 
   </section>
 
-  <!-- WITHDRAWALS -->
-<section class="page" id="withdrawals">
+  <!-- WITHDRAWALS: PRESERVED -->
+  <section class="page" id="withdrawals">
 
-  <h1>Withdraw Earnings</h1>
+    <h1>Withdraw Earnings</h1>
 
-  <p class="stat-note">
-    Withdraw your eligible earnings to your Mobile Money account.
-    Today's profits become available the following day.
-  </p>
+    <p class="stat-note">
+      Withdraw your eligible earnings to your Mobile Money account.
+      Today's profits become available the following day.
+    </p>
 
-  <div class="stats">
+    <div class="stats">
 
-  <div class="card">
-    <div class="stat-label">Available Balance</div>
-    <div class="stat-value green" id="availableBalance">
-      GH₵0.00
-    </div>
-    <div class="stat-note">
-      Available for withdrawal now.
-    </div>
-  </div>
+      <div class="card">
+        <div class="stat-label">Available Balance</div>
+        <div class="stat-value green" id="availableBalance">
+          GH₵0.00
+        </div>
+        <div class="stat-note">
+          Available for withdrawal now.
+        </div>
+      </div>
 
-    
+      <div class="card">
+        <div class="stat-label">Today's Profit</div>
+        <div class="stat-value" id="todayProfit">
+          GH₵0.00
+        </div>
+        <div class="stat-note">
+          Available for withdrawal tomorrow.
+        </div>
+      </div>
 
-  <div class="card">
-    <div class="stat-label">Today's Profit</div>
-    <div class="stat-value" id="todayProfit">
-      GH₵0.00
-    </div>
-    <div class="stat-note">
-      Available for withdrawal tomorrow.
-    </div>
-  </div>
+      <div class="card">
+        <div class="stat-label">Pending Withdrawals</div>
+        <div class="stat-value" id="pendingWithdrawals">
+          GH₵0.00
+        </div>
+        <div class="stat-note">
+          Requests awaiting processing.
+        </div>
+      </div>
 
-  <div class="card">
-    <div class="stat-label">Pending Withdrawals</div>
-    <div class="stat-value" id="pendingWithdrawals">
-      GH₵0.00
-    </div>
-    <div class="stat-note">
-      Requests awaiting processing.
-    </div>
-  </div>
-
-  </div>
-
-  <div class="card">
-
-    <h3>Request a Withdrawal</h3>
-
-    <div class="notice">
-      Minimum withdrawal: GH₵0.10. There is no maximum withdrawal limit, provided your available balance covers the request. Today's profit becomes withdrawable the following day.
     </div>
 
-    <div class="field">
-      <label for="withdrawAmount">Amount (GH₵)</label>
-      <input
-        type="number"
-        id="withdrawAmount"
-        min="0.10"
-step="0.01"
-        placeholder="e.g. 50.00"
+    <div class="card">
+
+      <h3>Request a Withdrawal</h3>
+
+      <div class="notice">
+        Minimum withdrawal: GH₵0.10. There is no maximum withdrawal
+        limit, provided your available balance covers the request.
+        Today's profit becomes withdrawable the following day.
+      </div>
+
+      <div class="field">
+        <label for="withdrawAmount">Amount (GH₵)</label>
+        <input
+          type="number"
+          id="withdrawAmount"
+          min="0.10"
+          step="0.01"
+          placeholder="e.g. 50.00"
+        >
+      </div>
+
+      <div class="field">
+        <label for="withdrawProvider">Mobile Money Provider</label>
+        <select id="withdrawProvider">
+          <option value="MTN">MTN MoMo</option>
+          <option value="TELECEL">Telecel Cash</option>
+          <option value="AIRTELTIGO">AirtelTigo Money</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="withdrawPhone">Mobile Money Number</label>
+        <input
+          type="tel"
+          id="withdrawPhone"
+          inputmode="tel"
+          maxlength="15"
+          placeholder="0241234567"
+        >
+      </div>
+
+      <button
+        class="btn btn-primary btn-block"
+        id="withdrawSubmit"
+        onclick="submitWithdrawal()"
       >
+        Request Withdrawal
+      </button>
+
+      <p id="withdrawMessage" class="message" aria-live="polite"></p>
+
     </div>
 
-    <div class="field">
-      <label for="withdrawProvider">Mobile Money Provider</label>
-      <select id="withdrawProvider">
-        <option value="MTN">MTN MoMo</option>
-        <option value="TELECEL">Telecel Cash</option>
-        <option value="AIRTELTIGO">AirtelTigo Money</option>
-      </select>
-    </div>
+    <div class="card">
 
-    <div class="field">
-      <label for="withdrawPhone">Mobile Money Number</label>
-      <input
-        type="tel"
-        id="withdrawPhone"
-        inputmode="tel"
-        maxlength="15"
-        placeholder="0241234567"
+      <h3>Withdrawal History</h3>
+
+      <button
+        class="btn btn-block"
+        onclick="loadWithdrawals()"
       >
+        Refresh Balance & History
+      </button>
+
+      <div id="withdrawalHistory" class="message">
+        Loading withdrawal history...
+      </div>
+
     </div>
 
-    <button
-      class="btn btn-primary btn-block"
-      id="withdrawSubmit"
-      onclick="submitWithdrawal()"
-    >
-      Request Withdrawal
-    </button>
+  </section>
 
-    <p id="withdrawMessage" class="message" aria-live="polite"></p>
-
-  </div>
-
-  <div class="card">
-
-    <h3>Withdrawal History</h3>
-
-    <button
-      class="btn btn-block"
-      onclick="loadWithdrawals()"
-    >
-      Refresh Balance & History
-    </button>
-
-    <div id="withdrawalHistory" class="message">
-      Loading withdrawal history...
-    </div>
-
-  </div>
-
-</section>
-
-<footer>
-  Kielmen 636 Dataplug · Agent Dashboard
-</footer>
+  <footer>
+    Kielmen 636 Dataplug · Agent Dashboard
+  </footer>
 
 </main>
 
@@ -875,21 +1054,29 @@ step="0.01"
 <script>
 "use strict";
 
-/* -------------------------------------------------
+/* =========================================================
    KIELMEN 636 AGENT DASHBOARD
    Backend: Render
--------------------------------------------------- */
+   ========================================================= */
 
 const AGENT_API =
   "https://kielmen-dataplug-payment-api.onrender.com";
 
 const LOGIN_PAGE = "agent-login.html";
 
+const PUBLIC_SITE =
+  "https://kielmen.com";
+
 const STORAGE = {
   profile: "k636_agent_profile_v1",
   prices: "k636_agent_prices_v1"
 };
 
+/*
+ * Fallback values only.
+ * The dashboard attempts to load authoritative prices from
+ * the authenticated backend before allowing price changes.
+ */
 const BASE_PRICES = {
   MTN: {
     "1GB": 4.50,
@@ -909,14 +1096,14 @@ const BASE_PRICES = {
   },
 
   Telecel: {
-    "10GB": 42.00,
-    "15GB": 57.00,
-    "20GB": 72.00,
-    "25GB": 93.00,
-    "30GB": 111.00,
-    "40GB": 145.00,
-    "50GB": 179.00,
-    "100GB": 402.00
+    "10GB": 45.00,
+    "15GB": 62.00,
+    "20GB": 82.00,
+    "25GB": 101.00,
+    "30GB": 124.00,
+    "40GB": 170.00,
+    "50GB": 210.00,
+    "100GB": 420.00
   },
 
   AirtelTigo: {
@@ -931,9 +1118,11 @@ const BASE_PRICES = {
 };
 
 let agent = null;
-let agentPrices = readStorage(STORAGE.prices, {});
 let orders = [];
 let dashboardStats = null;
+let agentPrices = readStorage(STORAGE.prices, {});
+let serverPricesAvailable = false;
+
 let profile = readStorage(STORAGE.profile, {
   businessName: "",
   agentName: "",
@@ -941,13 +1130,13 @@ let profile = readStorage(STORAGE.profile, {
   storeDescription: ""
 });
 
-let serverPricesAvailable = false;
+/* STORAGE */
 
 function readStorage(key, fallback) {
   try {
     const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : fallback;
-  } catch (error) {
+  } catch {
     return fallback;
   }
 }
@@ -956,10 +1145,12 @@ function writeStorage(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
+
+/* GENERAL HELPERS */
 
 function money(value) {
   const amount = Number(value);
@@ -969,6 +1160,91 @@ function money(value) {
   }
 
   return "GH₵" + amount.toFixed(2);
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, function (character) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[character];
+  });
+}
+
+function normaliseNetwork(value) {
+  const network = String(value ?? "")
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "");
+
+  if (network === "MTN") return "MTN";
+  if (network === "TELECEL") return "Telecel";
+
+  if (
+    network === "AIRTELTIGO" ||
+    network === "AIRTELTIGHO" ||
+    network === "AT"
+  ) {
+    return "AirtelTigo";
+  }
+
+  return null;
+}
+
+function normalisePriceMap(rawPrices) {
+  const result = {};
+
+  if (!rawPrices || typeof rawPrices !== "object") {
+    return result;
+  }
+
+  Object.entries(rawPrices).forEach(function ([networkKey, values]) {
+    const network = normaliseNetwork(networkKey);
+
+    if (!network || !values || typeof values !== "object") {
+      return;
+    }
+
+    result[network] = {};
+
+    if (Array.isArray(values)) {
+      values.forEach(function (item) {
+        if (!item) return;
+
+        const bundle = String(
+          item.bundle || item.size || ""
+        );
+
+        const price = Number(
+          item.sellingPrice ??
+          item.selling_price ??
+          item.price
+        );
+
+        if (bundle && Number.isFinite(price)) {
+          result[network][bundle] = price;
+        }
+      });
+
+      return;
+    }
+
+    Object.entries(values).forEach(function ([bundle, value]) {
+      const price = Number(
+        value && typeof value === "object"
+          ? value.sellingPrice ?? value.selling_price ?? value.price
+          : value
+      );
+
+      if (Number.isFinite(price)) {
+        result[network][bundle] = price;
+      }
+    });
+  });
+
+  return result;
 }
 
 function setMessage(title, detail, showLoginButton) {
@@ -998,40 +1274,52 @@ function setMessage(title, detail, showLoginButton) {
   }
 }
 
+/* API REQUESTS */
+
 async function apiRequest(path, options = {}) {
   const token = sessionStorage.getItem("k636_agent_token");
 
   const headers = {
-    "Accept": "application/json",
+    Accept: "application/json",
     ...(options.headers || {})
   };
 
   if (token) {
-    headers["Authorization"] = "Bearer " + token;
+    headers.Authorization = "Bearer " + token;
   }
 
-  if (options.body) {
+  if (options.body && !headers["Content-Type"]) {
     headers["Content-Type"] = "application/json";
   }
 
-  const response = await fetch(AGENT_API + path, {
-    ...options,
-    headers
-  });
+  let response;
+
+  try {
+    response = await fetch(AGENT_API + path, {
+      ...options,
+      headers
+    });
+  } catch {
+    throw new Error(
+      "Could not connect to the server. Check your internet connection."
+    );
+  }
 
   let result;
 
   try {
     result = await response.json();
-  } catch (error) {
+  } catch {
     throw new Error("The server returned an invalid response.");
   }
 
   return {
-    response: response,
-    result: result
+    response,
+    result
   };
 }
+
+/* AUTHENTICATION */
 
 async function verifyAgent() {
   const token = sessionStorage.getItem("k636_agent_token");
@@ -1051,7 +1339,7 @@ async function verifyAgent() {
     if (
       !data.response.ok ||
       !data.result ||
-      !data.result.success ||
+      data.result.success !== true ||
       !data.result.agent
     ) {
       sessionStorage.removeItem("k636_agent_token");
@@ -1059,7 +1347,7 @@ async function verifyAgent() {
 
       setMessage(
         "Your session is invalid or expired",
-        "Please sign in again. If your account is pending approval, contact the store administrator.",
+        "Please sign in again. If your account is awaiting approval, contact the administrator.",
         true
       );
 
@@ -1067,6 +1355,11 @@ async function verifyAgent() {
     }
 
     agent = data.result.agent;
+
+    sessionStorage.setItem(
+      "k636_agent",
+      JSON.stringify(agent)
+    );
 
     displayAgent();
 
@@ -1079,21 +1372,35 @@ async function verifyAgent() {
     await loadStats();
 
   } catch (error) {
+    console.error("Agent verification failed:", error);
+
     setMessage(
       "Unable to connect to the server",
-      "Check your internet connection. If the problem continues, the backend may be unavailable or its CORS settings may need checking. Your dashboard has not been authenticated yet.",
+      error.message +
+      " Your dashboard has not been authenticated yet.",
       true
     );
-
-    console.error("Agent verification failed:", error);
   }
 }
 
 function displayAgent() {
-  const fullName = agent.full_name || "Agent";
-  const businessName = agent.business_name || "My Data Store";
-  const phone = agent.phone || "Not provided";
-  const code = agent.agent_code || "Not assigned";
+  const fullName =
+    agent.full_name || agent.fullName || agent.name || "Agent";
+
+  const businessName =
+    agent.business_name || agent.businessName || "My Data Store";
+
+  const phone =
+    agent.phone || agent.mobile_number || "";
+
+  const email =
+    agent.email || "";
+
+  const code =
+    agent.agent_code || agent.agentCode || agent.code || "";
+
+  const status =
+    agent.status || agent.account_status || "Active";
 
   document.getElementById("welcomeName").textContent =
     "Welcome, " + fullName + "!";
@@ -1101,42 +1408,87 @@ function displayAgent() {
   document.getElementById("welcomeDetails").textContent =
     businessName + " — manage your data business here.";
 
-  document.getElementById("agentCode").textContent = code;
+  document.getElementById("agentCode").textContent =
+    code || "Not assigned";
 
   document.getElementById("profileAgent").textContent = fullName;
   document.getElementById("profileBusiness").textContent = businessName;
-  document.getElementById("profilePhone").textContent = phone;
-  document.getElementById("profileCode").textContent = code;
+  document.getElementById("profilePhone").textContent =
+    phone || "Not provided";
+  document.getElementById("profileEmail").textContent =
+    email || "Not provided";
+  document.getElementById("profileCode").textContent =
+    code || "Not assigned";
+  document.getElementById("profileStatus").textContent = status;
 
   profile = {
-    businessName: businessName,
+    businessName,
     agentName: fullName,
-    agentPhone: agent.phone || "",
-    storeDescription: agent.store_description || ""
+    agentPhone: phone,
+    storeDescription:
+      agent.store_description || agent.storeDescription || ""
   };
 
   loadProfileForm();
   renderStoreLink();
 }
 
+async function agentLogout() {
+  const token = sessionStorage.getItem("k636_agent_token");
+
+  try {
+    if (token) {
+      await fetch(AGENT_API + "/agents/logout", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + token
+        }
+      });
+    }
+  } catch (error) {
+    console.warn("Sign-out request could not reach the server.");
+  } finally {
+    sessionStorage.removeItem("k636_agent_token");
+    sessionStorage.removeItem("k636_agent");
+    window.location.replace(LOGIN_PAGE);
+  }
+}
+
+/* PAGE NAVIGATION */
+
 function showPage(pageId) {
+  const allowedPages = [
+    "home",
+    "store",
+    "prices",
+    "orders",
+    "profile",
+    "withdrawals"
+  ];
+
+  if (!allowedPages.includes(pageId)) {
+    return;
+  }
+
   document.querySelectorAll(".page").forEach(function (page) {
     page.classList.toggle("active", page.id === pageId);
   });
 
   document.querySelectorAll(".nav-btn").forEach(function (button) {
-    button.classList.toggle(
-      "active",
-      button.dataset.page === pageId
-    );
+    const active = button.dataset.page === pageId;
+
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-current", active ? "page" : "false");
   });
 
   if (pageId === "prices") {
     renderPrices();
   }
+
   if (pageId === "withdrawals") {
     loadWithdrawals();
   }
+
   if (pageId === "orders") {
     renderOrders();
   }
@@ -1148,16 +1500,24 @@ function showPage(pageId) {
 }
 
 function selectNetwork(network) {
-  document.getElementById("priceNetwork").value = network;
+  const normalized = normaliseNetwork(network);
+
+  if (!normalized) return;
+
+  document.getElementById("priceNetwork").value = normalized;
+
   renderPrices();
   showPage("prices");
 }
 
+/* SELLING PRICES */
+
 function getCurrentPrices(network) {
   const saved = agentPrices[network] || {};
   const result = {};
+  const basePrices = BASE_PRICES[network] || {};
 
-  Object.entries(BASE_PRICES[network]).forEach(function ([bundle, base]) {
+  Object.entries(basePrices).forEach(function ([bundle, base]) {
     const value = Number(saved[bundle]);
 
     result[bundle] =
@@ -1168,205 +1528,300 @@ function getCurrentPrices(network) {
 
   return result;
 }
+
+function getBasePrice(network, bundle) {
+  const backendBase = window.agentBasePrices || {};
+  const normalizedNetwork = normaliseNetwork(network);
+
+  if (!normalizedNetwork) {
+    return Number(BASE_PRICES[network]?.[bundle] ?? 0);
+  }
+
+  const networkCandidates = [
+    normalizedNetwork,
+    normalizedNetwork.toUpperCase(),
+    normalizedNetwork.toLowerCase()
+  ];
+
+  for (const key of networkCandidates) {
+    const networkValues = backendBase[key];
+
+    if (networkValues && networkValues[bundle] !== undefined) {
+      const price = Number(networkValues[bundle]);
+
+      if (Number.isFinite(price)) {
+        return price;
+      }
+    }
+  }
+
+  return Number(BASE_PRICES[normalizedNetwork]?.[bundle] ?? 0);
+}
+
+function getSavedPrice(network, bundle) {
+  const normalizedNetwork = normaliseNetwork(network);
+
+  if (!normalizedNetwork) return null;
+
+  const saved = agentPrices[normalizedNetwork] || {};
+  const value = Number(saved[bundle]);
+
+  return Number.isFinite(value) ? value : null;
+}
+
 function renderPrices() {
-  const network = document.getElementById("priceNetwork").value;
+  const networkSelect = document.getElementById("priceNetwork");
   const rows = document.getElementById("priceRows");
   const message = document.getElementById("priceMessage");
 
-  if (!BASE_PRICES[network]) {
-    rows.innerHTML = "";
-    message.textContent = "Network prices are unavailable.";
+  if (!networkSelect || !rows || !message) return;
+
+  const network = normaliseNetwork(networkSelect.value);
+
+  if (!network) {
+    rows.replaceChildren();
+    message.textContent = "Select a valid network.";
     return;
   }
 
-  rows.innerHTML = "";
+  networkSelect.value = network;
+  rows.replaceChildren();
 
-  const savedPrices =
-    window.agentSavedPrices || agentPrices || {};
+  const savedNetworkPrices = agentPrices[network] || {};
+  const bundles = Object.keys(BASE_PRICES[network] || {});
 
-  const normalizedNetwork = network
-    .toUpperCase()
-    .replace(/[^A-Z]/g, "");
+  if (bundles.length === 0) {
+    message.textContent = "No bundle prices are configured for this network.";
+    return;
+  }
 
-  const networkPrices =
-    savedPrices[normalizedNetwork] ||
-    savedPrices[network] ||
-    {};
+  bundles.forEach(function (bundle) {
+    const basePrice = getBasePrice(network, bundle);
+    const savedPrice = Number(savedNetworkPrices[bundle]);
 
-  Object.entries(BASE_PRICES[network]).forEach(
-    function ([bundle, basePrice]) {
-      const savedPrice = Number(networkPrices[bundle]);
+    const sellingPrice =
+      Number.isFinite(savedPrice) && savedPrice >= basePrice
+        ? savedPrice
+        : basePrice;
 
-      const sellingPrice =
-        Number.isFinite(savedPrice) && savedPrice >= basePrice
-          ? savedPrice
-          : basePrice;
+    const row = document.createElement("tr");
 
-      const row = document.createElement("tr");
+    const bundleCell = document.createElement("td");
+    bundleCell.textContent = bundle;
 
-      row.innerHTML = `
-        <td>${escapeHTML(bundle)}</td>
-        <td>${money(basePrice)}</td>
-        <td>
-          <input
-            class="price-input"
-            type="number"
-            min="${basePrice}"
-            step="0.01"
-            value="${sellingPrice.toFixed(2)}"
-            data-network="${escapeHTML(network)}"
-            data-bundle="${escapeHTML(bundle)}"
-            aria-label="${escapeHTML(network)} ${escapeHTML(bundle)} selling price"
-          >
-        </td>
-      `;
+    const baseCell = document.createElement("td");
+    baseCell.textContent = money(basePrice);
 
-      rows.appendChild(row);
-    }
-  );
+    const priceCell = document.createElement("td");
+    const input = document.createElement("input");
 
-  message.textContent =
-    "Set your selling prices, then tap Save My Prices.";
-}
-  
-async function loadPrices() {
-  try {
-    const response = await fetch(
-      `${AGENT_API}/agents/prices`,
-      {
-        headers: {
-          Authorization: `Bearer ${sessionStorage.getItem("k636_agent_token")}`
-        }
-      }
+    input.className = "price-input";
+    input.type = "number";
+    input.min = String(basePrice);
+    input.step = "0.01";
+    input.value = sellingPrice.toFixed(2);
+    input.dataset.network = network;
+    input.dataset.bundle = bundle;
+    input.setAttribute(
+      "aria-label",
+      network + " " + bundle + " selling price"
     );
 
-    const data = await response.json();
+    priceCell.appendChild(input);
+    row.append(bundleCell, baseCell, priceCell);
+    rows.appendChild(row);
+  });
 
-    if (!response.ok || !data.success) {
+  message.textContent = serverPricesAvailable
+    ? "Edit your selling prices and select Save My Prices."
+    : "Prices could not be confirmed by the server. Reconnect before saving changes.";
+}
+
+async function loadPrices() {
+  const message = document.getElementById("priceMessage");
+
+  try {
+    const data = await apiRequest("/agents/prices");
+
+    if (
+      !data.response.ok ||
+      !data.result ||
+      data.result.success !== true
+    ) {
       throw new Error(
-        data.message || "Could not load prices."
+        data.result?.message || "Could not load agent prices."
       );
     }
 
     const prices = {};
 
-    if (Array.isArray(data.prices)) {
-      data.prices.forEach(item => {
-        const network = String(item.network)
-          .toUpperCase()
-          .replace(/[^A-Z]/g, "");
+    const receivedPrices = data.result.prices;
 
-        if (!prices[network]) {
-          prices[network] = {};
+    if (Array.isArray(receivedPrices)) {
+      receivedPrices.forEach(function (item) {
+        if (!item) return;
+
+        const network = normaliseNetwork(item.network);
+        const bundle = String(item.bundle || item.size || "");
+
+        const sellingPrice = Number(
+          item.sellingPrice ??
+          item.selling_price ??
+          item.price
+        );
+
+        if (
+          network &&
+          bundle &&
+          Number.isFinite(sellingPrice)
+        ) {
+          if (!prices[network]) {
+            prices[network] = {};
+          }
+
+          prices[network][bundle] = sellingPrice;
         }
-
-        prices[network][item.bundle] =
-          Number(item.sellingPrice);
       });
+    } else if (
+      receivedPrices &&
+      typeof receivedPrices === "object"
+    ) {
+      Object.assign(
+        prices,
+        normalisePriceMap(receivedPrices)
+      );
     }
 
-    // Keep the backend's base prices available.
-    window.agentBasePrices = data.basePrices || {};
-
-    // Store the saved prices for the dashboard.
+    agentPrices = prices;
     window.agentSavedPrices = prices;
 
-    try {
-      localStorage.setItem(
-        "k636_agent_prices_v1",
-        JSON.stringify(prices)
-      );
-    } catch (storageError) {
-      console.warn("Could not cache agent prices.");
+    window.agentBasePrices =
+      data.result.basePrices ||
+      data.result.base_prices ||
+      {};
+
+    serverPricesAvailable = true;
+
+    writeStorage(STORAGE.prices, prices);
+
+    renderPrices();
+
+    if (message) {
+      message.textContent = "Your prices have been loaded from the server.";
     }
 
     return prices;
 
   } catch (error) {
+    serverPricesAvailable = false;
+
     console.error("Load prices error:", error);
 
-    alert(
-      error.message ||
-      "Could not load prices. Please try again."
-    );
+    renderPrices();
+
+    if (message) {
+      message.textContent =
+        "Could not confirm prices from the server. " +
+        error.message +
+        " Saving prices is disabled until prices load successfully.";
+    }
 
     return {};
   }
 }
-  
+
 async function savePrices() {
   const token = sessionStorage.getItem("k636_agent_token");
+  const button = document.getElementById("savePricesButton");
+  const message = document.getElementById("priceMessage");
 
   if (!token) {
-    alert("Your session has expired. Please log in again.");
+    message.textContent = "Your session has expired. Please sign in again.";
+    return;
+  }
+
+  if (!serverPricesAvailable) {
+    message.textContent =
+      "Prices have not been confirmed by the server. Refresh and try again.";
     return;
   }
 
   const inputs = document.querySelectorAll(
-    "[data-network][data-bundle]"
+    "#priceRows input[data-network][data-bundle]"
   );
 
   const prices = [];
+  let validationError = "";
 
-  inputs.forEach(input => {
-    const network = input.dataset.network;
+  inputs.forEach(function (input) {
+    const network = normaliseNetwork(input.dataset.network);
     const bundle = input.dataset.bundle;
     const sellingPrice = Number(input.value);
+    const basePrice = getBasePrice(network, bundle);
 
     if (
-      network &&
-      bundle &&
-      input.value.trim() !== "" &&
-      Number.isFinite(sellingPrice) &&
-      sellingPrice >= 0
+      !network ||
+      !bundle ||
+      input.value.trim() === "" ||
+      !Number.isFinite(sellingPrice) ||
+      sellingPrice < basePrice ||
+      Math.round(sellingPrice * 100) !== sellingPrice * 100
     ) {
-      prices.push({
-        network,
-        bundle,
-        sellingPrice
-      });
+      validationError =
+        "Check every price. Prices must be valid, use no more than two decimal places, and meet the minimum price.";
+      return;
     }
+
+    prices.push({
+      network,
+      bundle,
+      sellingPrice
+    });
   });
 
-  if (prices.length === 0) {
-    alert("No valid prices were found. Please check your price fields.");
+  if (validationError || prices.length === 0) {
+    message.textContent =
+      validationError || "No valid prices were found.";
     return;
   }
 
+  button.disabled = true;
+  button.textContent = "Saving Prices...";
+  message.textContent = "Saving prices to your agent account...";
+
   try {
-    const response = await fetch(
-      `${AGENT_API}/agents/prices`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionStorage.getItem("k636_agent_token")}`
-        },
-        body: JSON.stringify({ prices })
-      }
-    );
+    const data = await apiRequest("/agents/prices", {
+      method: "PUT",
+      body: JSON.stringify({ prices })
+    });
 
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
+    if (
+      !data.response.ok ||
+      !data.result ||
+      data.result.success !== true
+    ) {
       throw new Error(
-        data.message || "Unable to save prices."
+        data.result?.message || "Unable to save prices."
       );
     }
 
-    alert("Your selling prices have been saved successfully!");
-
     await loadPrices();
+
+    message.textContent =
+      "Your selling prices were saved successfully.";
 
   } catch (error) {
     console.error("Save prices error:", error);
 
-    alert(
-      error.message ||
-      "Unable to save prices. Please try again."
-    );
+    message.textContent =
+      error.message || "Unable to save your prices.";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Save My Prices";
   }
 }
+
+/* STORE PROFILE */
 
 function loadProfileForm() {
   document.getElementById("businessName").value =
@@ -1382,7 +1837,7 @@ function loadProfileForm() {
     profile.storeDescription || "";
 }
 
-function saveStore() {
+async function saveStore() {
   const businessName =
     document.getElementById("businessName").value.trim();
 
@@ -1395,164 +1850,231 @@ function saveStore() {
   const storeDescription =
     document.getElementById("storeDescription").value.trim();
 
-  if (!businessName || !agentName) {
-    alert("Please enter your business name and agent name.");
+  const message = document.getElementById("storeMessage");
+  const button = document.getElementById("saveStoreButton");
+
+  if (businessName.length < 2 || agentName.length < 2) {
+    message.textContent =
+      "Enter a valid business name and agent name.";
+    message.className = "message error";
     return;
   }
 
-  profile = {
-    businessName: businessName,
-    agentName: agentName,
-    agentPhone: agentPhone,
-    storeDescription: storeDescription
-  };
+  if (
+    agentPhone &&
+    !/^(0\d{9}|233\d{9})$/.test(agentPhone.replace(/\s+/g, ""))
+  ) {
+    message.textContent =
+      "Enter a valid Ghana phone number, for example 0241234567.";
+    message.className = "message error";
+    return;
+  }
 
-  const saved = writeStorage(STORAGE.profile, profile);
+  /*
+   * This sends the profile to the existing backend route.
+   * The server must support the PATCH method and these fields.
+   * If the backend rejects the request, the page will report it
+   * instead of pretending the server saved the information.
+   */
+  button.disabled = true;
+  button.textContent = "Saving...";
+  message.textContent = "Saving your store details...";
 
-  renderStoreLink();
+  try {
+    const data = await apiRequest("/agents/profile", {
+      method: "PATCH",
+      body: JSON.stringify({
+        businessName,
+        fullName: agentName,
+        phone: agentPhone,
+        storeDescription
+      })
+    });
 
-  document.getElementById("storeMessage").textContent = saved
-    ? "Details saved in this browser only. Server-side profile saving is not connected."
-    : "Your browser could not save these details.";
+    if (
+      !data.response.ok ||
+      !data.result ||
+      data.result.success !== true
+    ) {
+      throw new Error(
+        data.result?.message ||
+        "The server did not save your store details."
+      );
+    }
 
-  alert(
-    saved
-      ? "Store details saved in this browser."
-      : "Could not save details in this browser."
-  );
+    profile = {
+      businessName,
+      agentName,
+      agentPhone,
+      storeDescription
+    };
+
+    writeStorage(STORAGE.profile, profile);
+
+    if (data.result.agent) {
+      agent = data.result.agent;
+      sessionStorage.setItem("k636_agent", JSON.stringify(agent));
+    }
+
+    document.getElementById("profileBusiness").textContent =
+      businessName;
+
+    document.getElementById("profileAgent").textContent =
+      agentName;
+
+    document.getElementById("profilePhone").textContent =
+      agentPhone || "Not provided";
+
+    renderStoreLink();
+
+    message.textContent = "Your store details have been saved.";
+    message.className = "message success";
+
+  } catch (error) {
+    console.error("Store profile save error:", error);
+
+    message.textContent =
+      "Could not save your store details to the server: " +
+      error.message;
+
+    message.className = "message error";
+  } finally {
+    button.disabled = false;
+    button.textContent = "Save Store Details";
+  }
 }
 
-function makeSlug(value) {
-  return String(value)
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+function getAgentCode() {
+  let agentData = agent || {};
+
+  try {
+    const storedAgent = JSON.parse(
+      sessionStorage.getItem("k636_agent") || "{}"
+    );
+
+    agentData = {
+      ...storedAgent,
+      ...agentData
+    };
+  } catch {
+    // Continue with the authenticated agent object.
+  }
+
+  return String(
+    agentData.agent_code ||
+    agentData.agentCode ||
+    agentData.code ||
+    ""
+  ).trim();
+}
+
+function getStoreURL() {
+  const code = getAgentCode();
+
+  if (!code) {
+    return "";
+  }
+
+  /*
+   * Use the main website and pass the agent code expected by
+   * the agent store page.
+   */
+  return PUBLIC_SITE +
+    "/agent-store.html?code=" +
+    encodeURIComponent(code);
 }
 
 function renderStoreLink() {
-  const agentData = JSON.parse(
-    sessionStorage.getItem("k636_agent") || "{}"
-  );
+  const linkElement = document.getElementById("storeLink");
+  const link = getStoreURL();
 
-  const agentCode =
-    agentData.agentCode ||
-    agentData.agent_code ||
-    agentData.code ||
-    "";
-
-  const linkElement =
-    document.getElementById("storeLink");
-
-  const shareButton =
-    document.getElementById("shareStoreButton");
-
-  const copyButton =
-    document.getElementById("copyStoreButton");
-
-  if (!agentCode) {
-    if (linkElement) {
-      linkElement.textContent =
-        "Your agent code could not be found. Please log in again.";
-    }
-
+  if (!link) {
+    linkElement.textContent =
+      "Your agent code is unavailable. Please sign in again.";
     return;
   }
 
-  const storeURL =
-  `https://ezekielmemsahannan42-wq.github.io/kielmen-dataplug/agent-store.html?code=${encodeURIComponent(agentCode)}`;
-
-  if (linkElement) {
-    if ("value" in linkElement) {
-      linkElement.value = storeURL;
-    } else {
-      linkElement.textContent = storeURL;
-    }
-  }
-
-  if (copyButton) {
-    copyButton.onclick = async function () {
-      try {
-        await navigator.clipboard.writeText(storeURL);
-        alert("Your store link has been copied!");
-      } catch (error) {
-        prompt("Copy your store link:", storeURL);
-      }
-    };
-  }
-
-  if (shareButton) {
-    shareButton.onclick = async function () {
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: "My Data Store",
-            text: "Order your data bundles from my store.",
-            url: storeURL
-          });
-        } catch (error) {
-          if (error.name !== "AbortError") {
-            prompt("Copy your store link:", storeURL);
-          }
-        }
-      } else {
-        prompt("Copy your store link:", storeURL);
-      }
-    };
-  }
+  linkElement.textContent = link;
 }
 
 async function copyStoreLink() {
-  const link = document.getElementById("storeLink").textContent;
+  const link = getStoreURL();
+  const message = document.getElementById("storeLinkMessage");
 
-  if (!link.startsWith("http")) {
-    alert("Please save your store details first.");
+  if (!link) {
+    message.textContent =
+      "Your agent code could not be found. Please sign in again.";
     return;
   }
 
   try {
     await navigator.clipboard.writeText(link);
-    alert("Store link copied.");
-  } catch (error) {
+    message.textContent = "Store link copied successfully.";
+    message.className = "message success";
+  } catch {
     window.prompt("Copy your store link:", link);
+    message.textContent =
+      "If the link was not copied automatically, copy it from the box above.";
   }
 }
 
 async function shareStore() {
-  const link = document.getElementById("storeLink").textContent;
+  const link = getStoreURL();
+  const message = document.getElementById("storeLinkMessage");
 
-  if (!link.startsWith("http")) {
-    alert("Please save your store details first.");
+  if (!link) {
+    message.textContent =
+      "Your agent code could not be found. Please sign in again.";
     return;
   }
 
-  const text =
-    "Visit " + profile.businessName +
-    " for data bundles: " + link;
+  const businessName =
+    profile.businessName || "My Data Store";
+
+  const shareText =
+    "Order your data bundles from " +
+    businessName +
+    " using my Kielmen 636 Dataplug store: " +
+    link;
 
   if (navigator.share) {
     try {
       await navigator.share({
-        title: profile.businessName,
-        text: text,
+        title: businessName,
+        text: shareText,
         url: link
       });
+
+      message.textContent = "Store sharing opened.";
     } catch (error) {
-      // The user may cancel the share sheet.
+      if (error.name !== "AbortError") {
+        window.prompt("Copy your store link:", link);
+      }
     }
   } else {
     window.open(
-      "https://wa.me/?text=" + encodeURIComponent(text),
+      "https://wa.me/?text=" + encodeURIComponent(shareText),
       "_blank",
-      "noopener"
+      "noopener,noreferrer"
     );
   }
 }
 
+/* ORDERS */
+
 async function loadOrders() {
   const target = document.getElementById("ordersList");
+  const refreshButton = document.getElementById("refreshOrdersButton");
+  const countElement = document.getElementById("orderCount");
 
   target.textContent = "Loading orders from the server...";
+
+  if (countElement) {
+    countElement.textContent = "Loading orders...";
+  }
+
+  refreshButton.disabled = true;
+  refreshButton.textContent = "Loading...";
 
   try {
     const data = await apiRequest("/agents/orders");
@@ -1560,17 +2082,18 @@ async function loadOrders() {
     if (
       !data.response.ok ||
       !data.result ||
-      !data.result.success
+      data.result.success !== true
     ) {
-      target.textContent =
-        "The server did not return your orders. Please try again.";
-      return;
+      throw new Error(
+        data.result?.message || "The server did not return your orders."
+      );
     }
 
-    const result = data.result;
-    const receivedOrders = Array.isArray(result.orders)
-      ? result.orders
-      : [];
+    const receivedOrders = Array.isArray(data.result.orders)
+      ? data.result.orders
+      : Array.isArray(data.result.data?.orders)
+        ? data.result.data.orders
+        : [];
 
     orders = receivedOrders;
 
@@ -1578,35 +2101,101 @@ async function loadOrders() {
     renderRecentOrders();
 
   } catch (error) {
+    console.error("Load orders error:", error);
+
     target.textContent =
-      "Unable to load orders. Check your connection and try again.";
+      "Unable to load orders: " + error.message;
+
+    if (countElement) {
+      countElement.textContent = "Orders unavailable";
+    }
+
+  } finally {
+    refreshButton.disabled = false;
+    refreshButton.textContent = "↻ Refresh Orders";
   }
 }
 
 function renderOrders() {
   const target = document.getElementById("ordersList");
+  const searchInput = document.getElementById("orderSearch");
+  const countElement = document.getElementById("orderCount");
 
   if (!target) return;
 
-  if (!orders.length) {
-    target.textContent =
-      "No server orders were returned for this account.";
+  const searchTerm = searchInput
+    ? searchInput.value.trim().toLowerCase()
+    : "";
+
+  const filteredOrders = orders.filter(function (order) {
+    const searchableFields = [
+      order.network,
+      order.bundle,
+      order.status,
+      order.payment_status,
+      order.paymentStatus,
+      order.delivery_status,
+      order.deliveryStatus,
+      order.phone,
+      order.customer_phone,
+      order.customerPhone,
+      order.reference,
+      order.reference_code,
+      order.transaction_reference,
+      order.supplier_reference
+    ];
+
+    return searchableFields.some(function (value) {
+      return String(value ?? "")
+        .toLowerCase()
+        .includes(searchTerm);
+    });
+  });
+
+  if (countElement) {
+    countElement.textContent =
+      filteredOrders.length +
+      " of " +
+      orders.length +
+      " orders";
+  }
+
+  if (filteredOrders.length === 0) {
+    target.textContent = searchTerm
+      ? "No orders match your search. Try another phone number, reference, network, bundle or status."
+      : "No orders were returned for this agent account.";
+
     return;
   }
 
-  target.innerHTML = orders.map(function (order) {
+  target.innerHTML = filteredOrders.map(function (order) {
     const network = order.network || "Network";
     const bundle = order.bundle || "Bundle";
-    const status = order.status || "unknown";
-    const amount = order.amount ?? order.total ?? 0;
+
+    const paymentStatus =
+      order.payment_status ||
+      order.paymentStatus ||
+      order.status ||
+      "Unknown";
+
+    const deliveryStatus =
+      order.delivery_status ||
+      order.deliveryStatus ||
+      "Not provided";
+
     const phone =
-      order.phone || order.customer_phone || "Not provided";
+      order.phone ||
+      order.customer_phone ||
+      order.customerPhone ||
+      "Not provided";
 
     const reference =
       order.reference ||
       order.reference_code ||
       order.transaction_reference ||
       "Not available";
+
+    const amount = order.amount ?? order.total ?? 0;
 
     const orderDate = order.created_at
       ? new Date(order.created_at).toLocaleString("en-GB", {
@@ -1621,27 +2210,39 @@ function renderOrders() {
       : "Date unavailable";
 
     return `
-      <div class="card">
-        <h3>${escapeHTML(network)} · ${escapeHTML(bundle)}</h3>
+      <article class="order-card">
+        <h3>
+          ${escapeHTML(network)} · ${escapeHTML(bundle)}
+        </h3>
 
         <p class="stat-note">
           Reference: ${escapeHTML(reference)}
         </p>
 
         <p class="stat-note">
-          Order Date: ${escapeHTML(orderDate)}
+          Customer phone: ${escapeHTML(phone)}
         </p>
 
         <p class="stat-note">
-          Phone: ${escapeHTML(phone)}
+          Order date: ${escapeHTML(orderDate)}
         </p>
 
-        <p class="stat-note">
-          Status: ${escapeHTML(status)}
+        <p>
+          Payment status:
+          <span class="order-status">
+            ${escapeHTML(paymentStatus)}
+          </span>
+        </p>
+
+        <p>
+          Delivery status:
+          <span class="order-status">
+            ${escapeHTML(deliveryStatus)}
+          </span>
         </p>
 
         <strong>${money(amount)}</strong>
-      </div>
+      </article>
     `;
   }).join("");
 }
@@ -1683,41 +2284,32 @@ function renderRecentOrders() {
           · ${escapeHTML(order.bundle || "Bundle")}
         </strong>
 
-        <p>
-          Reference: ${escapeHTML(reference)}
-        </p>
-
-        <p>
-          Date: ${escapeHTML(orderDate)}
-        </p>
-
-        <p>
-          Status: ${escapeHTML(order.status || "unknown")}
-        </p>
-
-        <strong>
-          ${money(order.amount ?? order.total ?? 0)}
-        </strong>
+        <p>Reference: ${escapeHTML(reference)}</p>
+        <p>Date: ${escapeHTML(orderDate)}</p>
+        <p>Status: ${escapeHTML(order.status || "unknown")}</p>
+        <strong>${money(order.amount ?? order.total ?? 0)}</strong>
       </div>
     `;
   }).join("");
 }
+
+/* PERFORMANCE OVERVIEW
+   Original statistic elements and display logic are preserved. */
+
 async function loadStats() {
   const ordersElement = document.getElementById("ordersStat");
   const profitElement = document.getElementById("profitStat");
   const salesElement = document.getElementById("salesStat");
   const customersElement = document.getElementById("customersStat");
-  const confirmedElement = document.getElementById("confirmedProfitStat");
-  const pendingProfitElement = document.getElementById("pendingDeliveryProfitStat");
-  const pendingNoteElement = document.getElementById("pendingDeliveryNote");
+  const confirmedElement =
+    document.getElementById("confirmedProfitStat");
+  const pendingProfitElement =
+    document.getElementById("pendingDeliveryProfitStat");
+  const pendingNoteElement =
+    document.getElementById("pendingDeliveryNote");
 
   try {
-    console.log("Loading agent statistics...");
-
     const data = await apiRequest("/agents/stats");
-
-    console.log("Statistics HTTP status:", data.response.status);
-    console.log("Statistics response:", data.result);
 
     if (!data.response.ok) {
       throw new Error(
@@ -1771,7 +2363,6 @@ async function loadStats() {
       stats.pending_delivery_orders
     );
 
-    // Validate the required statistics.
     const requiredValues = [
       totalOrders,
       totalSales,
@@ -1784,12 +2375,11 @@ async function loadStats() {
 
     if (!requiredValues.every(Number.isFinite)) {
       throw new Error(
-        "The server response is missing one or more required statistics. " +
-        "Check the /agents/stats route in server.js."
+        "The server response is missing one or more statistics. " +
+        "Check the /agents/stats response in server.js."
       );
     }
 
-    // Update the dashboard.
     ordersElement.textContent = totalOrders;
     salesElement.textContent = money(totalSales);
     profitElement.textContent = money(estimatedProfit);
@@ -1801,8 +2391,6 @@ async function loadStats() {
       pendingOrders + " orders awaiting delivery.";
 
     dashboardStats = stats;
-
-    console.log("Agent statistics loaded successfully.");
 
   } catch (error) {
     console.error("Agent statistics error:", error);
@@ -1817,214 +2405,174 @@ async function loadStats() {
     pendingNoteElement.textContent =
       error.message || "Unable to retrieve statistics.";
   }
+}
+
+/* =========================================================
+   WITHDRAWAL FUNCTIONS
+   PRESERVED FROM YOUR EXISTING DASHBOARD.
+   ========================================================= */
+
+async function loadWithdrawals() {
+  const balanceElement = document.getElementById("availableBalance");
+  const todayElement = document.getElementById("todayProfit");
+  const pendingElement = document.getElementById("pendingWithdrawals");
+  const historyElement = document.getElementById("withdrawalHistory");
+  const messageElement = document.getElementById("withdrawMessage");
+
+  const token = sessionStorage.getItem("k636_agent_token");
+
+  if (!token) {
+    const message = "Your session has expired. Please sign in again.";
+
+    if (messageElement) messageElement.textContent = message;
+    if (historyElement) historyElement.textContent = message;
+
+    return;
   }
-async function loadAgentProfit() {
+
+  if (messageElement) {
+    messageElement.textContent = "Loading your earnings...";
+  }
+
+  if (historyElement) {
+    historyElement.textContent = "Loading withdrawal history...";
+  }
+
   try {
-    const token =
-      localStorage.getItem("agentToken") ||
-      sessionStorage.getItem("agentToken");
+    const balanceData = await apiRequest("/agents/stats");
 
-    if (!token) {
-      console.log("Please log in to your agent account.");
-      return;
+    if (
+      !balanceData.response.ok ||
+      !balanceData.result ||
+      balanceData.result.success !== true
+    ) {
+      throw new Error(
+        balanceData.result?.message ||
+        "Could not retrieve your earnings."
+      );
     }
 
-    const response = await fetch(
-      "https://kielmen-dataplug-payment-api.onrender.com/agents/stats",
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+    const stats =
+      balanceData.result.stats || balanceData.result;
+
+    const available = Number(stats.availableBalance);
+    const today = Number(stats.todayProfit ?? stats.todaysProfit);
+    const pending = Number(stats.pendingWithdrawals);
+
+    if (
+      !Number.isFinite(available) ||
+      !Number.isFinite(today) ||
+      !Number.isFinite(pending)
+    ) {
+      throw new Error(
+        "The server returned missing or invalid balance values."
+      );
+    }
+
+    balanceElement.textContent = money(available);
+    todayElement.textContent = money(today);
+    pendingElement.textContent = money(pending);
+
+    if (messageElement) {
+      messageElement.textContent =
+        "Balances loaded successfully. Today's profit becomes available for withdrawal on the following Ghana calendar day.";
+    }
+
+    try {
+      const historyData =
+        await apiRequest("/agents/withdrawals/history");
+
+      if (
+        !historyData.response.ok ||
+        !historyData.result ||
+        historyData.result.success !== true
+      ) {
+        throw new Error(
+          historyData.result?.message ||
+          "Could not retrieve withdrawal history."
+        );
       }
-    );
 
-    const data = await response.json();
+      const withdrawals = historyData.result.withdrawals;
 
-    if (!response.ok || data.success === false) {
-      throw new Error(data.message || "Unable to load agent statistics.");
-    }
+      if (!Array.isArray(withdrawals)) {
+        throw new Error("Invalid withdrawal history response.");
+      }
 
-    const stats = data.stats || data;
+      if (withdrawals.length === 0) {
+        historyElement.textContent =
+          "No withdrawal requests have been recorded yet.";
+      } else {
+        historyElement.innerHTML = withdrawals.map(function (item) {
+          const status =
+            String(item.status || "pending").toLowerCase();
 
-    const pendingProfit = Number(
-      stats.pendingDeliveryProfit || 0
-    );
+          const label =
+            status === "paid" ? "PAID" :
+            status === "rejected" ? "REJECTED" :
+            status === "approved" ? "APPROVED" :
+            "PENDING";
 
-    const pendingElement = document.getElementById("pendingProfit");
+          const color =
+            status === "paid" ? "#48c6a3" :
+            status === "rejected" ? "#ff7777" :
+            "#d8a72c";
 
-    if (pendingElement) {
-      pendingElement.textContent =
-        `GH₵ ${pendingProfit.toFixed(2)}`;
+          const date = item.created_at
+            ? new Date(item.created_at).toLocaleString("en-GB", {
+                timeZone: "Africa/Accra"
+              })
+            : "Date unavailable";
+
+          return `
+            <div class="card">
+              <strong>${money(item.amount)}</strong>
+
+              <p class="stat-note">
+                Provider: ${escapeHTML(item.provider || "Not provided")}
+              </p>
+
+              <p class="stat-note">
+                Mobile Money: ${escapeHTML(item.phone || "Not provided")}
+              </p>
+
+              <p>
+                Status:
+                <strong style="color:${color}">
+                  ${label}
+                </strong>
+              </p>
+
+              <p class="stat-note">
+                Date: ${escapeHTML(date)}
+              </p>
+            </div>
+          `;
+        }).join("");
+      }
+
+    } catch (historyError) {
+      console.error("Withdrawal history error:", historyError);
+
+      historyElement.textContent =
+        "Balances loaded, but history could not be loaded: " +
+        historyError.message;
     }
 
   } catch (error) {
-    console.error("Error loading pending profit:", error);
+    console.error("Withdrawal balance error:", error);
+
+    if (messageElement) {
+      messageElement.textContent =
+        "Unable to load balances: " + error.message;
+    }
+
+    if (historyElement) {
+      historyElement.textContent =
+        "Could not load withdrawal information. Please refresh.";
+    }
   }
 }
-
-loadAgentProfit();
-
-  // ============================================================
-// AGENT WITHDRAWALS
-// ============================================================
-
-  async function loadWithdrawals() {
-const balanceElement = document.getElementById("availableBalance");
-const todayElement = document.getElementById("todayProfit");
-const pendingElement = document.getElementById("pendingWithdrawals");
-const historyElement = document.getElementById("withdrawalHistory");
-const messageElement = document.getElementById("withdrawMessage");
-
-const token = sessionStorage.getItem("k636_agent_token");
-
-if (!token) {
-const message = "Your session has expired. Please sign in again.";
-
-if (messageElement) messageElement.textContent = message;
-if (historyElement) historyElement.textContent = message;
-
-return;
-
-}
-
-if (messageElement) {
-messageElement.textContent = "Loading your earnings...";
-}
-
-if (historyElement) {
-historyElement.textContent = "Loading withdrawal history...";
-}
-
-try {
-// The backend provides balances through /agents/stats.
-const balanceData = await apiRequest("/agents/stats");
-
-if (
-  !balanceData.response.ok ||
-  !balanceData.result ||
-  balanceData.result.success !== true
-) {
-  throw new Error(
-    balanceData.result?.message ||
-    "Could not retrieve your earnings."
-  );
-}
-
-const stats = balanceData.result.stats || balanceData.result;
-
-const available = Number(stats.availableBalance);
-const today = Number(stats.todayProfit ?? stats.todaysProfit);
-const pending = Number(stats.pendingWithdrawals);
-
-if (
-  !Number.isFinite(available) ||
-  !Number.isFinite(today) ||
-  !Number.isFinite(pending)
-) {
-  throw new Error(
-    "The server returned missing or invalid balance values."
-  );
-}
-
-balanceElement.textContent = money(available);
-todayElement.textContent = money(today);
-pendingElement.textContent = money(pending);
-
-if (messageElement) {
-  messageElement.textContent =
-    "Balances loaded successfully. Today's profit becomes available for withdrawal on the following Ghana calendar day.";
-}
-
-// Load withdrawal history separately.
-try {
-  const historyData = await apiRequest("/agents/withdrawals/history");
-
-  if (
-    !historyData.response.ok ||
-    !historyData.result ||
-    historyData.result.success !== true
-  ) {
-    throw new Error(
-      historyData.result?.message ||
-      "Could not retrieve withdrawal history."
-    );
-  }
-
-  const withdrawals = historyData.result.withdrawals;
-
-  if (!Array.isArray(withdrawals)) {
-    throw new Error("Invalid withdrawal history response.");
-  }
-
-  if (withdrawals.length === 0) {
-    historyElement.textContent =
-      "No withdrawal requests have been recorded yet.";
-  } else {
-    historyElement.innerHTML = withdrawals.map(function (item) {
-      const status = String(item.status || "pending").toLowerCase();
-
-      const label =
-        status === "paid" ? "PAID" :
-        status === "rejected" ? "REJECTED" :
-        status === "approved" ? "APPROVED" :
-        "PENDING";
-
-      const color =
-        status === "paid" ? "#48c6a3" :
-        status === "rejected" ? "#ff7777" :
-        "#d8a72c";
-
-      const date = item.created_at
-        ? new Date(item.created_at).toLocaleString("en-GB", {
-            timeZone: "Africa/Accra"
-          })
-        : "Date unavailable";
-
-      return `
-        <div class="card">
-          <strong>${money(item.amount)}</strong>
-          <p class="stat-note">
-            Provider: ${escapeHTML(item.provider || "Not provided")}
-          </p>
-          <p class="stat-note">
-            Mobile Money: ${escapeHTML(item.phone || "Not provided")}
-          </p>
-          <p>
-            Status:
-            <strong style="color:${color}">
-              ${label}
-            </strong>
-          </p>
-          <p class="stat-note">
-            Date: ${escapeHTML(date)}
-          </p>
-        </div>
-      `;
-    }).join("");
-  }
-} catch (historyError) {
-  console.error("Withdrawal history error:", historyError);
-
-  historyElement.textContent =
-    "Balances loaded, but history could not be loaded: " +
-    historyError.message;
-}
-
-} catch (error) {
-console.error("Withdrawal balance error:", error);
-
-if (messageElement) {
-  messageElement.textContent =
-    "Unable to load balances: " + error.message;
-}
-
-if (historyElement) {
-  historyElement.textContent =
-    "Could not load withdrawal information. Please refresh.";
-}
-
-}
-  }
 
 async function submitWithdrawal() {
   const amountInput = document.getElementById("withdrawAmount");
@@ -2037,8 +2585,6 @@ async function submitWithdrawal() {
   const provider = providerInput.value;
   const phone = phoneInput.value.trim();
 
-  // Minimum withdrawal: GH₵0.10. No maximum limit.
-   // Validate withdrawal amount accurately to two decimal places.
   const amountInPesewas = Math.round(amount * 100);
 
   if (
@@ -2091,12 +2637,12 @@ async function submitWithdrawal() {
     }
 
     message.textContent =
-  "✅ Withdrawal request submitted successfully. Status: PENDING. " +
-  "Your request is awaiting payment by the administrator.";
+      "✅ Withdrawal request submitted successfully. Status: PENDING. " +
+      "Your request is awaiting payment by the administrator.";
 
-amountInput.value = "";
+    amountInput.value = "";
 
-await loadWithdrawals();
+    await loadWithdrawals();
 
   } catch (error) {
     message.textContent =
@@ -2107,50 +2653,43 @@ await loadWithdrawals();
     button.textContent = "Request Withdrawal";
   }
 }
-  
-function setStatsUnavailable() {
-  document.getElementById("ordersStat").textContent = "—";
-  document.getElementById("salesStat").textContent = "—";
-  document.getElementById("profitStat").textContent = "—";
-  document.getElementById("customersStat").textContent = "—";
-}
 
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, function (character) {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[character];
+/* ORDER SEARCH CONTROLS */
+
+const orderSearchInput =
+  document.getElementById("orderSearch");
+
+const clearOrderSearchButton =
+  document.getElementById("clearOrderSearch");
+
+if (orderSearchInput) {
+  orderSearchInput.addEventListener("input", function () {
+    renderOrders();
   });
 }
 
-async function agentLogout() {
-  const token = sessionStorage.getItem("k636_agent_token");
-
-  try {
-    if (token) {
-      await fetch(AGENT_API + "/agents/logout", {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer " + token
-        }
-      });
+if (clearOrderSearchButton) {
+  clearOrderSearchButton.addEventListener("click", function () {
+    if (orderSearchInput) {
+      orderSearchInput.value = "";
+      orderSearchInput.focus();
     }
-  } catch (error) {
-    console.warn("Sign-out request could not reach the server.");
-  } finally {
-    sessionStorage.removeItem("k636_agent_token");
-    sessionStorage.removeItem("k636_agent");
-    window.location.replace(LOGIN_PAGE);
-  }
+
+    renderOrders();
+  });
 }
 
-/* Start only after the page structure exists. */
+/* NETWORK SELECTOR */
+
+document.getElementById("priceNetwork").addEventListener(
+  "change",
+  renderPrices
+);
+
+/* START DASHBOARD */
+
 verifyAgent();
 </script>
 
 </body>
-</html>
+  </html>
