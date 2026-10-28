@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#ffffff">
 
   <title>Kielmen 636 Dataplug | Owner Dashboard</title>
@@ -12,7 +12,7 @@
       --primary: #5b4bdb;
       --primary-light: #eeebff;
       --bg: #f6f7fb;
-      --white: #ffffff;
+      --white: #fff;
       --text: #20243a;
       --muted: #7b8197;
       --border: #e9ebf3;
@@ -26,16 +26,12 @@
       --blue-bg: #eaf4ff;
       --radius: 16px;
       --sidebar-width: 265px;
-      --shadow: 0 4px 20px rgba(33, 39, 75, 0.045);
+      --shadow: 0 4px 20px rgba(33,39,75,.045);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     body {
       margin: 0;
@@ -46,56 +42,40 @@
       font-size: 14px;
     }
 
-    button,
-    input,
-    select,
-    textarea {
-      font: inherit;
-    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
 
-    button {
-      cursor: pointer;
-    }
-
-    button:focus-visible,
-    input:focus-visible,
-    select:focus-visible,
-    textarea:focus-visible,
+    button:focus-visible, input:focus-visible,
+    select:focus-visible, textarea:focus-visible,
     a:focus-visible {
-      outline: 3px solid rgba(91, 75, 219, .25);
+      outline: 3px solid rgba(91,75,219,.25);
       outline-offset: 2px;
     }
 
-    a {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    .hidden {
-      display: none !important;
-    }
+    a { color: inherit; text-decoration: none; }
+    .hidden { display: none !important; }
 
     /* LOGIN */
 
-    #ownerLogin {
+    #ownerLoginOverlay {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 24px;
       background:
-        radial-gradient(circle at top left, #e8e5ff 0, transparent 35%),
-        radial-gradient(circle at bottom right, #dff6ed 0, transparent 35%),
+        radial-gradient(circle at top left,#e8e5ff 0,transparent 35%),
+        radial-gradient(circle at bottom right,#dff6ed 0,transparent 35%),
         #f7f8fc;
     }
 
     .login-card {
       width: 100%;
       max-width: 420px;
-      background: white;
+      background: #fff;
       padding: 34px;
       border-radius: 24px;
-      box-shadow: 0 20px 70px rgba(33, 39, 75, .12);
+      box-shadow: 0 20px 70px rgba(33,39,75,.12);
     }
 
     .brand-mark {
@@ -111,20 +91,10 @@
       margin-bottom: 22px;
     }
 
-    .login-card h1 {
-      margin: 0 0 8px;
-      font-size: 25px;
-    }
+    .login-card h1 { margin: 0 0 8px; font-size: 25px; }
+    .login-card p { color: var(--muted); line-height: 1.6; }
 
-    .login-card p {
-      margin: 0 0 24px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    .field {
-      margin-bottom: 16px;
-    }
+    .field { margin-bottom: 16px; }
 
     .field label {
       display: block;
@@ -133,23 +103,17 @@
       margin-bottom: 8px;
     }
 
-    .field input,
-    .field select,
-    .field textarea,
-    .control {
+    .field input, .field select, .field textarea, .control {
       width: 100%;
       min-width: 0;
       padding: 11px 13px;
       border: 1px solid var(--border);
       border-radius: 10px;
-      background: white;
+      background: #fff;
       color: var(--text);
     }
 
-    .field textarea {
-      min-height: 100px;
-      resize: vertical;
-    }
+    .field textarea { min-height: 100px; resize: vertical; }
 
     .btn {
       display: inline-flex;
@@ -163,52 +127,24 @@
       transition: .15s ease;
     }
 
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { filter: brightness(.95); }
+    .btn-light { background: #fff; border-color: var(--border); color: var(--text); }
+    .btn-danger { background: var(--red-bg); color: var(--red); }
+    .btn-success { background: var(--green-bg); color: var(--green); }
+    .btn-small { padding: 7px 10px; font-size: 12px; }
+    .full-width { width: 100%; }
 
-    .btn-primary:hover {
-      filter: brightness(.95);
-    }
+    /* LAYOUT */
 
-    .btn-light {
-      background: white;
-      border-color: var(--border);
-      color: var(--text);
-    }
-
-    .btn-danger {
-      background: var(--red-bg);
-      color: var(--red);
-    }
-
-    .btn-success {
-      background: var(--green-bg);
-      color: var(--green);
-    }
-
-    .btn-small {
-      padding: 7px 10px;
-      font-size: 12px;
-    }
-
-    .full-width {
-      width: 100%;
-    }
-
-    /* APPLICATION LAYOUT */
-
-    #ownerApp {
-      min-height: 100vh;
-    }
+    #ownerDashboardContent { min-height: 100vh; }
 
     .sidebar {
       position: fixed;
       z-index: 100;
       inset: 0 auto 0 0;
       width: var(--sidebar-width);
-      background: white;
+      background: #fff;
       border-right: 1px solid var(--border);
       display: flex;
       flex-direction: column;
@@ -232,21 +168,9 @@
       flex-shrink: 0;
     }
 
-    .brand-name {
-      font-weight: 850;
-      font-size: 14px;
-    }
-
-    .brand-caption {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    .sidebar-content {
-      padding: 16px 12px;
-      flex: 1;
-    }
+    .brand-name { font-weight: 850; font-size: 14px; }
+    .brand-caption { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .owner-nav { padding: 16px 12px; flex: 1; }
 
     .nav-heading {
       padding: 16px 12px 8px;
@@ -273,16 +197,8 @@
       text-align: left;
     }
 
-    .nav-link:hover {
-      background: #f6f5ff;
-      color: var(--primary);
-    }
-
-    .nav-link.active {
-      background: var(--primary-light);
-      color: var(--primary);
-      font-weight: 800;
-    }
+    .nav-link:hover { background: #f6f5ff; color: var(--primary); }
+    .nav-link.active { background: var(--primary-light); color: var(--primary); font-weight: 800; }
 
     .nav-icon {
       display: grid;
@@ -295,9 +211,7 @@
       font-size: 14px;
     }
 
-    .nav-link.active .nav-icon {
-      background: white;
-    }
+    .nav-link.active .nav-icon { background: #fff; }
 
     .nav-badge {
       margin-left: auto;
@@ -308,10 +222,7 @@
       font-size: 10px;
     }
 
-    .sidebar-footer {
-      padding: 15px;
-      border-top: 1px solid var(--border);
-    }
+    .sidebar-footer { padding: 15px; border-top: 1px solid var(--border); }
 
     .security-note {
       padding: 12px;
@@ -323,16 +234,11 @@
       margin-bottom: 12px;
     }
 
-    .main-area {
-      margin-left: var(--sidebar-width);
-      min-height: 100vh;
-    }
-
-    /* TOP BAR */
+    .main-area { margin-left: var(--sidebar-width); min-height: 100vh; }
 
     .topbar {
       min-height: 78px;
-      background: rgba(255, 255, 255, .96);
+      background: rgba(255,255,255,.96);
       border-bottom: 1px solid var(--border);
       padding: 15px 28px;
       display: flex;
@@ -343,38 +249,17 @@
       z-index: 50;
     }
 
-    .mobile-menu {
-      display: none;
-    }
-
-    .topbar-title {
-      min-width: 0;
-      flex: 1;
-    }
-
-    .topbar-title h1 {
-      margin: 0 0 5px;
-      font-size: 19px;
-      letter-spacing: -.3px;
-    }
-
-    .topbar-title p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 11px;
-    }
-
-    .topbar-actions {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-    }
+    .mobile-menu { display: none; }
+    .topbar-title { min-width: 0; flex: 1; }
+    .topbar-title h1 { margin: 0 0 5px; font-size: 19px; }
+    .topbar-title p { margin: 0; color: var(--muted); font-size: 11px; }
+    .topbar-actions { display: flex; align-items: center; gap: 9px; }
 
     .icon-button {
       width: 39px;
       height: 39px;
       border: 1px solid var(--border);
-      background: white;
+      background: #fff;
       border-radius: 11px;
       position: relative;
       display: grid;
@@ -391,29 +276,12 @@
       margin-right: 5px;
     }
 
-    .system-status {
-      color: var(--green);
-      font-size: 11px;
-      font-weight: 750;
-      white-space: nowrap;
-    }
+    .system-status { color: var(--green); font-size: 11px; font-weight: 750; white-space: nowrap; }
 
-    /* CONTENT */
+    .page-content { padding: 26px 28px 50px; max-width: 1700px; margin: 0 auto; }
 
-    .page-content {
-      padding: 26px 28px 50px;
-      max-width: 1700px;
-      margin: 0 auto;
-    }
-
-    .page-section {
-      display: none;
-      animation: fadeIn .2s ease;
-    }
-
-    .page-section.active {
-      display: block;
-    }
+    .page-section { display: none; animation: fadeIn .2s ease; }
+    .page-section.active { display: block; }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(4px); }
@@ -429,20 +297,11 @@
       flex-wrap: wrap;
     }
 
-    .welcome-row h2 {
-      font-size: 23px;
-      margin: 0 0 7px;
-      letter-spacing: -.5px;
-    }
-
-    .welcome-row p {
-      color: var(--muted);
-      margin: 0;
-      line-height: 1.5;
-    }
+    .welcome-row h2 { font-size: 23px; margin: 0 0 7px; }
+    .welcome-row p { color: var(--muted); margin: 0; line-height: 1.5; }
 
     .card {
-      background: white;
+      background: #fff;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
@@ -460,159 +319,68 @@
       margin-bottom: 18px;
     }
 
-    .card-header h3 {
-      margin: 0 0 5px;
-      font-size: 15px;
-    }
-
-    .card-header p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.5;
-    }
-
-    .section-title {
-      margin: 0 0 6px;
-      font-size: 23px;
-    }
-
-    .section-description {
-      color: var(--muted);
-      line-height: 1.6;
-      margin: 0 0 24px;
-    }
+    .card-header h3 { margin: 0 0 5px; font-size: 15px; }
+    .card-header p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .section-title { margin: 0 0 6px; font-size: 23px; }
+    .section-description { color: var(--muted); line-height: 1.6; margin: 0 0 24px; }
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(4,minmax(0,1fr));
       gap: 16px;
       margin-bottom: 22px;
     }
 
     .stat-card {
       padding: 19px;
-      background: white;
+      background: #fff;
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       min-width: 0;
     }
 
-    .stat-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      margin-bottom: 18px;
-    }
-
-    .stat-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 13px;
-      display: grid;
-      place-items: center;
-      font-size: 19px;
-    }
-
+    .stat-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 18px; }
+    .stat-icon { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; font-size: 19px; }
     .icon-purple { background: #efecff; }
     .icon-green { background: #e6f8ef; }
     .icon-orange { background: #fff1df; }
     .icon-blue { background: #e8f3ff; }
     .icon-red { background: #ffebee; }
     .icon-cyan { background: #e2f8fb; }
-
-    .stat-label {
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.5;
-      margin-bottom: 8px;
-    }
-
-    .stat-value {
-      font-size: clamp(20px, 2vw, 27px);
-      font-weight: 850;
-      letter-spacing: -.7px;
-      overflow-wrap: anywhere;
-    }
-
-    .stat-note {
-      color: var(--muted);
-      font-size: 10px;
-      margin-top: 8px;
-      line-height: 1.5;
-    }
+    .stat-label { color: var(--muted); font-size: 11px; line-height: 1.5; margin-bottom: 8px; }
+    .stat-value { font-size: clamp(20px,2vw,27px); font-weight: 850; overflow-wrap: anywhere; }
+    .stat-note { color: var(--muted); font-size: 10px; margin-top: 8px; line-height: 1.5; }
 
     .two-column {
       display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      grid-template-columns: minmax(0,1.3fr) minmax(0,1fr);
       gap: 20px;
       align-items: start;
     }
 
-    .three-column {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .quick-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
+    .three-column { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; }
+    .quick-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 12px; }
 
     .quick-action {
       padding: 15px;
       border: 1px solid var(--border);
-      background: white;
+      background: #fff;
       border-radius: 13px;
       text-align: left;
       min-width: 0;
     }
 
-    .quick-action:hover {
-      border-color: #c7c0ff;
-      background: #faf9ff;
-    }
+    .quick-action:hover { border-color: #c7c0ff; background: #faf9ff; }
+    .quick-icon { font-size: 22px; display: block; margin-bottom: 12px; }
+    .quick-action strong { display: block; font-size: 12px; margin-bottom: 6px; }
+    .quick-action span:last-child { color: var(--muted); font-size: 10px; line-height: 1.5; }
 
-    .quick-action .quick-icon {
-      font-size: 22px;
-      display: block;
-      margin-bottom: 12px;
-    }
+    .table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
 
-    .quick-action strong {
-      display: block;
-      font-size: 12px;
-      margin-bottom: 6px;
-    }
+    table { width: 100%; border-collapse: collapse; min-width: 600px; background: #fff; }
 
-    .quick-action span:last-child {
-      color: var(--muted);
-      font-size: 10px;
-      line-height: 1.5;
-    }
-
-    /* TABLES */
-
-    .table-wrap {
-      width: 100%;
-      overflow-x: auto;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 600px;
-      background: white;
-    }
-
-    th,
-    td {
+    th, td {
       padding: 13px 14px;
       text-align: left;
       border-bottom: 1px solid #f0f1f6;
@@ -629,21 +397,10 @@
       font-weight: 800;
     }
 
-    tbody tr:last-child td {
-      border-bottom: 0;
-    }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #fcfcff; }
 
-    tbody tr:hover {
-      background: #fcfcff;
-    }
-
-    .empty-state {
-      padding: 25px;
-      text-align: center;
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.7;
-    }
+    .empty-state { padding: 25px; text-align: center; color: var(--muted); font-size: 12px; line-height: 1.7; }
 
     .badge {
       display: inline-flex;
@@ -657,98 +414,40 @@
       color: #676e83;
     }
 
-    .badge.success {
-      background: var(--green-bg);
-      color: var(--green);
-    }
+    .badge.success { background: var(--green-bg); color: var(--green); }
+    .badge.warning { background: var(--orange-bg); color: #bd7417; }
+    .badge.danger { background: var(--red-bg); color: var(--red); }
+    .badge.info { background: var(--blue-bg); color: var(--blue); }
 
-    .badge.warning {
-      background: var(--orange-bg);
-      color: #bd7417;
-    }
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
 
-    .badge.danger {
-      background: var(--red-bg);
-      color: var(--red);
-    }
-
-    .badge.info {
-      background: var(--blue-bg);
-      color: var(--blue);
-    }
-
-    /* FILTERS AND FORMS */
-
-    .toolbar {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .toolbar input,
-    .toolbar select {
+    .toolbar input, .toolbar select {
       min-width: 150px;
       max-width: 100%;
       flex: 1;
       padding: 10px 12px;
       border: 1px solid var(--border);
       border-radius: 10px;
-      background: white;
+      background: #fff;
       color: var(--text);
     }
 
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 15px;
-    }
+    .form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 15px; }
+    .form-grid .field { margin-bottom: 5px; }
+    .field-full { grid-column: 1 / -1; }
+    .form-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 
-    .form-grid .field {
-      margin-bottom: 5px;
-    }
-
-    .field-full {
-      grid-column: 1 / -1;
-    }
-
-    .form-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 18px;
-    }
-
-    .info-box {
+    .info-box, .warning-box, .success-box {
       padding: 14px;
       border-radius: 12px;
-      background: var(--blue-bg);
-      color: #245c91;
       line-height: 1.7;
       font-size: 11px;
       margin-bottom: 16px;
     }
 
-    .warning-box {
-      padding: 14px;
-      border-radius: 12px;
-      background: var(--orange-bg);
-      color: #8c5a15;
-      line-height: 1.7;
-      font-size: 11px;
-      margin-bottom: 16px;
-    }
-
-    .success-box {
-      padding: 14px;
-      border-radius: 12px;
-      background: var(--green-bg);
-      color: #176b48;
-      line-height: 1.7;
-      font-size: 11px;
-      margin-bottom: 16px;
-    }
+    .info-box { background: var(--blue-bg); color: #245c91; }
+    .warning-box { background: var(--orange-bg); color: #8c5a15; }
+    .success-box { background: var(--green-bg); color: #176b48; }
 
     .metric-row {
       display: flex;
@@ -759,19 +458,9 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .metric-row:last-child {
-      border-bottom: 0;
-    }
-
-    .metric-row span {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .metric-row strong {
-      font-size: 13px;
-      text-align: right;
-    }
+    .metric-row:last-child { border-bottom: 0; }
+    .metric-row span { color: var(--muted); font-size: 12px; }
+    .metric-row strong { font-size: 13px; text-align: right; }
 
     .planned-card {
       border: 1px dashed #d7d9e7;
@@ -781,30 +470,10 @@
       margin-bottom: 12px;
     }
 
-    .planned-card h4 {
-      margin: 0 0 7px;
-      font-size: 13px;
-    }
+    .planned-card h4 { margin: 0 0 7px; font-size: 13px; }
+    .planned-card p { color: var(--muted); line-height: 1.7; margin: 0; font-size: 11px; }
 
-    .planned-card p {
-      color: var(--muted);
-      line-height: 1.7;
-      margin: 0;
-      font-size: 11px;
-    }
-
-    .planned-label {
-      color: #7a70d7;
-      font-size: 9px;
-      text-transform: uppercase;
-      font-weight: 850;
-      letter-spacing: .7px;
-    }
-
-    .notice-list {
-      display: grid;
-      gap: 10px;
-    }
+    .notice-list { display: grid; gap: 10px; }
 
     .notice-item {
       display: flex;
@@ -815,30 +484,11 @@
       border-radius: 12px;
     }
 
-    .notice-item .notice-icon {
-      font-size: 20px;
-    }
+    .notice-icon { font-size: 20px; }
+    .notice-item strong { display: block; font-size: 12px; margin-bottom: 5px; }
+    .notice-item p { color: var(--muted); margin: 0; font-size: 11px; line-height: 1.6; }
 
-    .notice-item strong {
-      display: block;
-      font-size: 12px;
-      margin-bottom: 5px;
-    }
-
-    .notice-item p {
-      color: var(--muted);
-      margin: 0;
-      font-size: 11px;
-      line-height: 1.6;
-    }
-
-    .footer-note {
-      color: var(--muted);
-      text-align: center;
-      font-size: 10px;
-      line-height: 1.8;
-      padding: 20px 0 0;
-    }
+    .footer-note { color: var(--muted); text-align: center; font-size: 10px; line-height: 1.8; padding: 20px 0 0; }
 
     .toast {
       position: fixed;
@@ -847,173 +497,112 @@
       bottom: 20px;
       max-width: 360px;
       background: #22253a;
-      color: white;
+      color: #fff;
       padding: 14px 17px;
       border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, .15);
+      box-shadow: 0 8px 30px rgba(0,0,0,.15);
       line-height: 1.6;
       font-size: 12px;
     }
 
-    .mobile-overlay {
-      display: none;
+    .mobile-overlay { display: none; }
+
+    @media (max-width:1250px) {
+      .stats-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .quick-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
     }
 
-    /* RESPONSIVE */
-
-    @media (max-width: 1250px) {
-      .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .quick-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-    }
-
-    @media (max-width: 900px) {
-      .sidebar {
-        transform: translateX(-100%);
-      }
-
-      .sidebar.open {
-        transform: translateX(0);
-      }
+    @media (max-width:900px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
 
       .mobile-overlay.show {
         display: block;
         position: fixed;
         inset: 0;
         z-index: 90;
-        background: rgba(23, 27, 48, .35);
+        background: rgba(23,27,48,.35);
       }
 
-      .main-area {
-        margin-left: 0;
-      }
-
-      .mobile-menu {
-        display: grid;
-      }
-
-      .topbar {
-        padding: 13px 17px;
-      }
-
-      .page-content {
-        padding: 20px 17px 35px;
-      }
-
-      .two-column {
-        grid-template-columns: 1fr;
-      }
-
-      .three-column {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
+      .main-area { margin-left: 0; }
+      .mobile-menu { display: grid; }
+      .topbar { padding: 13px 17px; }
+      .page-content { padding: 20px 17px 35px; }
+      .two-column { grid-template-columns: 1fr; }
+      .three-column { grid-template-columns: repeat(2,minmax(0,1fr)); }
     }
 
-    @media (max-width: 560px) {
-      .stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-      }
-
-      .stat-card {
-        padding: 14px;
-      }
-
-      .stat-value {
-        font-size: 21px;
-      }
-
-      .stat-icon {
-        width: 35px;
-        height: 35px;
-        font-size: 16px;
-      }
-
-      .page-content {
-        padding: 16px 12px 30px;
-      }
-
-      .card {
-        padding: 15px;
-      }
-
-      .topbar {
-        gap: 9px;
-      }
-
-      .topbar-title h1 {
-        font-size: 15px;
-      }
-
-      .topbar-title p {
-        font-size: 10px;
-      }
-
-      .system-status {
-        display: none;
-      }
-
-      .welcome-row h2 {
-        font-size: 20px;
-      }
-
-      .quick-grid,
-      .three-column,
-      .form-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .field-full {
-        grid-column: auto;
-      }
-
-      .toolbar input,
-      .toolbar select {
-        min-width: 100%;
-      }
-
-      .login-card {
-        padding: 25px;
-      }
+    @media (max-width:560px) {
+      .stats-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+      .stat-card { padding: 14px; }
+      .stat-value { font-size: 21px; }
+      .stat-icon { width: 35px; height: 35px; font-size: 16px; }
+      .page-content { padding: 16px 12px 30px; }
+      .card { padding: 15px; }
+      .topbar { gap: 9px; }
+      .topbar-title h1 { font-size: 15px; }
+      .topbar-title p { font-size: 10px; }
+      .system-status { display: none; }
+      .welcome-row h2 { font-size: 20px; }
+      .quick-grid, .three-column, .form-grid { grid-template-columns: 1fr; }
+      .field-full { grid-column: auto; }
+      .toolbar input, .toolbar select { min-width: 100%; }
+      .login-card { padding: 25px; }
     }
   </style>
 </head>
 
 <body>
 
-  <!-- OWNER LOGIN -->
-  <section id="ownerLogin">
+  <!--
+    COMPATIBLE LOGIN IDs:
+    ownerLoginOverlay
+    ownerLoginForm
+    ownerPassword
+    ownerLoginButton
+    ownerLoginMessage
+
+    owner.js handles authentication.
+  -->
+  <section id="ownerLoginOverlay">
     <div class="login-card">
       <div class="brand-mark">K636</div>
+
       <h1>Owner Dashboard</h1>
-      <p>
+
+      <p style="margin-bottom:24px;">
         Welcome back. Sign in to manage Kielmen 636 Dataplug.
       </p>
 
       <form id="ownerLoginForm">
         <div class="field">
-          <label for="ownerSecret">Owner Access Key</label>
+          <label for="ownerPassword">Owner Access Key</label>
+
           <input
             type="password"
-            id="ownerSecret"
+            id="ownerPassword"
+            name="password"
             placeholder="Enter your owner access key"
             autocomplete="current-password"
             required
           >
         </div>
 
-        <button class="btn btn-primary full-width" type="submit">
+        <button
+          class="btn btn-primary full-width"
+          type="submit"
+          id="ownerLoginButton"
+        >
           🔐 Sign In Securely
         </button>
-      </form>
 
-      <p id="loginError" class="hidden" role="alert"
-         style="color:#e34b59;margin-top:15px;margin-bottom:0;">
-      </p>
+        <p
+          id="ownerLoginMessage"
+          role="alert"
+          aria-live="polite"
+          style="display:none;color:#e34b59;margin-top:15px;line-height:1.6;"
+        ></p>
+      </form>
 
       <div class="footer-note">
         Kielmen 636 Dataplug<br>
@@ -1022,14 +611,12 @@
     </div>
   </section>
 
-  <!-- OWNER APPLICATION -->
-  <div id="ownerApp" class="hidden">
+  <!-- OWNER DASHBOARD: owner.js expects this exact ID -->
+  <div id="ownerDashboardContent" style="display:none;">
 
     <div id="mobileOverlay" class="mobile-overlay"></div>
 
-    <!-- SIDEBAR -->
     <aside id="ownerSidebar" class="sidebar">
-
       <div class="sidebar-brand">
         <div class="brand-mark">K636</div>
         <div>
@@ -1038,122 +625,37 @@
         </div>
       </div>
 
-      <nav class="sidebar-content" aria-label="Owner dashboard navigation">
+      <!-- owner.js expects .owner-nav .nav-link -->
+      <nav class="owner-nav" aria-label="Owner dashboard navigation">
 
         <div class="nav-heading">Main Menu</div>
-
-        <button class="nav-link active" data-page="dashboardHome">
-          <span class="nav-icon">🏠</span>
-          Overview
-        </button>
-
-        <button class="nav-link" data-page="advancedStatistics">
-          <span class="nav-icon">📊</span>
-          Statistics & Analytics
-        </button>
-
-        <button class="nav-link" data-page="orderManagement">
-          <span class="nav-icon">🛒</span>
-          Orders & Delivery
-          <span class="nav-badge" id="ordersNavBadge">Live</span>
-        </button>
-
-        <button class="nav-link" data-page="paymentManagement">
-          <span class="nav-icon">💳</span>
-          Payment Management
-        </button>
-
-        <button class="nav-link" data-page="revenueManagement">
-          <span class="nav-icon">💰</span>
-          Revenue & Profit
-        </button>
+        <button type="button" class="nav-link active" data-page="dashboardHome"><span class="nav-icon">🏠</span>Overview</button>
+        <button type="button" class="nav-link" data-page="advancedStatistics"><span class="nav-icon">📊</span>Statistics & Analytics</button>
+        <button type="button" class="nav-link" data-page="orderManagement"><span class="nav-icon">🛒</span>Orders & Delivery<span class="nav-badge" id="ordersNavBadge">Live</span></button>
+        <button type="button" class="nav-link" data-page="paymentManagement"><span class="nav-icon">💳</span>Payment Management</button>
+        <button type="button" class="nav-link" data-page="revenueManagement"><span class="nav-icon">💰</span>Revenue & Profit</button>
 
         <div class="nav-heading">Agents & Customers</div>
-
-        <button class="nav-link" data-page="agentManagement">
-          <span class="nav-icon">👥</span>
-          Agent Management
-        </button>
-
-        <button class="nav-link" data-page="agentNumbers">
-          <span class="nav-icon">📱</span>
-          Agent Numbers Isolated
-        </button>
-
-        <button class="nav-link" data-page="agentRankings">
-          <span class="nav-icon">🏆</span>
-          Agent Performance
-        </button>
-
-        <button class="nav-link" data-page="withdrawalManagement">
-          <span class="nav-icon">💸</span>
-          Agent Withdrawals
-        </button>
-
-        <button class="nav-link" data-page="customerManagement">
-          <span class="nav-icon">🧑</span>
-          Customer Management
-        </button>
+        <button type="button" class="nav-link" data-page="agentManagement"><span class="nav-icon">👥</span>Agent Management</button>
+        <button type="button" class="nav-link" data-page="agentNumbers"><span class="nav-icon">📱</span>Agent Numbers Isolated</button>
+        <button type="button" class="nav-link" data-page="agentRankings"><span class="nav-icon">🏆</span>Agent Performance</button>
+        <button type="button" class="nav-link" data-page="withdrawalManagement"><span class="nav-icon">💸</span>Agent Withdrawals</button>
+        <button type="button" class="nav-link" data-page="customerManagement"><span class="nav-icon">🧑</span>Customer Management</button>
 
         <div class="nav-heading">Communication</div>
-
-        <button class="nav-link" data-page="smsManagement">
-          <span class="nav-icon">✉️</span>
-          Bulk SMS
-        </button>
-
-        <button class="nav-link" data-page="contactGroups">
-          <span class="nav-icon">📇</span>
-          Contact Groups
-        </button>
-
-        <button class="nav-link" data-page="notificationCenter">
-          <span class="nav-icon">🔔</span>
-          Notification Centre
-        </button>
-
-        <button class="nav-link" data-page="emailNotifications">
-          <span class="nav-icon">📧</span>
-          Email Notifications
-        </button>
-
-        <button class="nav-link" data-page="passwordResetManagement">
-          <span class="nav-icon">🔑</span>
-          Password Reset Requests
-        </button>
+        <button type="button" class="nav-link" data-page="smsManagement"><span class="nav-icon">✉️</span>Bulk SMS</button>
+        <button type="button" class="nav-link" data-page="contactGroups"><span class="nav-icon">📇</span>Contact Groups</button>
+        <button type="button" class="nav-link" data-page="notificationCenter"><span class="nav-icon">🔔</span>Notification Centre</button>
+        <button type="button" class="nav-link" data-page="emailNotifications"><span class="nav-icon">📧</span>Email Notifications</button>
+        <button type="button" class="nav-link" data-page="passwordResetManagement"><span class="nav-icon">🔑</span>Password Reset Requests</button>
 
         <div class="nav-heading">Business & System</div>
-
-        <button class="nav-link" data-page="pricingManagement">
-          <span class="nav-icon">🏷️</span>
-          Pricing Management
-        </button>
-
-        <button class="nav-link" data-page="reportsManagement">
-          <span class="nav-icon">📑</span>
-          Reports & Exports
-        </button>
-
-        <button class="nav-link" data-page="supportManagement">
-          <span class="nav-icon">🎧</span>
-          Support & Complaints
-        </button>
-
-        <button class="nav-link" data-page="websiteHealth">
-          <span class="nav-icon">🌐</span>
-          Website & API Health
-        </button>
-
-        <button class="nav-link" data-page="securityLogs">
-          <span class="nav-icon">🛡️</span>
-          Security & Activity Logs
-        </button>
-
-        <button class="nav-link" data-page="websiteSettings">
-          <span class="nav-icon">⚙️</span>
-          Website Settings
-        </button>
-
+        <button type="button" class="nav-link" data-page="pricingManagement"><span class="nav-icon">🏷️</span>Pricing Management</button>
+        <button type="button" class="nav-link" data-page="reportsManagement"><span class="nav-icon">📑</span>Reports & Exports</button>
+        <button type="button" class="nav-link" data-page="supportManagement"><span class="nav-icon">🎧</span>Support & Complaints</button>
+        <button type="button" class="nav-link" data-page="websiteHealth"><span class="nav-icon">🌐</span>Website & API Health</button>
+        <button type="button" class="nav-link" data-page="securityLogs"><span class="nav-icon">🛡️</span>Security & Activity Logs</button>
+        <button type="button" class="nav-link" data-page="websiteSettings"><span class="nav-icon">⚙️</span>Website Settings</button>
       </nav>
 
       <div class="sidebar-footer">
@@ -1162,397 +664,167 @@
           Keep your access key private. Never share owner credentials.
         </div>
 
-        <button id="ownerLogout" class="btn btn-light full-width">
+        <button id="ownerLogoutButton" type="button" class="btn btn-light full-width">
           ↪ Sign Out
         </button>
       </div>
-
     </aside>
 
-    <!-- MAIN -->
     <main class="main-area">
-
       <header class="topbar">
-
-        <button
-          id="mobileMenuButton"
-          class="icon-button mobile-menu"
-          type="button"
-          aria-label="Open navigation"
-        >☰</button>
+        <button id="mobileMenuButton" class="icon-button mobile-menu" type="button" aria-label="Open navigation">☰</button>
 
         <div class="topbar-title">
           <h1 id="currentPageTitle">Dashboard Overview</h1>
-          <p id="currentPageSubtitle">
-            Manage your business from one place.
-          </p>
+          <p id="currentPageSubtitle">Manage your business from one place.</p>
         </div>
 
         <div class="topbar-actions">
-          <div class="system-status">
-            <span class="status-dot"></span>
-            Owner Area
-          </div>
-
-          <button
-            class="icon-button"
-            data-goto="notificationCenter"
-            type="button"
-            aria-label="Open notifications"
-          >🔔</button>
-
-          <button
-            id="refreshDashboard"
-            class="icon-button"
-            type="button"
-            title="Refresh dashboard"
-            aria-label="Refresh dashboard"
-          >↻</button>
+          <div class="system-status"><span class="status-dot"></span>Owner Area</div>
+          <button class="icon-button" type="button" data-goto="notificationCenter" aria-label="Open notifications">🔔</button>
+          <button id="refreshDashboard" class="icon-button" type="button" title="Refresh dashboard" aria-label="Refresh dashboard">↻</button>
         </div>
-
       </header>
 
       <div class="page-content">
 
+        <!-- GLOBAL MESSAGE USED BY owner.js -->
+        <div id="ownerMessage" role="status" aria-live="polite" style="margin-bottom:15px;"></div>
+
         <!-- OVERVIEW -->
         <section id="dashboardHome" class="page-section active">
-
           <div class="welcome-row">
             <div>
               <h2>Welcome to your control centre 👋</h2>
-              <p>
-                Monitor orders, deliveries, agents and business performance.
-              </p>
+              <p>Monitor orders, deliveries, agents and business performance.</p>
             </div>
-
-            <button class="btn btn-primary" data-goto="orderManagement">
-              🛒 Manage Orders
-            </button>
+            <button type="button" class="btn btn-primary" data-goto="orderManagement">🛒 Manage Orders</button>
           </div>
 
           <div class="stats-grid">
-
             <article class="stat-card">
-              <div class="stat-top">
-                <span class="stat-label">Total Sales</span>
-                <span class="stat-icon icon-purple">💰</span>
-              </div>
+              <div class="stat-top"><span class="stat-label">Total Sales</span><span class="stat-icon icon-purple">💰</span></div>
               <div class="stat-value" id="totalSales">GH₵0.00</div>
               <div class="stat-note">Sales recorded by the existing API</div>
             </article>
 
             <article class="stat-card">
-              <div class="stat-top">
-                <span class="stat-label">Estimated Agent Margin</span>
-                <span class="stat-icon icon-green">📈</span>
-              </div>
+              <div class="stat-top"><span class="stat-label">Estimated Agent Margin</span><span class="stat-icon icon-green">📈</span></div>
               <div class="stat-value" id="totalProfit">GH₵0.00</div>
-              <div class="stat-note">
-                Existing margin estimate; not necessarily net business profit.
-              </div>
+              <div class="stat-note">Estimate; not necessarily net business profit.</div>
             </article>
 
             <article class="stat-card">
-              <div class="stat-top">
-                <span class="stat-label">Total Orders</span>
-                <span class="stat-icon icon-blue">🛍️</span>
-              </div>
+              <div class="stat-top"><span class="stat-label">Total Orders</span><span class="stat-icon icon-blue">🛍️</span></div>
               <div class="stat-value" id="totalOrders">0</div>
-              <div class="stat-note">All orders returned by the API</div>
             </article>
 
             <article class="stat-card">
-              <div class="stat-top">
-                <span class="stat-label">Successful Deliveries</span>
-                <span class="stat-icon icon-green">✅</span>
-              </div>
+              <div class="stat-top"><span class="stat-label">Successful Deliveries</span><span class="stat-icon icon-green">✅</span></div>
               <div class="stat-value" id="successfulDeliveries">0</div>
-              <div class="stat-note">Recorded delivery successes</div>
             </article>
 
             <article class="stat-card">
-              <div class="stat-top">
-                <span class="stat-label">Pending Orders</span>
-                <span class="stat-icon icon-orange">⏳</span>
-              </div>
+              <div class="stat-top"><span class="stat-label">Pending Orders</span><span class="stat-icon icon-orange">⏳</span></div>
               <div class="stat-value" id="pendingOrders">0</div>
-              <div class="stat-note">Check outstanding orders</div>
             </article>
 
             <article class="stat-card">
-              <div class="stat-top">
-                <span class="stat-label">Failed Orders</span>
-                <span class="stat-icon icon-red">⚠️</span>
-              </div>
+              <div class="stat-top"><span class="stat-label">Failed Orders</span><span class="stat-icon icon-red">⚠️</span></div>
               <div class="stat-value" id="failedOrders">0</div>
-              <div class="stat-note">Review delivery failures</div>
             </article>
 
             <article class="stat-card">
-              <div class="stat-top">
-                <span class="stat-label">Registered Agents</span>
-                <span class="stat-icon icon-cyan">👥</span>
-              </div>
+              <div class="stat-top"><span class="stat-label">Registered Agents</span><span class="stat-icon icon-cyan">👥</span></div>
               <div class="stat-value" id="registeredAgents">0</div>
-              <div class="stat-note">Registered agent accounts</div>
             </article>
 
             <article class="stat-card">
-              <div class="stat-top">
-                <span class="stat-label">Pending Withdrawals</span>
-                <span class="stat-icon icon-orange">💸</span>
-              </div>
+              <div class="stat-top"><span class="stat-label">Pending Withdrawals</span><span class="stat-icon icon-orange">💸</span></div>
               <div class="stat-value" id="pendingWithdrawals">0</div>
-              <div class="stat-note">Review withdrawal requests</div>
             </article>
-
           </div>
 
           <div class="two-column">
-
             <div class="card">
               <div class="card-header">
-                <div>
-                  <h3>Quick Actions</h3>
-                  <p>Jump directly to important business functions.</p>
-                </div>
+                <div><h3>Quick Actions</h3><p>Jump directly to important business functions.</p></div>
               </div>
 
               <div class="quick-grid">
-
-                <button class="quick-action" data-goto="orderManagement">
-                  <span class="quick-icon">🛒</span>
-                  <strong>Orders</strong>
-                  <span>Review and manage customer orders.</span>
-                </button>
-
-                <button class="quick-action" data-goto="agentManagement">
-                  <span class="quick-icon">👥</span>
-                  <strong>Agents</strong>
-                  <span>Manage your registered agents.</span>
-                </button>
-
-                <button class="quick-action" data-goto="smsManagement">
-                  <span class="quick-icon">📩</span>
-                  <strong>Send SMS</strong>
-                  <span>Open the existing bulk SMS tool.</span>
-                </button>
-
-                <button class="quick-action" data-goto="withdrawalManagement">
-                  <span class="quick-icon">💸</span>
-                  <strong>Withdrawals</strong>
-                  <span>Review agent withdrawal requests.</span>
-                </button>
-
-                <button class="quick-action" data-goto="agentNumbers">
-                  <span class="quick-icon">📱</span>
-                  <strong>Agent Numbers</strong>
-                  <span>Open the number organisation workspace.</span>
-                </button>
-
-                <button class="quick-action" data-goto="reportsManagement">
-                  <span class="quick-icon">📑</span>
-                  <strong>Reports</strong>
-                  <span>Open reporting and export options.</span>
-                </button>
-
-                <button class="quick-action" data-goto="websiteSettings">
-                  <span class="quick-icon">⚙️</span>
-                  <strong>Website Settings</strong>
-                  <span>Manage existing public website settings.</span>
-                </button>
-
-                <button class="quick-action" data-goto="websiteHealth">
-                  <span class="quick-icon">🌐</span>
-                  <strong>System Health</strong>
-                  <span>Check the website and backend.</span>
-                </button>
-
+                <button type="button" class="quick-action" data-goto="orderManagement"><span class="quick-icon">🛒</span><strong>Orders</strong><span>Review customer orders.</span></button>
+                <button type="button" class="quick-action" data-goto="agentManagement"><span class="quick-icon">👥</span><strong>Agents</strong><span>Manage registered agents.</span></button>
+                <button type="button" class="quick-action" data-goto="smsManagement"><span class="quick-icon">📩</span><strong>Send SMS</strong><span>Open bulk SMS.</span></button>
+                <button type="button" class="quick-action" data-goto="withdrawalManagement"><span class="quick-icon">💸</span><strong>Withdrawals</strong><span>Review withdrawal requests.</span></button>
+                <button type="button" class="quick-action" data-goto="agentNumbers"><span class="quick-icon">📱</span><strong>Agent Numbers</strong><span>Prepare contact lists.</span></button>
+                <button type="button" class="quick-action" data-goto="reportsManagement"><span class="quick-icon">📑</span><strong>Reports</strong><span>Open reporting options.</span></button>
+                <button type="button" class="quick-action" data-goto="websiteSettings"><span class="quick-icon">⚙️</span><strong>Settings</strong><span>Manage supported settings.</span></button>
+                <button type="button" class="quick-action" data-goto="websiteHealth"><span class="quick-icon">🌐</span><strong>System Health</strong><span>Check backend availability.</span></button>
               </div>
             </div>
 
             <div class="card">
-              <div class="card-header">
-                <div>
-                  <h3>Business Snapshot</h3>
-                  <p>Today's figures from your existing statistics API.</p>
-                </div>
-              </div>
-
-              <div class="metric-row">
-                <span>Today's Sales</span>
-                <strong id="todaySales">GH₵0.00</strong>
-              </div>
-
-              <div class="metric-row">
-                <span>Today's Agent Margin</span>
-                <strong id="todayAgentMargin">GH₵0.00</strong>
-              </div>
-
-              <div class="metric-row">
-                <span>Active Agents</span>
-                <strong id="activeAgents">0</strong>
-              </div>
-
-              <div class="metric-row">
-                <span>Pending Agents</span>
-                <strong id="pendingAgents">0</strong>
-              </div>
-
-              <div class="metric-row">
-                <span>Suspended Agents</span>
-                <strong id="suspendedAgents">0</strong>
-              </div>
-
-              <div class="metric-row">
-                <span>Rejected Agents</span>
-                <strong id="rejectedAgents">0</strong>
-              </div>
-
+              <div class="card-header"><div><h3>Business Snapshot</h3><p>Figures from the existing statistics API.</p></div></div>
+              <div class="metric-row"><span>Today's Sales</span><strong id="todaySales">GH₵0.00</strong></div>
+              <div class="metric-row"><span>Today's Agent Margin</span><strong id="todayAgentMargin">GH₵0.00</strong></div>
+              <div class="metric-row"><span>Active Agents</span><strong id="activeAgents">0</strong></div>
+              <div class="metric-row"><span>Pending Agents</span><strong id="pendingAgents">0</strong></div>
+              <div class="metric-row"><span>Suspended Agents</span><strong id="suspendedAgents">0</strong></div>
+              <div class="metric-row"><span>Rejected Agents</span><strong id="rejectedAgents">0</strong></div>
             </div>
-
           </div>
 
           <div class="card">
             <div class="card-header">
-              <div>
-                <h3>Agent Leaderboard</h3>
-                <p>Performance information from the existing rankings endpoint.</p>
-              </div>
-
-              <button class="btn btn-light btn-small"
-                      data-goto="agentRankings">
-                View Performance
-              </button>
+              <div><h3>Agent Leaderboard</h3><p>Rankings from the existing API.</p></div>
+              <button type="button" class="btn btn-light btn-small" data-goto="agentRankings">View Performance</button>
             </div>
-
             <div class="table-wrap">
               <table>
-                <thead>
-                  <tr>
-                    <th>Rank</th>
-                    <th>Agent</th>
-                    <th>Orders</th>
-                    <th>Sales</th>
-                    <th>Performance</th>
-                  </tr>
-                </thead>
-                <tbody id="agentRankingsBody">
-                  <tr>
-                    <td colspan="5" class="empty-state">
-                      Loading agent rankings...
-                    </td>
-                  </tr>
-                </tbody>
+                <thead><tr><th>Rank</th><th>Agent</th><th>Agent Code</th><th>Paid Orders</th><th>Paid Sales</th><th>Estimated Margin</th></tr></thead>
+                <tbody id="agentRankingsBody"><tr><td colspan="6" class="empty-state">Loading agent rankings...</td></tr></tbody>
               </table>
             </div>
           </div>
-
         </section>
 
         <!-- STATISTICS -->
         <section id="advancedStatistics" class="page-section">
           <h2 class="section-title">Statistics & Analytics</h2>
-          <p class="section-description">
-            Review the statistics currently supplied by your backend.
-            Advanced charts and date-range analytics can be added later.
-          </p>
-
+          <p class="section-description">Statistics currently supplied by your backend.</p>
           <div class="stats-grid">
-            <article class="stat-card">
-              <div class="stat-label">Total Sales</div>
-              <div class="stat-value" id="statsSales">—</div>
-              <div class="stat-note">Existing API figure</div>
-            </article>
-
-            <article class="stat-card">
-              <div class="stat-label">Total Orders</div>
-              <div class="stat-value" id="statsOrders">—</div>
-              <div class="stat-note">Existing API figure</div>
-            </article>
-
-            <article class="stat-card">
-              <div class="stat-label">Successful Deliveries</div>
-              <div class="stat-value" id="statsDelivered">—</div>
-              <div class="stat-note">Existing API figure</div>
-            </article>
-
-            <article class="stat-card">
-              <div class="stat-label">Estimated Agent Margin</div>
-              <div class="stat-value" id="statsMargin">—</div>
-              <div class="stat-note">Not verified net profit</div>
-            </article>
+            <article class="stat-card"><div class="stat-label">Total Sales</div><div class="stat-value" id="statsSales">—</div></article>
+            <article class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value" id="statsOrders">—</div></article>
+            <article class="stat-card"><div class="stat-label">Successful Deliveries</div><div class="stat-value" id="statsDelivered">—</div></article>
+            <article class="stat-card"><div class="stat-label">Estimated Agent Margin</div><div class="stat-value" id="statsMargin">—</div></article>
           </div>
-
           <div class="card">
-            <div class="card-header">
-              <div>
-                <h3>Analytics Workspace</h3>
-                <p>Future expansion for deeper business reporting.</p>
-              </div>
-              <span class="badge info">Extension planned</span>
-            </div>
-
-            <div class="planned-card">
-              <h4>📈 Sales over time</h4>
-              <p>
-                A daily, weekly and monthly sales chart requires date-grouped
-                statistics from the backend.
-              </p>
-            </div>
-
-            <div class="planned-card">
-              <h4>📊 Network performance</h4>
-              <p>
-                Compare MTN, Telecel and AirtelTigo orders, delivery rates
-                and revenue using verified network-level records.
-              </p>
-            </div>
-
-            <div class="planned-card">
-              <h4>🎯 Business targets</h4>
-              <p>
-                Set daily and monthly sales targets and compare actual
-                performance against those targets.
-              </p>
-            </div>
+            <h3>Analytics Workspace</h3>
+            <div class="planned-card"><h4>📈 Sales over time</h4><p>Daily, weekly and monthly charts require date-grouped backend statistics.</p></div>
+            <div class="planned-card"><h4>📊 Network performance</h4><p>Compare MTN, Telecel and AirtelTigo orders and delivery rates when network-level statistics are available.</p></div>
+            <div class="planned-card"><h4>🎯 Business targets</h4><p>Target tracking can be added through a dedicated reporting feature.</p></div>
           </div>
         </section>
 
-        <!-- ORDERS -->
+        <!-- ORDERS: exact table/filter IDs expected by owner.js -->
         <section id="orderManagement" class="page-section">
           <h2 class="section-title">Orders & Data Delivery</h2>
-          <p class="section-description">
-            Review orders, inspect their status and use the existing
-            delivery retry function where appropriate.
-          </p>
+          <p class="section-description">Review orders and retry eligible deliveries.</p>
 
           <div class="card">
-            <div class="card-header">
-              <div>
-                <h3>Order Management</h3>
-                <p>Connected to the existing owner orders endpoint.</p>
-              </div>
-              <span class="badge info">Existing integration</span>
-            </div>
+            <div class="card-header"><div><h3>Order Management</h3><p>Connected to the existing owner orders endpoint.</p></div></div>
 
             <div class="toolbar">
-              <input
-                type="search"
-                id="orderSearch"
-                placeholder="Search order, reference or phone..."
-                aria-label="Search orders"
-              >
+              <input type="search" id="orderSearch" placeholder="Search reference or phone..." aria-label="Search orders">
 
-              <select id="orderStatusFilter" aria-label="Filter payment status">
+              <select id="orderPaymentFilter" aria-label="Filter payment status">
                 <option value="">All payment statuses</option>
                 <option value="paid">Paid</option>
                 <option value="pending">Pending</option>
                 <option value="failed">Failed</option>
               </select>
 
-              <select id="deliveryStatusFilter"
-                      aria-label="Filter delivery status">
+              <select id="orderDeliveryFilter" aria-label="Filter delivery status">
                 <option value="">All delivery statuses</option>
                 <option value="delivered">Delivered</option>
                 <option value="pending">Pending</option>
@@ -1560,78 +832,26 @@
                 <option value="failed">Failed</option>
               </select>
 
-              <button id="searchOrders" class="btn btn-primary">
-                Search
-              </button>
+              <button id="searchOrders" type="button" class="btn btn-primary">Search</button>
             </div>
 
             <div class="table-wrap">
               <table>
-                <thead>
-                  <tr>
-                    <th>Reference</th>
-                    <th>Customer</th>
-                    <th>Phone</th>
-                    <th>Network</th>
-                    <th>Bundle</th>
-                    <th>Amount</th>
-                    <th>Payment</th>
-                    <th>Delivery</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody id="ordersTableBody">
-                  <tr>
-                    <td colspan="9" class="empty-state">
-                      Orders will appear here after the existing JavaScript loads.
-                    </td>
-                  </tr>
-                </tbody>
+                <thead><tr><th>Reference</th><th>Phone</th><th>Network</th><th>Bundle</th><th>Amount</th><th>Payment Status</th><th>Delivery Status</th><th>Action</th></tr></thead>
+                <tbody id="ordersTableBody"><tr><td colspan="8" class="empty-state">Orders will appear here after the dashboard loads.</td></tr></tbody>
               </table>
             </div>
-
           </div>
 
           <div class="two-column">
             <div class="card">
-              <div class="card-header">
-                <div>
-                  <h3>Delivery Failure Handling</h3>
-                  <p>Use the existing retry mechanism when an order qualifies.</p>
-                </div>
-              </div>
-
-              <div class="warning-box">
-                Do not ask a customer to pay again simply because data delivery
-                failed. Verify the original payment and order status first.
-              </div>
-
-              <div class="planned-card">
-                <h4>Future: Failed-delivery queue</h4>
-                <p>
-                  A dedicated queue with supplier responses, retry history,
-                  failure reasons and safe retry controls requires additional
-                  backend data and endpoints.
-                </p>
-              </div>
+              <h3>Delivery Failure Handling</h3>
+              <div class="warning-box">Verify the original payment and order status before taking action. Do not ask a customer to pay again simply because data delivery failed.</div>
+              <div class="planned-card"><h4>Future: Failed-delivery queue</h4><p>A detailed queue with supplier responses and retry history requires additional backend support.</p></div>
             </div>
-
             <div class="card">
-              <div class="card-header">
-                <div>
-                  <h3>Payment Reconciliation</h3>
-                  <p>Future payment audit tools.</p>
-                </div>
-              </div>
-
-              <div class="planned-card">
-                <h4>Paystack reconciliation</h4>
-                <p>
-                  Match successful Paystack transactions with order records,
-                  flag discrepancies and maintain a review trail. This
-                  requires a dedicated reconciliation endpoint.
-                </p>
-              </div>
+              <h3>Payment Reconciliation</h3>
+              <div class="planned-card"><h4>Paystack reconciliation</h4><p>Matching transactions against order records requires a dedicated reconciliation endpoint.</p></div>
             </div>
           </div>
         </section>
@@ -1639,172 +859,52 @@
         <!-- PAYMENT MANAGEMENT -->
         <section id="paymentManagement" class="page-section">
           <h2 class="section-title">Payment Management</h2>
-          <p class="section-description">
-            Payment oversight for your Paystack checkout and order records.
-          </p>
-
-          <div class="info-box">
-            Your existing server remains responsible for payment verification.
-            This navigation page does not bypass Paystack verification or
-            manually mark transactions as paid.
-          </div>
-
-          <div class="two-column">
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <h3>Payment Review</h3>
-                  <p>Use the existing orders page to inspect payment status.</p>
-                </div>
-              </div>
-
-              <button class="btn btn-primary" data-goto="orderManagement">
-                Open Orders & Payment Status
-              </button>
-            </div>
-
-            <div class="card">
-              <div class="card-header">
-                <div>
-                  <h3>Reconciliation Tools</h3>
-                  <p>Not yet connected to a dedicated reconciliation API.</p>
-                </div>
-              </div>
-
-              <div class="planned-card">
-                <h4>Transaction matching</h4>
-                <p>
-                  A future backend extension can compare Paystack references,
-                  order amounts, payment states and delivery records.
-                </p>
-              </div>
-            </div>
+          <p class="section-description">Payment oversight for your Paystack checkout and order records.</p>
+          <div class="info-box">Your backend remains responsible for payment verification. This page does not bypass Paystack verification or manually mark transactions as paid.</div>
+          <div class="card">
+            <h3>Payment Review</h3>
+            <p>Inspect payment references and statuses through the existing order-management page.</p>
+            <button type="button" class="btn btn-primary" data-goto="orderManagement">Open Orders</button>
           </div>
         </section>
 
         <!-- REVENUE -->
         <section id="revenueManagement" class="page-section">
           <h2 class="section-title">Revenue & Profit</h2>
-          <p class="section-description">
-            Review available sales and margin figures without confusing
-            estimated agent margin with net profit.
-          </p>
-
+          <p class="section-description">Review available sales and margin figures.</p>
           <div class="stats-grid">
-            <article class="stat-card">
-              <div class="stat-label">Total Sales</div>
-              <div class="stat-value" id="revenueTotalSales">—</div>
-              <div class="stat-note">Existing dashboard metric</div>
-            </article>
-
-            <article class="stat-card">
-              <div class="stat-label">Estimated Agent Margin</div>
-              <div class="stat-value" id="revenueAgentMargin">—</div>
-              <div class="stat-note">Existing margin metric</div>
-            </article>
-
-            <article class="stat-card">
-              <div class="stat-label">Today's Sales</div>
-              <div class="stat-value" id="revenueTodaySales">—</div>
-              <div class="stat-note">Existing dashboard metric</div>
-            </article>
-
-            <article class="stat-card">
-              <div class="stat-label">Today's Agent Margin</div>
-              <div class="stat-value" id="revenueTodayMargin">—</div>
-              <div class="stat-note">Existing dashboard metric</div>
-            </article>
+            <article class="stat-card"><div class="stat-label">Total Sales</div><div class="stat-value" id="revenueTotalSales">—</div></article>
+            <article class="stat-card"><div class="stat-label">Estimated Agent Margin</div><div class="stat-value" id="revenueAgentMargin">—</div></article>
+            <article class="stat-card"><div class="stat-label">Today's Sales</div><div class="stat-value" id="revenueTodaySales">—</div></article>
+            <article class="stat-card"><div class="stat-label">Today's Agent Margin</div><div class="stat-value" id="revenueTodayMargin">—</div></article>
           </div>
-
-          <div class="card">
-            <div class="card-header">
-              <div>
-                <h3>Profit Accounting</h3>
-                <p>Recommended next phase.</p>
-              </div>
-            </div>
-
-            <div class="planned-card">
-              <h4>Net profit calculation</h4>
-              <p>
-                To calculate true net profit, the system needs reliable
-                supplier costs, agent commissions, SMS expenses, payment
-                fees, refunds and other operating expenses. The current
-                margin estimate should not be treated as net profit.
-              </p>
-            </div>
-          </div>
+          <div class="card"><h3>Profit Accounting</h3><div class="planned-card"><p>True net profit requires reliable supplier costs, agent commissions, SMS expenses, payment fees, refunds and operating expenses. The existing margin estimate should not be treated as net profit.</p></div></div>
         </section>
 
-        <!-- AGENTS -->
+        <!-- AGENTS: exact expected table and search IDs -->
         <section id="agentManagement" class="page-section">
           <h2 class="section-title">Agent Management</h2>
-          <p class="section-description">
-            Manage agent accounts using your existing owner API.
-          </p>
+          <p class="section-description">Manage agent accounts using the existing owner API.</p>
 
           <div class="stats-grid">
-            <article class="stat-card">
-              <div class="stat-label">Registered Agents</div>
-              <div class="stat-value" id="agentsTotalCard">—</div>
-            </article>
-
-            <article class="stat-card">
-              <div class="stat-label">Active Agents</div>
-              <div class="stat-value" id="agentsActiveCard">—</div>
-            </article>
-
-            <article class="stat-card">
-              <div class="stat-label">Pending Agents</div>
-              <div class="stat-value" id="agentsPendingCard">—</div>
-            </article>
-
-            <article class="stat-card">
-              <div class="stat-label">Suspended Agents</div>
-              <div class="stat-value" id="agentsSuspendedCard">—</div>
-            </article>
+            <article class="stat-card"><div class="stat-label">Registered Agents</div><div class="stat-value" id="agentsTotalCard">—</div></article>
+            <article class="stat-card"><div class="stat-label">Active Agents</div><div class="stat-value" id="agentsActiveCard">—</div></article>
+            <article class="stat-card"><div class="stat-label">Pending Agents</div><div class="stat-value" id="agentsPendingCard">—</div></article>
+            <article class="stat-card"><div class="stat-label">Suspended Agents</div><div class="stat-value" id="agentsSuspendedCard">—</div></article>
           </div>
 
           <div class="card">
-            <div class="card-header">
-              <div>
-                <h3>Registered Agents</h3>
-                <p>Existing agent list and account actions.</p>
-              </div>
-            </div>
-
+            <div class="card-header"><div><h3>Registered Agents</h3><p>Existing agent list and account actions.</p></div></div>
             <div class="toolbar">
-              <input type="search"
-                     id="agentSearch"
-                     placeholder="Search agent name, phone or email..."
-                     aria-label="Search agents">
-              <button class="btn btn-light" id="searchAgents">
-                Search
-              </button>
+              <input type="search" id="agentSearch" placeholder="Search agents..." aria-label="Search agents">
+              <button type="button" class="btn btn-light" id="searchAgents">Search</button>
             </div>
-
             <div class="table-wrap">
               <table>
-                <thead>
-                  <tr>
-                    <th>Agent</th>
-                    <th>Phone</th>
-                    <th>Email</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="agentsTableBody">
-                  <tr>
-                    <td colspan="6" class="empty-state">
-                      Agent records will appear here.
-                    </td>
-                  </tr>
-                </tbody>
+                <thead><tr><th>Agent Code</th><th>Full Name</th><th>Business Name</th><th>Status</th><th>Total Orders</th><th>Paid Sales</th><th>Actions</th></tr></thead>
+                <tbody id="agentsTableBody"><tr><td colspan="7" class="empty-state">Agent records will appear here.</td></tr></tbody>
               </table>
             </div>
-
             <div id="agentDetails" class="hidden"></div>
           </div>
         </section>
@@ -1812,134 +912,47 @@
         <!-- AGENT NUMBERS -->
         <section id="agentNumbers" class="page-section">
           <h2 class="section-title">Agent Numbers Isolated</h2>
-          <p class="section-description">
-            A dedicated workspace for organising agent contact numbers,
-            preparing contact lists and making SMS campaigns easier.
-          </p>
-
-          <div class="info-box">
-            This page is a new front-end workspace. It does not yet retrieve
-            or save agent numbers to your database. The existing SMS tool
-            remains available under Bulk SMS.
-          </div>
+          <p class="section-description">Prepare contact lists and export them for appropriate communication.</p>
+          <div class="info-box">This is a local browser workspace. It does not automatically retrieve agent phone numbers from PostgreSQL or send messages.</div>
 
           <div class="two-column">
             <div class="card">
-              <div class="card-header">
-                <div>
-                  <h3>Contact List Workspace</h3>
-                  <p>Prepare a CSV or text file of contacts.</p>
-                </div>
-              </div>
-
+              <h3>Contact List Workspace</h3>
               <div class="field">
                 <label for="agentNumbersFile">Import contact file</label>
-                <input class="control"
-                       type="file"
-                       id="agentNumbersFile"
-                       accept=".csv,.txt">
+                <input class="control" type="file" id="agentNumbersFile" accept=".csv,.txt">
               </div>
-
               <div class="field">
                 <label for="agentNumbersText">Or paste phone numbers</label>
-                <textarea
-                  id="agentNumbersText"
-                  placeholder="One phone number per line"
-                ></textarea>
+                <textarea id="agentNumbersText" placeholder="One phone number per line"></textarea>
               </div>
-
               <div class="toolbar">
-                <button class="btn btn-primary" id="prepareAgentNumbers">
-                  Prepare Numbers
-                </button>
-
-                <button class="btn btn-light" id="exportAgentNumbers">
-                  Export CSV
-                </button>
-
-                <button class="btn btn-light" id="clearAgentNumbers">
-                  Clear
-                </button>
+                <button type="button" class="btn btn-primary" id="prepareAgentNumbers">Prepare Numbers</button>
+                <button type="button" class="btn btn-light" id="exportAgentNumbers">Export CSV</button>
+                <button type="button" class="btn btn-light" id="clearAgentNumbers">Clear</button>
               </div>
-
-              <div class="metric-row">
-                <span>Numbers loaded</span>
-                <strong id="agentNumbersCount">0</strong>
-              </div>
-
-              <div class="metric-row">
-                <span>Valid Ghanaian-format numbers</span>
-                <strong id="agentNumbersValid">0</strong>
-              </div>
-
-              <div class="metric-row">
-                <span>Duplicates removed</span>
-                <strong id="agentNumbersDuplicates">0</strong>
-              </div>
-
-              <div class="metric-row">
-                <span>Invalid entries</span>
-                <strong id="agentNumbersInvalid">0</strong>
-              </div>
+              <div class="metric-row"><span>Numbers loaded</span><strong id="agentNumbersCount">0</strong></div>
+              <div class="metric-row"><span>Valid-format numbers</span><strong id="agentNumbersValid">0</strong></div>
+              <div class="metric-row"><span>Duplicates removed</span><strong id="agentNumbersDuplicates">0</strong></div>
+              <div class="metric-row"><span>Invalid entries</span><strong id="agentNumbersInvalid">0</strong></div>
             </div>
 
             <div class="card">
-              <div class="card-header">
-                <div>
-                  <h3>Contact Groups</h3>
-                  <p>Group-management integration is a future extension.</p>
-                </div>
-              </div>
-
-              <div class="field">
-                <label for="agentNumberGroupName">Group name</label>
-                <input id="agentNumberGroupName"
-                       placeholder="e.g. Active Agents">
-              </div>
-
-              <div class="field">
-                <label for="agentNumberGroupDescription">Description</label>
-                <textarea id="agentNumberGroupDescription"
-                          placeholder="Describe this contact group"></textarea>
-              </div>
-
-              <button class="btn btn-primary" id="saveAgentNumberGroup">
-                Save Group Locally
-              </button>
-
-              <p style="color:var(--muted);font-size:11px;line-height:1.7;">
-                Groups created here are stored only in this browser.
-                They are not shared with your backend or other devices.
-              </p>
-
+              <h3>Contact Groups</h3>
+              <div class="field"><label for="agentNumberGroupName">Group name</label><input id="agentNumberGroupName" placeholder="e.g. Active Agents"></div>
+              <div class="field"><label for="agentNumberGroupDescription">Description</label><textarea id="agentNumberGroupDescription" placeholder="Describe this group"></textarea></div>
+              <button type="button" class="btn btn-primary" id="saveAgentNumberGroup">Save Group Locally</button>
+              <p style="color:var(--muted);font-size:11px;line-height:1.7;">Groups are saved only in this browser, not on the server.</p>
               <div id="agentNumberGroupsList"></div>
             </div>
           </div>
 
           <div class="card">
-            <div class="card-header">
-              <div>
-                <h3>Prepared Contacts</h3>
-                <p>Review the contact list before exporting it.</p>
-              </div>
-            </div>
-
+            <h3>Prepared Contacts</h3>
             <div class="table-wrap">
               <table>
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Phone Number</th>
-                    <th>Format</th>
-                  </tr>
-                </thead>
-                <tbody id="agentNumbersTableBody">
-                  <tr>
-                    <td colspan="3" class="empty-state">
-                      Import a contact file or paste numbers to begin.
-                    </td>
-                  </tr>
-                </tbody>
+                <thead><tr><th>#</th><th>Phone Number</th><th>Format</th></tr></thead>
+                <tbody id="agentNumbersTableBody"><tr><td colspan="3" class="empty-state">Import a file or paste numbers to begin.</td></tr></tbody>
               </table>
             </div>
           </div>
@@ -1948,253 +961,84 @@
         <!-- RANKINGS -->
         <section id="agentRankings" class="page-section">
           <h2 class="section-title">Agent Performance</h2>
-          <p class="section-description">
-            Review the leaderboard provided by your existing rankings API.
-          </p>
-
+          <p class="section-description">Review the leaderboard provided by the existing rankings API.</p>
           <div class="card">
-            <div class="card-header">
-              <div>
-                <h3>Agent Leaderboard</h3>
-                <p>Performance fields depend on the data returned by the server.</p>
-              </div>
-            </div>
-
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Rank</th>
-                    <th>Agent</th>
-                    <th>Orders</th>
-                    <th>Sales</th>
-                    <th>Performance</th>
-                  </tr>
-                </thead>
-                <tbody id="rankingsPageBody">
-                  <tr>
-                    <td colspan="5" class="empty-state">
-                      The existing leaderboard is displayed on the Overview page.
-                      Dedicated ranking integration can be added to owner.js.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-          </div>
-
-          <div class="planned-card">
-            <h4>Future performance analytics</h4>
-            <p>
-              Add daily and monthly rankings, agent growth, conversion rates,
-              delivery success rates and configurable performance targets
-              through a dedicated backend extension.
-            </p>
+            <h3>Agent Leaderboard</h3>
+            <p style="color:var(--muted);line-height:1.7;">The live leaderboard is shown on the Overview page. Dedicated ranking integration can be added to owner.js.</p>
+            <button type="button" class="btn btn-light" data-goto="dashboardHome">View Overview Leaderboard</button>
           </div>
         </section>
 
-        <!-- WITHDRAWALS -->
+        <!-- WITHDRAWALS: exact expected table ID and seven columns -->
         <section id="withdrawalManagement" class="page-section">
           <h2 class="section-title">Agent Withdrawals</h2>
-          <p class="section-description">
-            Review withdrawal requests through the existing owner API.
-          </p>
-
-          <div class="warning-box">
-            Approve or reject a request only after checking its details.
-            The dashboard should not claim that a transfer has occurred
-            unless your payment process confirms it.
-          </div>
+          <p class="section-description">Review withdrawal requests using the existing owner API.</p>
+          <div class="warning-box">Approve or reject a request only after checking its details. Do not claim a transfer has occurred unless the payment process confirms it.</div>
 
           <div class="card">
-            <div class="card-header">
-              <div>
-                <h3>Withdrawal Requests</h3>
-                <p>Connected to your existing withdrawal-management interface.</p>
-              </div>
-            </div>
-
+            <div class="card-header"><div><h3>Withdrawal Requests</h3><p>Existing withdrawal-management interface.</p></div></div>
+            <div class="metric-row"><span>Pending requests</span><strong id="ownerPendingCount">0</strong></div>
+            <div class="metric-row"><span>Pending amount</span><strong id="ownerPendingAmount">GH₵0.00</strong></div>
             <div class="table-wrap">
               <table>
-                <thead>
-                  <tr>
-                    <th>Request</th>
-                    <th>Agent</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="withdrawalsTableBody">
-                  <tr>
-                    <td colspan="6" class="empty-state">
-                      Withdrawal requests will appear here.
-                    </td>
-                  </tr>
-                </tbody>
+                <thead><tr><th>ID</th><th>Agent / Business</th><th>Amount</th><th>Phone</th><th>Provider</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="withdrawalsTableBody"><tr><td colspan="7" class="empty-state">Withdrawal requests will appear here.</td></tr></tbody>
               </table>
             </div>
-          </div>
-
-          <div class="planned-card">
-            <h4>Future withdrawal controls</h4>
-            <p>
-              Add transfer references, payment confirmation, processing
-              history and reconciliation. These require backend support.
-            </p>
           </div>
         </section>
 
         <!-- CUSTOMERS -->
         <section id="customerManagement" class="page-section">
           <h2 class="section-title">Customer Management</h2>
-          <p class="section-description">
-            Customer-service workspace for order lookups and future customer
-            contact management.
-          </p>
-
+          <p class="section-description">Find customer orders and investigate issues.</p>
           <div class="card">
-            <div class="card-header">
-              <div>
-                <h3>Find a Customer's Orders</h3>
-                <p>Use the existing order search.</p>
-              </div>
-            </div>
-
+            <h3>Find a Customer's Orders</h3>
             <div class="toolbar">
-              <input type="search"
-                     id="customerOrderSearch"
-                     placeholder="Enter order reference or phone number">
-              <button class="btn btn-primary" id="customerSearchButton">
-                Search Orders
-              </button>
+              <input type="search" id="customerOrderSearch" placeholder="Enter phone number or order reference">
+              <button type="button" class="btn btn-primary" id="customerSearchButton">Search Orders</button>
             </div>
-
-            <div class="info-box">
-              The search redirects to the existing order-management page.
-              A dedicated customer database, customer notes and customer
-              lifetime-value analysis require additional backend integration.
-            </div>
-          </div>
-
-          <div class="planned-card">
-            <h4>Customer profiles</h4>
-            <p>
-              Future features can include order history, support notes,
-              customer communication preferences and complaint history.
-            </p>
+            <div class="info-box">This uses the existing order search. A separate customer database and customer notes require backend integration.</div>
           </div>
         </section>
 
-        <!-- SMS -->
+        <!-- SMS: exact IDs expected by owner.js -->
         <section id="smsManagement" class="page-section">
           <h2 class="section-title">Bulk SMS</h2>
-          <p class="section-description">
-            Send messages using your existing Sailup integration.
-          </p>
-
-          <div class="info-box">
-            SMS sending requires the backend's existing configuration,
-            including the API key, approved sender ID and sufficient credits.
-            Use contact lists only for appropriate, consent-based messages.
-          </div>
+          <p class="section-description">Send messages through your existing SMS integration.</p>
+          <div class="info-box">SMS sending depends on the backend API key, approved sender ID, sufficient credits and valid recipients. Send appropriate messages only to recipients who may be contacted.</div>
 
           <div class="two-column">
             <div class="card">
-              <div class="card-header">
-                <div>
-                  <h3>Create SMS Campaign</h3>
-                  <p>Existing SMS form IDs are preserved for owner.js.</p>
-                </div>
-              </div>
-
+              <h3>Create SMS Campaign</h3>
               <div class="field">
                 <label for="smsMessage">Message</label>
-                <textarea id="smsMessage"
-                          maxlength="1000"
-                          placeholder="Write your message here..."></textarea>
+                <textarea id="smsMessage" maxlength="1000" placeholder="Write your message here..."></textarea>
               </div>
-
               <div class="field">
-                <label for="smsContactFile">Upload recipients</label>
-                <input class="control"
-                       type="file"
-                       id="smsContactFile"
-                       accept=".csv,.txt,.xls,.xlsx">
+                <label for="smsContactFile">Upload recipients (.txt or .csv)</label>
+                <input class="control" type="file" id="smsContactFile" accept=".txt,.csv">
               </div>
-
               <div class="field">
                 <label for="smsRecipients">Or enter phone numbers</label>
-                <textarea id="smsRecipients"
-                          placeholder="Enter numbers as supported by your existing SMS tool"></textarea>
+                <textarea id="smsRecipients" placeholder="Enter recipients as supported by your SMS tool"></textarea>
               </div>
-
-              <div class="metric-row">
-                <span>Recipient count</span>
-                <strong id="smsRecipientCount">0</strong>
-              </div>
-
-              <div class="metric-row">
-                <span>Estimated SMS cost</span>
-                <strong id="smsCostDisplay">Not calculated</strong>
-              </div>
-
+              <div class="metric-row"><span>Recipient count</span><strong id="smsRecipientCount">0</strong></div>
+              <div class="metric-row"><span>Estimated SMS cost</span><strong id="smsCostDisplay">Not calculated</strong></div>
               <div class="form-actions">
-                <button type="button" class="btn btn-light"
-                        id="estimateSmsCost">
-                  Estimate Cost
-                </button>
-
-                <button type="button" class="btn btn-primary"
-                        id="sendSmsCampaign">
-                  Send SMS Campaign
-                </button>
+                <button type="button" class="btn btn-light" id="estimateSmsCost">Estimate Cost</button>
+                <button type="button" class="btn btn-primary" id="sendSmsCampaign">Send SMS Campaign</button>
               </div>
-
-              <p id="smsCampaignStatus"
-                 role="status"
-                 style="line-height:1.7;margin-top:15px;"></p>
+              <p id="smsCampaignStatus" role="status" style="line-height:1.7;margin-top:15px;"></p>
             </div>
 
-            <div>
-              <div class="card">
-                <div class="card-header">
-                  <div>
-                    <h3>Campaign Guidelines</h3>
-                    <p>Before sending a bulk message.</p>
-                  </div>
-                </div>
-
-                <div class="metric-row">
-                  <span>Maximum message length</span>
-                  <strong>1,000 characters</strong>
-                </div>
-
-                <div class="metric-row">
-                  <span>Backend batch size</span>
-                  <strong>Up to 2,000 recipients</strong>
-                </div>
-
-                <div class="metric-row">
-                  <span>Sender ID</span>
-                  <strong>Must be approved</strong>
-                </div>
-
-                <div class="warning-box" style="margin-top:15px;">
-                  Check the recipient list, sender ID and cost estimate
-                  before sending. Sending may incur charges.
-                </div>
-              </div>
-
-              <div class="planned-card">
-                <h4>Campaign history</h4>
-                <p>
-                  A searchable SMS history with delivery reports and
-                  campaign analytics requires persistent backend storage.
-                </p>
-              </div>
+            <div class="card">
+              <h3>Campaign Guidelines</h3>
+              <div class="metric-row"><span>Maximum message length</span><strong>1,000 characters</strong></div>
+              <div class="metric-row"><span>Backend batch limit</span><strong>Up to 2,000 recipients</strong></div>
+              <div class="metric-row"><span>Sender ID</span><strong>Must be approved</strong></div>
+              <div class="warning-box" style="margin-top:15px;">Check recipients and estimated costs before sending. SMS campaigns may incur charges.</div>
+              <div class="planned-card"><h4>Campaign history</h4><p>Persistent campaign history requires backend storage.</p></div>
             </div>
           </div>
         </section>
@@ -2202,198 +1046,73 @@
         <!-- CONTACT GROUPS -->
         <section id="contactGroups" class="page-section">
           <h2 class="section-title">Contact Groups</h2>
-          <p class="section-description">
-            Organise contacts into groups for easier communication.
-          </p>
-
-          <div class="info-box">
-            Persistent groups and automatically synchronised agent contacts
-            are not yet connected to the backend. Use Agent Numbers Isolated
-            to prepare and export contact lists.
-          </div>
-
-          <button class="btn btn-primary" data-goto="agentNumbers">
-            📱 Open Agent Numbers Isolated
-          </button>
-
+          <p class="section-description">Organise contact lists for easier communication.</p>
+          <div class="info-box">Persistent groups and automatic contact synchronisation are not connected to the backend yet.</div>
+          <button type="button" class="btn btn-primary" data-goto="agentNumbers">Open Agent Numbers Isolated</button>
           <div class="card" style="margin-top:20px;">
-            <div class="card-header">
-              <div>
-                <h3>Suggested Groups</h3>
-                <p>Group definitions for a future database-backed feature.</p>
-              </div>
-            </div>
-
             <div class="three-column">
-              <div class="planned-card">
-                <h4>Active Agents</h4>
-                <p>Agents currently authorised to use their accounts.</p>
-              </div>
-
-              <div class="planned-card">
-                <h4>New Agents</h4>
-                <p>Recently registered agents who may need onboarding.</p>
-              </div>
-
-              <div class="planned-card">
-                <h4>Customer Updates</h4>
-                <p>Customers who have agreed to receive relevant updates.</p>
-              </div>
+              <div class="planned-card"><h4>Active Agents</h4><p>Agents currently authorised to use their accounts.</p></div>
+              <div class="planned-card"><h4>New Agents</h4><p>Recently registered agents who may need onboarding.</p></div>
+              <div class="planned-card"><h4>Customer Updates</h4><p>Customers who have agreed to receive relevant updates.</p></div>
             </div>
           </div>
         </section>
 
-        <!-- NOTIFICATIONS -->
+        <!-- NOTIFICATION CENTRE -->
         <section id="notificationCenter" class="page-section">
           <h2 class="section-title">Notification Centre</h2>
-          <p class="section-description">
-            A central place for owner alerts and important system events.
-          </p>
-
-          <div class="info-box">
-            This is the notification workspace. Live unread counts,
-            persistent alerts and per-section notification badges require
-            event tracking and backend integration.
-          </div>
-
+          <p class="section-description">Central workspace for important business alerts.</p>
+          <div class="info-box">Persistent alerts and live unread counts require additional backend event tracking.</div>
           <div class="card">
-            <div class="card-header">
-              <div>
-                <h3>Notification Categories</h3>
-                <p>Events to monitor as the system is extended.</p>
-              </div>
-            </div>
-
             <div class="notice-list">
-              <div class="notice-item">
-                <span class="notice-icon">🛒</span>
-                <div>
-                  <strong>New Orders</strong>
-                  <p>
-                    Future alert for newly created orders and important
-                    changes in payment status.
-                  </p>
-                </div>
-              </div>
-
-              <div class="notice-item">
-                <span class="notice-icon">⚠️</span>
-                <div>
-                  <strong>Delivery Failures</strong>
-                  <p>
-                    Future alert for failed deliveries that require owner review.
-                  </p>
-                </div>
-              </div>
-
-              <div class="notice-item">
-                <span class="notice-icon">💸</span>
-                <div>
-                  <strong>Withdrawal Requests</strong>
-                  <p>
-                    Future alert when an agent submits a withdrawal request.
-                  </p>
-                </div>
-              </div>
-
-              <div class="notice-item">
-                <span class="notice-icon">🔑</span>
-                <div>
-                  <strong>Password Reset Requests</strong>
-                  <p>
-                    Review current requests through the existing password
-                    reset management page.
-                  </p>
-                  <button class="btn btn-light btn-small"
-                          style="margin-top:10px;"
-                          data-goto="passwordResetManagement">
-                    Open Requests
-                  </button>
-                </div>
-              </div>
+              <div class="notice-item"><span class="notice-icon">🛒</span><div><strong>New Orders</strong><p>Future alert for newly created orders and payment changes.</p></div></div>
+              <div class="notice-item"><span class="notice-icon">⚠️</span><div><strong>Delivery Failures</strong><p>Future alert for failed deliveries that need review.</p></div></div>
+              <div class="notice-item"><span class="notice-icon">💸</span><div><strong>Withdrawal Requests</strong><p>Future alert when an agent submits a withdrawal request.</p></div></div>
+              <div class="notice-item"><span class="notice-icon">🔑</span><div><strong>Password Reset Requests</strong><p>Use the existing password reset management page.</p><button type="button" class="btn btn-light btn-small" style="margin-top:10px;" data-goto="passwordResetManagement">Open Requests</button></div></div>
             </div>
           </div>
         </section>
 
-        <!-- EMAIL -->
+        <!-- EMAIL NOTIFICATIONS -->
         <section id="emailNotifications" class="page-section">
           <h2 class="section-title">Email Notifications</h2>
-          <p class="section-description">
-            Configure the intended owner-alert workflow.
-          </p>
-
-          <div class="warning-box">
-            Your existing server does not automatically gain an email-sending
-            service just because this page is added. An email provider,
-            server-side credentials and notification routes must be configured
-            before alerts can actually be delivered.
-          </div>
-
+          <p class="section-description">Owner-alert workflow planning.</p>
+          <div class="warning-box">Adding this page does not create an email service. A provider, server-side credentials and notification routes must be configured before emails can be delivered.</div>
           <div class="card">
-            <div class="card-header">
-              <div>
-                <h3>Owner Notification Plan</h3>
-                <p>Intended recipient for business alerts.</p>
-              </div>
-            </div>
-
-            <div class="metric-row">
-              <span>Owner email</span>
-              <strong>ezekielmensahannan42@gmail.com</strong>
-            </div>
-
-            <div class="metric-row">
-              <span>Delivery status</span>
-              <strong>
-                <span class="badge warning">Not connected here</span>
-              </strong>
-            </div>
-
-            <div class="planned-card" style="margin-top:15px;">
-              <h4>Recommended email events</h4>
-              <p>
-                Failed data deliveries, payment discrepancies, withdrawal
-                requests, suspicious owner activity and daily business summaries.
-              </p>
-            </div>
+            <div class="metric-row"><span>Intended owner email</span><strong>ezekielmensahannan42@gmail.com</strong></div>
+            <div class="metric-row"><span>Email alert integration</span><strong><span class="badge warning">Not connected</span></strong></div>
+            <div class="planned-card"><h4>Recommended email events</h4><p>Failed deliveries, payment discrepancies, withdrawal requests, suspicious owner activity and daily business summaries.</p></div>
           </div>
         </section>
 
-        <!-- PASSWORD RESET -->
+        <!-- PASSWORD RESET: exact IDs expected by owner.js -->
         <section id="passwordResetManagement" class="page-section">
           <h2 class="section-title">Password Reset Requests</h2>
-          <p class="section-description">
-            Manage agent password reset requests using the existing owner API.
-          </p>
+          <p class="section-description">Manage agent password reset requests using the existing owner API.</p>
 
           <div class="card">
             <div class="card-header">
-              <div>
-                <h3>Reset Requests</h3>
-                <p>Existing request-management table ID preserved.</p>
-              </div>
+              <div><h3>Reset Requests</h3><p>Existing request-management integration.</p></div>
+              <button type="button" class="btn btn-light btn-small" id="refreshPasswordResets">Refresh Requests</button>
             </div>
 
             <div class="table-wrap">
               <table>
-                <thead>
-                  <tr>
-                    <th>Request</th>
-                    <th>Agent</th>
-                    <th>Phone</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="passwordResetRequestsBody">
-                  <tr>
-                    <td colspan="6" class="empty-state">
-                      Password reset requests will appear here.
-                    </td>
-                  </tr>
-                </tbody>
+                <thead><tr><th>Request</th><th>Agent</th><th>Phone</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                <tbody id="passwordResetRequestsBody"><tr><td colspan="6" class="empty-state">Password reset requests will appear here.</td></tr></tbody>
               </table>
+            </div>
+
+            <p id="passwordResetMessage" role="status" style="line-height:1.7;margin-top:12px;"></p>
+
+            <div id="passwordResetCodePanel" class="hidden">
+              <div class="success-box">
+                <strong>Generated reset code</strong>
+                <p id="passwordResetGeneratedCode" style="font-size:20px;font-weight:800;word-break:break-all;"></p>
+                <p>Expires: <span id="passwordResetCodeExpiry"></span></p>
+                <button type="button" class="btn btn-light btn-small" id="copyPasswordResetCode">Copy Code</button>
+                <button type="button" class="btn btn-light btn-small" id="closePasswordResetCode">Close</button>
+              </div>
             </div>
           </div>
         </section>
@@ -2401,162 +1120,37 @@
         <!-- PRICING -->
         <section id="pricingManagement" class="page-section">
           <h2 class="section-title">Pricing Management</h2>
-          <p class="section-description">
-            Manage pricing carefully without changing the existing pricing API.
-          </p>
-
-          <div class="warning-box">
-            This page does not yet save new prices. Public prices and agent
-            prices may be enforced by server.js. Changing only the HTML will
-            not change the price customers are charged.
-          </div>
-
+          <p class="section-description">Pricing administration planning.</p>
+          <div class="warning-box">This page does not save prices. Server-side pricing in server.js determines the prices charged to customers.</div>
           <div class="three-column">
-            <div class="card">
-              <div class="stat-top">
-                <span class="stat-icon icon-orange">🟡</span>
-              </div>
-              <h3>MTN</h3>
-              <p style="color:var(--muted);line-height:1.7;">
-                Review MTN public and agent prices.
-              </p>
-              <span class="badge warning">Backend pricing applies</span>
-            </div>
-
-            <div class="card">
-              <div class="stat-top">
-                <span class="stat-icon icon-red">🔴</span>
-              </div>
-              <h3>Telecel</h3>
-              <p style="color:var(--muted);line-height:1.7;">
-                Review Telecel public and agent prices.
-              </p>
-              <span class="badge warning">Backend pricing applies</span>
-            </div>
-
-            <div class="card">
-              <div class="stat-top">
-                <span class="stat-icon icon-blue">🔵</span>
-              </div>
-              <h3>AirtelTigo</h3>
-              <p style="color:var(--muted);line-height:1.7;">
-                Review AirtelTigo public and agent prices.
-              </p>
-              <span class="badge warning">Backend pricing applies</span>
-            </div>
-          </div>
-
-          <div class="planned-card">
-            <h4>Future pricing editor</h4>
-            <p>
-              A safe editor should validate all bundle sizes, enforce
-              minimum prices, distinguish public from agent prices, record
-              changes and update the server-side pricing source atomically.
-            </p>
+            <div class="card"><h3>🟡 MTN</h3><p style="color:var(--muted);line-height:1.7;">Review MTN public and agent prices.</p><span class="badge warning">Backend pricing applies</span></div>
+            <div class="card"><h3>🔴 Telecel</h3><p style="color:var(--muted);line-height:1.7;">Review Telecel public and agent prices.</p><span class="badge warning">Backend pricing applies</span></div>
+            <div class="card"><h3>🔵 AirtelTigo</h3><p style="color:var(--muted);line-height:1.7;">Review AirtelTigo public and agent prices.</p><span class="badge warning">Backend pricing applies</span></div>
           </div>
         </section>
 
         <!-- REPORTS -->
         <section id="reportsManagement" class="page-section">
           <h2 class="section-title">Reports & Exports</h2>
-          <p class="section-description">
-            Prepare for structured reports and spreadsheet exports.
-          </p>
-
-          <div class="info-box">
-            A report export should use actual server records and preserve
-            payment and delivery statuses. The buttons below only export
-            the locally available contact list; they do not export the
-            full orders database.
-          </div>
-
+          <p class="section-description">Access reporting workspaces.</p>
+          <div class="info-box">Full orders and agent exports require dedicated backend export functions.</div>
           <div class="three-column">
-            <div class="card">
-              <h3>📑 Orders Report</h3>
-              <p style="color:var(--muted);line-height:1.7;">
-                A complete orders CSV requires a dedicated export function
-                in owner.js and a server endpoint.
-              </p>
-              <button class="btn btn-light" data-goto="orderManagement">
-                View Orders
-              </button>
-            </div>
-
-            <div class="card">
-              <h3>👥 Agent Report</h3>
-              <p style="color:var(--muted);line-height:1.7;">
-                Agent performance exports need the full agent and ranking data.
-              </p>
-              <button class="btn btn-light" data-goto="agentManagement">
-                View Agents
-              </button>
-            </div>
-
-            <div class="card">
-              <h3>📱 Contact Export</h3>
-              <p style="color:var(--muted);line-height:1.7;">
-                Prepare and export contact lists in the isolated workspace.
-              </p>
-              <button class="btn btn-primary" data-goto="agentNumbers">
-                Open Contact Workspace
-              </button>
-            </div>
+            <div class="card"><h3>📑 Orders Report</h3><p style="line-height:1.7;color:var(--muted);">Open the order table to review records.</p><button type="button" class="btn btn-light" data-goto="orderManagement">View Orders</button></div>
+            <div class="card"><h3>👥 Agent Report</h3><p style="line-height:1.7;color:var(--muted);">Review registered agents and account status.</p><button type="button" class="btn btn-light" data-goto="agentManagement">View Agents</button></div>
+            <div class="card"><h3>📱 Contact Export</h3><p style="line-height:1.7;color:var(--muted);">Export a locally prepared contact list.</p><button type="button" class="btn btn-primary" data-goto="agentNumbers">Open Contacts</button></div>
           </div>
         </section>
 
         <!-- SUPPORT -->
         <section id="supportManagement" class="page-section">
           <h2 class="section-title">Support & Complaints</h2>
-          <p class="section-description">
-            A central workspace for customer issues and order investigations.
-          </p>
-
-          <div class="warning-box">
-            This section is currently a navigation placeholder. It does not
-            create support tickets or save complaints to the database.
-          </div>
-
+          <p class="section-description">Workspace for investigating customer issues.</p>
+          <div class="warning-box">This is a placeholder. It does not yet create or store support tickets.</div>
           <div class="card">
-            <div class="card-header">
-              <div>
-                <h3>Support Workflow</h3>
-                <p>Recommended process for resolving customer problems.</p>
-              </div>
-            </div>
-
             <div class="notice-list">
-              <div class="notice-item">
-                <span class="notice-icon">1️⃣</span>
-                <div>
-                  <strong>Find the order</strong>
-                  <p>Search by payment reference or customer phone number.</p>
-                  <button class="btn btn-light btn-small"
-                          style="margin-top:10px;"
-                          data-goto="orderManagement">
-                    Find Order
-                  </button>
-                </div>
-              </div>
-
-              <div class="notice-item">
-                <span class="notice-icon">2️⃣</span>
-                <div>
-                  <strong>Verify payment and delivery status</strong>
-                  <p>
-                    Check the original transaction before deciding on a remedy.
-                  </p>
-                </div>
-              </div>
-
-              <div class="notice-item">
-                <span class="notice-icon">3️⃣</span>
-                <div>
-                  <strong>Record the resolution</strong>
-                  <p>
-                    A persistent complaint log requires a new backend feature.
-                  </p>
-                </div>
-              </div>
+              <div class="notice-item"><span class="notice-icon">1️⃣</span><div><strong>Find the order</strong><p>Search by payment reference or customer phone number.</p><button type="button" class="btn btn-light btn-small" style="margin-top:10px;" data-goto="orderManagement">Find Order</button></div></div>
+              <div class="notice-item"><span class="notice-icon">2️⃣</span><div><strong>Verify payment and delivery</strong><p>Check the original transaction before deciding on a remedy.</p></div></div>
+              <div class="notice-item"><span class="notice-icon">3️⃣</span><div><strong>Record the resolution</strong><p>A persistent complaint log requires a backend feature.</p></div></div>
             </div>
           </div>
         </section>
@@ -2564,867 +1158,541 @@
         <!-- HEALTH -->
         <section id="websiteHealth" class="page-section">
           <h2 class="section-title">Website & API Health</h2>
-          <p class="section-description">
-            Check the public website and the existing backend health endpoint.
-          </p>
-
+          <p class="section-description">Check the public website and backend health endpoint.</p>
           <div class="two-column">
             <div class="card">
-              <div class="card-header">
-                <div>
-                  <h3>Public Website</h3>
-                  <p>kielmen.com</p>
-                </div>
-              </div>
-
-              <div class="metric-row">
-                <span>Website</span>
-                <strong>
-                  <a href="https://kielmen.com/"
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     style="color:var(--primary);">
-                    Open Website ↗
-                  </a>
-                </strong>
-              </div>
+              <h3>Public Website</h3>
+              <div class="metric-row"><span>Website</span><strong><a href="https://kielmen.com/" target="_blank" rel="noopener noreferrer" style="color:var(--primary);">Open Website ↗</a></strong></div>
             </div>
-
             <div class="card">
-              <div class="card-header">
-                <div>
-                  <h3>Backend API</h3>
-                  <p>Render service health check</p>
-                </div>
-              </div>
-
-              <div class="metric-row">
-                <span>Health endpoint</span>
-                <strong>
-                  <a href="https://kielmen-dataplug-payment-api.onrender.com/health"
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     style="color:var(--primary);">
-                    Open Health Check ↗
-                  </a>
-                </strong>
-              </div>
-
-              <div class="metric-row">
-                <span>Last browser check</span>
-                <strong id="apiHealthTime">Not checked</strong>
-              </div>
-
-              <div class="metric-row">
-                <span>Health result</span>
-                <strong id="apiHealthStatus">
-                  <span class="badge">Not checked</span>
-                </strong>
-              </div>
-
-              <button class="btn btn-primary"
-                      style="margin-top:15px;"
-                      id="checkApiHealth">
-                Check API Health
-              </button>
+              <h3>Backend API</h3>
+              <div class="metric-row"><span>Health endpoint</span><strong><a href="https://kielmen-dataplug-payment-api.onrender.com/health" target="_blank" rel="noopener noreferrer" style="color:var(--primary);">Open Health Check ↗</a></strong></div>
+              <div class="metric-row"><span>Last check</span><strong id="apiHealthTime">Not checked</strong></div>
+              <div class="metric-row"><span>Result</span><strong id="apiHealthStatus"><span class="badge">Not checked</span></strong></div>
+              <button type="button" class="btn btn-primary" style="margin-top:15px;" id="checkApiHealth">Check API Health</button>
             </div>
           </div>
-
-          <div class="warning-box">
-            A successful health check only confirms that the health endpoint
-            responded. It does not prove that Paystack, PostgreSQL, DataMart
-            or SMS services are all functioning correctly.
-          </div>
+          <div class="warning-box">A successful health check does not prove that Paystack, PostgreSQL, DataMart or SMS are all working.</div>
         </section>
 
         <!-- SECURITY -->
         <section id="securityLogs" class="page-section">
           <h2 class="section-title">Security & Activity Logs</h2>
-          <p class="section-description">
-            Security planning for owner actions, agent management and sensitive
-            business operations.
-          </p>
-
-          <div class="warning-box">
-            This page does not yet read server-side activity logs. Do not
-            treat browser messages as an authoritative security audit trail.
-          </div>
-
+          <p class="section-description">Security planning for owner actions and sensitive operations.</p>
+          <div class="warning-box">This page does not yet retrieve authoritative server-side activity logs.</div>
           <div class="three-column">
-            <div class="card">
-              <h3>🛡️ Owner Sessions</h3>
-              <p style="color:var(--muted);line-height:1.7;">
-                Preserve the existing owner authentication mechanism and
-                session expiry behaviour.
-              </p>
-            </div>
-
-            <div class="card">
-              <h3>📝 Audit Trail</h3>
-              <p style="color:var(--muted);line-height:1.7;">
-                Future backend logging for account status changes,
-                withdrawal decisions and delivery retries.
-              </p>
-            </div>
-
-            <div class="card">
-              <h3>🚨 Suspicious Activity</h3>
-              <p style="color:var(--muted);line-height:1.7;">
-                Future monitoring for repeated failed logins and unusual
-                owner actions.
-              </p>
-            </div>
+            <div class="card"><h3>🛡️ Owner Sessions</h3><p style="color:var(--muted);line-height:1.7;">Preserve existing authentication and session expiry behaviour.</p></div>
+            <div class="card"><h3>📝 Audit Trail</h3><p style="color:var(--muted);line-height:1.7;">Future server logging for withdrawal decisions and delivery retries.</p></div>
+            <div class="card"><h3>🚨 Suspicious Activity</h3><p style="color:var(--muted);line-height:1.7;">Future monitoring for repeated failed logins and unusual owner actions.</p></div>
           </div>
         </section>
 
-        <!-- WEBSITE SETTINGS -->
+        <!-- WEBSITE SETTINGS: exact IDs and field types expected by owner.js -->
         <section id="websiteSettings" class="page-section">
           <h2 class="section-title">Website Settings</h2>
-          <p class="section-description">
-            Manage the existing public website configuration.
-          </p>
+          <p class="section-description">Manage the supported public website configuration.</p>
 
-          <div class="info-box">
-            Existing form IDs are retained so the current owner.js can
-            continue to load and save supported settings.
-          </div>
+          <div class="info-box">This form uses the field IDs and data structure expected by the existing owner.js.</div>
 
           <div class="card">
-            <div class="card-header">
-              <div>
-                <h3>Public Website Configuration</h3>
-                <p>Settings supported by the existing backend.</p>
-              </div>
-            </div>
+            <div class="card-header"><div><h3>Public Website Configuration</h3><p>Settings supported by the current backend integration.</p></div></div>
 
             <form id="websiteSettingsForm">
-
               <div class="form-grid">
 
                 <div class="field">
-                  <label for="settingsWhatsAppLink">WhatsApp Link</label>
-                  <input id="settingsWhatsAppLink"
-                         name="whatsappLink"
-                         type="url"
-                         placeholder="https://wa.me/...">
+                  <label for="settingsWhatsappLink">WhatsApp Link</label>
+                  <input id="settingsWhatsappLink" type="url" placeholder="https://wa.me/...">
                 </div>
 
                 <div class="field">
                   <label for="settingsContactNumber">Contact Number</label>
-                  <input id="settingsContactNumber"
-                         name="contactNumber"
-                         type="tel"
-                         placeholder="024XXXXXXX">
+                  <input id="settingsContactNumber" type="tel" placeholder="024XXXXXXX">
                 </div>
 
                 <div class="field field-full">
                   <label for="settingsAnnouncement">Announcement</label>
-                  <textarea id="settingsAnnouncement"
-                            name="announcement"
-                            placeholder="Enter the website announcement"></textarea>
+                  <textarea id="settingsAnnouncement" placeholder="Enter the website announcement"></textarea>
                 </div>
 
-                <div class="field">
-                  <label for="settingsPrimaryColor">Primary Colour</label>
-                  <input id="settingsPrimaryColor"
-                         name="primaryColor"
-                         type="text"
-                         placeholder="#5b4bdb">
-                </div>
-
-                <div class="field">
-                  <label for="settingsSecondaryColor">Secondary Colour</label>
-                  <input id="settingsSecondaryColor"
-                         name="secondaryColor"
-                         type="text"
-                         placeholder="#ffffff">
-                </div>
-
-                <div class="field">
-                  <label for="settingsMtnAvailable">MTN Availability</label>
-                  <select id="settingsMtnAvailable" name="mtnAvailable">
-                    <option value="">Use existing setting</option>
-                    <option value="true">Available</option>
-                    <option value="false">Unavailable</option>
-                  </select>
-                </div>
-
-                <div class="field">
-                  <label for="settingsTelecelAvailable">Telecel Availability</label>
-                  <select id="settingsTelecelAvailable"
-                          name="telecelAvailable">
-                    <option value="">Use existing setting</option>
-                    <option value="true">Available</option>
-                    <option value="false">Unavailable</option>
-                  </select>
-                </div>
-
-                <div class="field">
-                  <label for="settingsAirtelTigoAvailable">
-                    AirtelTigo Availability
+                <div class="field field-full">
+                  <label style="display:flex;align-items:center;gap:9px;">
+                    <input id="settingsAnnouncementEnabled" type="checkbox" style="width:auto;">
+                    Enable announcement
                   </label>
-                  <select id="settingsAirtelTigoAvailable"
-                          name="airtelTigoAvailable">
-                    <option value="">Use existing setting</option>
-                    <option value="true">Available</option>
-                    <option value="false">Unavailable</option>
-                  </select>
                 </div>
 
+                <div class="field">
+                  <label for="settingsPrimaryColour">Primary Colour</label>
+                  <input id="settingsPrimaryColour" type="text" value="#5b4bdb" placeholder="#5b4bdb">
+                </div>
+
+                <div class="field">
+                  <label for="settingsBackgroundColour">Background Colour</label>
+                  <input id="settingsBackgroundColour" type="text" value="#ffffff" placeholder="#ffffff">
+                </div>
+
+                <div class="field">
+                  <label for="settingsAccentColour">Accent Colour</label>
+                  <input id="settingsAccentColour" type="text" value="#eeebff" placeholder="#eeebff">
+                </div>
+
+                <div class="field">
+                  <label for="settingsTextColour">Text Colour</label>
+                  <input id="settingsTextColour" type="text" value="#20243a" placeholder="#20243a">
+                </div>
+
+                <div class="field field-full">
+                  <label>Network Availability</label>
+
+                  <label style="display:flex;align-items:center;gap:9px;margin:12px 0;">
+                    <input id="settingsMtnEnabled" type="checkbox" checked style="width:auto;">
+                    MTN available
+                  </label>
+
+                  <label style="display:flex;align-items:center;gap:9px;margin:12px 0;">
+                    <input id="settingsTelecelEnabled" type="checkbox" checked style="width:auto;">
+                    Telecel available
+                  </label>
+
+                  <label style="display:flex;align-items:center;gap:9px;margin:12px 0;">
+                    <input id="settingsAirtelTigoEnabled" type="checkbox" checked style="width:auto;">
+                    AirtelTigo available
+                  </label>
+                </div>
               </div>
 
               <div class="form-actions">
-                <button type="submit" class="btn btn-primary">
-                  💾 Save Website Settings
-                </button>
+                <button type="submit" id="saveWebsiteSettings" class="btn btn-primary">💾 Save Website Settings</button>
               </div>
 
-              <p id="websiteSettingsStatus"
-                 role="status"
-                 style="line-height:1.7;margin-top:12px;"></p>
-
+              <p id="websiteSettingsMessage" role="status" aria-live="polite" style="line-height:1.7;margin-top:12px;"></p>
             </form>
           </div>
         </section>
 
         <div class="footer-note">
           Kielmen 636 Dataplug Owner Dashboard<br>
-          Existing backend integrations remain authoritative for payments,
-          orders, agents and withdrawals.
+          Payments, orders, agents and withdrawals remain controlled by the backend.
         </div>
-
       </div>
     </main>
   </div>
 
-  <div id="ownerToast" class="toast hidden" role="status"></div>
+  <div id="ownerToast" class="toast hidden" role="status" aria-live="polite"></div>
 
-  <!-- Keep the existing JavaScript filename and version unchanged. -->
+  <!-- Keep your existing owner.js. Do not add a second login handler. -->
   <script src="owner.js?v=7"></script>
 
-  <!-- Navigation and isolated contact workspace. -->
+  <!-- Additional navigation and local contact workspace only. -->
   <script>
-    (() => {
-      "use strict";
+  (() => {
+    "use strict";
 
-      const pageTitles = {
-        dashboardHome: [
-          "Dashboard Overview",
-          "Your business at a glance."
-        ],
-        advancedStatistics: [
-          "Statistics & Analytics",
-          "Monitor business performance."
-        ],
-        orderManagement: [
-          "Orders & Delivery",
-          "Review orders and delivery status."
-        ],
-        paymentManagement: [
-          "Payment Management",
-          "Review payment-related operations."
-        ],
-        revenueManagement: [
-          "Revenue & Profit",
-          "Understand your sales and margin."
-        ],
-        agentManagement: [
-          "Agent Management",
-          "Manage agent accounts."
-        ],
-        agentNumbers: [
-          "Agent Numbers Isolated",
-          "Prepare and organise agent contacts."
-        ],
-        agentRankings: [
-          "Agent Performance",
-          "Review the agent leaderboard."
-        ],
-        withdrawalManagement: [
-          "Agent Withdrawals",
-          "Review withdrawal requests."
-        ],
-        customerManagement: [
-          "Customer Management",
-          "Find orders and plan customer support."
-        ],
-        smsManagement: [
-          "Bulk SMS",
-          "Send messages through the existing SMS integration."
-        ],
-        contactGroups: [
-          "Contact Groups",
-          "Organise contacts for communication."
-        ],
-        notificationCenter: [
-          "Notification Centre",
-          "Centralise important business alerts."
-        ],
-        emailNotifications: [
-          "Email Notifications",
-          "Configure the owner-alert workflow."
-        ],
-        passwordResetManagement: [
-          "Password Reset Requests",
-          "Review agent reset requests."
-        ],
-        pricingManagement: [
-          "Pricing Management",
-          "Plan pricing administration."
-        ],
-        reportsManagement: [
-          "Reports & Exports",
-          "Prepare business reporting."
-        ],
-        supportManagement: [
-          "Support & Complaints",
-          "Organise customer issue resolution."
-        ],
-        websiteHealth: [
-          "Website & API Health",
-          "Check your public website and API."
-        ],
-        securityLogs: [
-          "Security & Activity Logs",
-          "Owner access and audit planning."
-        ],
-        websiteSettings: [
-          "Website Settings",
-          "Manage existing public website settings."
-        ]
-      };
+    const titles = {
+      dashboardHome: ["Dashboard Overview", "Your business at a glance."],
+      advancedStatistics: ["Statistics & Analytics", "Monitor business performance."],
+      orderManagement: ["Orders & Delivery", "Review orders and delivery status."],
+      paymentManagement: ["Payment Management", "Review payment-related operations."],
+      revenueManagement: ["Revenue & Profit", "Understand your sales and margin."],
+      agentManagement: ["Agent Management", "Manage agent accounts."],
+      agentNumbers: ["Agent Numbers Isolated", "Prepare and organise agent contacts."],
+      agentRankings: ["Agent Performance", "Review the agent leaderboard."],
+      withdrawalManagement: ["Agent Withdrawals", "Review withdrawal requests."],
+      customerManagement: ["Customer Management", "Find orders and investigate issues."],
+      smsManagement: ["Bulk SMS", "Existing SMS integration."],
+      contactGroups: ["Contact Groups", "Organise contact lists."],
+      notificationCenter: ["Notification Centre", "Business alert workspace."],
+      emailNotifications: ["Email Notifications", "Owner alert workflow."],
+      passwordResetManagement: ["Password Reset Requests", "Review agent reset requests."],
+      pricingManagement: ["Pricing Management", "Pricing administration planning."],
+      reportsManagement: ["Reports & Exports", "Business reporting workspace."],
+      supportManagement: ["Support & Complaints", "Customer issue resolution."],
+      websiteHealth: ["Website & API Health", "Check the website and backend."],
+      securityLogs: ["Security & Activity Logs", "Owner access and audit planning."],
+      websiteSettings: ["Website Settings", "Manage supported website settings."]
+    };
 
-      const navLinks = [...document.querySelectorAll(".nav-link")];
-      const sections = [...document.querySelectorAll(".page-section")];
+    const sections = [...document.querySelectorAll(".page-section")];
+    const navLinks = [...document.querySelectorAll(".owner-nav .nav-link")];
 
-      function showToast(message) {
-        const toast = document.getElementById("ownerToast");
-        if (!toast) return;
+    function toast(message) {
+      const element = document.getElementById("ownerToast");
+      if (!element) return;
 
-        toast.textContent = message;
-        toast.classList.remove("hidden");
+      element.textContent = message;
+      element.classList.remove("hidden");
 
-        clearTimeout(showToast.timer);
-        showToast.timer = setTimeout(() => {
-          toast.classList.add("hidden");
-        }, 3500);
-      }
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => element.classList.add("hidden"), 3500);
+    }
 
-      function showPage(pageId, updateHash = true) {
-        const section = document.getElementById(pageId);
+    function closeMobileMenu() {
+      document.getElementById("ownerSidebar")?.classList.remove("open");
+      document.getElementById("mobileOverlay")?.classList.remove("show");
+    }
 
-        if (!section || !section.classList.contains("page-section")) {
-          return;
-        }
+    function showPage(id, updateHash = true) {
+      if (!titles[id]) return;
 
-        sections.forEach(item => item.classList.remove("active"));
-        section.classList.add("active");
+      const section = document.getElementById(id);
+      if (!section) return;
 
-        navLinks.forEach(link => {
-          const isActive = link.dataset.page === pageId;
-          link.classList.toggle("active", isActive);
-
-          if (isActive) {
-            link.setAttribute("aria-current", "page");
-          } else {
-            link.removeAttribute("aria-current");
-          }
-        });
-
-        const title = pageTitles[pageId];
-
-        if (title) {
-          document.getElementById("currentPageTitle").textContent = title[0];
-          document.getElementById("currentPageSubtitle").textContent = title[1];
-        }
-
-        if (updateHash) {
-          history.replaceState(null, "", "#" + pageId);
-        }
-
-        closeMobileMenu();
-
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-
-      function closeMobileMenu() {
-        document.getElementById("ownerSidebar")?.classList.remove("open");
-        document.getElementById("mobileOverlay")?.classList.remove("show");
-      }
+      sections.forEach(item => item.classList.remove("active"));
+      section.classList.add("active");
 
       navLinks.forEach(link => {
-        link.addEventListener("click", () => {
-          showPage(link.dataset.page);
-        });
+        const active = link.dataset.page === id;
+        link.classList.toggle("active", active);
+
+        if (active) link.setAttribute("aria-current", "page");
+        else link.removeAttribute("aria-current");
       });
 
-      document.querySelectorAll("[data-goto]").forEach(button => {
-        button.addEventListener("click", () => {
-          showPage(button.dataset.goto);
-        });
-      });
+      document.getElementById("currentPageTitle").textContent = titles[id][0];
+      document.getElementById("currentPageSubtitle").textContent = titles[id][1];
 
-      document.getElementById("mobileMenuButton")
-        ?.addEventListener("click", () => {
-          document.getElementById("ownerSidebar")?.classList.toggle("open");
-          document.getElementById("mobileOverlay")?.classList.toggle("show");
-        });
+      if (updateHash) history.replaceState(null, "", "#" + id);
 
-      document.getElementById("mobileOverlay")
-        ?.addEventListener("click", closeMobileMenu);
+      closeMobileMenu();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
 
-      const initialPage = location.hash.slice(1);
+    navLinks.forEach(link => {
+      link.addEventListener("click", () => showPage(link.dataset.page));
+    });
 
-      if (initialPage && pageTitles[initialPage]) {
-        showPage(initialPage, false);
-      }
+    document.querySelectorAll("[data-goto]").forEach(button => {
+      button.addEventListener("click", () => showPage(button.dataset.goto));
+    });
 
-      // Copy existing dashboard metrics into the new overview sections.
-      // This does not make additional API calls.
-      function copyMetric(sourceId, destinationId) {
-        const source = document.getElementById(sourceId);
-        const destination = document.getElementById(destinationId);
+    document.getElementById("mobileMenuButton")?.addEventListener("click", () => {
+      document.getElementById("ownerSidebar")?.classList.toggle("open");
+      document.getElementById("mobileOverlay")?.classList.toggle("show");
+    });
 
-        if (source && destination) {
-          destination.textContent = source.textContent;
-        }
-      }
+    document.getElementById("mobileOverlay")?.addEventListener("click", closeMobileMenu);
 
-      function syncVisibleMetrics() {
-        const pairs = [
-          ["totalSales", "statsSales"],
-          ["totalOrders", "statsOrders"],
-          ["successfulDeliveries", "statsDelivered"],
-          ["totalProfit", "statsMargin"],
+    const initialPage = location.hash.slice(1);
+    if (titles[initialPage]) showPage(initialPage, false);
 
-          ["totalSales", "revenueTotalSales"],
-          ["totalProfit", "revenueAgentMargin"],
-          ["todaySales", "revenueTodaySales"],
-          ["todayAgentMargin", "revenueTodayMargin"],
+    // Sync extra metric cards with existing API-populated metrics.
+    function copyMetric(sourceId, targetId) {
+      const source = document.getElementById(sourceId);
+      const target = document.getElementById(targetId);
+      if (source && target) target.textContent = source.textContent;
+    }
 
-          ["registeredAgents", "agentsTotalCard"],
-          ["activeAgents", "agentsActiveCard"],
-          ["pendingAgents", "agentsPendingCard"],
-          ["suspendedAgents", "agentsSuspendedCard"]
-        ];
+    function syncMetrics() {
+      [
+        ["totalSales", "statsSales"],
+        ["totalOrders", "statsOrders"],
+        ["successfulDeliveries", "statsDelivered"],
+        ["totalProfit", "statsMargin"],
+        ["totalSales", "revenueTotalSales"],
+        ["totalProfit", "revenueAgentMargin"],
+        ["todaySales", "revenueTodaySales"],
+        ["todayAgentMargin", "revenueTodayMargin"],
+        ["registeredAgents", "agentsTotalCard"],
+        ["activeAgents", "agentsActiveCard"],
+        ["pendingAgents", "agentsPendingCard"],
+        ["suspendedAgents", "agentsSuspendedCard"]
+      ].forEach(pair => copyMetric(pair[0], pair[1]));
+    }
 
-        pairs.forEach(([source, destination]) => {
-          copyMetric(source, destination);
-        });
-
-        const mainRanking = document.getElementById("agentRankingsBody");
-        const otherRanking = document.getElementById("rankingsPageBody");
-
-        if (
-          mainRanking &&
-          otherRanking &&
-          mainRanking.children.length &&
-          otherRanking.dataset.copied !== "true"
-        ) {
-          otherRanking.innerHTML = mainRanking.innerHTML;
-          otherRanking.dataset.copied = "true";
-        }
-      }
-
-      // The existing owner.js updates these elements. Observe them to keep
-      // the additional metric cards in sync without editing owner.js.
-      const metricIds = [
-        "totalSales",
-        "totalProfit",
-        "totalOrders",
-        "successfulDeliveries",
-        "todaySales",
-        "todayAgentMargin",
-        "registeredAgents",
-        "activeAgents",
-        "pendingAgents",
-        "suspendedAgents"
-      ];
-
-      metricIds.forEach(id => {
-        const element = document.getElementById(id);
-        if (!element) return;
-
-        new MutationObserver(syncVisibleMetrics).observe(element, {
+    [
+      "totalSales", "totalProfit", "totalOrders", "successfulDeliveries",
+      "todaySales", "todayAgentMargin", "registeredAgents", "activeAgents",
+      "pendingAgents", "suspendedAgents"
+    ].forEach(id => {
+      const element = document.getElementById(id);
+      if (element) {
+        new MutationObserver(syncMetrics).observe(element, {
           childList: true,
           subtree: true,
           characterData: true
         });
+      }
+    });
+
+    syncMetrics();
+
+    // Customer lookup reuses the existing order-search controls.
+    document.getElementById("customerSearchButton")?.addEventListener("click", () => {
+      const query = document.getElementById("customerOrderSearch").value.trim();
+      if (!query) {
+        toast("Enter a phone number or order reference.");
+        return;
+      }
+
+      const searchInput = document.getElementById("orderSearch");
+      if (searchInput) searchInput.value = query;
+
+      showPage("orderManagement");
+      document.getElementById("searchOrders")?.click();
+    });
+
+    // API health check. This is separate from owner authentication.
+    document.getElementById("checkApiHealth")?.addEventListener("click", async () => {
+      const status = document.getElementById("apiHealthStatus");
+      const time = document.getElementById("apiHealthTime");
+      const button = document.getElementById("checkApiHealth");
+
+      button.disabled = true;
+      button.textContent = "Checking...";
+      status.textContent = "Checking...";
+      time.textContent = new Date().toLocaleString();
+
+      try {
+        const response = await fetch(
+          "https://kielmen-dataplug-payment-api.onrender.com/health",
+          { method: "GET", cache: "no-store" }
+        );
+
+        if (!response.ok) throw new Error("HTTP " + response.status);
+
+        status.innerHTML = '<span class="badge success">Responding</span>';
+        toast("The backend health endpoint responded.");
+      } catch (error) {
+        status.innerHTML = '<span class="badge danger">Unavailable</span>';
+        toast("Health check failed. Check the Render service.");
+      } finally {
+        button.disabled = false;
+        button.textContent = "Check API Health";
+      }
+    });
+
+    // Local contact-list preparation. This never sends an SMS.
+    let preparedNumbers = [];
+
+    function normalizeGhanaNumber(value) {
+      let digits = String(value || "").replace(/\D/g, "");
+      if (digits.startsWith("233") && digits.length === 12) {
+        digits = "0" + digits.slice(3);
+      }
+      return digits;
+    }
+
+    function validGhanaNumber(number) {
+      return /^0[235]\d{8}$/.test(number);
+    }
+
+    function extractNumbers(text) {
+      return String(text || "")
+        .split(/[\r\n,;\t]+/)
+        .map(value => value.trim())
+        .filter(Boolean);
+    }
+
+    function readTextFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(new Error("Could not read file"));
+        reader.readAsText(file);
+      });
+    }
+
+    function renderNumbers() {
+      const tbody = document.getElementById("agentNumbersTableBody");
+      tbody.replaceChildren();
+
+      if (!preparedNumbers.length) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-state">No prepared contact numbers.</td></tr>';
+        return;
+      }
+
+      const fragment = document.createDocumentFragment();
+
+      preparedNumbers.forEach((number, index) => {
+        const row = document.createElement("tr");
+
+        [String(index + 1), number, validGhanaNumber(number) ? "Valid format" : "Invalid format"]
+          .forEach(value => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            row.appendChild(cell);
+          });
+
+        fragment.appendChild(row);
       });
 
-      syncVisibleMetrics();
+      tbody.appendChild(fragment);
+    }
 
-      // Preserve the existing refresh button if owner.js already handles it.
-      // The fallback only reloads the page if no existing handler is attached.
-      document.getElementById("refreshDashboard")
-        ?.addEventListener("click", () => {
-          showToast("Refreshing the dashboard...");
-        });
+    document.getElementById("prepareAgentNumbers")?.addEventListener("click", async () => {
+      const fileInput = document.getElementById("agentNumbersFile");
+      let text = document.getElementById("agentNumbersText").value || "";
 
-      // Customer search reuses the existing order search controls.
-      document.getElementById("customerSearchButton")
-        ?.addEventListener("click", () => {
-          const query =
-            document.getElementById("customerOrderSearch")?.value.trim() || "";
-
-          if (!query) {
-            showToast("Enter a phone number or order reference.");
-            return;
-          }
-
-          const searchInput = document.getElementById("orderSearch");
-
-          if (searchInput) {
-            searchInput.value = query;
-          }
-
-          showPage("orderManagement");
-
-          document.getElementById("searchOrders")?.click();
-        });
-
-      // Health check for the existing public health endpoint.
-      document.getElementById("checkApiHealth")
-        ?.addEventListener("click", async () => {
-          const status = document.getElementById("apiHealthStatus");
-          const time = document.getElementById("apiHealthTime");
-          const button = document.getElementById("checkApiHealth");
-
-          button.disabled = true;
-          button.textContent = "Checking...";
-
-          status.textContent = "Checking...";
-          time.textContent = new Date().toLocaleString();
-
-          try {
-            const response = await fetch(
-              "https://kielmen-dataplug-payment-api.onrender.com/health",
-              { method: "GET", cache: "no-store" }
-            );
-
-            if (!response.ok) {
-              throw new Error("HTTP " + response.status);
-            }
-
-            status.innerHTML = '<span class="badge success">Responding</span>';
-            showToast("The backend health endpoint responded successfully.");
-          } catch (error) {
-            status.innerHTML = '<span class="badge danger">Unavailable</span>';
-            showToast("Health check failed. Check the Render service.");
-          } finally {
-            button.disabled = false;
-            button.textContent = "Check API Health";
-          }
-        });
-
-      // Agent number preparation is deliberately local to this browser.
-      // It does not alter the backend or automatically send SMS.
-      let preparedNumbers = [];
-
-      function normaliseGhanaNumber(raw) {
-        let digits = String(raw || "").replace(/\D/g, "");
-
-        if (digits.startsWith("233") && digits.length === 12) {
-          digits = "0" + digits.slice(3);
-        }
-
-        return digits;
-      }
-
-      function isValidGhanaNumber(number) {
-        return /^0\d{9}$/.test(number) &&
-          /^0(2[0-9]|5[0-9])\d{7}$/.test(number);
-      }
-
-      function parseContactText(text) {
-        return String(text || "")
-          .split(/[\r\n,;\t]+/)
-          .map(value => value.trim())
-          .filter(Boolean);
-      }
-
-      function readContactFile(file) {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-
-          reader.onload = () => resolve(String(reader.result || ""));
-          reader.onerror = () => reject(new Error("Could not read file"));
-
-          reader.readAsText(file);
-        });
-      }
-
-      function renderPreparedNumbers() {
-        const tbody = document.getElementById("agentNumbersTableBody");
-        tbody.innerHTML = "";
-
-        if (!preparedNumbers.length) {
-          tbody.innerHTML = `
-            <tr>
-              <td colspan="3" class="empty-state">
-                No prepared contact numbers.
-              </td>
-            </tr>`;
+      if (fileInput.files && fileInput.files[0]) {
+        if (fileInput.files[0].size > 2 * 1024 * 1024) {
+          toast("Please use a contact file smaller than 2 MB.");
           return;
         }
-
-        const fragment = document.createDocumentFragment();
-
-        preparedNumbers.forEach((number, index) => {
-          const row = document.createElement("tr");
-
-          const indexCell = document.createElement("td");
-          indexCell.textContent = String(index + 1);
-
-          const numberCell = document.createElement("td");
-          numberCell.textContent = number;
-
-          const statusCell = document.createElement("td");
-          statusCell.textContent = isValidGhanaNumber(number)
-            ? "Valid format"
-            : "Invalid format";
-
-          row.append(indexCell, numberCell, statusCell);
-          fragment.appendChild(row);
-        });
-
-        tbody.appendChild(fragment);
-      }
-
-      document.getElementById("prepareAgentNumbers")
-        ?.addEventListener("click", async () => {
-          const fileInput = document.getElementById("agentNumbersFile");
-          const textInput = document.getElementById("agentNumbersText");
-
-          let rawText = textInput.value || "";
-
-          if (fileInput.files && fileInput.files[0]) {
-            try {
-              rawText += "\n" + await readContactFile(fileInput.files[0]);
-            } catch {
-              showToast("Could not read the selected contact file.");
-              return;
-            }
-          }
-
-          const rawNumbers = parseContactText(rawText);
-          const unique = new Set();
-
-          let duplicates = 0;
-
-          rawNumbers.forEach(raw => {
-            const match = raw.match(/(?:\+?233|0)?\d[\d\s()-]{7,}\d/);
-
-            if (!match) return;
-
-            const number = normaliseGhanaNumber(match[0]);
-
-            if (!number) return;
-
-            if (unique.has(number)) {
-              duplicates++;
-              return;
-            }
-
-            unique.add(number);
-          });
-
-          preparedNumbers = [...unique];
-
-          const validCount = preparedNumbers.filter(isValidGhanaNumber).length;
-
-          document.getElementById("agentNumbersCount").textContent =
-            String(preparedNumbers.length);
-
-          document.getElementById("agentNumbersValid").textContent =
-            String(validCount);
-
-          document.getElementById("agentNumbersDuplicates").textContent =
-            String(duplicates);
-
-          document.getElementById("agentNumbersInvalid").textContent =
-            String(preparedNumbers.length - validCount);
-
-          renderPreparedNumbers();
-
-          showToast(
-            "Prepared " + preparedNumbers.length +
-            " unique contact numbers."
-          );
-        });
-
-      document.getElementById("clearAgentNumbers")
-        ?.addEventListener("click", () => {
-          preparedNumbers = [];
-
-          document.getElementById("agentNumbersFile").value = "";
-          document.getElementById("agentNumbersText").value = "";
-
-          document.getElementById("agentNumbersCount").textContent = "0";
-          document.getElementById("agentNumbersValid").textContent = "0";
-          document.getElementById("agentNumbersDuplicates").textContent = "0";
-          document.getElementById("agentNumbersInvalid").textContent = "0";
-
-          renderPreparedNumbers();
-          showToast("The local contact workspace has been cleared.");
-        });
-
-      document.getElementById("exportAgentNumbers")
-        ?.addEventListener("click", () => {
-          if (!preparedNumbers.length) {
-            showToast("Prepare contact numbers before exporting.");
-            return;
-          }
-
-          const csv = [
-            "phone_number,format_status",
-            ...preparedNumbers.map(number =>
-              `"${number}","${isValidGhanaNumber(number) ? "valid" : "invalid"}"`
-            )
-          ].join("\r\n");
-
-          const blob = new Blob(["\uFEFF" + csv], {
-            type: "text/csv;charset=utf-8;"
-          });
-
-          const url = URL.createObjectURL(blob);
-          const anchor = document.createElement("a");
-
-          anchor.href = url;
-          anchor.download = "kielmen-agent-numbers.csv";
-          anchor.click();
-
-          URL.revokeObjectURL(url);
-          showToast("Contact CSV export started.");
-        });
-
-      // Contact groups are stored locally, not in PostgreSQL.
-      function renderLocalGroups() {
-        const container = document.getElementById("agentNumberGroupsList");
-        if (!container) return;
-
-        let groups = [];
 
         try {
-          groups = JSON.parse(
-            localStorage.getItem("kielmen_owner_local_contact_groups") || "[]"
-          );
+          text += "\n" + await readTextFile(fileInput.files[0]);
         } catch {
-          groups = [];
+          toast("Could not read the selected file.");
+          return;
         }
+      }
 
-        container.innerHTML = "";
+      const rawEntries = extractNumbers(text);
+      const unique = new Set();
+      let duplicates = 0;
 
-        if (!groups.length) {
-          container.innerHTML =
-            '<p style="color:var(--muted);font-size:11px;">No local groups saved.</p>';
+      rawEntries.forEach(entry => {
+        const match = entry.match(/(?:\+?233|0)?\d[\d\s()-]{7,}\d/);
+        if (!match) return;
+
+        const number = normalizeGhanaNumber(match[0]);
+        if (!number) return;
+
+        if (unique.has(number)) {
+          duplicates++;
           return;
         }
 
-        groups.forEach(group => {
-          const item = document.createElement("div");
-          item.className = "planned-card";
-
-          const title = document.createElement("h4");
-          title.textContent = group.name;
-
-          const description = document.createElement("p");
-          description.textContent = group.description || "No description";
-
-          const meta = document.createElement("p");
-          meta.style.marginTop = "8px";
-          meta.textContent = group.count + " numbers captured at save time";
-
-          item.append(title, description, meta);
-          container.appendChild(item);
-        });
-      }
-
-      document.getElementById("saveAgentNumberGroup")
-        ?.addEventListener("click", () => {
-          const name = document.getElementById("agentNumberGroupName")
-            .value.trim();
-
-          const description =
-            document.getElementById("agentNumberGroupDescription")
-              .value.trim();
-
-          if (!name) {
-            showToast("Enter a group name.");
-            return;
-          }
-
-          let groups = [];
-
-          try {
-            groups = JSON.parse(
-              localStorage.getItem("kielmen_owner_local_contact_groups") || "[]"
-            );
-          } catch {
-            groups = [];
-          }
-
-          groups.push({
-            name,
-            description,
-            count: preparedNumbers.length,
-            savedAt: new Date().toISOString()
-          });
-
-          try {
-            localStorage.setItem(
-              "kielmen_owner_local_contact_groups",
-              JSON.stringify(groups)
-            );
-          } catch {
-            showToast("The browser could not save this local group.");
-            return;
-          }
-
-          renderLocalGroups();
-          showToast("Contact group saved in this browser only.");
-        });
-
-      renderLocalGroups();
-
-      // Existing website-settings save handling remains with owner.js.
-      // This helper displays feedback if the existing script does not.
-      const settingsForm = document.getElementById("websiteSettingsForm");
-
-      settingsForm?.addEventListener("submit", () => {
-        const status = document.getElementById("websiteSettingsStatus");
-
-        if (status) {
-          status.textContent =
-            "Saving settings through the existing owner dashboard integration...";
-        }
+        unique.add(number);
       });
 
-      // Basic convenience: keep the existing order filters usable from
-      // the new navigation layout. The actual API request remains owner.js's job.
-      document.getElementById("searchOrders")
-        ?.addEventListener("click", () => {
-          document.getElementById("ordersNavBadge").textContent = "Updated";
-        });
+      preparedNumbers = [...unique];
 
-      document.getElementById("searchAgents")
-        ?.addEventListener("click", () => {
-          const query = document.getElementById("agentSearch")?.value.trim();
+      const validCount = preparedNumbers.filter(validGhanaNumber).length;
 
-          if (query) {
-            showToast(
-              "Agent search requires owner.js to use the search input."
-            );
-          } else {
-            showToast("Use the existing agent table to review all agents.");
-          }
-        });
+      document.getElementById("agentNumbersCount").textContent = preparedNumbers.length;
+      document.getElementById("agentNumbersValid").textContent = validCount;
+      document.getElementById("agentNumbersDuplicates").textContent = duplicates;
+      document.getElementById("agentNumbersInvalid").textContent = preparedNumbers.length - validCount;
 
-      // Refresh the copied metric cards occasionally without adding API calls.
-      setInterval(syncVisibleMetrics, 1500);
+      renderNumbers();
+      toast("Prepared " + preparedNumbers.length + " unique contact numbers.");
+    });
 
-    })();
+    document.getElementById("clearAgentNumbers")?.addEventListener("click", () => {
+      preparedNumbers = [];
+      document.getElementById("agentNumbersFile").value = "";
+      document.getElementById("agentNumbersText").value = "";
+
+      ["agentNumbersCount", "agentNumbersValid", "agentNumbersDuplicates", "agentNumbersInvalid"]
+        .forEach(id => document.getElementById(id).textContent = "0");
+
+      renderNumbers();
+      toast("Local contact workspace cleared.");
+    });
+
+    document.getElementById("exportAgentNumbers")?.addEventListener("click", () => {
+      if (!preparedNumbers.length) {
+        toast("Prepare contact numbers before exporting.");
+        return;
+      }
+
+      const rows = [
+        "phone_number,format_status",
+        ...preparedNumbers.map(number =>
+          '"' + number + '","' + (validGhanaNumber(number) ? "valid" : "invalid") + '"'
+        )
+      ];
+
+      const blob = new Blob(["\uFEFF" + rows.join("\r\n")], {
+        type: "text/csv;charset=utf-8;"
+      });
+
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "kielmen-agent-numbers.csv";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      toast("Contact CSV export started.");
+    });
+
+    // Contact groups remain local to this browser.
+    function renderGroups() {
+      const container = document.getElementById("agentNumberGroupsList");
+      let groups = [];
+
+      try {
+        groups = JSON.parse(localStorage.getItem("kielmen_owner_local_contact_groups") || "[]");
+      } catch {
+        groups = [];
+      }
+
+      container.replaceChildren();
+
+      if (!groups.length) {
+        const empty = document.createElement("p");
+        empty.style.color = "var(--muted)";
+        empty.style.fontSize = "11px";
+        empty.textContent = "No local groups saved.";
+        container.appendChild(empty);
+        return;
+      }
+
+      groups.forEach(group => {
+        const card = document.createElement("div");
+        card.className = "planned-card";
+
+        const heading = document.createElement("h4");
+        heading.textContent = group.name;
+
+        const description = document.createElement("p");
+        description.textContent = group.description || "No description";
+
+        const count = document.createElement("p");
+        count.style.marginTop = "8px";
+        count.textContent = String(group.count || 0) + " numbers captured at save time";
+
+        card.append(heading, description, count);
+        container.appendChild(card);
+      });
+    }
+
+    document.getElementById("saveAgentNumberGroup")?.addEventListener("click", () => {
+      const name = document.getElementById("agentNumberGroupName").value.trim();
+      const description = document.getElementById("agentNumberGroupDescription").value.trim();
+
+      if (!name) {
+        toast("Enter a group name.");
+        return;
+      }
+
+      let groups = [];
+
+      try {
+        groups = JSON.parse(localStorage.getItem("kielmen_owner_local_contact_groups") || "[]");
+      } catch {
+        groups = [];
+      }
+
+      groups.push({
+        name,
+        description,
+        count: preparedNumbers.length,
+        savedAt: new Date().toISOString()
+      });
+
+      try {
+        localStorage.setItem("kielmen_owner_local_contact_groups", JSON.stringify(groups));
+      } catch {
+        toast("The browser could not save this local group.");
+        return;
+      }
+
+      renderGroups();
+      toast("Contact group saved in this browser only.");
+    });
+
+    renderGroups();
+
+    // Do not intercept the settings form or duplicate owner.js submit handling.
+    // The existing owner.js owns website-settings API requests.
+  })();
   </script>
 
 </body>
-          </html>
+  </html>
