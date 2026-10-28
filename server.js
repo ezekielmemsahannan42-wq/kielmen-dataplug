@@ -1865,13 +1865,17 @@ app.get("/debug-agent-store/:slug", async (req, res) => {
       success: true,
       searchedSlug: search,
       totalAgents: agents.length,
-      matchingAgents: agents.filter(agent =>
-        String(agent.storeSlug || "").toLowerCase() === search ||
-        String(agent.businessName || "")
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "") === search
-      ),
+      matchingAgents: agents.filter(agent => {
+  const slug = String(agent.storeSlug || "").toLowerCase();
+  const name = String(agent.businessName || "").toLowerCase();
+
+  return (
+    slug.includes("one-time") ||
+    slug.includes("onetime") ||
+    name.includes("one-time") ||
+    name.includes("onetime")
+  );
+}),
       agents
     });
   } catch (error) {
