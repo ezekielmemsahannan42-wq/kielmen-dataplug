@@ -1459,9 +1459,9 @@ app.get(
             store_slug,
             store_description,
             whatsapp_number,
-whatsapp_channel,
-whatsapp_group_link,
-social_link
+            whatsapp_channel,
+            whatsapp_group_link,
+            social_link
           FROM agents
           WHERE id = $1
         `,
@@ -1486,13 +1486,24 @@ social_link
           phone: a.phone,
           storeSlug: a.store_slug,
           description: a.store_description,
-          whatsappNumber: a.whatsapp_number,
-whatsappChannel: a.whatsapp_channel,
-whatsappGroupLink: a.whatsapp_group_link,
-socialLink: a.social_link,
+
+          whatsappNumber: a.whatsapp_number || "",
+
+          whatsappGroupLink:
+            a.whatsapp_group_link || "",
+
+          whatsappChannel:
+            a.whatsapp_channel || "",
+
+          whatsappChannelLink:
+            a.whatsapp_channel || "",
+
+          socialLink: a.social_link || "",
+
           agentCode: a.agent_code
         }
       });
+
     } catch (error) {
       console.error("Load agent profile:", error.message);
 
@@ -1530,7 +1541,7 @@ app.put(
         req.body?.whatsappNumber || ""
       ).trim();
 
-      // Accept both old and new dashboard field names.
+      // Accept the dashboard's exact field names.
       const whatsappGroupLink = String(
         req.body?.whatsappGroupLink ||
         req.body?.whatsapp_group_link ||
@@ -1552,7 +1563,7 @@ app.put(
         req.body?.description || ""
       ).trim();
 
-      // Validate normal profile information.
+      // Validate profile information.
       if (
         fullName.length < 2 ||
         fullName.length > 100 ||
@@ -1580,7 +1591,8 @@ app.put(
 
           if (
             groupUrl.protocol !== "https:" ||
-            groupUrl.hostname.toLowerCase() !== "chat.whatsapp.com"
+            groupUrl.hostname.toLowerCase() !==
+              "chat.whatsapp.com"
           ) {
             throw new Error("Invalid group link");
           }
@@ -1646,10 +1658,12 @@ app.put(
         await client.query("BEGIN");
 
         const currentResult = await client.query(
-          `SELECT id, store_slug
-           FROM agents
-           WHERE id = $1
-           FOR UPDATE`,
+          `
+            SELECT id, store_slug
+            FROM agents
+            WHERE id = $1
+            FOR UPDATE
+          `,
           [req.agentId]
         );
 
@@ -1666,10 +1680,12 @@ app.put(
           currentResult.rows[0].store_slug;
 
         const slugCheck = await client.query(
-          `SELECT id
-           FROM agents
-           WHERE store_slug = $1
-           AND id <> $2`,
+          `
+            SELECT id
+            FROM agents
+            WHERE store_slug = $1
+              AND id <> $2
+          `,
           [newStoreSlug, req.agentId]
         );
 
@@ -1688,45 +1704,46 @@ app.put(
           currentSlug !== newStoreSlug
         ) {
           await client.query(
-            `INSERT INTO agent_store_slug_history
-             (agent_id, store_slug)
-             VALUES ($1, $2)
-             ON CONFLICT (store_slug) DO NOTHING`,
+            `
+              INSERT INTO agent_store_slug_history
+                (agent_id, store_slug)
+              VALUES ($1, $2)
+              ON CONFLICT (store_slug) DO NOTHING
+            `,
             [req.agentId, currentSlug]
           );
         }
 
-        // Save all profile information, including BOTH
-        // WhatsApp Group Link and WhatsApp Channel Link.
+        // Save profile and both WhatsApp links.
         result = await client.query(
           `
-          UPDATE agents
-          SET
-            full_name = $1,
-            business_name = $2,
-            store_slug = $3,
-            email = $4,
-            phone = $5,
-            whatsapp_number = $6,
-            whatsapp_group_link = $7,
-            whatsapp_channel = $8,
-            social_link = $9,
-            store_description = $10,
-            updated_at = NOW()
-          WHERE id = $11
-          RETURNING
-            id,
-            agent_code,
-            full_name,
-            business_name,
-            email,
-            phone,
-            store_slug,
-            store_description,
-            whatsapp_number,
-            whatsapp_group_link,
-            whatsapp_channel,
-            social_link
+            UPDATE agents
+            SET
+              full_name = $1,
+              business_name = $2,
+              store_slug = $3,
+              email = $4,
+              phone = $5,
+              whatsapp_number = $6,
+              whatsapp_group_link = $7,
+              whatsapp_channel = $8,
+              social_link = $9,
+              store_description = $10,
+              updated_at = NOW()
+            WHERE id = $11
+            RETURNING
+              id,
+              agent_code,
+              full_name,
+              business_name,
+              email,
+              phone,
+              store_slug,
+              store_description,
+              whatsapp_number,
+              whatsapp_group_link,
+              whatsapp_channel,
+              social_link
           `,
           [
             fullName,
@@ -1764,7 +1781,8 @@ app.put(
 
       return res.json({
         success: true,
-        message: "Your profile has been updated successfully.",
+        message:
+          "Your profile and WhatsApp links have been saved successfully.",
 
         profile: {
           fullName: a.full_name,
@@ -1774,20 +1792,19 @@ app.put(
           storeSlug: a.store_slug,
           description: a.store_description,
 
-          whatsappNumber: a.whatsapp_number,
+          whatsappNumber: a.whatsapp_number || "",
 
-          // WhatsApp Group Link
           whatsappGroupLink:
             a.whatsapp_group_link || "",
 
-          // Support both dashboard naming conventions.
           whatsappChannel:
             a.whatsapp_channel || "",
 
           whatsappChannelLink:
             a.whatsapp_channel || "",
 
-          socialLink: a.social_link,
+          socialLink: a.social_link || "",
+
           agentCode: a.agent_code
         }
       });
