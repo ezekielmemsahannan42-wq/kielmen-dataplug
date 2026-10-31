@@ -5,267 +5,92 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#111827">
 <title>Kielmen 636 | Agent Dashboard</title>
+
 <style>
 :root{
   --bg:#f4f6fa;
   --surface:#fff;
-  --surface2:#f8fafc;
   --border:#e2e8f0;
   --text:#172033;
   --muted:#64748b;
   --primary:#111827;
-  --primary2:#263449;
   --green:#078454;
-  --green-light:#e6f7ef;
   --gold:#eab308;
-  --gold-light:#fff7d6;
   --red:#dc3545;
-  --red-light:#fff0f1;
-  --blue:#2563eb;
   --shadow:0 8px 24px rgba(15,23,42,.06);
   --radius:18px;
 }
-
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:Arial,Helvetica,sans-serif;
-  font-size:14px;
-}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif;font-size:14px}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 button:disabled{opacity:.6;cursor:wait}
 [hidden]{display:none!important}
 a{color:var(--green);overflow-wrap:anywhere}
-button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
-  outline:3px solid #16a34a44;
-  outline-offset:2px;
-}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #16a34a44;outline-offset:2px}
 
 .topbar{
-  position:sticky;
-  top:0;
-  z-index:50;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  min-height:76px;
-  padding:12px 18px;
-  background:var(--primary);
-  color:#fff;
+  position:sticky;top:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;min-height:76px;padding:12px 18px;
+  background:var(--primary);color:#fff;
   border-bottom:3px solid var(--gold);
   box-shadow:0 4px 18px #0f172a20;
 }
-.top-left,.brand,.top-actions{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  min-width:0;
-}
-.menu-toggle{
-  width:43px;
-  height:43px;
-  border:1px solid #ffffff35;
-  border-radius:12px;
-  background:#ffffff12;
-  color:#fff;
-  font-size:23px;
-}
-.brand-logo{
-  display:grid;
-  place-items:center;
-  width:45px;
-  height:45px;
-  flex-shrink:0;
-  border-radius:13px;
-  background:var(--gold);
-  color:#111827;
-  font-weight:900;
-  letter-spacing:-1px;
-}
+.top-left,.brand,.top-actions{display:flex;align-items:center;gap:12px;min-width:0}
+.menu-toggle{width:43px;height:43px;border:1px solid #ffffff35;border-radius:12px;background:#ffffff12;color:#fff;font-size:23px}
+.brand-logo{display:grid;place-items:center;width:45px;height:45px;flex-shrink:0;border-radius:13px;background:var(--gold);color:#111827;font-weight:900}
 .brand strong{display:block;font-size:16px}
 .brand small{display:block;margin-top:5px;color:#cbd5e1;font-size:11px}
-.top-status{
-  padding:8px 11px;
-  border:1px solid #ffffff22;
-  border-radius:30px;
-  color:#d1fae5;
-  background:#ffffff0d;
-  font-size:11px;
-  white-space:nowrap;
-}
+.top-status{padding:8px 11px;border:1px solid #ffffff22;border-radius:30px;color:#d1fae5;background:#ffffff0d;font-size:11px;white-space:nowrap}
 
-.layout{min-height:calc(100vh - 76px)}
 .sidebar{
-  position:fixed;
-  top:76px;
-  bottom:0;
-  left:0;
-  z-index:45;
-  width:275px;
-  padding:18px 13px 30px;
-  overflow-y:auto;
-  background:#fff;
-  border-right:1px solid var(--border);
+  position:fixed;top:76px;bottom:0;left:0;z-index:45;
+  width:275px;padding:18px 13px 30px;overflow-y:auto;
+  background:#fff;border-right:1px solid var(--border);
   box-shadow:8px 0 25px #0f172a0a;
-  transform:translateX(-105%);
-  transition:transform .22s ease;
+  transform:translateX(-105%);transition:transform .22s ease;
 }
 .sidebar.open{transform:translateX(0)}
-.sidebar-overlay{
-  position:fixed;
-  inset:76px 0 0;
-  z-index:40;
-  background:#0f172a66;
-}
-.sidebar-caption{
-  margin:9px 12px 10px;
-  color:#94a3b8;
-  font-size:10px;
-  font-weight:800;
-  letter-spacing:1.2px;
-  text-transform:uppercase;
-}
-.side-link{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  width:100%;
-  padding:13px 12px;
-  margin:4px 0;
-  border:0;
-  border-radius:12px;
-  text-align:left;
-  background:transparent;
-  color:#475569;
-  font-weight:700;
-}
+.sidebar-overlay{position:fixed;inset:76px 0 0;z-index:40;background:#0f172a66}
+.sidebar-caption{margin:9px 12px 10px;color:#94a3b8;font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase}
+.side-link{display:flex;align-items:center;gap:12px;width:100%;padding:13px 12px;margin:4px 0;border:0;border-radius:12px;text-align:left;background:transparent;color:#475569;font-weight:700}
 .side-link .side-icon{width:24px;text-align:center;font-size:19px}
 .side-link:hover{background:#f1f5f9}
-.side-link.active{
-  background:#e6f7ef;
-  color:#08784d;
-  box-shadow:inset 3px 0 #078454;
-}
-.side-link .side-arrow{margin-left:auto;color:#94a3b8}
-.side-divider{height:1px;background:var(--border);margin:15px 5px}
-.side-group-title{
-  width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:12px;
-  border:0;
-  background:transparent;
-  color:#334155;
-  font-weight:800;
-  text-align:left;
-}
+.side-link.active{background:#e6f7ef;color:#08784d;box-shadow:inset 3px 0 #078454}
+.side-group-title{width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px;border:0;background:transparent;color:#334155;font-weight:800;text-align:left}
 .side-submenu{padding-left:12px}
 .side-submenu .side-link{font-size:13px;padding:11px 12px}
+.side-divider{height:1px;background:var(--border);margin:15px 5px}
 
-.container{
-  width:100%;
-  max-width:1250px;
-  margin:auto;
-  padding:23px 16px 110px;
-}
+.container{width:100%;max-width:1250px;margin:auto;padding:23px 16px 110px}
 .page{display:none;animation:fadein .2s ease}
 .page.active{display:block}
 @keyframes fadein{from{opacity:.6;transform:translateY(3px)}to{opacity:1;transform:none}}
-
-.page-heading{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:14px;
-  margin-bottom:20px;
-}
-.page-heading h1{margin:0 0 8px;font-size:25px;letter-spacing:-.5px}
+.page-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:20px}
+.page-heading h1{margin:0 0 8px;font-size:25px}
 .page-heading p{margin:0;color:var(--muted);line-height:1.6}
 .section-title{margin:27px 0 14px;font-size:18px}
-
-.welcome{
-  position:relative;
-  overflow:hidden;
-  padding:26px 22px;
-  margin-bottom:22px;
-  border-radius:22px;
-  background:linear-gradient(120deg,#111827,#24384d 68%,#08784d);
-  color:#fff;
-  box-shadow:var(--shadow);
-}
-.welcome:after{
-  content:"636";
-  position:absolute;
-  right:15px;
-  bottom:-38px;
-  color:#ffffff0a;
-  font-size:160px;
-  font-weight:900;
-  pointer-events:none;
-}
+.welcome{position:relative;overflow:hidden;padding:26px 22px;margin-bottom:22px;border-radius:22px;background:linear-gradient(120deg,#111827,#24384d 68%,#08784d);color:#fff;box-shadow:var(--shadow)}
+.welcome:after{content:"636";position:absolute;right:15px;bottom:-38px;color:#ffffff0a;font-size:160px;font-weight:900;pointer-events:none}
 .welcome-content{position:relative;z-index:1}
 .welcome h1{margin:0 0 10px;font-size:27px;overflow-wrap:anywhere}
-.welcome p{color:#d8e2ed;line-height:1.7;overflow-wrap:anywhere}
-.agent-code{
-  display:inline-block;
-  padding:8px 12px;
-  margin:5px 0 14px;
-  border:1px solid #ffffff30;
-  border-radius:9px;
-  background:#ffffff10;
-}
-.welcome .btn{border-color:#ffffff35;background:#ffffff12}
+.welcome p{color:#d8e2ed;line-height:1.7}
+.agent-code{display:inline-block;padding:8px 12px;margin:5px 0 14px;border:1px solid #ffffff30;border-radius:9px;background:#ffffff10}
+.welcome .btn{border-color:#ffffff35;background:#ffffff12;color:#fff}
 
-.stats{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:13px;
-}
-.card{
-  min-width:0;
-  padding:18px;
-  margin-bottom:15px;
-  border:1px solid var(--border);
-  border-radius:var(--radius);
-  background:var(--surface);
-  box-shadow:var(--shadow);
-}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.card{min-width:0;padding:18px;margin-bottom:15px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
 .stat-label{color:var(--muted);font-size:12px;font-weight:700;line-height:1.5}
-.stat-value{
-  margin:11px 0;
-  font-size:23px;
-  font-weight:800;
-  letter-spacing:-.5px;
-  overflow-wrap:anywhere;
-}
+.stat-value{margin:11px 0;font-size:23px;font-weight:800;overflow-wrap:anywhere}
 .stat-note{color:var(--muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}
 .green{color:var(--green)}
 .gold{color:#a16207}
 .red{color:var(--red)}
 
-.network-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:12px;
-}
-.network{
-  min-height:108px;
-  padding:16px;
-  border:1px solid var(--border);
-  border-radius:16px;
-  color:#172033;
-  background:#fff;
-  font-weight:800;
-  text-align:left;
-  transition:transform .15s,box-shadow .15s;
-}
-.network:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.network-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.network{min-height:108px;padding:16px;border:1px solid var(--border);border-radius:16px;color:#172033;background:#fff;font-weight:800;text-align:left}
 .network span{display:block;margin-bottom:9px;font-size:25px}
 .network.mtn{border-top:4px solid #facc15;background:linear-gradient(145deg,#fffbea,#fff)}
 .network.telecel{border-top:4px solid #e63946;background:linear-gradient(145deg,#fff0f1,#fff)}
@@ -273,130 +98,54 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
 .field{margin-bottom:17px}
 .field label{display:block;margin-bottom:8px;font-size:13px;font-weight:800}
-.field input,.field select,.field textarea{
-  display:block;
-  width:100%;
-  min-height:46px;
-  padding:12px 13px;
-  border:1px solid #cbd5e1;
-  border-radius:11px;
-  outline:none;
-  background:#fff;
-  color:var(--text);
-}
+.field input,.field select,.field textarea{display:block;width:100%;min-height:46px;padding:12px 13px;border:1px solid #cbd5e1;border-radius:11px;outline:none;background:#fff;color:var(--text)}
 .field textarea{min-height:100px;resize:vertical}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--green)}
 .field input[readonly]{background:#f1f5f9;color:#64748b}
 
-.btn{
-  min-height:43px;
-  padding:11px 15px;
-  border:1px solid var(--border);
-  border-radius:11px;
-  background:#fff;
-  color:#334155;
-  font-weight:800;
-  transition:filter .15s,transform .15s;
-}
-.btn:hover{filter:brightness(.97)}
-.btn:active{transform:scale(.99)}
+.btn{min-height:43px;padding:11px 15px;border:1px solid var(--border);border-radius:11px;background:#fff;color:#334155;font-weight:800}
 .btn-primary{border-color:var(--green);background:var(--green);color:#fff}
 .btn-dark{border-color:var(--primary);background:var(--primary);color:#fff}
-.btn-danger{border-color:#fecaca;background:var(--red-light);color:#b91c1c}
+.btn-danger{border-color:#fecaca;background:#fff0f1;color:#b91c1c}
 .btn-block{width:100%}
 .btn-row{display:flex;flex-wrap:wrap;gap:9px}
 .btn-row .btn{flex:1;min-width:110px}
-.notice{
-  padding:14px;
-  margin:14px 0;
-  border:1px solid #f5d56e;
-  border-left:4px solid var(--gold);
-  border-radius:11px;
-  background:var(--gold-light);
-  color:#854d0e;
-  font-size:12px;
-  line-height:1.7;
-}
-.message{
-  padding:12px 0;
-  color:var(--muted);
-  font-size:13px;
-  line-height:1.7;
-  overflow-wrap:anywhere;
-}
+.notice{padding:14px;margin:14px 0;border:1px solid #f5d56e;border-left:4px solid var(--gold);border-radius:11px;background:#fff7d6;color:#854d0e;font-size:12px;line-height:1.7}
+.message{padding:12px 0;color:var(--muted);font-size:13px;line-height:1.7;overflow-wrap:anywhere}
 .message.error{color:#b91c1c}
 .message.success{color:var(--green)}
 .table-wrap{overflow-x:auto}
 table{width:100%;min-width:420px;border-collapse:collapse}
 th,td{padding:13px 9px;border-bottom:1px solid var(--border);text-align:left;font-size:13px}
-th{background:#f8fafc;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
-.price-input{
-  width:105px;max-width:100%;padding:10px;
-  border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#172033;
-}
-.share-link{
-  padding:13px;margin:13px 0;border:1px dashed #94a3b8;
-  border-radius:11px;background:#f8fafc;color:#08784d;
-  overflow-wrap:anywhere;font-size:13px;line-height:1.7;user-select:text;
-}
-.badge{
-  display:inline-block;padding:6px 10px;border-radius:30px;
-  background:#e2e8f0;color:#475569;font-size:11px;font-weight:800;
-}
+th{background:#f8fafc;color:#64748b;font-size:11px;text-transform:uppercase}
+.price-input{width:105px;max-width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:9px}
+.share-link{padding:13px;margin:13px 0;border:1px dashed #94a3b8;border-radius:11px;background:#f8fafc;color:#08784d;overflow-wrap:anywhere;font-size:13px;line-height:1.7;user-select:text}
+.badge{display:inline-block;padding:6px 10px;border-radius:30px;background:#e2e8f0;color:#475569;font-size:11px;font-weight:800}
 .badge.green-badge{background:#dcfce7;color:#166534}
 
-.order-search{
-  display:flex;align-items:center;gap:10px;min-height:50px;
-  padding:0 12px;margin:15px 0;border:1px solid var(--border);
-  border-radius:12px;background:#fff;
-}
-.search-icon{flex-shrink:0;color:var(--green);font-size:23px}
-.order-search input{width:100%;min-width:0;padding:13px 0;border:0;outline:none;background:transparent;color:var(--text)}
+.order-search{display:flex;align-items:center;gap:10px;min-height:50px;padding:0 12px;margin:15px 0;border:1px solid var(--border);border-radius:12px;background:#fff}
+.order-search input{width:100%;min-width:0;padding:13px 0;border:0;outline:none;background:transparent}
 .order-search button{padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:#f8fafc}
 .order-count{margin:10px 0;color:var(--muted);font-size:12px}
 .order-card{padding:16px;margin:12px 0;border:1px solid var(--border);border-radius:14px;background:#fff;overflow-wrap:anywhere}
 .order-card h3{margin-top:0}
 .order-card p{line-height:1.6}
 .order-status{display:inline-block;padding:5px 9px;border-radius:30px;background:#f1f5f9;color:#475569;font-size:11px}
-
-.profile-line{
-  display:flex;align-items:flex-start;justify-content:space-between;
-  gap:14px;padding:13px 0;border-bottom:1px solid var(--border);
-}
+.profile-line{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:13px 0;border-bottom:1px solid var(--border)}
 .profile-line:last-child{border-bottom:0}
 .profile-label{color:var(--muted);font-size:12px}
 .profile-value{text-align:right;font-weight:700;overflow-wrap:anywhere;max-width:65%}
-
-.announcement-card{
-  padding:16px;margin:12px 0;border:1px solid var(--border);
-  border-left:4px solid var(--gold);border-radius:13px;background:#fff;
-}
+.announcement-card{padding:16px;margin:12px 0;border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:13px;background:#fff}
 .announcement-card h3{margin:0 0 9px}
 .announcement-card p{line-height:1.7;white-space:pre-wrap}
 .announcement-date{font-size:11px;color:var(--muted)}
-.empty-state{
-  padding:22px;text-align:center;color:var(--muted);
-  border:1px dashed var(--border);border-radius:13px;line-height:1.7;
-}
-.bottom-nav{
-  position:fixed;left:0;right:0;bottom:0;z-index:35;
-  display:grid;grid-template-columns:repeat(6,minmax(0,1fr));
-  padding:7px 4px calc(7px + env(safe-area-inset-bottom));
-  border-top:1px solid var(--border);background:#fff;
-  box-shadow:0 -5px 20px #0f172a0a;
-}
-.nav-btn{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:4px;min-width:0;padding:7px 2px;border:0;border-radius:9px;
-  background:transparent;color:#64748b;font-size:10px;font-weight:700;
-}
+.empty-state{padding:22px;text-align:center;color:var(--muted);border:1px dashed var(--border);border-radius:13px;line-height:1.7}
+
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;z-index:35;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));padding:7px 4px calc(7px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:#fff;box-shadow:0 -5px 20px #0f172a0a}
+.nav-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;padding:7px 2px;border:0;border-radius:9px;background:transparent;color:#64748b;font-size:10px;font-weight:700}
 .nav-btn .icon{font-size:19px}
 .nav-btn.active{background:#e6f7ef;color:#08784d}
-
-footer{
-  padding:20px 0 30px;text-align:center;
-  color:#94a3b8;font-size:11px;
-}
+footer{padding:20px 0 30px;text-align:center;color:#94a3b8;font-size:11px}
 
 @media(min-width:900px){
   .container{padding-left:28px;padding-right:28px}
@@ -415,12 +164,12 @@ footer{
   .card{padding:15px}
   .profile-line{gap:8px}
   .profile-value{max-width:62%}
-  .bottom-nav{padding-left:2px;padding-right:2px}
   .nav-btn{font-size:9px}
   .nav-btn .icon{font-size:17px}
 }
 </style>
 </head>
+
 <body>
 
 <header class="topbar">
@@ -428,452 +177,220 @@ footer{
     <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
     <div class="brand">
       <div class="brand-logo">636</div>
-      <div>
-        <strong>Kielmen Dataplug</strong>
-        <small>Agent Dashboard</small>
-      </div>
+      <div><strong>Kielmen Dataplug</strong><small>Agent Dashboard</small></div>
     </div>
   </div>
-  <div class="top-actions">
-    <div class="top-status">● Agent Portal</div>
-  </div>
+  <div class="top-actions"><div class="top-status">● Agent Portal</div></div>
 </header>
 
 <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
 
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-caption">Main Menu</div>
-
-  <button class="side-link active" data-page="home" type="button">
-    <span class="side-icon">⌂</span>Overview
-  </button>
-
-  <button class="side-link" data-page="store" type="button">
-    <span class="side-icon">▣</span>My Store
-  </button>
-
-  <button class="side-link" data-page="prices" type="button">
-    <span class="side-icon">₵</span>My Selling Prices
-  </button>
-
-  <button class="side-link" data-page="orders" type="button">
-    <span class="side-icon">▤</span>Orders & Payments
-  </button>
-
+  <button class="side-link active" data-page="home" type="button"><span class="side-icon">⌂</span>Overview</button>
+  <button class="side-link" data-page="store" type="button"><span class="side-icon">▣</span>My Store</button>
+  <button class="side-link" data-page="prices" type="button"><span class="side-icon">₵</span>My Selling Prices</button>
+  <button class="side-link" data-page="orders" type="button"><span class="side-icon">▤</span>Orders & Payments</button>
   <div class="side-divider"></div>
   <div class="sidebar-caption">Account Settings</div>
-
-  <button class="side-link" data-page="profile" type="button">
-    <span class="side-icon">◎</span>Account Information
-  </button>
-
-  <button class="side-group-title" id="settingsToggle" type="button" aria-expanded="false">
-    <span>⚙ Settings</span><span id="settingsArrow">›</span>
-  </button>
-
+  <button class="side-link" data-page="profile" type="button"><span class="side-icon">◎</span>Account Information</button>
+  <button class="side-group-title" id="settingsToggle" type="button" aria-expanded="false"><span>⚙ Settings</span><span id="settingsArrow">›</span></button>
   <div class="side-submenu" id="settingsSubmenu" hidden>
     <button class="side-link" data-page="passwordSettings" type="button">🔐 Change Password</button>
     <button class="side-link" data-page="phoneSettings" type="button">📱 Phone Number</button>
     <button class="side-link" data-page="communitySettings" type="button">👥 WhatsApp Customer Group</button>
   </div>
-
   <div class="side-divider"></div>
-
-  <button class="side-link" data-page="announcements" type="button">
-    <span class="side-icon">📢</span>Announcements
-  </button>
-
+  <button class="side-link" data-page="announcements" type="button">📢 Announcements</button>
   <div class="side-divider"></div>
-
-  <button class="side-link" data-page="withdrawals" type="button">
-    <span class="side-icon">💰</span>Withdraw Earnings
-  </button>
-
-  <button class="side-link" id="sideSignOut" type="button">
-    <span class="side-icon">↪</span>Sign Out
-  </button>
+  <button class="side-link" data-page="withdrawals" type="button">💰 Withdraw Earnings</button>
+  <button class="side-link" id="sideSignOut" type="button">↪ Sign Out</button>
 </aside>
 
-<div id="pageMessage" role="status" aria-live="polite">
+<div id="pageMessage" role="status" aria-live="polite" style="padding:20px">
   <strong>Checking your account...</strong>
   <p>Please wait while we verify your agent login.</p>
 </div>
 
 <main class="container" id="dashboard" hidden>
 
-  <!-- OVERVIEW -->
-  <section class="page active" id="home">
-    <div class="welcome">
-      <div class="welcome-content">
-        <h1 id="welcomeName">Welcome, Agent!</h1>
-        <p id="welcomeDetails">Manage your data business in one place.</p>
-        <div class="agent-code">Agent Code: <strong id="agentCode">Loading...</strong></div>
-        <br>
-        <button class="btn" type="button" onclick="agentLogout()">Sign Out</button>
-      </div>
+<section class="page active" id="home">
+  <div class="welcome">
+    <div class="welcome-content">
+      <h1 id="welcomeName">Welcome, Agent!</h1>
+      <p id="welcomeDetails">Manage your data business in one place.</p>
+      <div class="agent-code">Agent Code: <strong id="agentCode">Loading...</strong></div><br>
+      <button class="btn" type="button" onclick="agentLogout()">Sign Out</button>
     </div>
+  </div>
 
-    <h2 class="section-title">Performance Overview</h2>
+  <h2 class="section-title">Performance Overview</h2>
+  <div class="stats">
+    <div class="card"><div class="stat-label">Total Orders</div><div class="stat-value" id="ordersStat">—</div><div class="stat-note">Server order records</div></div>
+    <div class="card"><div class="stat-label">Estimated Profit</div><div class="stat-value green" id="profitStat">—</div><div class="stat-note">Estimated margin from paid orders.</div></div>
+    <div class="card"><div class="stat-label">Confirmed Profit</div><div class="stat-value green" id="confirmedProfitStat">—</div><div class="stat-note">Profit from successfully delivered orders.</div></div>
+    <div class="card"><div class="stat-label">Pending Delivery Profit</div><div class="stat-value gold" id="pendingDeliveryProfitStat">—</div><div class="stat-note" id="pendingDeliveryNote">Calculating...</div></div>
+    <div class="card"><div class="stat-label">Total Sales</div><div class="stat-value" id="salesStat">—</div><div class="stat-note">Recorded sales</div></div>
+    <div class="card"><div class="stat-label">Customers</div><div class="stat-value" id="customersStat">—</div><div class="stat-note">Recorded customers</div></div>
+  </div>
 
-    <div class="stats">
-      <div class="card">
-        <div class="stat-label">Total Orders</div>
-        <div class="stat-value" id="ordersStat">—</div>
-        <div class="stat-note">Server order records</div>
-      </div>
-
-      <div class="card">
-        <div class="stat-label">Estimated Profit</div>
-        <div class="stat-value green" id="profitStat">—</div>
-        <div class="stat-note">Estimated margin from paid orders. Delivery may still be pending.</div>
-      </div>
-
-      <div class="card">
-        <div class="stat-label">Confirmed Profit</div>
-        <div class="stat-value green" id="confirmedProfitStat">—</div>
-        <div class="stat-note">Profit from successfully delivered orders.</div>
-      </div>
-
-      <div class="card">
-        <div class="stat-label">Pending Delivery Profit</div>
-        <div class="stat-value gold" id="pendingDeliveryProfitStat">—</div>
-        <div class="stat-note" id="pendingDeliveryNote">Calculating orders awaiting delivery...</div>
-      </div>
-
-      <div class="card">
-        <div class="stat-label">Total Sales</div>
-        <div class="stat-value" id="salesStat">—</div>
-        <div class="stat-note">Recorded sales</div>
-      </div>
-
-      <div class="card">
-        <div class="stat-label">Customers</div>
-        <div class="stat-value" id="customersStat">—</div>
-        <div class="stat-note">Recorded customers</div>
-      </div>
+  <h2 class="section-title">Your Data Store</h2>
+  <div class="card">
+    <div class="network-grid">
+      <button class="network mtn" type="button" onclick="selectNetwork('MTN')"><span>🟡</span>MTN</button>
+      <button class="network telecel" type="button" onclick="selectNetwork('Telecel')"><span>🔴</span>Telecel</button>
+      <button class="network at" type="button" onclick="selectNetwork('AirtelTigo')"><span>🔵</span>AirtelTigo</button>
     </div>
+    <p class="stat-note">Select a network to view your selling prices.</p>
+    <button class="btn btn-primary btn-block" type="button" onclick="showPage('prices')">Manage My Prices</button>
+  </div>
 
-    <h2 class="section-title">Your Data Store</h2>
-    <div class="card">
-      <div class="network-grid">
-        <button class="network mtn" type="button" onclick="selectNetwork('MTN')"><span>🟡</span>MTN</button>
-        <button class="network telecel" type="button" onclick="selectNetwork('Telecel')"><span>🔴</span>Telecel</button>
-        <button class="network at" type="button" onclick="selectNetwork('AirtelTigo')"><span>🔵</span>AirtelTigo</button>
-      </div>
-      <p class="stat-note">Select a network to view your selling prices.</p>
-      <button class="btn btn-primary btn-block" type="button" onclick="showPage('prices')">Manage My Prices</button>
+  <h2 class="section-title">Recent Orders</h2>
+  <div class="card">
+    <div id="recentOrders" class="message">Loading order information...</div>
+    <button class="btn btn-block" type="button" onclick="showPage('orders')">View All Orders</button>
+  </div>
+</section>
+
+<section class="page" id="store">
+  <div class="page-heading"><div><h1>My Store</h1><p>Manage your storefront and share your store link.</p></div></div>
+  <div class="card">
+    <div class="field"><label for="businessName">Business Name</label><input id="businessName" maxlength="100" placeholder="Your business name"></div>
+    <div class="field"><label for="agentName">Agent Name</label><input id="agentName" maxlength="100" placeholder="Your full name"></div>
+    <div class="field"><label for="agentPhone">Business Phone</label><input id="agentPhone" type="tel" maxlength="15" placeholder="0241234567"></div>
+    <div class="field"><label for="storeDescription">Store Description</label><input id="storeDescription" maxlength="120" placeholder="Affordable data bundles"></div>
+    <button class="btn btn-primary btn-block" id="saveStoreButton" type="button" onclick="saveStore()">Save Store Details</button>
+    <p id="storeMessage" class="message" aria-live="polite"></p>
+  </div>
+  <div class="card">
+    <h3>Share Your Store</h3>
+    <p class="stat-note">Give customers your unique store link.</p>
+    <div id="storeLink" class="share-link">Loading your store link...</div>
+    <div class="btn-row">
+      <button class="btn btn-primary" type="button" onclick="copyStoreLink()">Copy Link</button>
+      <button class="btn" type="button" onclick="shareStore()">Share Store</button>
     </div>
+    <p id="storeLinkMessage" class="message" aria-live="polite"></p>
+  </div>
+</section>
 
-    <h2 class="section-title">Recent Orders</h2>
-    <div class="card">
-      <div id="recentOrders" class="message">Loading order information...</div>
-      <button class="btn btn-block" type="button" onclick="showPage('orders')">View All Orders</button>
+<section class="page" id="prices">
+  <div class="page-heading"><div><h1>My Selling Prices</h1><p>Manage the prices customers see in your store.</p></div></div>
+  <div class="card">
+    <div class="field">
+      <label for="priceNetwork">Select Network</label>
+      <select id="priceNetwork"><option value="MTN">MTN</option><option value="Telecel">Telecel</option><option value="AirtelTigo">AirtelTigo</option></select>
     </div>
-  </section>
-
-  <!-- STORE -->
-  <section class="page" id="store">
-    <div class="page-heading">
-      <div>
-        <h1>My Store</h1>
-        <p>Manage your storefront and share your store link.</p>
-      </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Bundle</th><th>Base Price</th><th>Selling Price</th></tr></thead><tbody id="priceRows"></tbody></table>
     </div>
+    <button class="btn btn-primary btn-block" id="savePricesButton" type="button" onclick="savePrices()">Save My Prices</button>
+    <p id="priceMessage" class="message" aria-live="polite"></p>
+  </div>
+</section>
 
-    <div class="card">
+<section class="page" id="orders">
+  <div class="page-heading"><div><h1>Orders & Payments</h1><p>Review the orders returned for your agent account.</p></div></div>
+  <div class="card">
+    <div class="notice">Search only filters orders returned to your authenticated agent account.</div>
+    <button class="btn btn-primary btn-block" id="refreshOrdersButton" type="button" onclick="loadOrders()">↻ Refresh Orders</button>
+    <div class="order-search"><span>⌕</span><input type="search" id="orderSearch" placeholder="Search phone, reference, network..." aria-label="Search orders"><button type="button" id="clearOrderSearch">Clear</button></div>
+    <p class="order-count" id="orderCount">Loading orders...</p>
+    <div id="ordersList" class="message">Loading orders...</div>
+  </div>
+</section>
+
+<section class="page" id="profile">
+  <div class="page-heading"><div><h1>Account Information</h1><p>View your agent account details.</p></div></div>
+  <div class="card">
+    <div class="profile-line"><div class="profile-label">Full Name</div><div class="profile-value" id="profileAgent">Loading...</div></div>
+    <div class="profile-line"><div class="profile-label">Business Name</div><div class="profile-value" id="profileBusiness">Loading...</div></div>
+    <div class="profile-line"><div class="profile-label">Phone</div><div class="profile-value" id="profilePhone">Loading...</div></div>
+    <div class="profile-line"><div class="profile-label">Email</div><div class="profile-value" id="profileEmail">Loading...</div></div>
+    <div class="profile-line"><div class="profile-label">Agent Code</div><div class="profile-value" id="profileCode">Loading...</div></div>
+    <div class="profile-line"><div class="profile-label">Account Status</div><div class="profile-value"><span id="profileStatus" class="badge">Loading...</span></div></div>
+    <div class="btn-row" style="margin-top:18px">
+      <button class="btn btn-primary" type="button" onclick="showPage('store')">Edit Store Profile</button>
+      <button class="btn" type="button" onclick="showPage('passwordSettings')">Security Settings</button>
+    </div>
+  </div>
+</section>
+
+<section class="page" id="passwordSettings">
+  <div class="page-heading"><div><h1>Change Password</h1><p>Keep your agent account secure.</p></div></div>
+  <div class="card">
+    <div class="notice">Use a strong password and never share it with anyone.</div>
+    <form id="passwordForm">
+      <div class="field"><label for="currentPassword">Current Password</label><input id="currentPassword" type="password" autocomplete="current-password" required maxlength="128"></div>
+      <div class="field"><label for="newPassword">New Password</label><input id="newPassword" type="password" autocomplete="new-password" required minlength="12" maxlength="128"><div class="stat-note">Use at least 12 characters.</div></div>
+      <div class="field"><label for="confirmPassword">Confirm New Password</label><input id="confirmPassword" type="password" autocomplete="new-password" required minlength="12" maxlength="128"></div>
+      <button class="btn btn-primary btn-block" id="passwordSubmit" type="submit">Update Password</button>
+      <p id="passwordMessage" class="message"></p>
+    </form>
+  </div>
+</section>
+
+<section class="page" id="phoneSettings">
+  <div class="page-heading"><div><h1>Phone Number</h1><p>Manage the contact number associated with your account.</p></div></div>
+  <div class="card">
+    <form id="phoneForm">
+      <div class="field"><label for="settingsPhone">New Phone Number</label><input id="settingsPhone" type="tel" maxlength="15" placeholder="0241234567" required></div>
+      <button class="btn btn-primary btn-block" id="phoneSubmit" type="submit">Update Phone Number</button>
+      <p id="phoneMessage" class="message"></p>
+    </form>
+  </div>
+</section>
+
+<section class="page" id="communitySettings">
+  <div class="page-heading"><div><h1>My WhatsApp Customer Group</h1><p>Add the invitation link for your own customers.</p></div></div>
+  <div class="card">
+    <div class="notice">Customers visiting your public agent store can use this link to join your WhatsApp group. This is separate from your private WhatsApp chat number.</div>
+    <form id="communityForm">
       <div class="field">
-        <label for="businessName">Business Name</label>
-        <input id="businessName" maxlength="100" placeholder="Your business name" autocomplete="organization">
+        <label for="whatsappLink">WhatsApp Group Invitation Link</label>
+        <input id="whatsappLink" type="url" maxlength="500" placeholder="https://chat.whatsapp.com/your-group-invite">
+        <div class="stat-note">Only links beginning with https://chat.whatsapp.com/ are accepted.</div>
       </div>
+      <button class="btn btn-primary btn-block" id="communitySubmit" type="submit">Save My Group Link</button>
+      <p id="communityMessage" class="message"></p>
+      <div id="communityPreview" class="share-link" hidden></div>
+    </form>
+  </div>
+</section>
 
-      <div class="field">
-        <label for="agentName">Agent Name</label>
-        <input id="agentName" maxlength="100" placeholder="Your full name" autocomplete="name">
-      </div>
+<section class="page" id="announcements">
+  <div class="page-heading"><div><h1>Announcements</h1><p>Important updates for Kielmen 636 agents.</p></div></div>
+  <div class="card">
+    <button class="btn btn-primary btn-block" id="refreshAnnouncements" type="button" onclick="loadAnnouncements()">↻ Refresh Announcements</button>
+    <div id="announcementsList" class="message">Loading announcements...</div>
+  </div>
+</section>
 
-      <div class="field">
-        <label for="agentPhone">Business Phone</label>
-        <input id="agentPhone" type="tel" inputmode="tel" maxlength="15" placeholder="0241234567" autocomplete="tel">
-      </div>
+<section class="page" id="withdrawals">
+  <div class="page-heading"><div><h1>Withdraw Earnings</h1><p>Withdraw eligible earnings to your Mobile Money account.</p></div></div>
+  <p class="stat-note">Today's profits become available the following day.</p>
+  <div class="stats">
+    <div class="card"><div class="stat-label">Available Balance</div><div class="stat-value green" id="availableBalance">GH₵0.00</div></div>
+    <div class="card"><div class="stat-label">Today's Profit</div><div class="stat-value" id="todayProfit">GH₵0.00</div></div>
+    <div class="card"><div class="stat-label">Pending Withdrawals</div><div class="stat-value gold" id="pendingWithdrawals">GH₵0.00</div></div>
+  </div>
+  <div class="card">
+    <h3>Request a Withdrawal</h3>
+    <div class="notice">Minimum withdrawal: GH₵0.10. Today's profit becomes withdrawable the following day.</div>
+    <div class="field"><label for="withdrawAmount">Amount (GH₵)</label><input type="number" id="withdrawAmount" min="0.10" step="0.01" placeholder="e.g. 50.00"></div>
+    <div class="field"><label for="withdrawProvider">Mobile Money Provider</label><select id="withdrawProvider"><option value="MTN">MTN MoMo</option><option value="TELECEL">Telecel Cash</option><option value="AIRTELTIGO">AirtelTigo Money</option></select></div>
+    <div class="field"><label for="withdrawPhone">Mobile Money Number</label><input type="tel" id="withdrawPhone" maxlength="15" placeholder="0241234567"></div>
+    <button class="btn btn-primary btn-block" id="withdrawSubmit" type="button" onclick="submitWithdrawal()">Request Withdrawal</button>
+    <p id="withdrawMessage" class="message"></p>
+  </div>
+  <div class="card">
+    <h3>Withdrawal History</h3>
+    <button class="btn btn-block" type="button" onclick="loadWithdrawals()">Refresh Balance & History</button>
+    <div id="withdrawalHistory" class="message">Loading withdrawal history...</div>
+  </div>
+</section>
 
-      <div class="field">
-        <label for="storeDescription">Store Description</label>
-        <input id="storeDescription" maxlength="120" placeholder="Affordable data bundles">
-      </div>
-
-      <button class="btn btn-primary btn-block" id="saveStoreButton" type="button" onclick="saveStore()">Save Store Details</button>
-      <p id="storeMessage" class="message" aria-live="polite">Your store information is loaded from your agent profile.</p>
-    </div>
-
-    <div class="card">
-      <h3>Share Your Store</h3>
-      <p class="stat-note">Give customers your unique store link.</p>
-      <div id="storeLink" class="share-link">Loading your store link...</div>
-      <div class="btn-row">
-        <button class="btn btn-primary" type="button" onclick="copyStoreLink()">Copy Link</button>
-        <button class="btn" type="button" onclick="shareStore()">Share Store</button>
-      </div>
-      <p id="storeLinkMessage" class="message" aria-live="polite"></p>
-    </div>
-  </section>
-
-  <!-- PRICES -->
-  <section class="page" id="prices">
-    <div class="page-heading">
-      <div>
-        <h1>My Selling Prices</h1>
-        <p>Manage the prices customers see in your store.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="field">
-        <label for="priceNetwork">Select Network</label>
-        <select id="priceNetwork">
-          <option value="MTN">MTN</option>
-          <option value="Telecel">Telecel</option>
-          <option value="AirtelTigo">AirtelTigo</option>
-        </select>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Bundle</th><th>Base Price</th><th>Selling Price</th></tr>
-          </thead>
-          <tbody id="priceRows"></tbody>
-        </table>
-      </div>
-
-      <button class="btn btn-primary btn-block" id="savePricesButton" type="button" onclick="savePrices()">Save My Prices</button>
-      <p id="priceMessage" class="message" aria-live="polite"></p>
-    </div>
-  </section>
-
-  <!-- ORDERS -->
-  <section class="page" id="orders">
-    <div class="page-heading">
-      <div>
-        <h1>Orders & Payments</h1>
-        <p>Review the orders returned for your agent account.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="notice">Search only filters orders returned to your authenticated agent account.</div>
-      <button class="btn btn-primary btn-block" id="refreshOrdersButton" type="button" onclick="loadOrders()">↻ Refresh Orders</button>
-
-      <div class="order-search">
-        <span class="search-icon" aria-hidden="true">⌕</span>
-        <input type="search" id="orderSearch" placeholder="Search phone, reference, network..." aria-label="Search orders" autocomplete="off">
-        <button type="button" id="clearOrderSearch">Clear</button>
-      </div>
-
-      <p class="order-count" id="orderCount" aria-live="polite">Loading orders...</p>
-      <div id="ordersList" class="message">Loading orders...</div>
-    </div>
-  </section>
-
-  <!-- ACCOUNT INFORMATION -->
-  <section class="page" id="profile">
-    <div class="page-heading">
-      <div>
-        <h1>Account Information</h1>
-        <p>View your agent account details.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="profile-line"><div class="profile-label">Full Name</div><div class="profile-value" id="profileAgent">Loading...</div></div>
-      <div class="profile-line"><div class="profile-label">Business Name</div><div class="profile-value" id="profileBusiness">Loading...</div></div>
-      <div class="profile-line"><div class="profile-label">Phone</div><div class="profile-value" id="profilePhone">Loading...</div></div>
-      <div class="profile-line"><div class="profile-label">Email</div><div class="profile-value" id="profileEmail">Loading...</div></div>
-      <div class="profile-line"><div class="profile-label">Agent Code</div><div class="profile-value" id="profileCode">Loading...</div></div>
-      <div class="profile-line"><div class="profile-label">Account Status</div><div class="profile-value"><span id="profileStatus" class="badge">Loading...</span></div></div>
-
-      <div class="btn-row" style="margin-top:18px">
-        <button class="btn btn-primary" type="button" onclick="showPage('store')">Edit Store Profile</button>
-        <button class="btn" type="button" onclick="showPage('passwordSettings')">Security Settings</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- SETTINGS: PASSWORD -->
-  <section class="page" id="passwordSettings">
-    <div class="page-heading">
-      <div>
-        <h1>Change Password</h1>
-        <p>Keep your agent account secure.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="notice">Use a strong password and never share it with anyone. The server must support the password-change endpoint for this feature to work.</div>
-
-      <form id="passwordForm">
-        <div class="field">
-          <label for="currentPassword">Current Password</label>
-          <input id="currentPassword" type="password" autocomplete="current-password" required maxlength="128">
-        </div>
-
-        <div class="field">
-          <label for="newPassword">New Password</label>
-          <input id="newPassword" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
-          <div class="stat-note">Use at least 12 characters.</div>
-        </div>
-
-        <div class="field">
-          <label for="confirmPassword">Confirm New Password</label>
-          <input id="confirmPassword" type="password" autocomplete="new-password" required minlength="12" maxlength="128">
-        </div>
-
-        <button class="btn btn-primary btn-block" id="passwordSubmit" type="submit">Update Password</button>
-        <p id="passwordMessage" class="message" aria-live="polite"></p>
-      </form>
-    </div>
-  </section>
-
-  <!-- SETTINGS: PHONE -->
-  <section class="page" id="phoneSettings">
-    <div class="page-heading">
-      <div>
-        <h1>Phone Number</h1>
-        <p>Manage the contact number associated with your account.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="notice">Your number is account information. This form updates it only if your backend supports the relevant profile-update endpoint.</div>
-
-      <form id="phoneForm">
-        <div class="field">
-          <label for="settingsPhone">New Phone Number</label>
-          <input id="settingsPhone" type="tel" inputmode="tel" maxlength="15" autocomplete="tel" placeholder="0241234567" required>
-        </div>
-
-        <button class="btn btn-primary btn-block" id="phoneSubmit" type="submit">Update Phone Number</button>
-        <p id="phoneMessage" class="message" aria-live="polite"></p>
-      </form>
-    </div>
-  </section>
-
-  <!-- SETTINGS: WHATSAPP CUSTOMER GROUP -->
-  <section class="page" id="communitySettings">
-    <div class="page-heading">
-      <div>
-        <h1>My WhatsApp Customer Group</h1>
-        <p>Add the invitation link for your own customers to join your WhatsApp group.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="notice">
-        Add your WhatsApp group invitation link here. Customers visiting your public agent store will see a Group button and can join your group. This is separate from your private WhatsApp chat number.
-      </div>
-
-      <form id="communityForm">
-        <div class="field">
-          <label for="whatsappLink">WhatsApp Group Invitation Link</label>
-          <input
-            id="whatsappLink"
-            type="url"
-            maxlength="500"
-            placeholder="https://chat.whatsapp.com/your-group-invite"
-            autocomplete="url"
-          >
-          <div class="stat-note">Only WhatsApp group invitation links beginning with https://chat.whatsapp.com/ are accepted.</div>
-        </div>
-
-        <button class="btn btn-primary btn-block" id="communitySubmit" type="submit">Save My Group Link</button>
-
-        <p id="communityMessage" class="message" aria-live="polite"></p>
-        <div id="communityPreview" class="share-link" hidden></div>
-      </form>
-    </div>
-  </section>
-
-  <!-- ANNOUNCEMENTS -->
-  <section class="page" id="announcements">
-    <div class="page-heading">
-      <div>
-        <h1>Announcements</h1>
-        <p>Important updates for Kielmen 636 agents.</p>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="notice">Announcements are loaded from the server when a compatible announcements endpoint is available.</div>
-      <button class="btn btn-primary btn-block" id="refreshAnnouncements" type="button" onclick="loadAnnouncements()">↻ Refresh Announcements</button>
-      <div id="announcementsList" class="message" aria-live="polite">Loading announcements...</div>
-    </div>
-  </section>
-
-  <!-- WITHDRAWALS -->
-  <section class="page" id="withdrawals">
-    <div class="page-heading">
-      <div>
-        <h1>Withdraw Earnings</h1>
-        <p>Withdraw eligible earnings to your Mobile Money account.</p>
-      </div>
-    </div>
-
-    <p class="stat-note">Today's profits become available the following day.</p>
-
-    <div class="stats">
-      <div class="card">
-        <div class="stat-label">Available Balance</div>
-        <div class="stat-value green" id="availableBalance">GH₵0.00</div>
-        <div class="stat-note">Available for withdrawal now.</div>
-      </div>
-
-      <div class="card">
-        <div class="stat-label">Today's Profit</div>
-        <div class="stat-value" id="todayProfit">GH₵0.00</div>
-        <div class="stat-note">Available for withdrawal tomorrow.</div>
-      </div>
-
-      <div class="card">
-        <div class="stat-label">Pending Withdrawals</div>
-        <div class="stat-value gold" id="pendingWithdrawals">GH₵0.00</div>
-        <div class="stat-note">Requests awaiting processing.</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h3>Request a Withdrawal</h3>
-      <div class="notice">Minimum withdrawal: GH₵0.10. There is no maximum withdrawal limit provided your available balance covers the request. Today's profit becomes withdrawable the following day.</div>
-
-      <div class="field">
-        <label for="withdrawAmount">Amount (GH₵)</label>
-        <input type="number" id="withdrawAmount" min="0.10" step="0.01" placeholder="e.g. 50.00">
-      </div>
-
-      <div class="field">
-        <label for="withdrawProvider">Mobile Money Provider</label>
-        <select id="withdrawProvider">
-          <option value="MTN">MTN MoMo</option>
-          <option value="TELECEL">Telecel Cash</option>
-          <option value="AIRTELTIGO">AirtelTigo Money</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="withdrawPhone">Mobile Money Number</label>
-        <input type="tel" id="withdrawPhone" inputmode="tel" maxlength="15" placeholder="0241234567">
-      </div>
-
-      <button class="btn btn-primary btn-block" id="withdrawSubmit" type="button" onclick="submitWithdrawal()">Request Withdrawal</button>
-      <p id="withdrawMessage" class="message" aria-live="polite"></p>
-    </div>
-
-    <div class="card">
-      <h3>Withdrawal History</h3>
-      <button class="btn btn-block" type="button" onclick="loadWithdrawals()">Refresh Balance & History</button>
-      <div id="withdrawalHistory" class="message">Loading withdrawal history...</div>
-    </div>
-  </section>
-
-  <footer>Kielmen 636 Dataplug · Agent Dashboard</footer>
+<footer>Kielmen 636 Dataplug · Agent Dashboard</footer>
 </main>
 
 <nav class="bottom-nav" id="bottomNav" hidden aria-label="Quick navigation">
@@ -883,8 +400,141 @@ footer{
   <button class="nav-btn" data-page="orders" type="button"><span class="icon">▤</span>Orders</button>
   <button class="nav-btn" data-page="profile" type="button"><span class="icon">◎</span>Account</button>
   <button class="nav-btn" data-page="withdrawals" type="button"><span class="icon">💰</span>Withdraw</button>
-  </nav>
-  /* AUTHENTICATION */
+</nav>
+
+<!-- IMPORTANT: JAVASCRIPT MUST START INSIDE THIS SCRIPT TAG -->
+<script>
+
+/* CONFIGURATION */
+const AGENT_API="https://kielmen-dataplug-payment-api.onrender.com";
+const PUBLIC_SITE="https://kielmen.com";
+const LOGIN_PAGE="https://kielmen.com/agent-login.html";
+
+const BASE_PRICES={
+  MTN:{
+    "1GB":4.50,"2GB":9.00,"3GB":13.50,"4GB":19.00,
+    "5GB":25.00,"6GB":31.00,"8GB":42.00,"10GB":48.00,
+    "15GB":68.00,"20GB":98.00,"25GB":139.00,
+    "30GB":154.00,"40GB":198.00,"50GB":239.00
+  },
+  Telecel:{
+    "10GB":45,"15GB":62,"20GB":82,"25GB":101,
+    "30GB":124,"40GB":170,"50GB":210,"100GB":420
+  },
+  AirtelTigo:{
+    "1GB":5,"2GB":9.20,"5GB":22,"10GB":41,
+    "20GB":78,"30GB":115,"50GB":188
+  }
+};
+
+const STORAGE={
+  prices:"k636_agent_prices",
+  profile:"k636_agent_profile",
+  community:"k636_agent_community"
+};
+
+let agent=null;
+let profile={businessName:"",agentName:"",agentPhone:"",storeDescription:""};
+let agentPrices={};
+let orders=[];
+let announcements=[];
+let dashboardStats={};
+let serverPricesAvailable=false;
+let agentProfileFromServer=null;
+let communitySettings={whatsappLink:""};
+
+/* HELPERS */
+function money(value){
+  const amount=Number(value);
+  return "GH₵"+(Number.isFinite(amount)?amount:0).toFixed(2);
+}
+
+function escapeHTML(value){
+  return String(value??"").replace(/[&<>"']/g,char=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[char]));
+}
+
+function writeStorage(key,value){
+  try{sessionStorage.setItem(key,JSON.stringify(value));}catch(error){console.warn("Storage unavailable",error);}
+}
+
+function normaliseNetwork(value){
+  const name=String(value||"").toLowerCase().replace(/[\s_-]/g,"");
+  if(name==="mtn")return "MTN";
+  if(name==="telecel"||name==="vodafone")return "Telecel";
+  if(name==="airteltigo"||name==="tigo"||name==="airtel")return "AirtelTigo";
+  return null;
+}
+
+function normalisePriceMap(input){
+  const result={};
+  if(!input||typeof input!=="object")return result;
+
+  Object.keys(input).forEach(key=>{
+    const network=normaliseNetwork(key);
+    if(!network)return;
+    result[network]={};
+
+    Object.entries(input[key]||{}).forEach(([bundle,price])=>{
+      const amount=Number(price);
+      if(Number.isFinite(amount))result[network][bundle]=amount;
+    });
+  });
+
+  return result;
+}
+
+function setMessage(title,description,error=false){
+  const element=document.getElementById("pageMessage");
+  element.replaceChildren();
+
+  const strong=document.createElement("strong");
+  strong.textContent=title;
+
+  const paragraph=document.createElement("p");
+  paragraph.textContent=description;
+
+  element.append(strong,paragraph);
+  element.className=error?"message error":"message";
+  element.hidden=false;
+}
+
+async function apiRequest(path,options={}){
+  const token=sessionStorage.getItem("k636_agent_token");
+
+  const headers={
+    ...(options.headers||{})
+  };
+
+  if(!(options.body instanceof FormData)){
+    headers["Content-Type"]="application/json";
+  }
+
+  if(token)headers.Authorization="Bearer "+token;
+
+  const response=await fetch(AGENT_API+path,{
+    ...options,
+    headers,
+    credentials:"omit"
+  });
+
+  let result={};
+
+  try{
+    result=await response.json();
+  }catch{
+    throw new Error("The server returned an invalid response.");
+  }
+
+  return {response,result};
+}
+
+function getBasePrice(network,bundle){
+  return Number(BASE_PRICES[network]?.[bundle]??0);
+}
+
+/* AUTHENTICATION */
 async function verifyAgent(){
   const token=sessionStorage.getItem("k636_agent_token");
 
@@ -920,6 +570,7 @@ async function verifyAgent(){
     ]);
 
     await loadCommunityForm();
+
   }catch(error){
     console.error("Agent verification failed:",error);
     setMessage("Unable to connect to the server",error.message+" Your dashboard has not been authenticated yet.",true);
@@ -937,6 +588,7 @@ function displayAgent(){
   document.getElementById("welcomeName").textContent="Welcome, "+fullName+"!";
   document.getElementById("welcomeDetails").textContent=businessName+" — manage your data business here.";
   document.getElementById("agentCode").textContent=code||"Not assigned";
+
   document.getElementById("profileAgent").textContent=fullName;
   document.getElementById("profileBusiness").textContent=businessName;
   document.getElementById("profilePhone").textContent=phone||"Not provided";
@@ -977,7 +629,7 @@ async function agentLogout(){
   }
 }
 
-/* TOP-LEFT NAVIGATION */
+/* NAVIGATION */
 const sidebar=document.getElementById("sidebar");
 const menuToggle=document.getElementById("menuToggle");
 const overlay=document.getElementById("sidebarOverlay");
@@ -1045,37 +697,16 @@ document.getElementById("sideSignOut").addEventListener("click",agentLogout);
 function selectNetwork(network){
   const normalized=normaliseNetwork(network);
   if(!normalized)return;
-
   document.getElementById("priceNetwork").value=normalized;
   renderPrices();
   showPage("prices");
 }
 
 /* SELLING PRICES */
-function getBasePrice(network,bundle){
-  const backendBase=window.agentBasePrices||{};
-  const normalized=normaliseNetwork(network);
-
-  if(!normalized)return Number(BASE_PRICES[network]?.[bundle]??0);
-
-  for(const key of [normalized,normalized.toUpperCase(),normalized.toLowerCase()]){
-    const values=backendBase[key];
-
-    if(values&&values[bundle]!==undefined){
-      const price=Number(values[bundle]);
-      if(Number.isFinite(price))return price;
-    }
-  }
-
-  return Number(BASE_PRICES[normalized]?.[bundle]??0);
-}
-
 function renderPrices(){
   const networkSelect=document.getElementById("priceNetwork");
   const rows=document.getElementById("priceRows");
   const message=document.getElementById("priceMessage");
-
-  if(!networkSelect||!rows||!message)return;
 
   const network=normaliseNetwork(networkSelect.value);
 
@@ -1102,15 +733,13 @@ function renderPrices(){
     const selling=Number.isFinite(savedPrice)&&savedPrice>=base?savedPrice:base;
 
     const row=document.createElement("tr");
-
     const bundleCell=document.createElement("td");
-    bundleCell.textContent=bundle;
-
     const baseCell=document.createElement("td");
-    baseCell.textContent=money(base);
-
     const priceCell=document.createElement("td");
     const input=document.createElement("input");
+
+    bundleCell.textContent=bundle;
+    baseCell.textContent=money(base);
 
     input.className="price-input";
     input.type="number";
@@ -1119,7 +748,6 @@ function renderPrices(){
     input.value=selling.toFixed(2);
     input.dataset.network=network;
     input.dataset.bundle=bundle;
-    input.setAttribute("aria-label",network+" "+bundle+" selling price");
 
     priceCell.appendChild(input);
     row.append(bundleCell,baseCell,priceCell);
@@ -1137,7 +765,7 @@ async function loadPrices(){
   try{
     const data=await apiRequest("/agents/prices");
 
-    if(!data.response.ok||!data.result||data.result.success!==true){
+    if(!data.response.ok||data.result?.success!==true){
       throw new Error(data.result?.message||"Could not load agent prices.");
     }
 
@@ -1162,35 +790,26 @@ async function loadPrices(){
     }
 
     agentPrices=prices;
-    window.agentSavedPrices=prices;
-    window.agentBasePrices=data.result.basePrices||data.result.base_prices||{};
     serverPricesAvailable=true;
-
-    writeStorage(STORAGE.prices,prices);
     renderPrices();
 
-    if(message)message.textContent="Your prices have been loaded from the server.";
-
+    message.textContent="Your prices have been loaded from the server.";
     return prices;
+
   }catch(error){
     serverPricesAvailable=false;
     console.error("Load prices error:",error);
     renderPrices();
-
-    if(message){
-      message.textContent="Could not confirm prices from the server. "+error.message+" Saving prices is disabled until prices load successfully.";
-    }
-
+    message.textContent="Could not confirm prices from the server: "+error.message;
     return {};
   }
 }
 
 async function savePrices(){
-  const token=sessionStorage.getItem("k636_agent_token");
   const button=document.getElementById("savePricesButton");
   const message=document.getElementById("priceMessage");
 
-  if(!token){
+  if(!sessionStorage.getItem("k636_agent_token")){
     message.textContent="Your session has expired. Please sign in again.";
     return;
   }
@@ -1211,7 +830,7 @@ async function savePrices(){
     const base=getBasePrice(network,bundle);
 
     if(!network||!bundle||input.value.trim()===""||!Number.isFinite(price)||price<base||Math.round(price*100)!==price*100){
-      validationError="Check every price. Prices must be valid, use no more than two decimal places, and meet the minimum price.";
+      validationError="Check every price. Prices must be valid and meet the minimum price.";
       return;
     }
 
@@ -1225,7 +844,6 @@ async function savePrices(){
 
   button.disabled=true;
   button.textContent="Saving Prices...";
-  message.textContent="Saving prices to your agent account...";
 
   try{
     const data=await apiRequest("/agents/prices",{
@@ -1233,24 +851,24 @@ async function savePrices(){
       body:JSON.stringify({prices})
     });
 
-    if(!data.response.ok||!data.result||data.result.success!==true){
+    if(!data.response.ok||data.result?.success!==true){
       throw new Error(data.result?.message||"Unable to save prices.");
     }
 
     await loadPrices();
-
     message.textContent="Your selling prices were saved successfully.";
     message.className="message success";
+
   }catch(error){
-    console.error("Save prices error:",error);
-    message.textContent=error.message||"Unable to save your prices.";
+    message.textContent=error.message;
     message.className="message error";
   }finally{
     button.disabled=false;
     button.textContent="Save My Prices";
   }
 }
-  /* STORE PROFILE — UPDATED PROFILE REQUEST */
+
+/* STORE PROFILE */
 function loadProfileForm(){
   document.getElementById("businessName").value=profile.businessName||"";
   document.getElementById("agentName").value=profile.agentName||"";
@@ -1259,13 +877,8 @@ function loadProfileForm(){
 }
 
 function getStoreURL(){
-  const brand=document.getElementById("businessName")?.value.trim()||
-    profile.businessName||
-    agent?.business_name||
-    agent?.businessName||
-    "";
-
-  if(!brand.trim())return "";
+  const brand=document.getElementById("businessName")?.value.trim()||profile.businessName||"";
+  if(!brand)return "";
 
   const slug=brand.toLowerCase().trim()
     .normalize("NFD")
@@ -1299,68 +912,48 @@ async function saveStore(){
     return;
   }
 
-  const email=String(agent?.email||agent?.email_address||"").trim();
-
-  const profilePayload={
+  const payload={
     fullName:agentName,
-    businessName:businessName,
-    email:email,
+    businessName,
+    email:String(agent?.email||agent?.email_address||"").trim(),
     phone:normalizedPhone,
     description:storeDescription
   };
 
   button.disabled=true;
   button.textContent="Saving...";
-  message.textContent="Saving your store details...";
 
   try{
     const data=await apiRequest("/agents/profile",{
       method:"PUT",
-      body:JSON.stringify(profilePayload)
+      body:JSON.stringify(payload)
     });
 
-    if(!data.response.ok||!data.result||data.result.success!==true){
+    if(!data.response.ok||data.result?.success!==true){
       throw new Error(data.result?.message||"The server did not save your store details.");
     }
 
-    profile={
-      ...profile,
-      businessName:businessName,
-      agentName:agentName,
-      agentPhone:normalizedPhone,
-      storeDescription:storeDescription
+    profile={businessName,agentName,agentPhone:normalizedPhone,storeDescription};
+
+    if(data.result.agent)agent=data.result.agent;
+    else agent={
+      ...agent,
+      business_name:businessName,
+      full_name:agentName,
+      phone:normalizedPhone,
+      store_description:storeDescription
     };
 
-    writeStorage(STORAGE.profile,profile);
-
-    if(data.result.agent){
-      agent=data.result.agent;
-    }else if(agent){
-      agent={
-        ...agent,
-        business_name:businessName,
-        businessName:businessName,
-        full_name:agentName,
-        fullName:agentName,
-        phone:normalizedPhone,
-        store_description:storeDescription,
-        storeDescription:storeDescription,
-        description:storeDescription
-      };
-    }
-
-    if(agent){
-      sessionStorage.setItem("k636_agent",JSON.stringify(agent));
-    }
+    sessionStorage.setItem("k636_agent",JSON.stringify(agent));
 
     displayAgent();
     renderStoreLink();
 
     message.textContent="Your store details have been saved successfully.";
     message.className="message success";
+
   }catch(error){
-    console.error("Save store error:",error);
-    message.textContent=error.message||"Unable to save your store details.";
+    message.textContent=error.message;
     message.className="message error";
   }finally{
     button.disabled=false;
@@ -1371,21 +964,15 @@ async function saveStore(){
 function renderStoreLink(){
   const element=document.getElementById("storeLink");
   const message=document.getElementById("storeLinkMessage");
-
-  if(!element)return;
-
   const link=getStoreURL();
 
   if(!link){
     element.textContent="Enter your business name and save your store details to generate your link.";
-
     if(message)message.textContent="";
-
     return;
   }
 
   element.textContent=link;
-
   if(message){
     message.textContent="Your brand-name store link is ready.";
     message.className="message success";
@@ -1398,7 +985,6 @@ async function copyStoreLink(){
 
   if(!link){
     message.textContent="Enter your business name and save your store details first.";
-    message.className="message error";
     return;
   }
 
@@ -1408,7 +994,6 @@ async function copyStoreLink(){
     message.className="message success";
   }catch{
     window.prompt("Copy your store link:",link);
-    message.textContent="If the link was not copied automatically, copy it from the box above.";
   }
 }
 
@@ -1418,18 +1003,15 @@ async function shareStore(){
 
   if(!link){
     message.textContent="Enter your business name and save your store details first.";
-    message.className="message error";
     return;
   }
 
-  const name=document.getElementById("businessName").value.trim()||profile.businessName||"My Data Store";
+  const name=document.getElementById("businessName").value.trim()||"My Data Store";
   const text="Order your data bundles from "+name+" using my Kielmen 636 Dataplug store: "+link;
 
   if(navigator.share){
     try{
       await navigator.share({title:name,text,url:link});
-      message.textContent="Store sharing opened.";
-      message.className="message success";
     }catch(error){
       if(error.name!=="AbortError")window.prompt("Copy your store link:",link);
     }
@@ -1445,32 +1027,25 @@ async function loadOrders(){
   const count=document.getElementById("orderCount");
 
   target.textContent="Loading orders from the server...";
-
-  if(count)count.textContent="Loading orders...";
-
+  count.textContent="Loading orders...";
   button.disabled=true;
   button.textContent="Loading...";
 
   try{
     const data=await apiRequest("/agents/orders");
 
-    if(!data.response.ok||!data.result||data.result.success!==true){
+    if(!data.response.ok||data.result?.success!==true){
       throw new Error(data.result?.message||"The server did not return your orders.");
     }
 
-    orders=Array.isArray(data.result.orders)
-      ?data.result.orders
-      :Array.isArray(data.result.data?.orders)
-        ?data.result.data.orders
-        :[];
-
+    orders=Array.isArray(data.result.orders)?data.result.orders:[];
     renderOrders();
     renderRecentOrders();
+
   }catch(error){
     console.error("Load orders error:",error);
     target.textContent="Unable to load orders: "+error.message;
-
-    if(count)count.textContent="Orders unavailable";
+    count.textContent="Orders unavailable";
   }finally{
     button.disabled=false;
     button.textContent="↻ Refresh Orders";
@@ -1479,31 +1054,25 @@ async function loadOrders(){
 
 function orderSearchFields(order){
   return [
-    order.network,order.bundle,order.status,order.payment_status,order.paymentStatus,
-    order.delivery_status,order.deliveryStatus,order.phone,order.customer_phone,
-    order.customerPhone,order.reference,order.reference_code,
-    order.transaction_reference,order.supplier_reference
+    order.network,order.bundle,order.status,order.payment_status,
+    order.paymentStatus,order.delivery_status,order.deliveryStatus,
+    order.phone,order.customer_phone,order.customerPhone,
+    order.reference,order.reference_code,order.transaction_reference,
+    order.supplier_reference
   ];
 }
 
 function renderOrders(){
   const target=document.getElementById("ordersList");
-  const search=document.getElementById("orderSearch");
-  const count=document.getElementById("orderCount");
-
-  if(!target)return;
-
-  const term=search?search.value.trim().toLowerCase():"";
+  const term=document.getElementById("orderSearch").value.trim().toLowerCase();
   const filtered=orders.filter(order=>
     orderSearchFields(order).some(value=>String(value??"").toLowerCase().includes(term))
   );
 
-  if(count)count.textContent=filtered.length+" of "+orders.length+" orders";
+  document.getElementById("orderCount").textContent=filtered.length+" of "+orders.length+" orders";
 
   if(!filtered.length){
-    target.textContent=term
-      ?"No orders match your search. Try another phone number, reference, network, bundle or status."
-      :"No orders were returned for this agent account.";
+    target.textContent=term?"No orders match your search.":"No orders were returned for this agent account.";
     return;
   }
 
@@ -1517,15 +1086,7 @@ function renderOrders(){
     const amount=order.amount??order.total??0;
 
     const date=order.created_at
-      ?new Date(order.created_at).toLocaleString("en-GB",{
-        timeZone:"Africa/Accra",
-        day:"2-digit",
-        month:"short",
-        year:"numeric",
-        hour:"2-digit",
-        minute:"2-digit",
-        hour12:true
-      })
+      ?new Date(order.created_at).toLocaleString("en-GB",{timeZone:"Africa/Accra"})
       :"Date unavailable";
 
     return `<article class="order-card">
@@ -1543,8 +1104,6 @@ function renderOrders(){
 function renderRecentOrders(){
   const target=document.getElementById("recentOrders");
 
-  if(!target)return;
-
   if(!orders.length){
     target.textContent="No server orders have been returned yet.";
     return;
@@ -1552,47 +1111,22 @@ function renderRecentOrders(){
 
   target.innerHTML=orders.slice(0,3).map(order=>{
     const reference=order.reference||order.reference_code||order.transaction_reference||"Not available";
-
-    const date=order.created_at
-      ?new Date(order.created_at).toLocaleString("en-GB",{
-        timeZone:"Africa/Accra",
-        day:"2-digit",
-        month:"short",
-        year:"numeric",
-        hour:"2-digit",
-        minute:"2-digit",
-        hour12:true
-      })
-      :"Date unavailable";
-
     return `<div class="message">
       <strong>${escapeHTML(order.network||"Network")} · ${escapeHTML(order.bundle||"Bundle")}</strong>
       <p>Reference: ${escapeHTML(reference)}</p>
-      <p>Date: ${escapeHTML(date)}</p>
       <p>Status: ${escapeHTML(order.status||"unknown")}</p>
       <strong>${money(order.amount??order.total??0)}</strong>
     </div>`;
   }).join("");
 }
-    /* PERFORMANCE OVERVIEW */
-async function loadStats(){
-  const ordersElement=document.getElementById("ordersStat");
-  const profitElement=document.getElementById("profitStat");
-  const salesElement=document.getElementById("salesStat");
-  const customersElement=document.getElementById("customersStat");
-  const confirmedElement=document.getElementById("confirmedProfitStat");
-  const pendingElement=document.getElementById("pendingDeliveryProfitStat");
-  const pendingNote=document.getElementById("pendingDeliveryNote");
 
+/* PERFORMANCE STATISTICS */
+async function loadStats(){
   try{
     const data=await apiRequest("/agents/stats");
 
-    if(!data.response.ok){
-      throw new Error(data.result?.message||"Statistics request failed with HTTP "+data.response.status);
-    }
-
-    if(!data.result||data.result.success!==true){
-      throw new Error(data.result?.message||"The server did not return successful statistics.");
+    if(!data.response.ok||data.result?.success!==true){
+      throw new Error(data.result?.message||"Statistics request failed.");
     }
 
     const stats=data.result.stats||data.result;
@@ -1605,148 +1139,122 @@ async function loadStats(){
     const customers=Number(stats.customers??stats.totalCustomers??stats.total_customers);
     const pendingOrders=Number(stats.pendingDeliveryOrders??stats.pending_delivery_orders);
 
-    const required=[
-      totalOrders,totalSales,estimatedProfit,confirmedProfit,
-      pendingProfit,customers,pendingOrders
-    ];
+    const values=[totalOrders,totalSales,estimatedProfit,confirmedProfit,pendingProfit,customers,pendingOrders];
 
-    if(!required.every(Number.isFinite)){
-      throw new Error("The server response is missing one or more statistics. Check the /agents/stats response in server.js.");
+    if(!values.every(Number.isFinite)){
+      throw new Error("The server statistics response is missing required values.");
     }
 
-    ordersElement.textContent=totalOrders;
-    salesElement.textContent=money(totalSales);
-    profitElement.textContent=money(estimatedProfit);
-    confirmedElement.textContent=money(confirmedProfit);
-    pendingElement.textContent=money(pendingProfit);
-    customersElement.textContent=customers;
-    pendingNote.textContent=pendingOrders+" orders awaiting delivery.";
+    document.getElementById("ordersStat").textContent=totalOrders;
+    document.getElementById("salesStat").textContent=money(totalSales);
+    document.getElementById("profitStat").textContent=money(estimatedProfit);
+    document.getElementById("confirmedProfitStat").textContent=money(confirmedProfit);
+    document.getElementById("pendingDeliveryProfitStat").textContent=money(pendingProfit);
+    document.getElementById("customersStat").textContent=customers;
+    document.getElementById("pendingDeliveryNote").textContent=pendingOrders+" orders awaiting delivery.";
 
     dashboardStats=stats;
+
   }catch(error){
     console.error("Agent statistics error:",error);
-
-    ordersElement.textContent="Error";
-    salesElement.textContent="Error";
-    profitElement.textContent="Unavailable";
-    confirmedElement.textContent="Unavailable";
-    pendingElement.textContent="Unavailable";
-    customersElement.textContent="Error";
-    pendingNote.textContent=error.message||"Unable to retrieve statistics.";
+    ["ordersStat","salesStat","profitStat","confirmedProfitStat","pendingDeliveryProfitStat","customersStat"].forEach(id=>{
+      document.getElementById(id).textContent="Unavailable";
+    });
+    document.getElementById("pendingDeliveryNote").textContent=error.message;
   }
 }
 
-/* WITHDRAWAL FUNCTIONS */
+/* WITHDRAWALS */
 async function loadWithdrawals(){
-  const balanceElement=document.getElementById("availableBalance");
-  const todayElement=document.getElementById("todayProfit");
-  const pendingElement=document.getElementById("pendingWithdrawals");
-  const historyElement=document.getElementById("withdrawalHistory");
-  const messageElement=document.getElementById("withdrawMessage");
-  const token=sessionStorage.getItem("k636_agent_token");
+  const message=document.getElementById("withdrawMessage");
+  const history=document.getElementById("withdrawalHistory");
 
-  if(!token){
-    const message="Your session has expired. Please sign in again.";
-
-    if(messageElement)messageElement.textContent=message;
-    if(historyElement)historyElement.textContent=message;
-
+  if(!sessionStorage.getItem("k636_agent_token")){
+    message.textContent="Your session has expired. Please sign in again.";
     return;
   }
 
-  if(messageElement)messageElement.textContent="Loading your earnings...";
-  if(historyElement)historyElement.textContent="Loading withdrawal history...";
+  message.textContent="Loading your earnings...";
+  history.textContent="Loading withdrawal history...";
 
   try{
     const balanceData=await apiRequest("/agents/stats");
 
-    if(!balanceData.response.ok||!balanceData.result||balanceData.result.success!==true){
+    if(!balanceData.response.ok||balanceData.result?.success!==true){
       throw new Error(balanceData.result?.message||"Could not retrieve your earnings.");
     }
 
     const stats=balanceData.result.stats||balanceData.result;
-
     const available=Number(stats.availableBalance);
     const today=Number(stats.todayProfit??stats.todaysProfit);
     const pending=Number(stats.pendingWithdrawals);
 
-    if(!Number.isFinite(available)||!Number.isFinite(today)||!Number.isFinite(pending)){
+    if(![available,today,pending].every(Number.isFinite)){
       throw new Error("The server returned missing or invalid balance values.");
     }
 
-    balanceElement.textContent=money(available);
-    todayElement.textContent=money(today);
-    pendingElement.textContent=money(pending);
+    document.getElementById("availableBalance").textContent=money(available);
+    document.getElementById("todayProfit").textContent=money(today);
+    document.getElementById("pendingWithdrawals").textContent=money(pending);
 
-    if(messageElement){
-      messageElement.textContent="Balances loaded successfully. Today's profit becomes available for withdrawal on the following Ghana calendar day.";
+    message.textContent="Balances loaded successfully.";
+
+    const historyData=await apiRequest("/agents/withdrawals/history");
+
+    if(!historyData.response.ok||historyData.result?.success!==true){
+      throw new Error(historyData.result?.message||"Could not retrieve withdrawal history.");
     }
 
-    try{
-      const historyData=await apiRequest("/agents/withdrawals/history");
+    const withdrawals=historyData.result.withdrawals;
 
-      if(!historyData.response.ok||!historyData.result||historyData.result.success!==true){
-        throw new Error(historyData.result?.message||"Could not retrieve withdrawal history.");
-      }
-
-      const withdrawals=historyData.result.withdrawals;
-
-      if(!Array.isArray(withdrawals)){
-        throw new Error("Invalid withdrawal history response.");
-      }
-
-      if(!withdrawals.length){
-        historyElement.textContent="No withdrawal requests have been recorded yet.";
-      }else{
-        historyElement.innerHTML=withdrawals.map(item=>{
-          const status=String(item.status||"pending").toLowerCase();
-          const label=status==="paid"?"PAID":status==="rejected"?"REJECTED":status==="approved"?"APPROVED":"PENDING";
-          const color=status==="paid"?"#078454":status==="rejected"?"#dc3545":"#a16207";
-
-          const date=item.created_at
-            ?new Date(item.created_at).toLocaleString("en-GB",{timeZone:"Africa/Accra"})
-            :"Date unavailable";
-
-          return `<div class="card">
-            <strong>${money(item.amount)}</strong>
-            <p class="stat-note">Provider: ${escapeHTML(item.provider||"Not provided")}</p>
-            <p class="stat-note">Mobile Money: ${escapeHTML(item.phone||"Not provided")}</p>
-            <p>Status: <strong style="color:${color}">${label}</strong></p>
-            <p class="stat-note">Date: ${escapeHTML(date)}</p>
-          </div>`;
-        }).join("");
-      }
-    }catch(historyError){
-      console.error("Withdrawal history error:",historyError);
-      historyElement.textContent="Balances loaded, but history could not be loaded: "+historyError.message;
+    if(!Array.isArray(withdrawals)){
+      throw new Error("Invalid withdrawal history response.");
     }
+
+    if(!withdrawals.length){
+      history.textContent="No withdrawal requests have been recorded yet.";
+      return;
+    }
+
+    history.innerHTML=withdrawals.map(item=>{
+      const status=String(item.status||"pending").toLowerCase();
+      const label=status==="paid"?"PAID":status==="rejected"?"REJECTED":status==="approved"?"APPROVED":"PENDING";
+      const color=status==="paid"?"#078454":status==="rejected"?"#dc3545":"#a16207";
+      const date=item.created_at?new Date(item.created_at).toLocaleString("en-GB",{timeZone:"Africa/Accra"}):"Date unavailable";
+
+      return `<div class="card">
+        <strong>${money(item.amount)}</strong>
+        <p class="stat-note">Provider: ${escapeHTML(item.provider||"Not provided")}</p>
+        <p class="stat-note">Mobile Money: ${escapeHTML(item.phone||"Not provided")}</p>
+        <p>Status: <strong style="color:${color}">${label}</strong></p>
+        <p class="stat-note">Date: ${escapeHTML(date)}</p>
+      </div>`;
+    }).join("");
+
   }catch(error){
-    console.error("Withdrawal balance error:",error);
-
-    if(messageElement)messageElement.textContent="Unable to load balances: "+error.message;
-    if(historyElement)historyElement.textContent="Could not load withdrawal information. Please refresh.";
+    console.error("Withdrawal error:",error);
+    message.textContent="Unable to load balances: "+error.message;
+    history.textContent="Could not load withdrawal information.";
   }
 }
 
 async function submitWithdrawal(){
   const amountInput=document.getElementById("withdrawAmount");
-  const providerInput=document.getElementById("withdrawProvider");
-  const phoneInput=document.getElementById("withdrawPhone");
+  const provider=document.getElementById("withdrawProvider").value;
+  const phone=document.getElementById("withdrawPhone").value.trim();
   const button=document.getElementById("withdrawSubmit");
   const message=document.getElementById("withdrawMessage");
 
   const amount=Number(amountInput.value);
-  const provider=providerInput.value;
-  const phone=phoneInput.value.trim();
   const pesewas=Math.round(amount*100);
 
   if(amountInput.value.trim()===""||!Number.isFinite(amount)||!Number.isSafeInteger(pesewas)||pesewas<10||Math.abs(amount*100-pesewas)>0.000001){
-    message.textContent="Enter a valid withdrawal amount of at least GH₵0.10, using no more than two decimal places.";
+    message.textContent="Enter a valid withdrawal amount of at least GH₵0.10.";
     return;
   }
 
-  if(!phone){
-    message.textContent="Please enter your Mobile Money number.";
+  if(!/^(0\d{9}|233\d{9})$/.test(phone.replace(/\s+/g,""))){
+    message.textContent="Enter a valid Ghana Mobile Money number.";
     return;
   }
 
@@ -1754,31 +1262,30 @@ async function submitWithdrawal(){
 
   button.disabled=true;
   button.textContent="Submitting...";
-  message.textContent="Submitting your withdrawal request...";
 
   try{
     const data=await apiRequest("/agents/withdrawals",{
       method:"POST",
-      body:JSON.stringify({amount:amount,provider:provider,phone:phone})
+      body:JSON.stringify({amount,provider,phone})
     });
 
-    if(!data.response.ok||!data.result||!data.result.success){
+    if(!data.response.ok||data.result?.success!==true){
       throw new Error(data.result?.message||"Your withdrawal request could not be submitted.");
     }
 
-    message.textContent="✅ Withdrawal request submitted successfully. Status: PENDING. Your request is awaiting payment by the administrator.";
+    message.textContent="Withdrawal request submitted successfully. Your request is awaiting processing.";
     amountInput.value="";
-
     await loadWithdrawals();
+
   }catch(error){
-    message.textContent=error.message||"Unable to submit your withdrawal request. Please try again.";
+    message.textContent=error.message;
   }finally{
     button.disabled=false;
     button.textContent="Request Withdrawal";
   }
 }
 
-/* PASSWORD SETTINGS — MINIMUM 12 CHARACTERS */
+/* CHANGE PASSWORD */
 document.getElementById("passwordForm").addEventListener("submit",async event=>{
   event.preventDefault();
 
@@ -1815,16 +1322,16 @@ document.getElementById("passwordForm").addEventListener("submit",async event=>{
       body:JSON.stringify({currentPassword,newPassword})
     });
 
-    if(!data.response.ok||!data.result||data.result.success!==true){
+    if(!data.response.ok||data.result?.success!==true){
       throw new Error(data.result?.message||"Password update was not accepted by the server.");
     }
 
     document.getElementById("passwordForm").reset();
-
     message.textContent="Password updated successfully.";
     message.className="message success";
+
   }catch(error){
-    message.textContent=error.message+" If the server reports that this endpoint is unavailable, it must be added to server.js before password changes can work.";
+    message.textContent=error.message;
     message.className="message error";
   }finally{
     button.disabled=false;
@@ -1832,7 +1339,7 @@ document.getElementById("passwordForm").addEventListener("submit",async event=>{
   }
 });
 
-/* PHONE SETTINGS */
+/* UPDATE PHONE NUMBER */
 document.getElementById("phoneForm").addEventListener("submit",async event=>{
   event.preventDefault();
 
@@ -1855,24 +1362,20 @@ document.getElementById("phoneForm").addEventListener("submit",async event=>{
       body:JSON.stringify({phone})
     });
 
-    if(!data.response.ok||!data.result||data.result.success!==true){
+    if(!data.response.ok||data.result?.success!==true){
       throw new Error(data.result?.message||"Phone number was not updated.");
     }
 
-    if(data.result.agent){
-      agent=data.result.agent;
-    }else if(agent){
-      agent.phone=phone;
-    }
+    if(data.result.agent)agent=data.result.agent;
+    else agent={...agent,phone};
 
     profile.agentPhone=phone;
-    writeStorage(STORAGE.profile,profile);
     sessionStorage.setItem("k636_agent",JSON.stringify(agent));
-
     displayAgent();
 
     message.textContent="Phone number updated successfully.";
     message.className="message success";
+
   }catch(error){
     message.textContent="Could not update the phone number: "+error.message;
     message.className="message error";
@@ -1882,18 +1385,15 @@ document.getElementById("phoneForm").addEventListener("submit",async event=>{
   }
 });
 
-/* WHATSAPP CUSTOMER GROUP SETTINGS
-   The group link is stored on the agent's server-side profile.
-   It is not saved only in this browser. */
+/* WHATSAPP CUSTOMER GROUP */
 function validWhatsAppGroupLink(value){
   const link=String(value||"").trim();
-
   if(!link)return true;
 
   try{
     const url=new URL(link);
-    return url.protocol==="https:" &&
-      url.hostname.toLowerCase()==="chat.whatsapp.com" &&
+    return url.protocol==="https:"&&
+      url.hostname.toLowerCase()==="chat.whatsapp.com"&&
       url.pathname.length>1;
   }catch{
     return false;
@@ -1907,7 +1407,7 @@ async function loadCommunityForm(){
   try{
     const data=await apiRequest("/agents/profile");
 
-    if(!data.response.ok||!data.result||data.result.success!==true||!data.result.profile){
+    if(!data.response.ok||data.result?.success!==true||!data.result.profile){
       throw new Error(data.result?.message||"Could not load your agent profile.");
     }
 
@@ -1920,22 +1420,18 @@ async function loadCommunityForm(){
     ).trim();
 
     communitySettings={whatsappLink:serverLink};
-    writeStorage(STORAGE.community,communitySettings);
-
     input.value=serverLink;
     renderCommunityPreview();
 
     message.textContent=serverLink
       ?"Your WhatsApp group link has been loaded from your agent profile."
       :"No group link has been added yet. Paste your group invitation link below.";
-    message.className="message";
+
   }catch(error){
     console.error("Load WhatsApp group link:",error);
-
     input.value="";
     renderCommunityPreview();
-
-    message.textContent="Could not load your saved group link from the server: "+error.message;
+    message.textContent="Could not load your saved group link: "+error.message;
     message.className="message error";
   }
 }
@@ -1951,15 +1447,13 @@ function renderCommunityPreview(){
     const title=document.createElement("strong");
     title.textContent="WhatsApp group invitation link";
 
-    const br=document.createElement("br");
-
     const anchor=document.createElement("a");
     anchor.href=link;
     anchor.target="_blank";
     anchor.rel="noopener noreferrer";
     anchor.textContent=link;
 
-    preview.append(title,br,anchor);
+    preview.append(title,document.createElement("br"),anchor);
   }else{
     preview.hidden=true;
     preview.textContent="";
@@ -1982,7 +1476,7 @@ document.getElementById("communityForm").addEventListener("submit",async event=>
   }
 
   if(!agentProfileFromServer){
-    message.textContent="Your agent profile has not loaded from the server. Refresh this page and try again.";
+    message.textContent="Your agent profile has not loaded from the server. Refresh and try again.";
     message.className="message error";
     return;
   }
@@ -2009,7 +1503,6 @@ document.getElementById("communityForm").addEventListener("submit",async event=>
 
   button.disabled=true;
   button.textContent="Saving...";
-  message.textContent="Saving your group link to your agent account...";
 
   try{
     const data=await apiRequest("/agents/profile",{
@@ -2017,14 +1510,14 @@ document.getElementById("communityForm").addEventListener("submit",async event=>
       body:JSON.stringify(payload)
     });
 
-    if(!data.response.ok||!data.result||data.result.success!==true){
+    if(!data.response.ok||data.result?.success!==true){
       throw new Error(data.result?.message||"The server did not save your group link.");
     }
 
     const refreshed=await apiRequest("/agents/profile");
 
     if(!refreshed.response.ok||!refreshed.result?.success||!refreshed.result?.profile){
-      throw new Error("The save request completed, but the updated profile could not be verified. Refresh the page to check.");
+      throw new Error("The updated profile could not be verified. Refresh the page to check.");
     }
 
     agentProfileFromServer=refreshed.result.profile;
@@ -2036,19 +1529,19 @@ document.getElementById("communityForm").addEventListener("submit",async event=>
     ).trim();
 
     if(savedLink!==link){
-      throw new Error("The server did not return the group link as saved. The backend profile route must support the whatsapp_group_link field.");
+      throw new Error("The server did not return the group link as saved. Check the backend profile route.");
     }
 
     communitySettings={whatsappLink:savedLink};
-    writeStorage(STORAGE.community,communitySettings);
-
     document.getElementById("whatsappLink").value=savedLink;
     renderCommunityPreview();
 
     message.textContent=savedLink
-      ?"Your WhatsApp group link has been saved successfully to your agent profile."
-      :"Your WhatsApp group link has been removed from your agent profile.";
+      ?"Your WhatsApp group link has been saved successfully."
+      :"Your WhatsApp group link has been removed successfully.";
+
     message.className="message success";
+
   }catch(error){
     console.error("Save WhatsApp group link:",error);
     message.textContent="Could not confirm that your group link was saved: "+error.message;
@@ -2067,7 +1560,6 @@ async function loadAnnouncements(){
   if(!target)return;
 
   target.textContent="Loading announcements...";
-
   if(button){
     button.disabled=true;
     button.textContent="Loading...";
@@ -2081,8 +1573,8 @@ async function loadAnnouncements(){
       try{
         const data=await apiRequest(endpoint);
 
-        if(!data.response.ok||!data.result||data.result.success!==true){
-          lastError=data.result?.message||"The endpoint "+endpoint+" is not available.";
+        if(!data.response.ok||data.result?.success!==true){
+          lastError=data.result?.message||"Endpoint unavailable.";
           continue;
         }
 
@@ -2096,12 +1588,14 @@ async function loadAnnouncements(){
         announcements=result;
         renderAnnouncements();
         return;
+
       }catch(error){
         lastError=error.message;
       }
     }
 
-    target.innerHTML='<div class="empty-state">Announcements are not available right now.<br>'+escapeHTML(lastError)+'<br><br>If your server has no announcements route yet, an announcements endpoint must be added to server.js.</div>';
+    target.innerHTML='<div class="empty-state">Announcements are not available right now.<br>'+escapeHTML(lastError)+'</div>';
+
   }finally{
     if(button){
       button.disabled=false;
@@ -2122,24 +1616,18 @@ function renderAnnouncements(){
     const title=item.title||item.subject||"Kielmen 636 Update";
     const body=item.message||item.body||item.content||"";
     const date=item.created_at||item.createdAt||item.date||"";
-
-    const formatted=date
-      ?new Date(date).toLocaleString("en-GB",{timeZone:"Africa/Accra"})
-      :"";
+    const formatted=date?new Date(date).toLocaleString("en-GB",{timeZone:"Africa/Accra"}):"";
 
     return '<article class="announcement-card"><h3>'+escapeHTML(title)+'</h3><p>'+escapeHTML(body)+'</p><div class="announcement-date">'+escapeHTML(formatted)+'</div></article>';
   }).join("");
 }
 
 /* SEARCH AND SELECT */
-const orderSearchInput=document.getElementById("orderSearch");
-const clearOrderSearchButton=document.getElementById("clearOrderSearch");
+document.getElementById("orderSearch").addEventListener("input",renderOrders);
 
-orderSearchInput.addEventListener("input",renderOrders);
-
-clearOrderSearchButton.addEventListener("click",()=>{
-  orderSearchInput.value="";
-  orderSearchInput.focus();
+document.getElementById("clearOrderSearch").addEventListener("click",()=>{
+  document.getElementById("orderSearch").value="";
+  document.getElementById("orderSearch").focus();
   renderOrders();
 });
 
@@ -2151,6 +1639,7 @@ document.addEventListener("keydown",event=>{
 
 /* START */
 verifyAgent();
+
 </script>
 </body>
   </html>
