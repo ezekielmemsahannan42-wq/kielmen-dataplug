@@ -453,6 +453,11 @@ async function createAgentTables() {
   `);
 
   // Agent profile contact and social links.
+    await pool.query(`
+    ALTER TABLE agents
+    ADD COLUMN IF NOT EXISTS whatsapp_group_link
+    VARCHAR(500) NOT NULL DEFAULT ''
+  `);
   await pool.query(`
     ALTER TABLE agents
     ADD COLUMN IF NOT EXISTS whatsapp_number
@@ -1454,8 +1459,9 @@ app.get(
             store_slug,
             store_description,
             whatsapp_number,
-            whatsapp_channel,
-            social_link
+whatsapp_channel,
+whatsapp_group_link,
+social_link
           FROM agents
           WHERE id = $1
         `,
@@ -1481,8 +1487,9 @@ app.get(
           storeSlug: a.store_slug,
           description: a.store_description,
           whatsappNumber: a.whatsapp_number,
-          whatsappChannel: a.whatsapp_channel,
-          socialLink: a.social_link,
+whatsappChannel: a.whatsapp_channel,
+whatsappGroupLink: a.whatsapp_group_link,
+socialLink: a.social_link,
           agentCode: a.agent_code
         }
       });
@@ -1899,6 +1906,7 @@ app.get("/agents/store/:code", async (req, res) => {
         SELECT
           id,
           agent_code,
+          whatsapp_group_link,
           business_name,
           store_description,
           phone,
@@ -1939,6 +1947,7 @@ app.get("/agents/store/:code", async (req, res) => {
         businessName: agent.business_name,
         description: agent.store_description,
         phone: agent.phone,
+        whatsappGroupLink: agent.whatsapp_group_link || "",
         whatsapp: "https://wa.me/233" +
           agent.phone.replace(/^0/, "").replace(/\D/g, "")
       },
@@ -1981,6 +1990,7 @@ const result = await pool.query(
       store_slug,
       store_description,
       phone,
+      whatsapp_group_link,
       status
     FROM agents
     WHERE store_slug = $1
@@ -2017,6 +2027,7 @@ return res.json({
     storeSlug: agent.store_slug,
     description: agent.store_description,
     phone: agent.phone,
+    whatsappGroupLink: agent.whatsapp_group_link || "",
     whatsapp:
       "https://wa.me/233" +
       agent.phone.replace(/^0/, "").replace(/\D/g, "")
