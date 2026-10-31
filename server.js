@@ -1530,8 +1530,18 @@ app.put(
         req.body?.whatsappNumber || ""
       ).trim();
 
+      // Accept both old and new dashboard field names.
+      const whatsappGroupLink = String(
+        req.body?.whatsappGroupLink ||
+        req.body?.whatsapp_group_link ||
+        ""
+      ).trim();
+
       const whatsappChannel = String(
-        req.body?.whatsappChannel || ""
+        req.body?.whatsappChannelLink ||
+        req.body?.whatsappChannel ||
+        req.body?.whatsapp_channel ||
+        ""
       ).trim();
 
       const socialLink = String(
@@ -1542,6 +1552,7 @@ app.put(
         req.body?.description || ""
       ).trim();
 
+      // Validate normal profile information.
       if (
         fullName.length < 2 ||
         fullName.length > 100 ||
@@ -1551,6 +1562,7 @@ app.put(
         email.length > 255 ||
         !validGhanaPhone(phone) ||
         whatsappNumber.length > 25 ||
+        whatsappGroupLink.length > 500 ||
         whatsappChannel.length > 500 ||
         socialLink.length > 500 ||
         description.length > 200
@@ -1561,16 +1573,51 @@ app.put(
         });
       }
 
-      if (
-        whatsappChannel &&
-        !/^https?:\/\/\S+$/i.test(whatsappChannel)
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Enter a valid WhatsApp Channel URL."
-        });
+      // Validate WhatsApp group invitation link.
+      if (whatsappGroupLink) {
+        try {
+          const groupUrl = new URL(whatsappGroupLink);
+
+          if (
+            groupUrl.protocol !== "https:" ||
+            groupUrl.hostname.toLowerCase() !== "chat.whatsapp.com"
+          ) {
+            throw new Error("Invalid group link");
+          }
+        } catch {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Enter a valid WhatsApp Group link beginning with https://chat.whatsapp.com/"
+          });
+        }
       }
 
+      // Validate WhatsApp channel link.
+      if (whatsappChannel) {
+        try {
+          const channelUrl = new URL(whatsappChannel);
+
+          if (
+            channelUrl.protocol !== "https:" ||
+            ![
+              "whatsapp.com",
+              "www.whatsapp.com"
+            ].includes(channelUrl.hostname.toLowerCase()) ||
+            !channelUrl.pathname.startsWith("/channel/")
+          ) {
+            throw new Error("Invalid channel link");
+          }
+        } catch {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Enter a valid WhatsApp Channel link beginning with https://whatsapp.com/channel/"
+          });
+        }
+      }
+
+      // Validate social media link.
       if (
         socialLink &&
         !/^https?:\/\/\S+$/i.test(socialLink)
@@ -1583,111 +1630,128 @@ app.put(
 
       const newStoreSlug = createStoreSlug(businessName);
 
-if (!newStoreSlug) {
-  return res.status(400).json({
-    success: false,
-    message: "Please enter a valid business name for your store link."
-  });
-}
+      if (!newStoreSlug) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Please enter a valid business name for your store link."
+        });
+      }
 
-const client = await pool.connect();
+      const client = await pool.connect();
 
-let result;
+      let result;
 
-try {
-  await client.query("BEGIN");
+      try {
+        await client.query("BEGIN");
 
-  const currentResult = await client.query(
-    `SELECT id, store_slug
-     FROM agents
-     WHERE id = $1
-     FOR UPDATE`,
-    [req.agentId]
-  );
+        const currentResult = await client.query(
+          `SELECT id, store_slug
+           FROM agents
+           WHERE id = $1
+           FOR UPDATE`,
+          [req.agentId]
+        );
 
-  if (!currentResult.rowCount) {
-    await client.query("ROLLBACK");
-    return res.status(404).json({
-      success: false,
-      message: "Agent account not found."
-    });
-  }
+        if (!currentResult.rowCount) {
+          await client.query("ROLLBACK");
 
-  const currentSlug = currentResult.rows[0].store_slug;
+          return res.status(404).json({
+            success: false,
+            message: "Agent account not found."
+          });
+        }
 
-  const slugCheck = await client.query(
-    `SELECT id
-     FROM agents
-     WHERE store_slug = $1 AND id <> $2`,
-    [newStoreSlug, req.agentId]
-  );
+        const currentSlug =
+          currentResult.rows[0].store_slug;
 
-  if (slugCheck.rowCount) {
-    await client.query("ROLLBACK");
-    return res.status(409).json({
-      success: false,
-      message: "That store link is already being used. Please choose another business name."
-    });
-  }
+        const slugCheck = await client.query(
+          `SELECT id
+           FROM agents
+           WHERE store_slug = $1
+           AND id <> $2`,
+          [newStoreSlug, req.agentId]
+        );
 
-  if (currentSlug && currentSlug !== newStoreSlug) {
-    await client.query(
-      `INSERT INTO agent_store_slug_history (agent_id, store_slug)
-       VALUES ($1, $2)
-       ON CONFLICT (store_slug) DO NOTHING`,
-      [req.agentId, currentSlug]
-    );
-  }
+        if (slugCheck.rowCount) {
+          await client.query("ROLLBACK");
 
-  result = await client.query(
-    `
-      UPDATE agents
-      SET
-        full_name = $1,
-        business_name = $2,
-        store_slug = $3,
-        email = $4,
-        phone = $5,
-        whatsapp_number = $6,
-        whatsapp_channel = $7,
-        social_link = $8,
-        store_description = $9,
-        updated_at = NOW()
-      WHERE id = $10
-      RETURNING
-        id,
-        agent_code,
-        full_name,
-        business_name,
-        email,
-        phone,
-        store_slug,
-        store_description,
-        whatsapp_number,
-        whatsapp_channel,
-        social_link
-    `,
-    [
-      fullName,
-      businessName,
-      newStoreSlug,
-      email,
-      phone,
-      whatsappNumber,
-      whatsappChannel,
-      socialLink,
-      description,
-      req.agentId
-    ]
-  );
+          return res.status(409).json({
+            success: false,
+            message:
+              "That store link is already being used. Please choose another business name."
+          });
+        }
 
-  await client.query("COMMIT");
-} catch (error) {
-  await client.query("ROLLBACK");
-  throw error;
-} finally {
-  client.release();
-}
+        if (
+          currentSlug &&
+          currentSlug !== newStoreSlug
+        ) {
+          await client.query(
+            `INSERT INTO agent_store_slug_history
+             (agent_id, store_slug)
+             VALUES ($1, $2)
+             ON CONFLICT (store_slug) DO NOTHING`,
+            [req.agentId, currentSlug]
+          );
+        }
+
+        // Save all profile information, including BOTH
+        // WhatsApp Group Link and WhatsApp Channel Link.
+        result = await client.query(
+          `
+          UPDATE agents
+          SET
+            full_name = $1,
+            business_name = $2,
+            store_slug = $3,
+            email = $4,
+            phone = $5,
+            whatsapp_number = $6,
+            whatsapp_group_link = $7,
+            whatsapp_channel = $8,
+            social_link = $9,
+            store_description = $10,
+            updated_at = NOW()
+          WHERE id = $11
+          RETURNING
+            id,
+            agent_code,
+            full_name,
+            business_name,
+            email,
+            phone,
+            store_slug,
+            store_description,
+            whatsapp_number,
+            whatsapp_group_link,
+            whatsapp_channel,
+            social_link
+          `,
+          [
+            fullName,
+            businessName,
+            newStoreSlug,
+            email,
+            phone,
+            whatsappNumber,
+            whatsappGroupLink,
+            whatsappChannel,
+            socialLink,
+            description,
+            req.agentId
+          ]
+        );
+
+        await client.query("COMMIT");
+
+      } catch (error) {
+        await client.query("ROLLBACK");
+        throw error;
+
+      } finally {
+        client.release();
+      }
 
       if (!result.rowCount) {
         return res.status(404).json({
@@ -1701,6 +1765,7 @@ try {
       return res.json({
         success: true,
         message: "Your profile has been updated successfully.",
+
         profile: {
           fullName: a.full_name,
           businessName: a.business_name,
@@ -1708,12 +1773,25 @@ try {
           phone: a.phone,
           storeSlug: a.store_slug,
           description: a.store_description,
+
           whatsappNumber: a.whatsapp_number,
-          whatsappChannel: a.whatsapp_channel,
+
+          // WhatsApp Group Link
+          whatsappGroupLink:
+            a.whatsapp_group_link || "",
+
+          // Support both dashboard naming conventions.
+          whatsappChannel:
+            a.whatsapp_channel || "",
+
+          whatsappChannelLink:
+            a.whatsapp_channel || "",
+
           socialLink: a.social_link,
           agentCode: a.agent_code
         }
       });
+
     } catch (error) {
       if (error.code === "23505") {
         return res.status(409).json({
@@ -1723,7 +1801,10 @@ try {
         });
       }
 
-      console.error("Update agent profile:", error.message);
+      console.error(
+        "Update agent profile:",
+        error.message
+      );
 
       return res.status(500).json({
         success: false,
