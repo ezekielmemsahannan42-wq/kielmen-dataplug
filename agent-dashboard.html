@@ -198,7 +198,7 @@ footer{padding:20px 0 30px;text-align:center;color:#94a3b8;font-size:11px}
   <div class="side-submenu" id="settingsSubmenu" hidden>
     <button class="side-link" data-page="passwordSettings" type="button">🔐 Change Password</button>
     <button class="side-link" data-page="phoneSettings" type="button">📱 Phone Number</button>
-    <button class="side-link" data-page="communitySettings" type="button">👥 WhatsApp Customer Group</button>
+    <button class="side-link" data-page="communitySettings" type="button">👥 WhatsApp Group & Channel</button>
   </div>
   <div class="side-divider"></div>
   <button class="side-link" data-page="announcements" type="button">📢 Announcements</button>
@@ -341,19 +341,65 @@ footer{padding:20px 0 30px;text-align:center;color:#94a3b8;font-size:11px}
   </div>
 </section>
 
+<!-- WHATSAPP GROUP AND CHANNEL SETTINGS -->
 <section class="page" id="communitySettings">
-  <div class="page-heading"><div><h1>My WhatsApp Customer Group</h1><p>Add the invitation link for your own customers.</p></div></div>
+  <div class="page-heading">
+    <div>
+      <h1>My WhatsApp Group & Channel</h1>
+      <p>Give your customers the choice to join your group or follow your channel.</p>
+    </div>
+  </div>
+
   <div class="card">
-    <div class="notice">Customers visiting your public agent store can use this link to join your WhatsApp group. This is separate from your private WhatsApp chat number.</div>
+    <div class="notice">
+      Customers visiting your public agent store can choose to join your WhatsApp group, follow your WhatsApp channel, or both.
+      These links are separate from your private WhatsApp chat number.
+    </div>
+
     <form id="communityForm">
+
       <div class="field">
         <label for="whatsappLink">WhatsApp Group Invitation Link</label>
-        <input id="whatsappLink" type="url" maxlength="500" placeholder="https://chat.whatsapp.com/your-group-invite">
-        <div class="stat-note">Only links beginning with https://chat.whatsapp.com/ are accepted.</div>
+        <input
+          id="whatsappLink"
+          type="url"
+          maxlength="500"
+          placeholder="https://chat.whatsapp.com/your-group-invite"
+        >
+        <div class="stat-note">
+          Enter a group invitation link beginning with https://chat.whatsapp.com/
+        </div>
       </div>
-      <button class="btn btn-primary btn-block" id="communitySubmit" type="submit">Save My Group Link</button>
-      <p id="communityMessage" class="message"></p>
-      <div id="communityPreview" class="share-link" hidden></div>
+
+      <div class="field">
+        <label for="whatsappChannelLink">WhatsApp Channel Link</label>
+        <input
+          id="whatsappChannelLink"
+          type="url"
+          maxlength="500"
+          placeholder="https://whatsapp.com/channel/your-channel-link"
+        >
+        <div class="stat-note">
+          Enter a channel link beginning with https://whatsapp.com/channel/
+        </div>
+      </div>
+
+      <div class="notice">
+        Leave either field empty if you do not have that type of WhatsApp community.
+        You can provide both links if you have a group and a channel.
+      </div>
+
+      <button class="btn btn-primary btn-block" id="communitySubmit" type="submit">
+        Save WhatsApp Links
+      </button>
+
+      <p id="communityMessage" class="message" aria-live="polite"></p>
+
+      <div id="communityPreview" hidden>
+        <div id="groupPreview" class="share-link" hidden></div>
+        <div id="channelPreview" class="share-link" hidden></div>
+      </div>
+
     </form>
   </div>
 </section>
@@ -402,7 +448,6 @@ footer{padding:20px 0 30px;text-align:center;color:#94a3b8;font-size:11px}
   <button class="nav-btn" data-page="withdrawals" type="button"><span class="icon">💰</span>Withdraw</button>
 </nav>
 
-<!-- IMPORTANT: JAVASCRIPT MUST START INSIDE THIS SCRIPT TAG -->
 <script>
 
 /* CONFIGURATION */
@@ -441,7 +486,11 @@ let announcements=[];
 let dashboardStats={};
 let serverPricesAvailable=false;
 let agentProfileFromServer=null;
-let communitySettings={whatsappLink:""};
+
+let communitySettings={
+  whatsappGroupLink:"",
+  whatsappChannelLink:""
+};
 
 /* HELPERS */
 function money(value){
@@ -1385,23 +1434,53 @@ document.getElementById("phoneForm").addEventListener("submit",async event=>{
   }
 });
 
-/* WHATSAPP CUSTOMER GROUP */
+/* WHATSAPP GROUP AND CHANNEL */
+
+/* Validate WhatsApp group invitation links */
 function validWhatsAppGroupLink(value){
   const link=String(value||"").trim();
+
   if(!link)return true;
 
   try{
     const url=new URL(link);
+
     return url.protocol==="https:"&&
       url.hostname.toLowerCase()==="chat.whatsapp.com"&&
       url.pathname.length>1;
+
   }catch{
     return false;
   }
 }
 
+/* Validate WhatsApp channel links */
+function validWhatsAppChannelLink(value){
+  const link=String(value||"").trim();
+
+  if(!link)return true;
+
+  try{
+    const url=new URL(link);
+    const hostname=url.hostname.toLowerCase();
+
+    return url.protocol==="https:"&&
+      (
+        hostname==="whatsapp.com"||
+        hostname==="www.whatsapp.com"
+      )&&
+      url.pathname.startsWith("/channel/")&&
+      url.pathname.length>9;
+
+  }catch{
+    return false;
+  }
+}
+
+/* Load saved group and channel links */
 async function loadCommunityForm(){
-  const input=document.getElementById("whatsappLink");
+  const groupInput=document.getElementById("whatsappLink");
+  const channelInput=document.getElementById("whatsappChannelLink");
   const message=document.getElementById("communityMessage");
 
   try{
@@ -1413,64 +1492,125 @@ async function loadCommunityForm(){
 
     agentProfileFromServer=data.result.profile;
 
-    const serverLink=String(
+    const groupLink=String(
       agentProfileFromServer.whatsappGroupLink||
       agentProfileFromServer.whatsapp_group_link||
       ""
     ).trim();
 
-    communitySettings={whatsappLink:serverLink};
-    input.value=serverLink;
+    const channelLink=String(
+      agentProfileFromServer.whatsappChannelLink||
+      agentProfileFromServer.whatsapp_channel_link||
+      ""
+    ).trim();
+
+    communitySettings={
+      whatsappGroupLink:groupLink,
+      whatsappChannelLink:channelLink
+    };
+
+    groupInput.value=groupLink;
+    channelInput.value=channelLink;
+
     renderCommunityPreview();
 
-    message.textContent=serverLink
-      ?"Your WhatsApp group link has been loaded from your agent profile."
-      :"No group link has been added yet. Paste your group invitation link below.";
+    if(groupLink&&channelLink){
+      message.textContent="Your WhatsApp group and channel links have been loaded.";
+    }else if(groupLink){
+      message.textContent="Your WhatsApp group link has been loaded. You can also add a channel link.";
+    }else if(channelLink){
+      message.textContent="Your WhatsApp channel link has been loaded. You can also add a group link.";
+    }else{
+      message.textContent="You have not added a WhatsApp group or channel link yet.";
+    }
+
+    message.className="message";
 
   }catch(error){
-    console.error("Load WhatsApp group link:",error);
-    input.value="";
+    console.error("Load WhatsApp community links:",error);
+
+    groupInput.value="";
+    channelInput.value="";
+
     renderCommunityPreview();
-    message.textContent="Could not load your saved group link: "+error.message;
+
+    message.textContent="Could not load your saved WhatsApp links: "+error.message;
     message.className="message error";
   }
 }
 
+/* Display both previews */
 function renderCommunityPreview(){
-  const link=document.getElementById("whatsappLink").value.trim();
-  const preview=document.getElementById("communityPreview");
+  const groupLink=document.getElementById("whatsappLink").value.trim();
+  const channelLink=document.getElementById("whatsappChannelLink").value.trim();
 
-  if(validWhatsAppGroupLink(link)&&link){
-    preview.hidden=false;
-    preview.replaceChildren();
+  const wrapper=document.getElementById("communityPreview");
+  const groupPreview=document.getElementById("groupPreview");
+  const channelPreview=document.getElementById("channelPreview");
 
+  groupPreview.replaceChildren();
+  channelPreview.replaceChildren();
+
+  let hasPreview=false;
+
+  if(groupLink&&validWhatsAppGroupLink(groupLink)){
     const title=document.createElement("strong");
-    title.textContent="WhatsApp group invitation link";
+    title.textContent="WhatsApp Group Invitation Link";
 
     const anchor=document.createElement("a");
-    anchor.href=link;
+    anchor.href=groupLink;
     anchor.target="_blank";
     anchor.rel="noopener noreferrer";
-    anchor.textContent=link;
+    anchor.textContent=groupLink;
 
-    preview.append(title,document.createElement("br"),anchor);
+    groupPreview.append(title,document.createElement("br"),anchor);
+    groupPreview.hidden=false;
+    hasPreview=true;
   }else{
-    preview.hidden=true;
-    preview.textContent="";
+    groupPreview.hidden=true;
   }
+
+  if(channelLink&&validWhatsAppChannelLink(channelLink)){
+    const title=document.createElement("strong");
+    title.textContent="WhatsApp Channel Link";
+
+    const anchor=document.createElement("a");
+    anchor.href=channelLink;
+    anchor.target="_blank";
+    anchor.rel="noopener noreferrer";
+    anchor.textContent=channelLink;
+
+    channelPreview.append(title,document.createElement("br"),anchor);
+    channelPreview.hidden=false;
+    hasPreview=true;
+  }else{
+    channelPreview.hidden=true;
+  }
+
+  wrapper.hidden=!hasPreview;
 }
 
 document.getElementById("whatsappLink").addEventListener("input",renderCommunityPreview);
+document.getElementById("whatsappChannelLink").addEventListener("input",renderCommunityPreview);
 
+/* Save both WhatsApp links */
 document.getElementById("communityForm").addEventListener("submit",async event=>{
   event.preventDefault();
 
-  const link=document.getElementById("whatsappLink").value.trim();
+  const groupLink=document.getElementById("whatsappLink").value.trim();
+  const channelLink=document.getElementById("whatsappChannelLink").value.trim();
+
   const message=document.getElementById("communityMessage");
   const button=document.getElementById("communitySubmit");
 
-  if(!validWhatsAppGroupLink(link)){
-    message.textContent="Enter a valid WhatsApp group invitation link beginning with https://chat.whatsapp.com/";
+  if(!validWhatsAppGroupLink(groupLink)){
+    message.textContent="Your group link is invalid. It must begin with https://chat.whatsapp.com/";
+    message.className="message error";
+    return;
+  }
+
+  if(!validWhatsAppChannelLink(channelLink)){
+    message.textContent="Your channel link is invalid. It must begin with https://whatsapp.com/channel/";
     message.className="message error";
     return;
   }
@@ -1484,19 +1624,29 @@ document.getElementById("communityForm").addEventListener("submit",async event=>
   const p=agentProfileFromServer;
 
   const payload={
-    fullName:String(p.fullName||agent?.full_name||"").trim(),
-    businessName:String(p.businessName||agent?.business_name||"").trim(),
-    email:String(p.email||agent?.email||"").trim(),
+    fullName:String(p.fullName||p.full_name||agent?.full_name||"").trim(),
+
+    businessName:String(p.businessName||p.business_name||agent?.business_name||"").trim(),
+
+    email:String(p.email||agent?.email||agent?.email_address||"").trim(),
+
     phone:String(p.phone||agent?.phone||"").trim(),
-    description:String(p.description||agent?.store_description||"").trim(),
-    whatsappNumber:String(p.whatsappNumber||"").trim(),
-    whatsappChannel:String(p.whatsappChannel||"").trim(),
-    whatsappGroupLink:link,
-    socialLink:String(p.socialLink||"").trim()
+
+    description:String(p.description||p.store_description||agent?.store_description||"").trim(),
+
+    whatsappNumber:String(p.whatsappNumber||p.whatsapp_number||"").trim(),
+
+    whatsappChannel:String(p.whatsappChannel||p.whatsapp_channel||"").trim(),
+
+    whatsappGroupLink:groupLink,
+
+    whatsappChannelLink:channelLink,
+
+    socialLink:String(p.socialLink||p.social_link||"").trim()
   };
 
   if(!payload.fullName||!payload.businessName||!payload.email||!payload.phone){
-    message.textContent="Your profile is missing required account details. Update your account profile before saving the group link.";
+    message.textContent="Your profile is missing required account details. Update your account profile before saving the WhatsApp links.";
     message.className="message error";
     return;
   }
@@ -1511,9 +1661,10 @@ document.getElementById("communityForm").addEventListener("submit",async event=>
     });
 
     if(!data.response.ok||data.result?.success!==true){
-      throw new Error(data.result?.message||"The server did not save your group link.");
+      throw new Error(data.result?.message||"The server did not save your WhatsApp links.");
     }
 
+    /* Fetch the updated profile to verify both saved links */
     const refreshed=await apiRequest("/agents/profile");
 
     if(!refreshed.response.ok||!refreshed.result?.success||!refreshed.result?.profile){
@@ -1522,33 +1673,57 @@ document.getElementById("communityForm").addEventListener("submit",async event=>
 
     agentProfileFromServer=refreshed.result.profile;
 
-    const savedLink=String(
+    const savedGroupLink=String(
       agentProfileFromServer.whatsappGroupLink||
       agentProfileFromServer.whatsapp_group_link||
       ""
     ).trim();
 
-    if(savedLink!==link){
+    const savedChannelLink=String(
+      agentProfileFromServer.whatsappChannelLink||
+      agentProfileFromServer.whatsapp_channel_link||
+      ""
+    ).trim();
+
+    if(savedGroupLink!==groupLink){
       throw new Error("The server did not return the group link as saved. Check the backend profile route.");
     }
 
-    communitySettings={whatsappLink:savedLink};
-    document.getElementById("whatsappLink").value=savedLink;
+    if(savedChannelLink!==channelLink){
+      throw new Error("The server did not return the channel link as saved. Check that whatsappChannelLink is supported by your backend.");
+    }
+
+    communitySettings={
+      whatsappGroupLink:savedGroupLink,
+      whatsappChannelLink:savedChannelLink
+    };
+
+    document.getElementById("whatsappLink").value=savedGroupLink;
+    document.getElementById("whatsappChannelLink").value=savedChannelLink;
+
     renderCommunityPreview();
 
-    message.textContent=savedLink
-      ?"Your WhatsApp group link has been saved successfully."
-      :"Your WhatsApp group link has been removed successfully.";
+    if(savedGroupLink&&savedChannelLink){
+      message.textContent="Your WhatsApp group and channel links have been saved successfully.";
+    }else if(savedGroupLink){
+      message.textContent="Your WhatsApp group link has been saved successfully.";
+    }else if(savedChannelLink){
+      message.textContent="Your WhatsApp channel link has been saved successfully.";
+    }else{
+      message.textContent="Your WhatsApp group and channel links have been removed successfully.";
+    }
 
     message.className="message success";
 
   }catch(error){
-    console.error("Save WhatsApp group link:",error);
-    message.textContent="Could not confirm that your group link was saved: "+error.message;
+    console.error("Save WhatsApp community links:",error);
+
+    message.textContent="Could not confirm that your WhatsApp links were saved: "+error.message;
     message.className="message error";
+
   }finally{
     button.disabled=false;
-    button.textContent="Save My Group Link";
+    button.textContent="Save WhatsApp Links";
   }
 });
 
@@ -1560,6 +1735,7 @@ async function loadAnnouncements(){
   if(!target)return;
 
   target.textContent="Loading announcements...";
+
   if(button){
     button.disabled=true;
     button.textContent="Loading...";
@@ -1642,4 +1818,4 @@ verifyAgent();
 
 </script>
 </body>
-  </html>
+                        </html>
