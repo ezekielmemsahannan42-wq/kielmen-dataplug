@@ -48,6 +48,10 @@ const FRONTEND_BASE_URL =
 
 const AGENT_TOKEN_SECRET = process.env.AGENT_TOKEN_SECRET || "";
 const OWNER_SECRET = process.env.OWNER_SECRET || "";
+// EMAIL NOTIFICATION SETTINGS
+const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
+const OWNER_NOTIFICATION_EMAIL = process.env.OWNER_NOTIFICATION_EMAIL || "ezekielmensahannan42@gmail.com";
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "";
 
 if (!DATABASE_URL) {
   console.error("Missing DATABASE_URL");
@@ -196,6 +200,51 @@ const SUPPLIER_NETWORKS = {
 // ============================================================
 // 3. GENERAL HELPERS
 // ============================================================
+// ============================================================
+// OWNER EMAIL NOTIFICATION HELPER
+// Sends email notifications without interrupting normal operations.
+// ============================================================
+
+async function sendOwnerNotification(subject, message) {
+  try {
+    if (
+      !RESEND_API_KEY ||
+      !OWNER_NOTIFICATION_EMAIL ||
+      !RESEND_FROM_EMAIL
+    ) {
+      console.log("Owner email notification skipped: Email settings missing.");
+      return false;
+    }
+
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: RESEND_FROM_EMAIL,
+        to: [OWNER_NOTIFICATION_EMAIL],
+        subject: subject,
+        text: message
+      })
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error("Owner email notification failed:", result);
+      return false;
+    }
+
+    console.log("Owner email notification sent:", result.id);
+    return true;
+
+  } catch (error) {
+    console.error("Owner email notification error:", error.message);
+    return false;
+  }
+}
 
 function normalizeNetwork(value) {
 const raw = String(value || "")
@@ -2691,14 +2740,35 @@ const availableBalance = Math.max(
         [req.agentId, amount, phone, provider]
       );
 
-      await client.query("COMMIT");
+     await client.query("COMMIT");
 
-      return res.status(201).json({
-        success: true,
-        message:
-          "Withdrawal request submitted successfully. It is pending owner review; money has not yet been sent.",
-        withdrawal: withdrawalResult.rows[0]
-      });
+
+
+ // ============================================================
+// NOTIFY OWNER: NEW AGENT WITHDRAWAL REQUEST
+// ============================================================
+
+void sendOwnerNotification(
+  "New Agent Withdrawal Request - Kielmen 636",
+  `A new withdrawal request has been submitted.
+
+Agent ID: ${req.agentId}
+Withdrawal ID: ${withdrawalResult.rows[0].id}
+Amount: GH₵${Number(withdrawalResult.rows[0].amount).toFixed(2)}
+Phone: ${withdrawalResult.rows[0].phone}
+Provider: ${withdrawalResult.rows[0].provider}
+Status: Pending
+
+Please log in to your owner dashboard to review this request.`
+);
+
+// Return the normal response to the agent.
+return res.status(201).json({
+  success: true,
+  message:
+    "Withdrawal request submitted successfully. It is pending owner review; money has not yet been sent.",
+  withdrawal: withdrawalResult.rows[0]
+});
     } catch (error) {
       await client.query("ROLLBACK").catch(() => {});
 
