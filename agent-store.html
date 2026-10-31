@@ -438,8 +438,6 @@
       font-weight: 900;
     }
 
-    /* MTN BUNDLES */
-
     .bundle[data-network="MTN"] {
       border-color: #e5e7eb;
       border-top-color: #ffcc00;
@@ -455,8 +453,6 @@
       background: #ffcc00;
       color: #111827;
     }
-
-    /* TELECEL BUNDLES */
 
     .bundle[data-network="TELECEL"] {
       border-top-color: #ed1c24;
@@ -476,8 +472,6 @@
       background: #ed1c24;
       color: #fff;
     }
-
-    /* AIRTELTIGO BUNDLES */
 
     .bundle[data-network="AIRTELTIGO"] {
       border-top-color: #7fa9e8;
@@ -673,6 +667,95 @@
       color: var(--green);
     }
 
+    /* FLOATING WHATSAPP GROUP BUTTON */
+
+    .floating-group-whatsapp {
+      position: fixed;
+      left: 12px;
+      bottom: calc(88px + env(safe-area-inset-bottom));
+      z-index: 200;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 49px;
+      height: 49px;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      background: #128c4a;
+      color: #fff;
+      text-decoration: none;
+      font-size: 26px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, .25);
+      animation: whatsappFloat 2s ease-in-out infinite;
+    }
+
+    .floating-group-whatsapp[hidden] {
+      display: none !important;
+    }
+
+    .floating-group-whatsapp .whatsapp-icon {
+      display: block;
+      line-height: 1;
+    }
+
+    .group-join-badge {
+      position: absolute;
+      top: -9px;
+      right: -17px;
+      min-width: 43px;
+      padding: 4px 6px;
+      border: 2px solid #fff;
+      border-radius: 999px;
+      background: #ef1b2d;
+      color: #fff;
+      text-align: center;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: .4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .2);
+      animation: redBadgeBlink 1s infinite;
+    }
+
+    .group-join-text {
+      position: absolute;
+      left: 57px;
+      bottom: 7px;
+      width: max-content;
+      max-width: 175px;
+      padding: 6px 10px;
+      border: 1px solid #fecaca;
+      border-radius: 999px;
+      background: #fff;
+      color: #b91c1c;
+      font-size: 10px;
+      font-weight: 900;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, .12);
+      animation: redBadgeBlink 1s infinite;
+      pointer-events: none;
+    }
+
+    @keyframes redBadgeBlink {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: .45;
+        transform: scale(.94);
+      }
+    }
+
+    @keyframes whatsappFloat {
+      0%, 100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-4px);
+      }
+    }
+
     /* FOOTER */
 
     footer {
@@ -738,6 +821,11 @@
         right: max(20px, calc((100% - 1100px) / 2));
         width: 250px;
       }
+
+      .floating-group-whatsapp {
+        bottom: 25px;
+        left: 22px;
+      }
     }
 
     @media (max-width: 370px) {
@@ -768,6 +856,12 @@
       .network-btn {
         font-size: 10px;
       }
+
+      .floating-group-whatsapp {
+        width: 45px;
+        height: 45px;
+        font-size: 23px;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -775,6 +869,7 @@
       *::before,
       *::after {
         scroll-behavior: auto !important;
+        animation: none !important;
         transition-duration: .01ms !important;
       }
     }
@@ -848,32 +943,17 @@
     </p>
 
     <div class="network-grid">
-      <button
-        type="button"
-        class="network-btn"
-        data-network="MTN"
-        aria-pressed="false"
-      >
+      <button type="button" class="network-btn" data-network="MTN" aria-pressed="false">
         <span class="network-icon">🟡</span>
         MTN
       </button>
 
-      <button
-        type="button"
-        class="network-btn"
-        data-network="TELECEL"
-        aria-pressed="false"
-      >
+      <button type="button" class="network-btn" data-network="TELECEL" aria-pressed="false">
         <span class="network-icon">🔴</span>
         TELECEL
       </button>
 
-      <button
-        type="button"
-        class="network-btn"
-        data-network="AIRTELTIGO"
-        aria-pressed="false"
-      >
+      <button type="button" class="network-btn" data-network="AIRTELTIGO" aria-pressed="false">
         <span class="network-icon">🔵</span>
         AIRTELTIGO
       </button>
@@ -894,12 +974,9 @@
       Loading bundles...
     </p>
 
-    <div
-      id="bundleMessage"
-      class="message"
-      role="status"
-      aria-live="polite"
-    >Connecting to the store...</div>
+    <div id="bundleMessage" class="message" role="status" aria-live="polite">
+      Connecting to the store...
+    </div>
 
     <div id="bundles" class="bundles"></div>
   </section>
@@ -981,12 +1058,7 @@
       Select a Bundle First
     </button>
 
-    <p
-      id="checkoutMessage"
-      class="message"
-      role="status"
-      aria-live="polite"
-    ></p>
+    <p id="checkoutMessage" class="message" role="status" aria-live="polite"></p>
   </section>
 
   <!-- ORDER TRACKING -->
@@ -1015,12 +1087,7 @@
       Check My Orders
     </button>
 
-    <p
-      id="trackingMessage"
-      class="message"
-      role="status"
-      aria-live="polite"
-    ></p>
+    <p id="trackingMessage" class="message" role="status" aria-live="polite"></p>
 
     <div id="trackingResults"></div>
   </section>
@@ -1078,6 +1145,25 @@
   </button>
 </nav>
 
+<!-- FLOATING WHATSAPP GROUP BUTTON
+     Appears only when the agent has a valid group invitation link.
+-->
+
+<a
+  id="floatingGroupWhatsApp"
+  class="floating-group-whatsapp"
+  href="#"
+  target="_blank"
+  rel="noopener noreferrer"
+  aria-label="Join this agent's WhatsApp customer group"
+  title="Join our WhatsApp customer group"
+  hidden
+>
+  <span class="whatsapp-icon" aria-hidden="true">☏</span>
+  <span class="group-join-badge">JOIN</span>
+  <span class="group-join-text">Join Our Group!</span>
+</a>
+
 <script>
 "use strict";
 
@@ -1133,6 +1219,8 @@ const el = {
   trackingResults: $("trackingResults"),
 
   helpWhatsApp: $("helpWhatsApp"),
+  floatingGroupWhatsApp: $("floatingGroupWhatsApp"),
+
   footerBusinessName: $("footerBusinessName")
 };
 
@@ -1253,12 +1341,6 @@ async function fetchJSON(url, options = {}) {
 
 /* =====================================================
    IDENTIFY THE AGENT
-
-   Supports:
-   1. ?code=AGENTCODE
-   2. ?agentCode=AGENTCODE
-   3. ?slug=business-name
-   4. Clean URLs routed through 404.html
 ===================================================== */
 
 function getStoreIdentifiers() {
@@ -1400,6 +1482,93 @@ function getStoreWhatsApp() {
 }
 
 /* =====================================================
+   WHATSAPP CUSTOMER GROUP LINK
+
+   Reads the invitation link saved by the agent.
+
+   Supported response fields:
+   whatsappGroupLink
+   whatsapp_group_link
+   customerGroupLink
+   customer_group_link
+   whatsapp_group_url
+   whatsappLink
+   whatsapp_link
+
+   The link must be a valid WhatsApp group invitation.
+===================================================== */
+
+function getWhatsAppGroupLink() {
+  const raw =
+    store?.whatsappGroupLink ||
+    store?.whatsapp_group_link ||
+    store?.customerGroupLink ||
+    store?.customer_group_link ||
+    store?.whatsapp_group_url ||
+    store?.whatsappLink ||
+    store?.whatsapp_link ||
+    "";
+
+  const value = String(raw).trim();
+
+  if (!value) {
+    return "";
+  }
+
+  try {
+    const url = new URL(value);
+
+    if (url.protocol !== "https:") {
+      return "";
+    }
+
+    const hostname = url.hostname.toLowerCase();
+
+    const validWhatsAppHosts = [
+      "chat.whatsapp.com",
+      "www.chat.whatsapp.com"
+    ];
+
+    if (!validWhatsAppHosts.includes(hostname)) {
+      return "";
+    }
+
+    return url.href;
+
+  } catch {
+    return "";
+  }
+}
+
+/* =====================================================
+   DISPLAY FLOATING WHATSAPP GROUP BUTTON
+===================================================== */
+
+function setWhatsAppGroupButton() {
+  const groupLink = getWhatsAppGroupLink();
+
+  if (!el.floatingGroupWhatsApp) {
+    return;
+  }
+
+  if (groupLink) {
+    el.floatingGroupWhatsApp.href = groupLink;
+    el.floatingGroupWhatsApp.hidden = false;
+    el.floatingGroupWhatsApp.setAttribute(
+      "aria-label",
+      "Join " + getBusinessName() + " WhatsApp customer group"
+    );
+
+    el.floatingGroupWhatsApp.title =
+      "Tap to join " + getBusinessName() + "'s WhatsApp group";
+
+  } else {
+    el.floatingGroupWhatsApp.hidden = true;
+    el.floatingGroupWhatsApp.removeAttribute("href");
+  }
+}
+
+/* =====================================================
    DISPLAY AGENT DETAILS
 ===================================================== */
 
@@ -1428,6 +1597,9 @@ function setBusinessDetails() {
   el.summaryAgent.textContent = name;
 
   document.title = name + " | Agent Data Store";
+
+  // Display the agent's WhatsApp group invitation button.
+  setWhatsAppGroupButton();
 }
 
 /* =====================================================
@@ -1465,6 +1637,10 @@ function showStoreError(message) {
 
   el.payButton.disabled = true;
   el.payButton.textContent = "Store Unavailable";
+
+  // Hide the group button if the store fails to load.
+  el.floatingGroupWhatsApp.hidden = true;
+  el.floatingGroupWhatsApp.removeAttribute("href");
 }
 
 /* =====================================================
@@ -1815,10 +1991,6 @@ function chooseBundle(item, selectedCard) {
 
 /* =====================================================
    PAYSTACK PAYMENT INITIALIZATION
-
-   The backend must verify the payment and handle
-   supplier delivery. This page never marks an order
-   as paid or delivered by itself.
 ===================================================== */
 
 async function startPayment() {
@@ -2281,4 +2453,4 @@ if (document.readyState === "loading") {
 </script>
 
 </body>
-  </html>
+</html>
