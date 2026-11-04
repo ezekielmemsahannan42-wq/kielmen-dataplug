@@ -23,6 +23,7 @@ const calculateAgentTotalProfit = require("./agent-profit");
 const {
   calculateNextPayout
 } = require("./next-payout");
+const smsSystem = require("./sms-system");
 const app = express();
 
 app.disable("x-powered-by");
@@ -936,9 +937,24 @@ async function processSuccessfulPayment(reference) {
 
   const paidOrder = claim.rows[0];
 
-  try {
-    // Automatically purchase the data bundle.
-    const purchase = await purchaseDataFromSupplier(paidOrder);
+// Queue customer order confirmation SMS.
+try {
+  await smsSystem.enqueueOrderReceived(pool, paidOrder);
+
+  console.log(
+    "Order confirmation SMS queued:",
+    reference
+  );
+} catch (smsError) {
+  console.error(
+    "Could not queue order confirmation SMS:",
+    smsError.message
+  );
+}
+
+try {
+  // Automatically purchase the data bundle.
+  const purchase = await purchaseDataFromSupplier(paidOrder);
 
     await pool.query(
       `
@@ -1178,6 +1194,17 @@ function requireOwner(req, res, next) {
 
   next();
 }
+// ============================================================
+// KIELMEN636 SMS ROUTES
+// ============================================================
+
+app.use(
+  "/owner/sms",
+  smsSystem.createSmsRouter({
+    pool,
+    requireOwner
+  })
+);
 
 function requireWithdrawalsEnabled(req, res, next) {
   if (!WITHDRAWALS_ENABLED) {
@@ -5807,6 +5834,8 @@ async function startServer() {
 await createOrdersTable();
 await createPasswordResetTable();
 await createWebsiteSettingsTable();
+
+await smsSystem.initSmsTables(pool);
     // TEMPORARY DIAGNOSTIC: Check why an agent store cannot be found
 app.get("/debug-agent-store/:slug", async (req, res) => {
   try {
