@@ -5836,6 +5836,7 @@ await createPasswordResetTable();
 await createWebsiteSettingsTable();
 
 await smsSystem.initSmsTables(pool);
+    smsSystem.startSmsWorker(pool);
     // TEMPORARY DIAGNOSTIC: Check why an agent store cannot be found
 app.get("/debug-agent-store/:slug", async (req, res) => {
   try {
