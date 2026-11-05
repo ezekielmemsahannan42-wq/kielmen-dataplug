@@ -113,15 +113,24 @@ async function sendMtnSms({
   clientCorrelatorId
 }) {
 
-  const serviceCode =
+    const serviceCode =
     process.env.MTN_SMS_SERVICE_CODE;
 
   const senderAddress =
-    process.env.MTN_SMS_SENDER_ADDRESS;
+    process.env.MTN_SMS_SENDER_ADDRESS || "";
 
   if (!serviceCode) {
     throw new Error(
       "MTN SMS service code is not configured."
+    );
+  }
+
+  if (
+    senderAddress &&
+    senderAddress !== serviceCode
+  ) {
+    throw new Error(
+      "MTN sender address must match the service code."
     );
   }
 
