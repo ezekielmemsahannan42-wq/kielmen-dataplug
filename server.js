@@ -171,25 +171,49 @@ const AGENT_BASE_PRICES = {
   MTN: {
     "1GB": 4.50,
     "2GB": 9.00,
-    "3GB": 13.00,
+    "3GB": 13.50,
     "4GB": 17.50,
-    "5GB": 21.00,
-    "6GB": 25.00,
+    "5GB": 22.00,
+    "6GB": 26.00,
     "8GB": 34.00,
     "10GB": 42.00,
-    "15GB": 59.00,
-    "20GB": 79.00,
+    "15GB": 61.00,
+    "20GB": 81.50,
     "25GB": 98.00,
-    "30GB": 119.00,
-    "40GB": 157.00,
-    "50GB": 197.00
+    "30GB": 120.00,
+    "40GB": 160.00,
+    "50GB": 199.00
   },
 
-  // Provisional prices: confirm these before enabling these networks
-  // for agents.
-  TELECEL: { ...PRICES.TELECEL },
+  TELECEL: {
+    "10GB": 39.50,
+    "15GB": 59.75,
+    "20GB": 79.00,
+    "25GB": 98.25,
+    "30GB": 117.50,
+    "35GB": 136.75,
+    "40GB": 157.00,
+    "45GB": 175.25,
+    "50GB": 194.00,
+    "100GB": 387.00
+  },
 
-  AIRTELTIGO: { ...PRICES.AIRTELTIGO }
+  AIRTELTIGO: {
+    "1GB": 4.45,
+    "2GB": 8.99,
+    "3GB": 14.00,
+    "4GB": 17.50,
+    "5GB": 20.50,
+    "6GB": 24.50,
+    "8GB": 31.50,
+    "10GB": 39.50,
+    "12GB": 46.50,
+    "15GB": 59.50,
+    "25GB": 97.00,
+    "30GB": 117.00,
+    "40GB": 153.00,
+    "50GB": 192.00
+  }
 };
 
 const SUPPLIER_NETWORKS = {
