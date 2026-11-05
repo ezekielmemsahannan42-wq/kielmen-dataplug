@@ -160,6 +160,9 @@ const PRICES = {
     "30GB": 115.00,
     "50GB": 188.00
   }
+
+  // MTN_MASHUP will be loaded dynamically
+  // from the DataMart MashUp packages API.
 };
 
 // ============================================================
@@ -272,28 +275,35 @@ async function sendOwnerNotification(subject, message) {
 }
 
 function normalizeNetwork(value) {
-const raw = String(value || "")
-.trim()
-.toUpperCase()
-.replace(/[\s_-]/g, "");
+  const raw = String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[\s_-]/g, "");
 
-if (raw === "MTN" || raw === "YELLO") {
-return "MTN";
-}
+  if (raw === "MTN" || raw === "YELLO") {
+    return "MTN";
+  }
 
-if (raw === "TELECEL" || raw === "VODAFONE") {
-return "TELECEL";
-}
+  if (
+    raw === "MTNMASHUP" ||
+    raw === "MASHUP"
+  ) {
+    return "MTN_MASHUP";
+  }
 
-if (
-raw === "AIRTELTIGO" ||
-raw === "ATPREMIUM" ||
-raw === "AIRTEL"
-) {
-return "AIRTELTIGO";
-}
+  if (raw === "TELECEL" || raw === "VODAFONE") {
+    return "TELECEL";
+  }
 
-return "";
+  if (
+    raw === "AIRTELTIGO" ||
+    raw === "ATPREMIUM" ||
+    raw === "AIRTEL"
+  ) {
+    return "AIRTELTIGO";
+  }
+
+  return "";
 }
 
 function normalizeBundle(value) {
@@ -3177,9 +3187,10 @@ const DEFAULT_WEBSITE_SETTINGS = {
   },
 
   networkAvailability: {
-    MTN: true,
-    TELECEL: true,
-    AIRTELTIGO: true
+  MTN: true,
+  MTN_MASHUP: true,
+  TELECEL: true,
+  AIRTELTIGO: true
   }
 };
 
@@ -3306,10 +3317,11 @@ app.put(
       };
 
       const networkAvailability = {
-        MTN: suppliedAvailability.MTN,
-        TELECEL: suppliedAvailability.TELECEL,
-        AIRTELTIGO: suppliedAvailability.AIRTELTIGO
-      };
+  MTN: suppliedAvailability.MTN,
+  MTN_MASHUP: suppliedAvailability.MTN_MASHUP,
+  TELECEL: suppliedAvailability.TELECEL,
+  AIRTELTIGO: suppliedAvailability.AIRTELTIGO
+};
 
       if (
         whatsappLink.length > 500 ||
@@ -3354,15 +3366,16 @@ app.put(
       }
 
       if (
-        typeof networkAvailability.MTN !== "boolean" ||
-        typeof networkAvailability.TELECEL !== "boolean" ||
-        typeof networkAvailability.AIRTELTIGO !== "boolean"
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Choose Available or Unavailable for all three networks."
-        });
+  typeof networkAvailability.MTN !== "boolean" ||
+  typeof networkAvailability.MTN_MASHUP !== "boolean" ||
+  typeof networkAvailability.TELECEL !== "boolean" ||
+  typeof networkAvailability.AIRTELTIGO !== "boolean"
+) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Choose Available or Unavailable for all four networks."
+  });
       }
 
       const result = await pool.query(
@@ -4930,6 +4943,7 @@ const availabilityResult = await pool.query(`
 const availability =
   availabilityResult.rows[0]?.network_availability || {
     MTN: true,
+    MTN_MASHUP: true,
     TELECEL: true,
     AIRTELTIGO: true
   };
