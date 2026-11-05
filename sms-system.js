@@ -33,6 +33,162 @@ function normalizeGhanaPhone(value) {
     ? phone
     : "";
 }
+/* =========================================
+   MTN SMS V3 API CONNECTION
+========================================= */
+
+let mtnAccessToken = "";
+let mtnTokenExpiresAt = 0;
+
+
+/* GET MTN ACCESS TOKEN */
+
+async function getMtnAccessToken() {
+
+  const clientId =
+    process.env.MTN_SMS_CLIENT_ID;
+
+  const clientSecret =
+    process.env.MTN_SMS_CLIENT_SECRET;
+
+  if (!clientId || !clientSecret) {
+    throw new Error(
+      "MTN SMS credentials are missing."
+    );
+  }
+
+  if (
+    mtnAccessToken &&
+    Date.now() < mtnTokenExpiresAt
+  ) {
+    return mtnAccessToken;
+  }
+
+  const body = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret
+  });
+
+  const response = await fetch(
+    "https://api.mtn.com/v1/oauth/access_token/accesstoken?grant_type=client_credentials",
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type":
+          "application/x-www-form-urlencoded"
+      },
+
+      body: body.toString()
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok || !data.access_token) {
+    throw new Error(
+      "MTN authentication failed: " +
+      JSON.stringify(data)
+    );
+  }
+
+  mtnAccessToken = data.access_token;
+
+  const expiresIn =
+    Number(data.expires_in || 3600);
+
+  mtnTokenExpiresAt =
+    Date.now() +
+    Math.max(expiresIn - 120, 60) * 1000;
+
+  return mtnAccessToken;
+}
+
+
+/* SEND ONE SMS THROUGH MTN */
+
+async function sendMtnSms({
+  phone,
+  message,
+  clientCorrelatorId
+}) {
+
+  const serviceCode =
+    process.env.MTN_SMS_SERVICE_CODE;
+
+  const senderAddress =
+    process.env.MTN_SMS_SENDER_ADDRESS;
+
+  if (!serviceCode) {
+    throw new Error(
+      "MTN SMS service code is not configured."
+    );
+  }
+
+  const normalizedPhone =
+    normalizeGhanaPhone(phone);
+
+  if (!normalizedPhone) {
+    throw new Error(
+      "Invalid Ghanaian phone number."
+    );
+  }
+
+  const internationalPhone =
+    "233" + normalizedPhone.slice(1);
+
+  const token =
+    await getMtnAccessToken();
+
+  const payload = {
+    message: String(message),
+
+    serviceCode,
+
+    receiverAddress: [
+      internationalPhone
+    ],
+
+    clientCorrelatorId:
+      String(clientCorrelatorId).slice(0, 36)
+  };
+
+  if (senderAddress) {
+    payload.senderAddress = senderAddress;
+  }
+
+  const response = await fetch(
+    "https://api.mtn.com/v3/sms/messages/sms/outbound",
+    {
+      method: "POST",
+
+      headers: {
+        "Authorization":
+          "Bearer " + token,
+
+        "Content-Type":
+          "application/json",
+
+        "Accept":
+          "application/json"
+      },
+
+      body: JSON.stringify(payload)
+    }
+  );
+
+  const result = await response.json()
+    .catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(
+      "MTN SMS request failed: " +
+      JSON.stringify(result)
+    );
+  }
+
+  return result;
+       }
 
 
 /* =========================================
