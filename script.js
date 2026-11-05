@@ -91,6 +91,7 @@ let trackingInProgress = false;
 
 let networkAvailability = {
     MTN: true,
+    MTN_MASHUP: true,
     TELECEL: true,
     AIRTELTIGO: true
 };
@@ -1148,6 +1149,7 @@ function parseNetworkAvailability(settings) {
 
     const result = {
         MTN: true,
+        MTN_MASHUP: true,
         TELECEL: true,
         AIRTELTIGO: true
     };
@@ -1175,7 +1177,7 @@ function parseNetworkAvailability(settings) {
     });
 
     return result;
-}
+                }
 
 function isAnnouncementEnabled(settings) {
     const value = getSettingValue(
