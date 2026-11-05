@@ -398,32 +398,36 @@ async function processSmsQueue(pool) {
     // from claiming the same message.
 
     const claimed = await pool.query(`
-      UPDATE sms_messages
+  WITH next_sms AS (
+    SELECT id
 
-      SET status = 'sending',
-          error_message = NULL
+    FROM sms_messages
 
-      WHERE id = (
-        SELECT id
+    WHERE status = 'queued'
 
-        FROM sms_messages
+    ORDER BY created_at ASC
 
-        WHERE status = 'queued'
+    LIMIT 1
 
-        ORDER BY created_at ASC
+    FOR UPDATE SKIP LOCKED
+  )
 
-        FOR UPDATE SKIP LOCKED
+  UPDATE sms_messages AS sms
 
-        LIMIT 1
-      )
+  SET status = 'sending',
+      error_message = NULL
 
-      RETURNING
-        id,
-        phone,
-        message,
-        sender_id,
-        message_type
-    `);
+  FROM next_sms
+
+  WHERE sms.id = next_sms.id
+
+  RETURNING
+    sms.id,
+    sms.phone,
+    sms.message,
+    sms.sender_id,
+    sms.message_type
+`);
 
     if (!claimed.rowCount) {
       return;
