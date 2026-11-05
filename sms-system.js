@@ -362,7 +362,181 @@ async function enqueueOrderReceived(pool, order) {
 
 }
 
+/* =========================================
+   SMS QUEUE WORKER
+========================================= */
 
+let smsWorkerTimer = null;
+let smsWorkerRunning = false;
+
+
+/* PROCESS ONE QUEUED SMS */
+
+async function processSmsQueue(pool) {
+
+  // Prevent sending until production access
+  // and configuration have been confirmed.
+
+  if (
+    process.env.MTN_SMS_ENABLED !== "true"
+  ) {
+    return;
+  }
+
+  if (smsWorkerRunning) {
+    return;
+  }
+
+  smsWorkerRunning = true;
+
+  let sms = null;
+
+  try {
+
+    // Atomically claim one queued message.
+    // SKIP LOCKED prevents two workers
+    // from claiming the same message.
+
+    const claimed = await pool.query(`
+      UPDATE sms_messages
+
+      SET status = 'sending',
+          error_message = NULL
+
+      WHERE id = (
+        SELECT id
+
+        FROM sms_messages
+
+        WHERE status = 'queued'
+
+        ORDER BY created_at ASC
+
+        FOR UPDATE SKIP LOCKED
+
+        LIMIT 1
+      )
+
+      RETURNING
+        id,
+        phone,
+        message,
+        sender_id,
+        message_type
+    `);
+
+    if (!claimed.rowCount) {
+      return;
+    }
+
+    sms = claimed.rows[0];
+
+    // Send the claimed message through MTN.
+
+    const result = await sendMtnSms({
+      phone: sms.phone,
+      message: sms.message,
+      clientCorrelatorId: "K636-" + sms.id
+    });
+
+    const providerReference =
+      result.transactionId ||
+      result.resourceReference ||
+      result.data?.transactionId ||
+      null;
+
+    // MTN accepted the request.
+    // This does not independently prove delivery.
+
+    await pool.query(
+      `
+        UPDATE sms_messages
+
+        SET status = 'sent',
+            provider_reference = $1,
+            sent_at = NOW(),
+            error_message = NULL
+
+        WHERE id = $2
+          AND status = 'sending'
+      `,
+      [
+        providerReference,
+        sms.id
+      ]
+    );
+
+    console.log(
+      "MTN accepted SMS:",
+      sms.id,
+      sms.phone
+    );
+
+  } catch (error) {
+
+    console.error(
+      "SMS worker error:",
+      error.message
+    );
+
+    if (sms) {
+
+      await pool.query(
+        `
+          UPDATE sms_messages
+
+          SET status = 'failed',
+              error_message = $1
+
+          WHERE id = $2
+            AND status = 'sending'
+        `,
+        [
+          String(error.message).slice(0, 2000),
+          sms.id
+        ]
+      ).catch(updateError => {
+        console.error(
+          "Could not update SMS failure:",
+          updateError.message
+        );
+      });
+
+    }
+
+  } finally {
+
+    smsWorkerRunning = false;
+
+  }
+
+}
+
+
+/* START AUTOMATIC SMS PROCESSING */
+
+function startSmsWorker(pool) {
+
+  if (smsWorkerTimer) {
+    return;
+  }
+
+  console.log(
+    "KIELMEN636 SMS worker initialized."
+  );
+
+  smsWorkerTimer = setInterval(() => {
+
+    processSmsQueue(pool).catch(error => {
+      console.error(
+        "SMS worker processing error:",
+        error.message
+      );
+    });
+
+  }, 5000);
+
+}
 /* =========================================
    OWNER SMS ROUTER
 ========================================= */
@@ -1100,13 +1274,15 @@ function createSmsRouter({
 /* =========================================
    EXPORT SMS FUNCTIONS
 ========================================= */
-
 module.exports = {
 
   initSmsTables,
 
   enqueueOrderReceived,
 
-  createSmsRouter
+  createSmsRouter,
+
+  startSmsWorker
 
 };
+
