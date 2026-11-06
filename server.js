@@ -1111,35 +1111,6 @@ async function refreshSupplierOrderStatus(supplierReference) {
     };
   }
 
-  return {
-    status: "processing",
-    raw: result
-  };
-}
-
-  if (
-    ["delivered", "completed", "success", "successful"].includes(status)
-  ) {
-    return {
-      status: "delivered",
-      raw: result
-    };
-  }
-
-  if (
-    ["failed", "rejected", "cancelled", "canceled"].includes(status)
-  ) {
-    return {
-      status: "failed",
-      raw: result
-    };
-  }
-
-  return {
-    status: "processing",
-    raw: result
-  };
-}
 /* ============================================================
    AUTOMATIC DATAMART DELIVERY STATUS SYNCHRONIZATION
    Checks pending orders and updates Kielmen when DataMart
