@@ -776,8 +776,7 @@ function initializeBundleSearch() {
 /* =========================================================
    11. SELECTING A BUNDLE
 ========================================================= */
-
-function chooseBundle(network, size) {
+function chooseBundle(network, size, comboCost = null) {
     const normalizedNetwork = normalizeNetwork(network);
 
     if (
@@ -792,8 +791,30 @@ function chooseBundle(network, size) {
         return;
     }
 
-    const product = getProductsForNetwork(normalizedNetwork)
-        .find(item => item.size === size);
+    const products = getProductsForNetwork(normalizedNetwork);
+
+    // MashUp packages must be identified by their unique
+    // DataMart comboCost, not by data size alone.
+    let product;
+
+    if (normalizedNetwork === "MTN_MASHUP") {
+        if (comboCost === null || comboCost === undefined) {
+            showCheckoutMessage(
+                "MashUp package identification is missing. Please select the package again.",
+                "error"
+            );
+
+            return;
+        }
+
+        product = products.find(item =>
+            String(item.comboCost) === String(comboCost)
+        );
+    } else {
+        product = products.find(item =>
+            String(item.size) === String(size)
+        );
+    }
 
     if (!product) {
         showCheckoutMessage(
@@ -806,10 +827,17 @@ function chooseBundle(network, size) {
 
     activeNetwork = normalizedNetwork;
 
+    // Preserve the complete product information.
+    // This includes MashUp allowances and comboCost.
     selectedBundle = {
+        ...product,
         network: normalizedNetwork,
-        size: product.size,
-        price: Number(product.price)
+        size: product.size || size,
+        price: Number(product.price),
+
+        ...(normalizedNetwork === "MTN_MASHUP"
+            ? { comboCost: product.comboCost }
+            : {})
     };
 
     const networkInput = getElement("selectedNetwork");
@@ -839,6 +867,7 @@ function chooseBundle(network, size) {
         });
     }
 }
+
 
 function updateSelectedSummary() {
     const bundleElement = getElement("selectedBundle");
