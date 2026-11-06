@@ -3074,9 +3074,13 @@ app.patch(
   requireOwner,
   async (req, res) => {
     const id = Number(req.params.id);
+
     const status = String(req.body?.status || "")
       .trim()
       .toLowerCase();
+
+    const transferConfirmed =
+      req.body?.transferConfirmed === true;
 
     if (!Number.isSafeInteger(id) || id < 1) {
       return res.status(400).json({
@@ -3092,6 +3096,14 @@ app.patch(
       });
     }
 
+    if (status === "paid" && !transferConfirmed) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Confirm that the Mobile Money transfer has actually succeeded."
+      });
+    }
+
     const client = await pool.connect();
 
     try {
@@ -3099,10 +3111,17 @@ app.patch(
 
       const result = await client.query(
         `
-          SELECT id, amount, status
-          FROM agent_withdrawals
-          WHERE id = $1
-          FOR UPDATE
+          SELECT
+            w.id,
+            w.amount,
+            w.status,
+            w.agent_id,
+            a.phone AS agent_phone
+          FROM agent_withdrawals w
+          INNER JOIN agents a
+            ON a.id = w.agent_id
+          WHERE w.id = $1
+          FOR UPDATE OF w
         `,
         [id]
       );
@@ -3123,8 +3142,7 @@ app.patch(
 
         return res.status(409).json({
           success: false,
-          message:
-            "Only pending requests can be marked paid or rejected."
+          message: "This withdrawal has already been processed."
         });
       }
 
@@ -3132,6 +3150,7 @@ app.patch(
         `
           UPDATE agent_withdrawals
           SET status = $1,
+              reviewed_at = NOW(),
               updated_at = NOW()
           WHERE id = $2
           RETURNING id, amount, status, updated_at
@@ -3141,17 +3160,40 @@ app.patch(
 
       await client.query("COMMIT");
 
+      let smsQueued = false;
+
+      if (status === "paid") {
+        try {
+          await smsSystem.enqueueWithdrawalPaid(
+            pool,
+            {
+              id: withdrawal.id
+            }
+          );
+
+          smsQueued = true;
+
+        } catch (smsError) {
+          console.error(
+            "Withdrawal SMS queue error:",
+            smsError.message
+          );
+        }
+      }
+
       return res.json({
         success: true,
         message:
           status === "paid"
-            ? "Withdrawal marked as paid. Ensure the Mobile Money transfer has actually succeeded."
-            : "Withdrawal rejected. The reserved amount is now available again.",
+            ? "Withdrawal marked as paid."
+            : "Withdrawal rejected.",
+        smsQueued,
         withdrawal: {
           ...updated.rows[0],
           amount: Number(updated.rows[0].amount)
         }
       });
+
     } catch (error) {
       await client.query("ROLLBACK").catch(() => {});
 
@@ -3164,6 +3206,7 @@ app.patch(
         success: false,
         message: "Could not update withdrawal status."
       });
+
     } finally {
       client.release();
     }
