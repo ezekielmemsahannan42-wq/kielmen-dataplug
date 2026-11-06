@@ -2803,7 +2803,7 @@ function displayResetCode(
     return;
   }
 
-  codeElement.textContent =
+  codeElement.value =
     String(code);
 
   setResetCodePanelVisible(
@@ -2833,7 +2833,7 @@ function displayResetCode(
       !Number.isFinite(remaining) ||
       remaining <= 0
     ) {
-      expiryElement.textContent =
+      expiryElement.value =
         "The code has expired. Generate a new code if necessary.";
 
       clearResetCodeExpiryTimer();
@@ -3203,7 +3203,7 @@ async function copyPasswordResetCode() {
     byId("passwordResetGeneratedCode");
 
   const code =
-    codeElement?.textContent
+    codeElement?.value
       ?.trim() || "";
 
   if (!code) {
@@ -3245,11 +3245,11 @@ function closePasswordResetCodePanel() {
     byId("passwordResetCodeExpiry");
 
   if (codeElement) {
-    codeElement.textContent = "";
+    codeElement.value = "";
   }
 
   if (expiryElement) {
-    expiryElement.textContent = "";
+    expiryElement.value = "";
   }
 }
 
