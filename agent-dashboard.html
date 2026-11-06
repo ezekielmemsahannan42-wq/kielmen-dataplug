@@ -1114,6 +1114,21 @@ async function loadOrders(){
     button.textContent="↻ Refresh Orders";
   }
 }
+  /* ============================================================
+   AUTOMATIC AGENT ORDER REFRESH
+============================================================ */
+
+setInterval(() => {
+  const ordersPage = document.getElementById("orders");
+
+  if (
+    document.visibilityState === "visible" &&
+    ordersPage &&
+    ordersPage.classList.contains("active")
+  ) {
+    loadOrders();
+  }
+}, 30000);
 
 function orderSearchFields(order){
   return [
