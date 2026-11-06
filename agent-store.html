@@ -1684,9 +1684,10 @@ async function loadStore() {
       : API_BASE + "/agents/store-by-slug/" + encodeURIComponent(storeSlug);
 
     const data = await fetchJSON(endpoint, {
-      method: "GET",
-      signal: controller.signal
-    });
+  method: "GET",
+  cache: "no-store",
+  signal: controller.signal
+});
 
     if (data.success !== true) {
       throw new Error(
