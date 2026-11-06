@@ -2762,12 +2762,20 @@ function setResetCodePanelVisible(
   const panel =
     byId("passwordResetCodePanel");
 
-  if (panel) {
-    panel.style.display =
-      visible
-        ? "block"
-        : "none";
+  if (!panel) {
+    console.error(
+      "Password reset code panel not found."
+    );
+    return;
   }
+
+  panel.classList.toggle(
+    "hidden",
+    !visible
+  );
+
+  panel.style.display =
+    visible ? "block" : "none";
 }
 
 function clearResetCodeExpiryTimer() {
@@ -2794,79 +2802,59 @@ function displayResetCode(
     byId("passwordResetCodeExpiry");
 
   if (!codeElement) {
-    alert(
-      "Reset code: " +
-      code +
-      "\n\nGive this code only to the verified agent."
-    );
-
+    alert("Generated Reset Code: " + code);
     return;
   }
 
-  codeElement.value =
-    String(code);
+  // Display the actual code inside the input.
+  codeElement.value = String(code);
 
-  setResetCodePanelVisible(
-    true
-  );
+  // Make the reset-code panel visible.
+  setResetCodePanelVisible(true);
 
   clearResetCodeExpiryTimer();
 
   const expiryDate =
     expiresAt
       ? new Date(expiresAt)
-      : new Date(
-          Date.now() +
-          10 * 60 * 1000
-        );
+      : new Date(Date.now() + 10 * 60 * 1000);
 
   function updateCountdown() {
-    if (!expiryElement) {
-      return;
-    }
+    if (!expiryElement) return;
 
     const remaining =
-      expiryDate.getTime() -
-      Date.now();
+      expiryDate.getTime() - Date.now();
 
-    if (
-      !Number.isFinite(remaining) ||
-      remaining <= 0
-    ) {
-      expiryElement.value =
-        "The code has expired. Generate a new code if necessary.";
-
+    if (remaining <= 0) {
+      expiryElement.value = "Code expired";
       clearResetCodeExpiryTimer();
-
       return;
     }
 
     const totalSeconds =
-      Math.floor(
-        remaining / 1000
-      );
+      Math.floor(remaining / 1000);
 
     const minutes =
-      Math.floor(
-        totalSeconds / 60
-      );
+      Math.floor(totalSeconds / 60);
 
     const seconds =
       totalSeconds % 60;
 
-    expiryElement.textContent =
+    expiryElement.value =
       `Expires in ${minutes}:` +
-      String(seconds)
-        .padStart(2, "0");
+      String(seconds).padStart(2, "0");
   }
 
   updateCountdown();
 
   resetCodeExpiryTimer =
-    setInterval(
-      updateCountdown,
-      1000
-    );
+    setInterval(updateCountdown, 1000);
+
+  // Bring the generated code into view.
+  panel.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
 }
 
 async function loadPasswordResetRequests() {
