@@ -284,15 +284,13 @@ async function enqueueWithdrawalPaid(pool, withdrawal) {
       )
       SELECT
         'withdrawal-paid:' || w.id::text,
-        a.phone,
+        w.phone,
         'KIELMEN636',
         'Your withdrawal of GH₵' ||
           TO_CHAR(w.amount, 'FM999999990.00') ||
           ' has been successfully paid. Thank you for using KIELMEN636.',
         'withdrawal_confirmation'
       FROM agent_withdrawals w
-      INNER JOIN agents a
-        ON a.id = w.agent_id
       WHERE w.id = $1
         AND w.status = 'paid'
       ON CONFLICT (idempotency_key)
@@ -303,7 +301,7 @@ async function enqueueWithdrawalPaid(pool, withdrawal) {
   );
 
   return result.rowCount;
-     }
+}
 
 /* =========================================
    SAILUP SMS QUEUE WORKER
