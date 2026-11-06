@@ -1561,34 +1561,35 @@ function getPaymentStatus(order) {
 --------------------------------------------------------- */
 
 function getDeliveryStatus(order) {
+    const supplierRaw = String(
+        order.supplierStatus ??
+        order.supplier_status ??
+        order.supplier_response?.data?.orderStatus ??
+        order.supplier_response?.orderStatus ??
+        order.supplier_response?.data?.status ??
+        ""
+    ).trim().toLowerCase();
+
     const raw = String(
         order.deliveryStatus ??
         order.delivery_status ??
-        order.supplierStatus ??
-        order.supplier_status ??
         order.deliveryState ??
         order.delivery_state ??
         ""
     ).trim().toLowerCase();
 
+    // Check supplier verification/hold status first.
     if (
         [
-            "delivered",
-            "delivery_success",
-            "delivery_successful",
-            "success",
-            "successful"
-        ].includes(raw)
-    ) {
-        return {
-            label: "Delivered",
-            className: "success",
-            description:
-                "The data supplier has reported successful delivery."
-        };
-    }
-
-    if (
+            "on_hold",
+            "on hold",
+            "hold",
+            "held",
+            "verifying",
+            "verification",
+            "awaiting_verification",
+            "awaiting verification"
+        ].includes(supplierRaw) ||
         [
             "on_hold",
             "on hold",
@@ -1601,10 +1602,49 @@ function getDeliveryStatus(order) {
         ].includes(raw)
     ) {
         return {
-            label: "On Hold",
+            label: "On Hold — Verifying",
             className: "pending",
             description:
-                "This order is awaiting further verification or resolution. Check the latest status before taking action."
+                "Your payment has been received successfully. Your money is safe and has not been lost. This number is currently undergoing verification by the data supplier. Once verification is completed, your data will be delivered automatically. You do not need to place another order or make another payment."
+        };
+    }
+
+    if (
+        [
+            "delivered",
+            "completed",
+            "complete",
+            "delivery_success",
+            "delivery_successful",
+            "success",
+            "successful"
+        ].includes(supplierRaw) ||
+        [
+            "delivered",
+            "completed",
+            "complete",
+            "delivery_success",
+            "delivery_successful",
+            "success",
+            "successful"
+        ].includes(raw)
+    ) {
+        return {
+            label: "Delivered",
+            className: "success",
+            description:
+                "Your data has been delivered successfully."
+        };
+    }
+
+    if (
+        ["failed", "delivery_failed", "rejected", "error"].includes(raw)
+    ) {
+        return {
+            label: "Delivery Failed",
+            className: "failed",
+            description:
+                "There is an issue with your data delivery. Please contact support."
         };
     }
 
@@ -1612,7 +1652,6 @@ function getDeliveryStatus(order) {
         [
             "processing",
             "in_progress",
-            "in progress",
             "queued",
             "accepted",
             "submitted",
@@ -1627,44 +1666,14 @@ function getDeliveryStatus(order) {
         };
     }
 
-    if (
-        [
-            "failed",
-            "delivery_failed",
-            "delivery failed",
-            "rejected",
-            "error"
-        ].includes(raw)
-    ) {
-        return {
-            label: "Delivery Failed",
-            className: "failed",
-            description:
-                "The delivery attempt was reported as unsuccessful. Please contact support for assistance."
-        };
-    }
-
-    if (
-        [
-            "cancelled",
-            "canceled"
-        ].includes(raw)
-    ) {
-        return {
-            label: "Cancelled",
-            className: "failed",
-            description:
-                "This order has been marked as cancelled."
-        };
-    }
-
     return {
         label: "Status Unavailable",
         className: "unknown",
         description:
-            "The latest delivery status is not available. Please check again later or contact support."
+            "The latest delivery status is not available. Please check again later."
     };
 }
+        
 
 
 /* ---------------------------------------------------------
