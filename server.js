@@ -6051,10 +6051,11 @@ await createWebsiteSettingsTable();
 await smsSystem.initSmsTables(pool);
 
 smsSystem.startSmsWorker(
-  pool,
-  startDataMartStatusWorker();
-  sendQueuedSmsThroughSailup
+    pool,
+    sendQueuedSmsThroughSailup
 );
+
+startDataMartStatusWorker();
     // TEMPORARY DIAGNOSTIC: Check why an agent store cannot be found
 app.get("/debug-agent-store/:slug", async (req, res) => {
   try {
