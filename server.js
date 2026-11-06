@@ -5417,7 +5417,9 @@ const isOnHold =
     supplierResponseText.includes("on hold") ||
     supplierResponseText.includes("verifying") ||
     String(supplierResult.data?.processingMethod || "").toLowerCase() === "manual" ||
+    String(apiResponse.processingMethod || "").toLowerCase() === "manual" ||
     String(apiResponse.status || "").toLowerCase() === "pending" ||
+    String(supplierResult.data?.orderStatus || "").toLowerCase() === "waiting" ||
     String(apiResponse.skipReason || "").toLowerCase() === "inventory-default";
           supplierResponseText.includes("verifying");
 
