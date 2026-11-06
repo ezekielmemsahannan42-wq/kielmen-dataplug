@@ -943,20 +943,25 @@
     </p>
 
     <div class="network-grid">
-      <button type="button" class="network-btn" data-network="MTN" aria-pressed="false">
-        <span class="network-icon">🟡</span>
-        MTN
-      </button>
+  <button type="button" class="network-btn" data-network="MTN" aria-pressed="false">
+    <span class="network-icon">🟡</span>
+    MTN
+  </button>
 
-      <button type="button" class="network-btn" data-network="TELECEL" aria-pressed="false">
-        <span class="network-icon">🔴</span>
-        TELECEL
-      </button>
+  <button type="button" class="network-btn" data-network="TELECEL" aria-pressed="false">
+    <span class="network-icon">🔴</span>
+    TELECEL
+  </button>
 
-      <button type="button" class="network-btn" data-network="AIRTELTIGO" aria-pressed="false">
-        <span class="network-icon">🔵</span>
-        AIRTELTIGO
-      </button>
+  <button type="button" class="network-btn" data-network="AIRTELTIGO" aria-pressed="false">
+    <span class="network-icon">🔵</span>
+    AIRTELTIGO
+  </button>
+
+  <button type="button" class="network-btn" data-network="MTN_MASHUP" aria-pressed="false">
+    <span class="network-icon">🟠</span>
+    MTN MASHUP
+  </button>
     </div>
 
     <label for="bundleSearch" class="hidden">Search bundles</label>
@@ -1746,10 +1751,11 @@ async function loadStore() {
     }
 
     const networks = [
-      "MTN",
-      "TELECEL",
-      "AIRTELTIGO"
-    ];
+  "MTN",
+  "TELECEL",
+  "AIRTELTIGO",
+  "MTN_MASHUP"
+];
 
     const firstNetwork = networks.find(network =>
       prices.some(item => getPriceNetwork(item) === network)
