@@ -1,11 +1,15 @@
 /**
  * KIELMEN636 SMS SYSTEM
  *
- * 1. Automatic customer order notifications.
- * 2. Owner-controlled promotional SMS campaigns.
+ * SMS gateway: Sailup
  *
- * Actual SMS transmission requires an approved
- * SMS gateway or carrier connection.
+ * Features in this module:
+ * 1. Automatic customer order confirmation queue.
+ * 2. Owner SMS overview.
+ * 3. SMS contact management.
+ * 4. Promotional SMS campaign queue.
+ *
+ * Sailup API communication is supplied by server.js.
  */
 
 "use strict";
@@ -18,186 +22,26 @@ const express = require("express");
 ========================================= */
 
 function normalizeGhanaPhone(value) {
+
   let phone = String(value || "")
     .trim()
     .replace(/[^\d+]/g, "");
 
   if (phone.startsWith("+233")) {
+
     phone = "0" + phone.slice(4);
 
   } else if (phone.startsWith("233")) {
+
     phone = "0" + phone.slice(3);
+
   }
 
   return /^0\d{9}$/.test(phone)
     ? phone
     : "";
+
 }
-/* =========================================
-   MTN SMS V3 API CONNECTION
-========================================= */
-
-let mtnAccessToken = "";
-let mtnTokenExpiresAt = 0;
-
-
-/* GET MTN ACCESS TOKEN */
-
-async function getMtnAccessToken() {
-
-  const clientId =
-    process.env.MTN_SMS_CLIENT_ID;
-
-  const clientSecret =
-    process.env.MTN_SMS_CLIENT_SECRET;
-
-  if (!clientId || !clientSecret) {
-    throw new Error(
-      "MTN SMS credentials are missing."
-    );
-  }
-
-  if (
-    mtnAccessToken &&
-    Date.now() < mtnTokenExpiresAt
-  ) {
-    return mtnAccessToken;
-  }
-
-  const body = new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret
-  });
-
-  const response = await fetch(
-    "https://api.mtn.com/v1/oauth/access_token/accesstoken?grant_type=client_credentials",
-    {
-      method: "POST",
-
-      headers: {
-        "Content-Type":
-          "application/x-www-form-urlencoded"
-      },
-
-      body: body.toString()
-    }
-  );
-
-  const data = await response.json();
-
-  if (!response.ok || !data.access_token) {
-    throw new Error(
-      "MTN authentication failed: " +
-      JSON.stringify(data)
-    );
-  }
-
-  mtnAccessToken = data.access_token;
-
-  const expiresIn =
-    Number(data.expires_in || 3600);
-
-  mtnTokenExpiresAt =
-    Date.now() +
-    Math.max(expiresIn - 120, 60) * 1000;
-
-  return mtnAccessToken;
-}
-
-
-/* SEND ONE SMS THROUGH MTN */
-
-async function sendMtnSms({
-  phone,
-  message,
-  clientCorrelatorId
-}) {
-
-    const serviceCode =
-    process.env.MTN_SMS_SERVICE_CODE;
-
-  const senderAddress =
-    process.env.MTN_SMS_SENDER_ADDRESS || "";
-
-  if (!serviceCode) {
-    throw new Error(
-      "MTN SMS service code is not configured."
-    );
-  }
-
-  if (
-    senderAddress &&
-    senderAddress !== serviceCode
-  ) {
-    throw new Error(
-      "MTN sender address must match the service code."
-    );
-  }
-
-  const normalizedPhone =
-    normalizeGhanaPhone(phone);
-
-  if (!normalizedPhone) {
-    throw new Error(
-      "Invalid Ghanaian phone number."
-    );
-  }
-
-  const internationalPhone =
-    "233" + normalizedPhone.slice(1);
-
-  const token =
-    await getMtnAccessToken();
-
-  const payload = {
-    message: String(message),
-
-    serviceCode,
-
-    receiverAddress: [
-      internationalPhone
-    ],
-
-    clientCorrelatorId:
-      String(clientCorrelatorId).slice(0, 36)
-  };
-
-  if (senderAddress) {
-    payload.senderAddress = senderAddress;
-  }
-
-  const response = await fetch(
-    "https://api.mtn.com/v3/sms/messages/sms/outbound",
-    {
-      method: "POST",
-
-      headers: {
-        "Authorization":
-          "Bearer " + token,
-
-        "Content-Type":
-          "application/json",
-
-        "Accept":
-          "application/json"
-      },
-
-      body: JSON.stringify(payload)
-    }
-  );
-
-  const result = await response.json()
-    .catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(
-      "MTN SMS request failed: " +
-      JSON.stringify(result)
-    );
-  }
-
-  return result;
-       }
 
 
 /* =========================================
@@ -208,6 +52,7 @@ async function initSmsTables(pool) {
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sms_messages (
+
       id BIGSERIAL PRIMARY KEY,
 
       idempotency_key VARCHAR(180) UNIQUE,
@@ -221,11 +66,13 @@ async function initSmsTables(pool) {
 
       message TEXT NOT NULL,
 
-      message_type VARCHAR(30) NOT NULL
+            message_type VARCHAR(30) NOT NULL
         CHECK (
           message_type IN (
             'order_notification',
-            'promotional'
+            'promotional',
+            'agent_announcement',
+            'withdrawal_confirmation'
           )
         ),
 
@@ -248,6 +95,7 @@ async function initSmsTables(pool) {
         DEFAULT NOW(),
 
       sent_at TIMESTAMPTZ
+
     )
   `);
 
@@ -260,6 +108,7 @@ async function initSmsTables(pool) {
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sms_contacts (
+
       id BIGSERIAL PRIMARY KEY,
 
       phone VARCHAR(20) UNIQUE NOT NULL,
@@ -280,12 +129,14 @@ async function initSmsTables(pool) {
 
       updated_at TIMESTAMPTZ NOT NULL
         DEFAULT NOW()
+
     )
   `);
 
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS sms_campaigns (
+
       id BIGSERIAL PRIMARY KEY,
 
       name VARCHAR(120) NOT NULL,
@@ -300,6 +151,7 @@ async function initSmsTables(pool) {
 
       created_at TIMESTAMPTZ NOT NULL
         DEFAULT NOW()
+
     )
   `);
 
@@ -313,7 +165,7 @@ async function initSmsTables(pool) {
 
 
 /* =========================================
-   AUTOMATIC ORDER CONFIRMATION
+   AUTOMATIC CUSTOMER ORDER CONFIRMATION
 ========================================= */
 
 async function enqueueOrderReceived(pool, order) {
@@ -370,149 +222,269 @@ async function enqueueOrderReceived(pool, order) {
   );
 
 }
+/* =========================================
+   AGENT ANNOUNCEMENT SMS
+========================================= */
+
+async function enqueueAgentAnnouncement(pool, message) {
+  const text = String(message || "").trim();
+
+  if (!text || text.length > 1000) {
+    throw new Error("Announcement must contain 1–1000 characters.");
+  }
+
+  const result = await pool.query(
+    `
+      INSERT INTO sms_messages (
+        idempotency_key,
+        phone,
+        sender_id,
+        message,
+        message_type
+      )
+      SELECT
+        'agent-announcement:' ||
+        gen_random_uuid()::text ||
+        ':' ||
+        a.id::text,
+        a.phone,
+        'KIELMEN636',
+        $1,
+        'agent_announcement'
+      FROM agents a
+      WHERE a.status = 'approved'
+      RETURNING id
+    `,
+    [text]
+  );
+
+  return result.rowCount;
+}
+
 
 /* =========================================
-   SMS QUEUE WORKER
+   WITHDRAWAL CONFIRMATION SMS
+========================================= */
+
+async function enqueueWithdrawalPaid(pool, withdrawal) {
+  const withdrawalId = Number(withdrawal?.id);
+
+  if (!Number.isSafeInteger(withdrawalId) || withdrawalId < 1) {
+    throw new Error("Invalid withdrawal ID.");
+  }
+
+  const result = await pool.query(
+    `
+      INSERT INTO sms_messages (
+        idempotency_key,
+        phone,
+        sender_id,
+        message,
+        message_type
+      )
+      SELECT
+        'withdrawal-paid:' || w.id::text,
+        a.phone,
+        'KIELMEN636',
+        'Your withdrawal of GH₵' ||
+          TO_CHAR(w.amount, 'FM999999990.00') ||
+          ' has been successfully paid. Thank you for using KIELMEN636.',
+        'withdrawal_confirmation'
+      FROM agent_withdrawals w
+      INNER JOIN agents a
+        ON a.id = w.agent_id
+      WHERE w.id = $1
+        AND w.status = 'paid'
+      ON CONFLICT (idempotency_key)
+      DO NOTHING
+      RETURNING id
+    `,
+    [withdrawalId]
+  );
+
+  return result.rowCount;
+     }
+
+/* =========================================
+   SAILUP SMS QUEUE WORKER
 ========================================= */
 
 let smsWorkerTimer = null;
+
 let smsWorkerRunning = false;
 
 
-/* PROCESS ONE QUEUED SMS */
+/* PROCESS ONE QUEUED SMS THROUGH SAILUP */
 
-async function processSmsQueue(pool) {
+async function processSmsQueue(
+  pool,
+  sendSailupSms
+) {
 
-  // Prevent sending until production access
-  // and configuration have been confirmed.
+  if (typeof sendSailupSms !== "function") {
 
-  if (
-    process.env.MTN_SMS_ENABLED !== "true"
-  ) {
-    return;
+    throw new Error(
+      "The Sailup sender callback from server.js is missing."
+    );
+
   }
+
 
   if (smsWorkerRunning) {
     return;
   }
 
+
   smsWorkerRunning = true;
 
   let sms = null;
 
+
   try {
 
-    // Atomically claim one queued message.
-    // SKIP LOCKED prevents two workers
-    // from claiming the same message.
-
     const claimed = await pool.query(`
-  WITH next_sms AS (
-    SELECT id
+      WITH next_sms AS (
 
-    FROM sms_messages
+        SELECT id
 
-    WHERE status = 'queued'
+        FROM sms_messages
 
-    ORDER BY created_at ASC
+        WHERE status = 'queued'
 
-    LIMIT 1
+        ORDER BY created_at ASC
 
-    FOR UPDATE SKIP LOCKED
-  )
+        LIMIT 1
 
-  UPDATE sms_messages AS sms
+        FOR UPDATE SKIP LOCKED
 
-  SET status = 'sending',
-      error_message = NULL
+      )
 
-  FROM next_sms
+      UPDATE sms_messages AS sms
 
-  WHERE sms.id = next_sms.id
+      SET status = 'sending',
+          error_message = NULL
 
-  RETURNING
-    sms.id,
-    sms.phone,
-    sms.message,
-    sms.sender_id,
-    sms.message_type
-`);
+      FROM next_sms
+
+      WHERE sms.id = next_sms.id
+
+      RETURNING
+        sms.id,
+        sms.phone,
+        sms.message,
+        sms.sender_id,
+        sms.message_type
+
+    `);
+
 
     if (!claimed.rowCount) {
       return;
     }
 
+
     sms = claimed.rows[0];
 
-    // Send the claimed message through MTN.
 
-    const result = await sendMtnSms({
+    /*
+      Send using the Sailup callback
+      supplied by server.js.
+    */
+
+    const result = await sendSailupSms({
+
       phone: sms.phone,
+
       message: sms.message,
-      clientCorrelatorId: "K636-" + sms.id
+
+      senderId: sms.sender_id,
+
+      messageId: sms.id
+
     });
 
+
     const providerReference =
-      result.transactionId ||
-      result.resourceReference ||
-      result.data?.transactionId ||
+      result?.id ||
+      result?.reference ||
+      result?.campaign_id ||
+      result?.campaign?.id ||
       null;
 
-    // MTN accepted the request.
-    // This does not independently prove delivery.
 
-    await pool.query(
-      `
-        UPDATE sms_messages
+    /*
+      Sailup accepted the SMS request.
+      This does not independently prove
+      delivery to the recipient.
+    */
 
-        SET status = 'sent',
-            provider_reference = $1,
-            sent_at = NOW(),
-            error_message = NULL
+    await pool.query(`
+      UPDATE sms_messages
 
-        WHERE id = $2
-          AND status = 'sending'
-      `,
-      [
-        providerReference,
-        sms.id
-      ]
-    );
+      SET status = 'sent',
+
+          provider_reference = $1,
+
+          sent_at = NOW(),
+
+          error_message = NULL
+
+      WHERE id = $2
+
+        AND status = 'sending'
+
+    `, [
+
+      providerReference
+        ? String(providerReference).slice(0, 180)
+        : null,
+
+      sms.id
+
+    ]);
+
 
     console.log(
-      "MTN accepted SMS:",
+      "Sailup accepted queued SMS:",
       sms.id,
       sms.phone
     );
 
+
   } catch (error) {
 
     console.error(
-      "SMS worker error:",
+      "Sailup SMS worker error:",
       error.message
     );
 
+
     if (sms) {
 
-      await pool.query(
-        `
-          UPDATE sms_messages
+      await pool.query(`
+        UPDATE sms_messages
 
-          SET status = 'failed',
-              error_message = $1
+        SET status = 'failed',
 
-          WHERE id = $2
-            AND status = 'sending'
-        `,
-        [
-          String(error.message).slice(0, 2000),
-          sms.id
-        ]
-      ).catch(updateError => {
+            error_message = $1
+
+        WHERE id = $2
+
+          AND status = 'sending'
+
+      `, [
+
+        String(error.message).slice(0, 2000),
+
+        sms.id
+
+      ]).catch(updateError => {
+
         console.error(
-          "Could not update SMS failure:",
+          "Could not record SMS failure:",
           updateError.message
         );
+
       });
 
     }
@@ -526,37 +498,65 @@ async function processSmsQueue(pool) {
 }
 
 
-/* START AUTOMATIC SMS PROCESSING */
+/* =========================================
+   START AUTOMATIC SMS PROCESSING
+========================================= */
 
-function startSmsWorker(pool) {
+function startSmsWorker(
+  pool,
+  sendSailupSms
+) {
 
   if (smsWorkerTimer) {
     return;
   }
 
+
+  if (typeof sendSailupSms !== "function") {
+
+    console.error(
+      "Sailup SMS worker not started: sender callback is missing."
+    );
+
+    return;
+
+  }
+
+
   console.log(
-    "KIELMEN636 SMS worker initialized."
+    "KIELMEN636 Sailup SMS worker initialized."
   );
+
 
   smsWorkerTimer = setInterval(() => {
 
-    processSmsQueue(pool).catch(error => {
+    processSmsQueue(
+      pool,
+      sendSailupSms
+    ).catch(error => {
+
       console.error(
         "SMS worker processing error:",
         error.message
       );
+
     });
 
   }, 5000);
 
 }
+
+
 /* =========================================
    OWNER SMS ROUTER
 ========================================= */
 
 function createSmsRouter({
+
   pool,
+
   requireOwner
+
 }) {
 
   const router = express.Router();
@@ -595,16 +595,24 @@ function createSmsRouter({
             FROM sms_messages
           `),
 
+
           pool.query(`
             SELECT
 
               id,
+
               phone,
+
               sender_id,
+
               message_type,
+
               status,
+
               created_at,
+
               sent_at,
+
               error_message
 
             FROM sms_messages
@@ -634,6 +642,7 @@ function createSmsRouter({
         "SMS overview:",
         error.message
       );
+
 
       return res.status(500).json({
 
@@ -719,6 +728,7 @@ function createSmsRouter({
           VALUES ($1, $2, $3, $4, NULL)
 
           ON CONFLICT (phone)
+
           DO UPDATE SET
 
             contact_name = EXCLUDED.contact_name,
@@ -743,9 +753,13 @@ function createSmsRouter({
           RETURNING
 
             id,
+
             phone,
+
             contact_name,
+
             promotional_consent,
+
             created_at
         `,
         [
@@ -772,6 +786,7 @@ function createSmsRouter({
         "SMS contact save:",
         error.message
       );
+
 
       return res.status(500).json({
 
@@ -811,11 +826,17 @@ function createSmsRouter({
           SELECT
 
             id,
+
             phone,
+
             contact_name,
+
             promotional_consent,
+
             consent_source,
+
             opted_out_at,
+
             created_at
 
           FROM sms_contacts
@@ -844,6 +865,7 @@ function createSmsRouter({
         error.message
       );
 
+
       return res.status(500).json({
 
         success: false,
@@ -856,15 +878,53 @@ function createSmsRouter({
 
   });
 
+/* =====================================
+   SEND ANNOUNCEMENT TO ALL AGENTS
+========================================= */
 
+router.post("/announcements", async (req, res) => {
+  try {
+    const message = String(req.body?.message || "").trim();
+
+    if (!message || message.length > 1000) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter an announcement of 1–1000 characters."
+      });
+    }
+
+    const recipientCount = await enqueueAgentAnnouncement(
+      pool,
+      message
+    );
+
+    if (!recipientCount) {
+      return res.status(404).json({
+        success: false,
+        message: "No approved agents were found."
+      });
+    }
+
+    return res.status(202).json({
+      success: true,
+      message: "Agent announcement added to the SMS queue.",
+      recipientCount
+    });
+
+  } catch (error) {
+    console.error("Agent announcement SMS:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not queue agent announcement."
+    });
+  }
+});
   /* =====================================
      CREATE PROMOTIONAL CAMPAIGN
-     
-     Sends only to numbers imported
-     or pasted by the owner.
 
-     Requires owner confirmation that
-     recipients agreed to promotions.
+     Only recipients with recorded consent
+     and without an opt-out are eligible.
   ===================================== */
 
   router.post("/campaigns", async (req, res) => {
@@ -896,8 +956,6 @@ function createSmsRouter({
         req.body?.consentConfirmed === true;
 
 
-      /* VALIDATE MESSAGE */
-
       if (
         !name ||
         !message ||
@@ -916,8 +974,6 @@ function createSmsRouter({
       }
 
 
-      /* VALIDATE CONSENT */
-
       if (!consentConfirmed) {
 
         return res.status(400).json({
@@ -931,8 +987,6 @@ function createSmsRouter({
 
       }
 
-
-      /* VALIDATE RECIPIENT COUNT */
 
       if (
         !recipients.length ||
@@ -950,8 +1004,6 @@ function createSmsRouter({
 
       }
 
-
-      /* NORMALIZE NUMBERS */
 
       const normalized = recipients.map(
         normalizeGhanaPhone
@@ -974,8 +1026,6 @@ function createSmsRouter({
       }
 
 
-      /* REMOVE DUPLICATES */
-
       const uniqueRecipients = [
         ...new Set(normalized)
       ];
@@ -988,10 +1038,9 @@ function createSmsRouter({
 
       /*
         Save new imported contacts only when
-        the owner has confirmed consent.
+        the owner confirms consent.
 
-        Existing contacts are NOT overwritten.
-
+        Existing contacts are not overwritten.
         Previously opted-out contacts remain
         opted out.
       */
@@ -1008,7 +1057,9 @@ function createSmsRouter({
           SELECT
 
             imported.phone,
+
             TRUE,
+
             'Owner-confirmed imported promotional list'
 
           FROM UNNEST($1::text[])
@@ -1020,13 +1071,6 @@ function createSmsRouter({
         [uniqueRecipients]
       );
 
-
-      /*
-        Select only imported numbers that
-        are eligible for promotional messages.
-
-        Numbers previously opted out are excluded.
-      */
 
       const eligible = await client.query(
         `
@@ -1075,8 +1119,6 @@ function createSmsRouter({
       }
 
 
-      /* CREATE CAMPAIGN */
-
       const campaign = await client.query(
         `
           INSERT INTO sms_campaigns
@@ -1100,8 +1142,6 @@ function createSmsRouter({
       const campaignId =
         campaign.rows[0].id;
 
-
-      /* QUEUE ONLY SELECTED RECIPIENTS */
 
       const inserted = await client.query(
         `
@@ -1148,8 +1188,6 @@ function createSmsRouter({
       );
 
 
-      /* UPDATE CAMPAIGN COUNT */
-
       await client.query(
         `
           UPDATE sms_campaigns
@@ -1173,7 +1211,7 @@ function createSmsRouter({
         success: true,
 
         message:
-          "Promotion saved to the SMS queue. No messages have been transmitted yet.",
+          "Promotion saved to the SMS queue. Sailup will process the messages.",
 
         campaignId,
 
@@ -1181,7 +1219,7 @@ function createSmsRouter({
 
         skippedCount,
 
-        deliveryConfigured: false
+        deliveryConfigured: true
 
       });
 
@@ -1235,9 +1273,13 @@ function createSmsRouter({
           SELECT
 
             id,
+
             name,
+
             status,
+
             recipient_count,
+
             created_at
 
           FROM sms_campaigns
@@ -1287,15 +1329,12 @@ function createSmsRouter({
 /* =========================================
    EXPORT SMS FUNCTIONS
 ========================================= */
+
 module.exports = {
-
   initSmsTables,
-
   enqueueOrderReceived,
-
+  enqueueAgentAnnouncement,
+  enqueueWithdrawalPaid,
   createSmsRouter,
-
   startSmsWorker
-
 };
-
