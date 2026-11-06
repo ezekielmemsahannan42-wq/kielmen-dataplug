@@ -2332,7 +2332,7 @@ app.put(
           AGENT_BASE_PRICES[network]?.[bundle] === undefined ||
           !Number.isFinite(sellingPrice) ||
           sellingPrice < 0 ||
-          Math.round(sellingPrice * 100) !== sellingPrice * 100
+          Math.abs(sellingPrice * 100 - Math.round(sellingPrice * 100)) > 0.00000001
         ) {
           throw new Error(
             `Invalid price for ${item.network} ${item.bundle}.`
