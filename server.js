@@ -1068,14 +1068,15 @@ async function refreshSupplierOrderStatus(supplierReference) {
     JSON.stringify(result, null, 2)
   );
 
-  const apiResponse = result.data?.apiResponse || {};
+  const data = result.data || {};
+  const apiResponse = data.apiResponse || {};
 
   const status = String(
-    result.data?.orderStatus ||
+    data.orderStatus ||
+    data.delivery_status ||
+    data.status ||
     result.orderStatus ||
-    result.data?.delivery_status ||
     result.delivery_status ||
-    result.data?.status ||
     result.status ||
     ""
   ).trim().toLowerCase();
@@ -1084,41 +1085,17 @@ async function refreshSupplierOrderStatus(supplierReference) {
     apiResponse.status || ""
   ).trim().toLowerCase();
 
-  const processingMethod = String(
-    result.data?.processingMethod ||
-    result.processingMethod ||
-    apiResponse.processingMethod ||
-    ""
-  ).trim().toLowerCase();
-
-  const skipReason = String(
-    result.data?.skipReason ||
-    result.skipReason ||
-    apiResponse.skipReason ||
-    ""
-  ).trim().toLowerCase();
-
   const responseText = JSON.stringify(result).toLowerCase();
 
-  const isOnHold =
-    responseText.includes("beneficiary not allowed") ||
-    responseText.includes("on hold") ||
-    responseText.includes("verifying") ||
-    ["pending", "waiting", "processing"].includes(status) ||
-    apiStatus === "pending" ||
-    processingMethod === "manual" ||
-    skipReason === "inventory-default" ||
-    skipReason === "inventory_default";
-
-  if (isOnHold) {
-    return {
-      status: "on_hold",
-      raw: result
-    };
-  }
-
+  // 1. Check confirmed delivery FIRST.
   if (
-    ["delivered", "completed", "success", "successful"].includes(status)
+    [
+      "delivered",
+      "completed",
+      "complete",
+      "success",
+      "successful"
+    ].includes(status)
   ) {
     return {
       status: "delivered",
@@ -1126,8 +1103,14 @@ async function refreshSupplierOrderStatus(supplierReference) {
     };
   }
 
+  // 2. Check failed orders.
   if (
-    ["failed", "rejected", "cancelled", "canceled"].includes(status)
+    [
+      "failed",
+      "rejected",
+      "cancelled",
+      "canceled"
+    ].includes(status)
   ) {
     return {
       status: "failed",
@@ -1135,11 +1118,39 @@ async function refreshSupplierOrderStatus(supplierReference) {
     };
   }
 
+  // 3. Check orders that are on hold.
+  if (
+    responseText.includes("beneficiary not allowed") ||
+    responseText.includes("on hold") ||
+    responseText.includes("verifying")
+  ) {
+    return {
+      status: "on_hold",
+      raw: result
+    };
+  }
+
+  // 4. Orders accepted but not yet delivered.
+  if (
+    [
+      "pending",
+      "waiting",
+      "processing"
+    ].includes(status) ||
+    apiStatus === "pending"
+  ) {
+    return {
+      status: "processing",
+      raw: result
+    };
+  }
+
+  // 5. Unknown status: do not falsely mark as delivered.
   return {
-    status: "on_hold",
+    status: "processing",
     raw: result
   };
-    }
+}
 
 /* ============================================================
    AUTOMATIC DATAMART DELIVERY STATUS SYNCHRONIZATION
@@ -1181,14 +1192,14 @@ async function syncPendingDataMartOrders() {
 
         const supplierStatus = String(supplier.status || "").toLowerCase();
 
-        const deliveryStatus =
-  ["delivered", "completed", "complete", "success", "successful"]
-    .includes(supplierStatus)
+      const deliveryStatus =
+  supplier.status === "delivered"
     ? "delivered"
-    : ["failed", "cancelled", "canceled", "rejected"]
-        .includes(supplierStatus)
+    : supplier.status === "failed"
       ? "failed"
-      : "on_hold";
+      : supplier.status === "on_hold"
+        ? "on_hold"
+        : "processing";
 
 const result = await pool.query(
     `
