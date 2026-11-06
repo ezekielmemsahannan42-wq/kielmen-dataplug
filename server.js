@@ -5419,16 +5419,31 @@ app.get("/order-status/:reference", async (req, res) => {
 
         const apiResponse = supplierResult.data?.apiResponse || {};
 
+const processingMethod = String(
+  supplierResult.data?.processingMethod ||
+  apiResponse.processingMethod ||
+  ""
+).trim().toLowerCase();
+
+const skipReason = String(
+  supplierResult.data?.skipReason ||
+  apiResponse.skipReason ||
+  ""
+).trim().toLowerCase();
+
+const apiStatus = String(
+  apiResponse.status || ""
+).trim().toLowerCase();
+
 const isOnHold =
-    supplierResponseText.includes("beneficiary not allowed") ||
-    supplierResponseText.includes("on hold") ||
-    supplierResponseText.includes("verifying") ||
-    String(supplierResult.data?.processingMethod || "").toLowerCase() === "manual" ||
-    String(apiResponse.processingMethod || "").toLowerCase() === "manual" ||
-    String(apiResponse.status || "").toLowerCase() === "pending" ||
-    String(supplierResult.data?.orderStatus || "").toLowerCase() === "waiting" ||
-    String(apiResponse.skipReason || "").toLowerCase() === "inventory-default";
-          supplierResponseText.includes("verifying");
+  supplierResponseText.includes("beneficiary not allowed") ||
+  supplierResponseText.includes("on hold") ||
+  supplierResponseText.includes("verifying") ||
+  processingMethod === "manual" ||
+  apiStatus === "pending" ||
+  skipReason === "inventory-default" ||
+  skipReason === "inventory_default" ||
+  normalizedStatus === "waiting";
 
         if (isOnHold) {
           await pool.query(
