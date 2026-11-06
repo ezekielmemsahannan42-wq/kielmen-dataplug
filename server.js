@@ -1067,7 +1067,7 @@ async function refreshSupplierOrderStatus(supplierReference) {
   JSON.stringify(result, null, 2)
 );
 
-  const status = String(
+    const status = String(
     result.data?.orderStatus ||
     result.orderStatus ||
     result.data?.delivery_status ||
@@ -1076,6 +1076,42 @@ async function refreshSupplierOrderStatus(supplierReference) {
     result.status ||
     ""
   ).trim().toLowerCase();
+
+  const responseText = JSON.stringify(result).toLowerCase();
+
+  if (
+    responseText.includes("beneficiary not allowed") ||
+    responseText.includes("on hold") ||
+    responseText.includes("verifying")
+  ) {
+    return {
+      status: "on_hold",
+      raw: result
+    };
+  }
+
+  if (
+    ["delivered", "completed", "success", "successful"].includes(status)
+  ) {
+    return {
+      status: "delivered",
+      raw: result
+    };
+  }
+
+  if (
+    ["failed", "rejected", "cancelled", "canceled"].includes(status)
+  ) {
+    return {
+      status: "failed",
+      raw: result
+    };
+  }
+
+  return {
+    status: "processing",
+    raw: result
+  };
 
   if (
     ["delivered", "completed", "success", "successful"].includes(status)
@@ -5353,17 +5389,44 @@ app.get("/order-status/:reference", async (req, res) => {
   JSON.stringify(supplierResult)
 );
 
-        const normalizedStatus = String(
-  supplierResult.data?.orderStatus ||
-  supplierResult.orderStatus ||
-  supplierResult.data?.delivery_status ||
-  supplierResult.delivery_status ||
-  supplierResult.data?.status ||
-  supplierResult.status ||
-  ""
-).trim().toLowerCase();
+                const normalizedStatus = String(
+          supplierResult.data?.orderStatus ||
+          supplierResult.orderStatus ||
+          supplierResult.data?.delivery_status ||
+          supplierResult.delivery_status ||
+          supplierResult.data?.status ||
+          supplierResult.status ||
+          ""
+        ).trim().toLowerCase();
 
-        if (
+        const supplierResponseText = JSON.stringify(
+          supplierResult
+        ).toLowerCase();
+
+        const isOnHold =
+          supplierResponseText.includes("beneficiary not allowed") ||
+          supplierResponseText.includes("on hold") ||
+          supplierResponseText.includes("verifying");
+
+        if (isOnHold) {
+          await pool.query(
+            `
+              UPDATE orders
+              SET delivery_status = 'on_hold',
+                  supplier_response = $1::jsonb,
+                  updated_at = NOW()
+              WHERE reference = $2
+                AND status = 'paid'
+            `,
+            [
+              JSON.stringify(supplierResult),
+              reference
+            ]
+          );
+
+          order.delivery_status = "on_hold";
+
+        } else if (
           [
             "delivered",
             "completed",
@@ -5375,9 +5438,9 @@ app.get("/order-status/:reference", async (req, res) => {
             `
               UPDATE orders
               SET delivery_status = 'delivered',
-    delivered_at = COALESCE(delivered_at, NOW()),
-    supplier_response = $1::jsonb,
-    updated_at = NOW()
+                  delivered_at = COALESCE(delivered_at, NOW()),
+                  supplier_response = $1::jsonb,
+                  updated_at = NOW()
               WHERE reference = $2
                 AND status = 'paid'
             `,
@@ -5388,6 +5451,7 @@ app.get("/order-status/:reference", async (req, res) => {
           );
 
           order.delivery_status = "delivered";
+
         } else if (
           [
             "failed",
