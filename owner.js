@@ -2187,8 +2187,9 @@ async function updateWithdrawalStatus(
       {
         method: "PATCH",
         body: JSON.stringify({
-          status
-        })
+  status,
+  transferConfirmed: status === "paid"
+})
       }
     );
 
