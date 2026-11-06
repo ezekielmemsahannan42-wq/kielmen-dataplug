@@ -1104,6 +1104,9 @@ async function initializePayment(event) {
                     email,
                     network: selectedBundle.network,
                     bundle: selectedBundle.size,
+                   ...(selectedBundle.network === "MTN_MASHUP"
+    ? { comboCost: selectedBundle.comboCost }
+    : {}),
 
                     /*
                      * Compatibility only.
