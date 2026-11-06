@@ -2851,6 +2851,9 @@ function displayResetCode(
     setInterval(updateCountdown, 1000);
 
   // Bring the generated code into view.
+const panel = byId("passwordResetCodePanel");
+
+if (panel) {
   panel.scrollIntoView({
     behavior: "smooth",
     block: "center"
