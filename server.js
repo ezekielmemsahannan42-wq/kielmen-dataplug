@@ -1062,48 +1062,51 @@ async function refreshSupplierOrderStatus(supplierReference) {
     encodeURIComponent(supplierReference);
 
   const result = await dataMartRequest(path, "GET");
-  console.log(
-  "DATAMART STATUS RESPONSE:",
-  JSON.stringify(result, null, 2)
-);
 
-    const status = String(
-    result.data?.orderStatus ||
+  console.log(
+    "DATAMART STATUS RESPONSE:",
+    JSON.stringify(result, null, 2)
+  );
+
+  const data = result.data || {};
+  const apiResponse = data.apiResponse || {};
+
+  const status = String(
+    data.orderStatus ||
+    data.delivery_status ||
+    data.status ||
     result.orderStatus ||
-    result.data?.delivery_status ||
-    result.delivery_status ||
-    result.data?.status ||
     result.status ||
     ""
   ).trim().toLowerCase();
 
   const responseText = JSON.stringify(result).toLowerCase();
 
-  if (
+  const isOnHold =
     responseText.includes("beneficiary not allowed") ||
     responseText.includes("on hold") ||
-    responseText.includes("verifying")
-  ) {
-    return {
-      status: "on_hold",
-      raw: result
-    };
-  }
+    responseText.includes("verifying") ||
+    String(data.processingMethod || "").toLowerCase() === "manual" ||
+    String(apiResponse.status || "").toLowerCase() === "pending" ||
+    String(data.skipReason || "").toLowerCase() === "inventory-default";
 
-  if (
-    ["delivered", "completed", "success", "successful"].includes(status)
-  ) {
+  if (["delivered", "completed", "complete", "success", "successful"].includes(status)) {
     return {
       status: "delivered",
       raw: result
     };
   }
 
-  if (
-    ["failed", "rejected", "cancelled", "canceled"].includes(status)
-  ) {
+  if (["failed", "rejected", "cancelled", "canceled"].includes(status)) {
     return {
       status: "failed",
+      raw: result
+    };
+  }
+
+  if (isOnHold) {
+    return {
+      status: "on_hold",
       raw: result
     };
   }
@@ -1112,6 +1115,7 @@ async function refreshSupplierOrderStatus(supplierReference) {
     status: "processing",
     raw: result
   };
+}
 
   if (
     ["delivered", "completed", "success", "successful"].includes(status)
@@ -1159,8 +1163,9 @@ async function syncPendingDataMartOrders() {
           supplier_reference
         FROM orders
         WHERE status = 'paid'
-          AND delivery_status = 'processing'
-          AND supplier_reference IS NOT NULL
+  AND delivery_status IN ('processing', 'on_hold')
+  AND supplier_reference IS NOT NULL
+  AND TRIM(supplier_reference) <> ''
           AND TRIM(supplier_reference) <> ''
         ORDER BY updated_at ASC
         LIMIT 20
@@ -1175,17 +1180,19 @@ async function syncPendingDataMartOrders() {
 
         const supplierStatus = String(supplier.status || "").toLowerCase();
 
-const deliveryStatus = [
-    "completed",
-    "complete",
-    "success",
-    "successful",
-    "delivered"
+        const deliveryStatus = [
+  "completed",
+  "complete",
+  "success",
+  "successful",
+  "delivered"
 ].includes(supplierStatus)
-    ? "delivered"
-    : ["failed", "cancelled", "canceled", "rejected"].includes(supplierStatus)
-        ? "failed"
-        : "processing";
+  ? "delivered"
+  : ["failed", "cancelled", "canceled", "rejected"].includes(supplierStatus)
+    ? "failed"
+    : supplierStatus === "on_hold"
+      ? "on_hold"
+      : "processing";
 
 const result = await pool.query(
     `
@@ -1202,7 +1209,7 @@ const result = await pool.query(
     WHERE reference = $3::text
       AND supplier_reference = $4::text
       AND status = 'paid'
-      AND delivery_status = 'processing'
+      AND delivery_status IN ('processing', 'on_hold')
     RETURNING reference, delivery_status
     `,
     [
@@ -5403,9 +5410,15 @@ app.get("/order-status/:reference", async (req, res) => {
           supplierResult
         ).toLowerCase();
 
-        const isOnHold =
-          supplierResponseText.includes("beneficiary not allowed") ||
-          supplierResponseText.includes("on hold") ||
+        const apiResponse = supplierResult.data?.apiResponse || {};
+
+const isOnHold =
+    supplierResponseText.includes("beneficiary not allowed") ||
+    supplierResponseText.includes("on hold") ||
+    supplierResponseText.includes("verifying") ||
+    String(supplierResult.data?.processingMethod || "").toLowerCase() === "manual" ||
+    String(apiResponse.status || "").toLowerCase() === "pending" ||
+    String(apiResponse.skipReason || "").toLowerCase() === "inventory-default";
           supplierResponseText.includes("verifying");
 
         if (isOnHold) {
