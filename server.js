@@ -1096,7 +1096,119 @@ async function refreshSupplierOrderStatus(supplierReference) {
     raw: result
   };
 }
+/* ============================================================
+   AUTOMATIC DATAMART DELIVERY STATUS SYNCHRONIZATION
+   Checks pending orders and updates Kielmen when DataMart
+   confirms that an order has been delivered.
+============================================================ */
 
+let dataMartStatusWorkerRunning = false;
+
+async function syncPendingDataMartOrders() {
+  if (dataMartStatusWorkerRunning || !DATAMART_API_KEY) {
+    return;
+  }
+
+  dataMartStatusWorkerRunning = true;
+
+  try {
+    const pendingOrders = await pool.query(
+      `
+        SELECT
+          reference,
+          supplier_reference
+        FROM orders
+        WHERE status = 'paid'
+          AND delivery_status = 'processing'
+          AND supplier_reference IS NOT NULL
+          AND TRIM(supplier_reference) <> ''
+        ORDER BY updated_at ASC
+        LIMIT 20
+      `
+    );
+
+    for (const order of pendingOrders.rows) {
+      try {
+        const supplier = await refreshSupplierOrderStatus(
+          order.supplier_reference
+        );
+
+        const result = await pool.query(
+          `
+            UPDATE orders
+            SET
+              delivery_status = $1,
+              supplier_response = $2::jsonb,
+              delivered_at = CASE
+                WHEN $1 = 'delivered'
+                THEN COALESCE(delivered_at, NOW())
+                ELSE delivered_at
+              END,
+              updated_at = NOW()
+            WHERE reference = $3
+              AND supplier_reference = $4
+              AND status = 'paid'
+              AND delivery_status = 'processing'
+            RETURNING reference, delivery_status
+          `,
+          [
+            supplier.status,
+            JSON.stringify(supplier.raw),
+            order.reference,
+            order.supplier_reference
+          ]
+        );
+
+        if (result.rowCount && supplier.status === "delivered") {
+          console.log(
+            "DATAMART DELIVERY CONFIRMED:",
+            order.reference
+          );
+        }
+
+        if (result.rowCount && supplier.status === "failed") {
+          console.log(
+            "DATAMART DELIVERY FAILED:",
+            order.reference
+          );
+        }
+
+      } catch (orderError) {
+        console.error(
+          "DataMart status synchronization failed:",
+          order.reference,
+          orderError.message
+        );
+      }
+    }
+
+  } catch (error) {
+    console.error(
+      "DataMart background synchronization error:",
+      error.message
+    );
+
+  } finally {
+    dataMartStatusWorkerRunning = false;
+  }
+}
+
+
+function startDataMartStatusWorker() {
+  console.log(
+    "DataMart automatic delivery status checker started."
+  );
+
+  // First check shortly after server startup.
+  setTimeout(() => {
+    syncPendingDataMartOrders();
+  }, 10000);
+
+  // Continue checking every 30 seconds.
+  setInterval(() => {
+    syncPendingDataMartOrders();
+  }, 30000);
+}
 // ============================================================
 // 7. AGENT AUTHENTICATION
 // ============================================================
@@ -5940,6 +6052,7 @@ await smsSystem.initSmsTables(pool);
 
 smsSystem.startSmsWorker(
   pool,
+  startDataMartStatusWorker();
   sendQueuedSmsThroughSailup
 );
     // TEMPORARY DIAGNOSTIC: Check why an agent store cannot be found
