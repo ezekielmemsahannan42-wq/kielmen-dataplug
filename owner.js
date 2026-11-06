@@ -2162,20 +2162,13 @@ async function loadWithdrawals() {
    It does not send Mobile Money.
 ========================================= */
 
-async function updateWithdrawalStatus(
-  id,
-  status
-) {
+async function updateWithdrawalStatus(id, status) {
   const promptMessage =
     status === "paid"
-      ? "Have you already sent this money successfully through Mobile Money?"
+      ? "Have you successfully completed the Mobile Money transfer? Only continue if the money has actually been sent."
       : "Are you sure you want to reject this withdrawal?";
 
-  if (
-    !window.confirm(
-      promptMessage
-    )
-  ) {
+  if (!window.confirm(promptMessage)) {
     return;
   }
 
@@ -2187,16 +2180,21 @@ async function updateWithdrawalStatus(
       {
         method: "PATCH",
         body: JSON.stringify({
-  status,
-  transferConfirmed: status === "paid"
-})
+          status,
+          transferConfirmed: status === "paid"
+        })
       }
     );
 
     showMessage(
-      data.message ||
-      "Withdrawal status updated."
+      data.message || "Withdrawal status updated."
     );
+
+    if (status === "paid" && data.smsQueued) {
+      showMessage(
+        "Withdrawal paid. Confirmation SMS added to the queue."
+      );
+    }
 
     await Promise.all([
       loadStatistics(),
@@ -2204,9 +2202,7 @@ async function updateWithdrawalStatus(
     ]);
 
   } catch (error) {
-    showMessage(
-      error.message
-    );
+    showMessage(error.message);
   }
 }
 
@@ -2608,17 +2604,9 @@ async function sendSmsCampaign() {
 ========================================= */
 
 async function sendAgentAnnouncement() {
-  const messageBox = byId(
-    "agentAnnouncementMessage"
-  );
-
-  const statusBox = byId(
-    "agentAnnouncementStatus"
-  );
-
-  const sendButton = byId(
-    "sendAgentAnnouncement"
-  );
+  const messageBox = byId("agentAnnouncementMessage");
+  const statusBox = byId("agentAnnouncementStatus");
+  const sendButton = byId("sendAgentAnnouncement");
 
   if (!messageBox || !statusBox || !sendButton) {
     return;
@@ -2627,47 +2615,37 @@ async function sendAgentAnnouncement() {
   const message = messageBox.value.trim();
 
   if (!message) {
-    statusBox.textContent =
-      "Please enter your announcement.";
-
+    statusBox.textContent = "Please enter your announcement.";
     return;
   }
 
   if (message.length > 1000) {
     statusBox.textContent =
-      "Your announcement cannot exceed 1,000 characters.";
-
+      "Announcement cannot exceed 1,000 characters.";
     return;
   }
 
-  if (
-    !window.confirm(
-      "Send this announcement to all approved registered agents?"
-    )
-  ) {
+  if (!window.confirm(
+    "Send this announcement to all registered agents?"
+  )) {
     return;
   }
 
   sendButton.disabled = true;
-
-  statusBox.textContent =
-    "Submitting announcement...";
+  statusBox.textContent = "Submitting announcement...";
 
   try {
     const data = await ownerRequest(
       "/owner/sms/announcements",
       {
         method: "POST",
-        body: JSON.stringify({
-          message
-        })
+        body: JSON.stringify({ message })
       }
     );
 
     if (!data || !data.success) {
       throw new Error(
-        data?.message ||
-        "Could not submit announcement."
+        data?.message || "Could not send announcement."
       );
     }
 
