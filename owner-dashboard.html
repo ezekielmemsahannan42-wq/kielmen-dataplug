@@ -1827,6 +1827,48 @@
             <div class="notice notice-warning">
               Check your recipient list, message content, sender ID and SMS credit estimate before sending. SMS charges may apply. Send only to recipients you are authorised to contact.
             </div>
+            <!-- AGENT ANNOUNCEMENTS -->
+<div class="panel" style="margin-bottom:20px">
+  <div class="panel-header">
+    <div>
+      <h3>📢 Agent Announcements</h3>
+      <p>Send an SMS announcement to registered agents automatically.</p>
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="agentAnnouncementMessage">
+      Announcement Message
+    </label>
+
+    <textarea
+      id="agentAnnouncementMessage"
+      maxlength="1000"
+      placeholder="Type your announcement to all agents..."
+    ></textarea>
+
+    <div class="small muted">
+      Maximum 1,000 characters. Agent phone numbers are retrieved automatically.
+    </div>
+  </div>
+
+  <div class="inline-actions">
+    <button
+      type="button"
+      class="btn btn-primary"
+      id="sendAgentAnnouncement"
+    >
+      Send to All Agents
+    </button>
+  </div>
+
+  <div
+    id="agentAnnouncementStatus"
+    class="message-box"
+    style="margin-top:16px"
+    aria-live="polite"
+  ></div>
+</div>
 
             <div class="two-columns">
               <div class="panel">
