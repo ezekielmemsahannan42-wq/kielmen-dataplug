@@ -5697,6 +5697,37 @@ function normalizeSailupRecipients(input) {
 
   return [...new Set(normalized)];
 }
+// SEND QUEUED SMS THROUGH SAILUP
+async function sendQueuedSmsThroughSailup({ phone, message }) {
+  const { senderId, senderApproved } = getSailupConfig();
+
+  if (!senderId) {
+    throw new Error("SAILUP_SENDER_ID is not configured.");
+  }
+
+  if (!senderApproved) {
+    throw new Error("Sailup sender ID is not approved.");
+  }
+
+  const recipients = normalizeSailupRecipients([phone]);
+
+  const { data: result } = await sailupRequest(
+    "/v1/sms/",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        from: senderId,
+        to: recipients,
+        body: message
+      })
+    }
+  );
+
+  return result;
+}
 
 
 // GET /owner/sms/credits
@@ -5874,7 +5905,11 @@ await createPasswordResetTable();
 await createWebsiteSettingsTable();
 
 await smsSystem.initSmsTables(pool);
-    smsSystem.startSmsWorker(pool);
+
+smsSystem.startSmsWorker(
+  pool,
+  sendQueuedSmsThroughSailup
+);
     // TEMPORARY DIAGNOSTIC: Check why an agent store cannot be found
 app.get("/debug-agent-store/:slug", async (req, res) => {
   try {
