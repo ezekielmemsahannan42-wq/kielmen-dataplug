@@ -1062,6 +1062,10 @@ async function refreshSupplierOrderStatus(supplierReference) {
     encodeURIComponent(supplierReference);
 
   const result = await dataMartRequest(path, "GET");
+  console.log(
+  "DATAMART STATUS RESPONSE:",
+  JSON.stringify(result, null, 2)
+);
 
   const status = String(
     result.data?.orderStatus ||
