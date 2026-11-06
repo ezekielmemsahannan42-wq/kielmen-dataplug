@@ -252,7 +252,8 @@ async function enqueueAgentAnnouncement(pool, message) {
         $1,
         'agent_announcement'
       FROM agents a
-      WHERE a.status = 'approved'
+      WHERE a.phone IS NOT NULL
+        AND TRIM(a.phone) <> ''
       RETURNING id
     `,
     [text]
@@ -293,6 +294,8 @@ async function enqueueWithdrawalPaid(pool, withdrawal) {
       FROM agent_withdrawals w
       WHERE w.id = $1
         AND w.status = 'paid'
+        AND w.phone IS NOT NULL
+        AND TRIM(w.phone) <> ''
       ON CONFLICT (idempotency_key)
       DO NOTHING
       RETURNING id
