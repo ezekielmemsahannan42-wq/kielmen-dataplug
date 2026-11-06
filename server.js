@@ -1137,30 +1137,44 @@ async function syncPendingDataMartOrders() {
           order.supplier_reference
         );
 
-        const result = await pool.query(
-  `
+        const supplierStatus = String(supplier.status || "").toLowerCase();
+
+const deliveryStatus = [
+    "completed",
+    "complete",
+    "success",
+    "successful",
+    "delivered"
+].includes(supplierStatus)
+    ? "delivered"
+    : ["failed", "cancelled", "canceled", "rejected"].includes(supplierStatus)
+        ? "failed"
+        : "processing";
+
+const result = await pool.query(
+    `
     UPDATE orders
     SET
-      delivery_status = $1::text,
-      supplier_response = $2::jsonb,
-      delivered_at = CASE
-        WHEN $1::text = 'delivered'
-        THEN COALESCE(delivered_at, NOW())
-        ELSE delivered_at
-      END,
-      updated_at = NOW()
+        delivery_status = $1::text,
+        supplier_response = $2::jsonb,
+        delivered_at = CASE
+            WHEN $1::text = 'delivered'
+            THEN COALESCE(delivered_at, NOW())
+            ELSE delivered_at
+        END,
+        updated_at = NOW()
     WHERE reference = $3::text
       AND supplier_reference = $4::text
       AND status = 'paid'
       AND delivery_status = 'processing'
     RETURNING reference, delivery_status
-  `,
-  [
-    supplier.status,
-    JSON.stringify(supplier.raw),
-    order.reference,
-    order.supplier_reference
-  ]
+    `,
+    [
+        deliveryStatus,
+        JSON.stringify(supplier.raw),
+        order.reference,
+        order.supplier_reference
+    ]
 );
 
         if (result.rowCount && supplier.status === "delivered") {
