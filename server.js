@@ -3099,8 +3099,7 @@ app.patch(
     if (status === "paid" && !transferConfirmed) {
       return res.status(400).json({
         success: false,
-        message:
-          "Confirm that the Mobile Money transfer has actually succeeded."
+        message: "Confirm that the Mobile Money transfer succeeded."
       });
     }
 
@@ -3111,17 +3110,10 @@ app.patch(
 
       const result = await client.query(
         `
-          SELECT
-            w.id,
-            w.amount,
-            w.status,
-            w.agent_id,
-            a.phone AS agent_phone
-          FROM agent_withdrawals w
-          INNER JOIN agents a
-            ON a.id = w.agent_id
-          WHERE w.id = $1
-          FOR UPDATE OF w
+          SELECT id, amount, status, phone
+          FROM agent_withdrawals
+          WHERE id = $1
+          FOR UPDATE
         `,
         [id]
       );
@@ -3142,7 +3134,7 @@ app.patch(
 
         return res.status(409).json({
           success: false,
-          message: "This withdrawal has already been processed."
+          message: "Only pending withdrawals can be processed."
         });
       }
 
@@ -3150,7 +3142,6 @@ app.patch(
         `
           UPDATE agent_withdrawals
           SET status = $1,
-              reviewed_at = NOW(),
               updated_at = NOW()
           WHERE id = $2
           RETURNING id, amount, status, updated_at
@@ -3164,18 +3155,16 @@ app.patch(
 
       if (status === "paid") {
         try {
-          await smsSystem.enqueueWithdrawalPaid(
+          const queued = await smsSystem.enqueueWithdrawalPaid(
             pool,
-            {
-              id: withdrawal.id
-            }
+            { id: withdrawal.id }
           );
 
-          smsQueued = true;
+          smsQueued = queued > 0;
 
         } catch (smsError) {
           console.error(
-            "Withdrawal SMS queue error:",
+            "Withdrawal confirmation SMS error:",
             smsError.message
           );
         }
