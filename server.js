@@ -1118,11 +1118,42 @@ async function refreshSupplierOrderStatus(supplierReference) {
     };
   }
 
-  // 3. Check orders that are on hold.
+    // 3. Check orders that are on hold.
+  const processingMethod = String(
+    data.processingMethod ||
+    result.processingMethod ||
+    apiResponse.processingMethod ||
+    ""
+  ).trim().toLowerCase();
+
+  const userProcessingRule = String(
+    data.userProcessingRule ||
+    result.userProcessingRule ||
+    ""
+  ).trim().toLowerCase();
+
+  const userProcessingSource = String(
+    data.userProcessingSource ||
+    result.userProcessingSource ||
+    ""
+  ).trim().toLowerCase();
+
+  const skipReason = String(
+    data.skipReason ||
+    result.skipReason ||
+    apiResponse.skipReason ||
+    ""
+  ).trim().toLowerCase();
+
   if (
     responseText.includes("beneficiary not allowed") ||
     responseText.includes("on hold") ||
-    responseText.includes("verifying")
+    responseText.includes("verifying") ||
+    processingMethod === "manual" ||
+    userProcessingRule === "inventory_default" ||
+    userProcessingSource === "inventory-default" ||
+    skipReason === "inventory-default" ||
+    skipReason === "inventory_default"
   ) {
     return {
       status: "on_hold",
