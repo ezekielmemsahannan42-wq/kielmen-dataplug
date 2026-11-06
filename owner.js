@@ -2860,6 +2860,8 @@ if (panel) {
   });
 }
 
+} // END OF displayResetCode()
+
 async function loadPasswordResetRequests() {
   const tbody =
     byId("passwordResetRequestsBody");
