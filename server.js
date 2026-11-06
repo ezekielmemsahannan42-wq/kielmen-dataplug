@@ -1068,15 +1068,33 @@ async function refreshSupplierOrderStatus(supplierReference) {
     JSON.stringify(result, null, 2)
   );
 
-  const data = result.data || {};
-  const apiResponse = data.apiResponse || {};
+  const apiResponse = result.data?.apiResponse || {};
 
   const status = String(
-    data.orderStatus ||
-    data.delivery_status ||
-    data.status ||
+    result.data?.orderStatus ||
     result.orderStatus ||
+    result.data?.delivery_status ||
+    result.delivery_status ||
+    result.data?.status ||
     result.status ||
+    ""
+  ).trim().toLowerCase();
+
+  const apiStatus = String(
+    apiResponse.status || ""
+  ).trim().toLowerCase();
+
+  const processingMethod = String(
+    result.data?.processingMethod ||
+    result.processingMethod ||
+    apiResponse.processingMethod ||
+    ""
+  ).trim().toLowerCase();
+
+  const skipReason = String(
+    result.data?.skipReason ||
+    result.skipReason ||
+    apiResponse.skipReason ||
     ""
   ).trim().toLowerCase();
 
@@ -1086,23 +1104,11 @@ async function refreshSupplierOrderStatus(supplierReference) {
     responseText.includes("beneficiary not allowed") ||
     responseText.includes("on hold") ||
     responseText.includes("verifying") ||
-    String(data.processingMethod || "").toLowerCase() === "manual" ||
-    String(apiResponse.status || "").toLowerCase() === "pending" ||
-    String(data.skipReason || "").toLowerCase() === "inventory-default";
-
-  if (["delivered", "completed", "complete", "success", "successful"].includes(status)) {
-    return {
-      status: "delivered",
-      raw: result
-    };
-  }
-
-  if (["failed", "rejected", "cancelled", "canceled"].includes(status)) {
-    return {
-      status: "failed",
-      raw: result
-    };
-  }
+    ["pending", "waiting", "processing"].includes(status) ||
+    apiStatus === "pending" ||
+    processingMethod === "manual" ||
+    skipReason === "inventory-default" ||
+    skipReason === "inventory_default";
 
   if (isOnHold) {
     return {
@@ -1110,6 +1116,30 @@ async function refreshSupplierOrderStatus(supplierReference) {
       raw: result
     };
   }
+
+  if (
+    ["delivered", "completed", "success", "successful"].includes(status)
+  ) {
+    return {
+      status: "delivered",
+      raw: result
+    };
+  }
+
+  if (
+    ["failed", "rejected", "cancelled", "canceled"].includes(status)
+  ) {
+    return {
+      status: "failed",
+      raw: result
+    };
+  }
+
+  return {
+    status: "on_hold",
+    raw: result
+  };
+    }
 
 /* ============================================================
    AUTOMATIC DATAMART DELIVERY STATUS SYNCHRONIZATION
@@ -1151,19 +1181,14 @@ async function syncPendingDataMartOrders() {
 
         const supplierStatus = String(supplier.status || "").toLowerCase();
 
-        const deliveryStatus = [
-  "completed",
-  "complete",
-  "success",
-  "successful",
-  "delivered"
-].includes(supplierStatus)
-  ? "delivered"
-  : ["failed", "cancelled", "canceled", "rejected"].includes(supplierStatus)
-    ? "failed"
-    : supplierStatus === "on_hold"
-      ? "on_hold"
-      : "processing";
+        const deliveryStatus =
+  ["delivered", "completed", "complete", "success", "successful"]
+    .includes(supplierStatus)
+    ? "delivered"
+    : ["failed", "cancelled", "canceled", "rejected"]
+        .includes(supplierStatus)
+      ? "failed"
+      : "on_hold";
 
 const result = await pool.query(
     `
