@@ -261,6 +261,65 @@ async function enqueueAgentAnnouncement(pool, message) {
 
   return result.rowCount;
 }
+/* =========================================
+   NEW WITHDRAWAL REQUEST — NOTIFY OWNER
+========================================= */
+
+async function enqueueWithdrawalRequested(
+  pool,
+  withdrawal
+) {
+  const withdrawalId = Number(withdrawal?.id);
+  const ownerPhone = normalizeGhanaPhone(
+    withdrawal?.ownerPhone
+  );
+
+  if (
+    !Number.isSafeInteger(withdrawalId) ||
+    withdrawalId < 1 ||
+    !ownerPhone
+  ) {
+    throw new Error(
+      "A valid withdrawal ID and owner phone are required."
+    );
+  }
+
+  const result = await pool.query(
+    `
+      INSERT INTO sms_messages (
+        idempotency_key,
+        phone,
+        sender_id,
+        message,
+        message_type
+      )
+      SELECT
+        'withdrawal-request:' || w.id::text,
+        $2,
+        'KIELMEN636',
+        'NEW WITHDRAWAL REQUEST: ' ||
+          a.full_name ||
+          ' has requested GH₵' ||
+          TO_CHAR(w.amount, 'FM999999990.00') ||
+          '. MoMo Number: ' ||
+          w.phone ||
+          '. Network: ' ||
+          w.provider ||
+          '. Please log in to your Kielmen owner dashboard to review and process this request.',
+        'withdrawal_confirmation'
+      FROM agent_withdrawals w
+      JOIN agents a ON a.id = w.agent_id
+      WHERE w.id = $1
+        AND w.status = 'pending'
+      ON CONFLICT (idempotency_key)
+      DO NOTHING
+      RETURNING id
+    `,
+    [withdrawalId, ownerPhone]
+  );
+
+  return result.rowCount;
+}
 
 
 /* =========================================
