@@ -3849,24 +3849,7 @@ function initializeOwnerDashboard() {
       }
     );
   }
-     /* RETRY ALL FAILED ORDERS */
-
-  const retryAllButton =
-    byId("retryAllOrders");
-
-  if (
-    retryAllButton &&
-    !retryAllButton.dataset.ownerBound
-  ) {
-    retryAllButton.dataset.ownerBound = "true";
-
-    retryAllButton.addEventListener(
-      "click",
-      () => {
-        retryAllFailedOrders(retryAllButton);
-      }
-    );
-  }
+     
 /* RETRY ALL BUTTON */
 
 const retryAllButton = byId(
