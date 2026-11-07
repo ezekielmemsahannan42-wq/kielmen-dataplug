@@ -1118,43 +1118,21 @@ async function refreshSupplierOrderStatus(supplierReference) {
     };
   }
 
-    // 3. Check orders that are on hold.
+      // 3. Check genuine orders that are on hold.
+
   const processingMethod = String(
     data.processingMethod ||
     result.processingMethod ||
-    apiResponse.processingMethod ||
     ""
   ).trim().toLowerCase();
 
-  const userProcessingRule = String(
-    data.userProcessingRule ||
-    result.userProcessingRule ||
-    ""
-  ).trim().toLowerCase();
-
-  const userProcessingSource = String(
-    data.userProcessingSource ||
-    result.userProcessingSource ||
-    ""
-  ).trim().toLowerCase();
-
-  const skipReason = String(
-    data.skipReason ||
-    result.skipReason ||
-    apiResponse.skipReason ||
-    ""
-  ).trim().toLowerCase();
-
-  if (
+  const genuineHold =
     responseText.includes("beneficiary not allowed") ||
     responseText.includes("on hold") ||
     responseText.includes("verifying") ||
-    processingMethod === "manual" ||
-    userProcessingRule === "inventory_default" ||
-    userProcessingSource === "inventory-default" ||
-    skipReason === "inventory-default" ||
-    skipReason === "inventory_default"
-  ) {
+    processingMethod === "manual";
+
+  if (genuineHold) {
     return {
       status: "on_hold",
       raw: result
@@ -5513,19 +5491,15 @@ app.get("/order-status/:reference", async (req, res) => {
 
 const processingMethod = String(
   supplierResult.data?.processingMethod ||
-  apiResponse.processingMethod ||
+  supplierResult.processingMethod ||
   ""
 ).trim().toLowerCase();
 
-const skipReason = String(
-  supplierResult.data?.skipReason ||
-  apiResponse.skipReason ||
-  ""
-).trim().toLowerCase();
-
-const apiStatus = String(
-  apiResponse.status || ""
-).trim().toLowerCase();
+const isOnHold =
+  supplierResponseText.includes("beneficiary not allowed") ||
+  supplierResponseText.includes("on hold") ||
+  supplierResponseText.includes("verifying") ||
+  processingMethod === "manual";
 
 const isOnHold =
   supplierResponseText.includes("beneficiary not allowed") ||
