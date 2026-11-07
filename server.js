@@ -1127,17 +1127,16 @@ async function refreshSupplierOrderStatus(supplierReference) {
   ).trim().toLowerCase();
 
   const genuineHold =
-    responseText.includes("beneficiary not allowed") ||
-    responseText.includes("on hold") ||
-    responseText.includes("verifying") ||
-    processingMethod === "manual";
+  responseText.includes("beneficiary not allowed") ||
+  responseText.includes("on hold") ||
+  responseText.includes("verifying");
 
-  if (genuineHold) {
-    return {
-      status: "on_hold",
-      raw: result
-    };
-  }
+if (genuineHold) {
+  return {
+    status: "on_hold",
+    raw: result
+  };
+}
 
   // 4. Orders accepted but not yet delivered.
   if (
@@ -5504,13 +5503,8 @@ const isOnHold =
 const isOnHold =
   supplierResponseText.includes("beneficiary not allowed") ||
   supplierResponseText.includes("on hold") ||
-  supplierResponseText.includes("verifying") ||
-  processingMethod === "manual" ||
-  apiStatus === "pending" ||
-  skipReason === "inventory-default" ||
-  skipReason === "inventory_default" ||
-  normalizedStatus === "waiting";
-
+  supplierResponseText.includes("verifying");
+        
         if (isOnHold) {
           await pool.query(
             `
@@ -5555,7 +5549,7 @@ const isOnHold =
 
           order.delivery_status = "delivered";
 
-        } else if (
+                } else if (
           [
             "failed",
             "rejected",
@@ -5579,6 +5573,24 @@ const isOnHold =
           );
 
           order.delivery_status = "failed";
+
+        } else {
+          await pool.query(
+            `
+              UPDATE orders
+              SET delivery_status = 'processing',
+                  supplier_response = $1::jsonb,
+                  updated_at = NOW()
+              WHERE reference = $2
+                AND status = 'paid'
+            `,
+            [
+              JSON.stringify(supplierResult),
+              reference
+            ]
+          );
+
+          order.delivery_status = "processing";
         }
       } catch (supplierError) {
         supplier_status_message =
