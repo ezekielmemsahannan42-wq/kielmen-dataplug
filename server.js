@@ -1182,15 +1182,20 @@ async function syncPendingDataMartOrders() {
           reference,
           supplier_reference
         FROM orders
-        WHERE status = 'paid'
-  AND delivery_status IN ('processing', 'on_hold')
-  AND supplier_reference IS NOT NULL
-  AND TRIM(supplier_reference) <> ''
-          AND TRIM(supplier_reference) <> ''
-        ORDER BY updated_at ASC
-        LIMIT 20
-      `
-    );
+        const pendingOrders = await pool.query(
+  `
+    SELECT
+      reference,
+      supplier_reference
+    FROM orders
+    WHERE status = 'paid'
+      AND delivery_status IN ('processing', 'on_hold', 'failed')
+      AND supplier_reference IS NOT NULL
+      AND TRIM(supplier_reference) <> ''
+    ORDER BY updated_at ASC
+    LIMIT 20
+  `
+);
 
     for (const order of pendingOrders.rows) {
       try {
@@ -1224,7 +1229,7 @@ const result = await pool.query(
     WHERE reference = $3::text
       AND supplier_reference = $4::text
       AND status = 'paid'
-      AND delivery_status IN ('processing', 'on_hold')
+      AND delivery_status IN ('processing', 'on_hold', 'failed')
     RETURNING reference, delivery_status
     `,
     [
@@ -5707,24 +5712,28 @@ app.get("/order-status/:reference", async (req, res) => {
           supplierResult
         ).toLowerCase();
 
-        const apiResponse = supplierResult.data?.apiResponse || {};
+        const apiResponse =
+  supplierResult.data?.apiResponse || {};
 
-const processingMethod = String(
-  supplierResult.data?.processingMethod ||
-  supplierResult.processingMethod ||
-  ""
-).trim().toLowerCase();
+const isTerminalStatus = [
+  "delivered",
+  "completed",
+  "complete",
+  "success",
+  "successful",
+  "failed",
+  "rejected",
+  "cancelled",
+  "canceled"
+].includes(normalizedStatus);
 
 const isOnHold =
-  supplierResponseText.includes("beneficiary not allowed") ||
-  supplierResponseText.includes("on hold") ||
-  supplierResponseText.includes("verifying") ||
-  processingMethod === "manual";
-
-const isOnHold =
-  supplierResponseText.includes("beneficiary not allowed") ||
-  supplierResponseText.includes("on hold") ||
-  supplierResponseText.includes("verifying");
+  !isTerminalStatus &&
+  (
+    supplierResponseText.includes("beneficiary not allowed") ||
+    supplierResponseText.includes("on hold") ||
+    supplierResponseText.includes("verifying")
+  ); 
         
         if (isOnHold) {
           await pool.query(
