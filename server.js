@@ -3369,24 +3369,34 @@ app.patch(
 
       await client.query("COMMIT");
 
-      let smsQueued = false;
+let smsQueued = false;
 
-      if (status === "paid") {
-        try {
-          const queued = await smsSystem.enqueueWithdrawalPaid(
-            pool,
-            { id: withdrawal.id }
-          );
-
-          smsQueued = queued > 0;
-
-        } catch (smsError) {
-          console.error(
-            "Withdrawal confirmation SMS error:",
-            smsError.message
-          );
-        }
+if (status === "paid") {
+  try {
+    const queued = await smsSystem.enqueueWithdrawalPaid(
+      pool,
+      {
+        id: withdrawal.id,
+        ownerPhone: "0533878548"
       }
+    );
+
+    smsQueued = queued > 0;
+
+    console.log(
+      "Withdrawal confirmation SMS queued:",
+      withdrawal.id,
+      "Messages:",
+      queued
+    );
+
+  } catch (smsError) {
+    console.error(
+      "Withdrawal confirmation SMS error:",
+      smsError.message
+    );
+  }
+}
 
       return res.json({
         success: true,
