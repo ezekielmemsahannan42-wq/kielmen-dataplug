@@ -5692,13 +5692,12 @@ app.get("/order-status/:reference", async (req, res) => {
   JSON.stringify(supplierResult)
 );
 
-                const normalizedStatus = String(
+                        const normalizedStatus = String(
           supplierResult.data?.orderStatus ||
-          supplierResult.orderStatus ||
           supplierResult.data?.delivery_status ||
-          supplierResult.delivery_status ||
           supplierResult.data?.status ||
-          supplierResult.status ||
+          supplierResult.orderStatus ||
+          supplierResult.delivery_status ||
           ""
         ).trim().toLowerCase();
 
@@ -5706,74 +5705,47 @@ app.get("/order-status/:reference", async (req, res) => {
           supplierResult
         ).toLowerCase();
 
-        const apiResponse =
-  supplierResult.data?.apiResponse || {};
+        let mappedStatus = null;
 
-const isTerminalStatus = [
-  "delivered",
-  "completed",
-  "complete",
-  "success",
-  "successful",
-  "failed",
-  "rejected",
-  "cancelled",
-  "canceled"
-].includes(normalizedStatus);
+        // ON HOLD — VERIFYING
+        if (
+          [
+            "on_hold",
+            "on hold",
+            "verifying",
+            "verification"
+          ].includes(normalizedStatus) ||
+          supplierResponseText.includes("beneficiary not allowed") ||
+          supplierResponseText.includes("on hold") ||
+          supplierResponseText.includes("verifying")
+        ) {
+          mappedStatus = "on_hold";
 
-const isOnHold =
-  !isTerminalStatus &&
-  (
-    supplierResponseText.includes("beneficiary not allowed") ||
-    supplierResponseText.includes("on hold") ||
-    supplierResponseText.includes("verifying")
-  ); 
-        
-        if (isOnHold) {
-          await pool.query(
-            `
-              UPDATE orders
-              SET delivery_status = 'on_hold',
-                  supplier_response = $1::jsonb,
-                  updated_at = NOW()
-              WHERE reference = $2
-                AND status = 'paid'
-            `,
-            [
-              JSON.stringify(supplierResult),
-              reference
-            ]
-          );
-
-          order.delivery_status = "on_hold";
-
+        // DELIVERED
         } else if (
           [
             "delivered",
             "completed",
-            "success",
+            "complete",
             "successful"
           ].includes(normalizedStatus)
         ) {
-          await pool.query(
-            `
-              UPDATE orders
-              SET delivery_status = 'delivered',
-                  delivered_at = COALESCE(delivered_at, NOW()),
-                  supplier_response = $1::jsonb,
-                  updated_at = NOW()
-              WHERE reference = $2
-                AND status = 'paid'
-            `,
-            [
-              JSON.stringify(supplierResult),
-              reference
-            ]
-          );
+          mappedStatus = "delivered";
 
-          order.delivery_status = "delivered";
+        // PROCESSING
+        } else if (
+          normalizedStatus === "processing"
+        ) {
+          mappedStatus = "processing";
 
-                } else if (
+        // PENDING
+        } else if (
+          normalizedStatus === "pending"
+        ) {
+          mappedStatus = "pending";
+
+        // FAILED
+        } else if (
           [
             "failed",
             "rejected",
@@ -5781,40 +5753,34 @@ const isOnHold =
             "canceled"
           ].includes(normalizedStatus)
         ) {
+          mappedStatus = "failed";
+        }
+
+        // Update only when DataMart gives a recognised order status.
+        // Unknown responses must not overwrite Kielmen's saved status.
+        if (mappedStatus) {
           await pool.query(
             `
               UPDATE orders
-              SET delivery_status = 'failed',
-                  supplier_response = $1::jsonb,
+              SET delivery_status = $1,
+                  delivered_at = CASE
+                    WHEN $1 = 'delivered'
+                    THEN COALESCE(delivered_at, NOW())
+                    ELSE delivered_at
+                  END,
+                  supplier_response = $2::jsonb,
                   updated_at = NOW()
-              WHERE reference = $2
+              WHERE reference = $3
                 AND status = 'paid'
             `,
             [
+              mappedStatus,
               JSON.stringify(supplierResult),
               reference
             ]
           );
 
-          order.delivery_status = "failed";
-
-        } else {
-          await pool.query(
-            `
-              UPDATE orders
-              SET delivery_status = 'processing',
-                  supplier_response = $1::jsonb,
-                  updated_at = NOW()
-              WHERE reference = $2
-                AND status = 'paid'
-            `,
-            [
-              JSON.stringify(supplierResult),
-              reference
-            ]
-          );
-
-          order.delivery_status = "processing";
+          order.delivery_status = mappedStatus;
         }
       } catch (supplierError) {
         supplier_status_message =
