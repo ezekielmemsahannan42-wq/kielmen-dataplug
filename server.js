@@ -990,30 +990,93 @@ try {
   // Automatically purchase the data bundle.
   const purchase = await purchaseDataFromSupplier(paidOrder);
 
+        // Check DataMart's purchase response.
+    const supplierData = purchase.raw?.data || {};
+    const apiResponse = supplierData.apiResponse || {};
+
+    const processingMethod = String(
+      supplierData.processingMethod ||
+      purchase.raw?.processingMethod ||
+      apiResponse.processingMethod ||
+      ""
+    ).trim().toLowerCase();
+
+    const supplierMessage = String(
+      apiResponse.message ||
+      supplierData.message ||
+      purchase.raw?.message ||
+      ""
+    ).trim().toLowerCase();
+
+    const supplierResponseText = JSON.stringify(
+      purchase.raw
+    ).toLowerCase();
+
+    // Detect DataMart manual processing / verification.
+    const isOnHold =
+      processingMethod === "manual" ||
+
+      supplierMessage.includes(
+        "manual processing"
+      ) ||
+
+      supplierMessage.includes(
+        "stored for manual processing"
+      ) ||
+
+      supplierMessage.includes(
+        "verifying"
+      ) ||
+
+      supplierMessage.includes(
+        "on hold"
+      ) ||
+
+      supplierResponseText.includes(
+        "beneficiary not allowed"
+      ) ||
+
+      supplierResponseText.includes(
+        "stored for manual processing"
+      );
+
+    // Save the correct status immediately.
+    const initialDeliveryStatus = isOnHold
+      ? "on_hold"
+      : "processing";
+
     await pool.query(
       `
         UPDATE orders
         SET supplier_reference = $1,
             supplier_response = $2::jsonb,
-            delivery_status = 'processing',
+            delivery_status = $3,
             updated_at = NOW()
-        WHERE reference = $3
+        WHERE reference = $4
       `,
       [
         purchase.supplierReference,
         JSON.stringify(purchase.raw),
+        initialDeliveryStatus,
         reference
       ]
+    );
+
+    console.log(
+      "KIELMEN INITIAL DELIVERY STATUS:",
+      reference,
+      initialDeliveryStatus
     );
 
     return {
       success: true,
       paid: true,
       reference,
-      delivery_status: "processing",
+      delivery_status: initialDeliveryStatus,
       supplier_reference: purchase.supplierReference,
-      message:
-        "Payment verified and the data order was accepted for processing."
+      message: isOnHold
+        ? "Payment verified. Your order is on hold for verification."
+        : "Payment verified and the data order was accepted for processing."
     };
   } catch (error) {
     console.error(
