@@ -2948,7 +2948,7 @@ async function loadLiveAgentNumbers() {
 
 
 /* =========================================
-   REFRESH AND SEARCH
+   REFRESH, SEARCH AND SEND AGENT SMS
 ========================================= */
 
 $("refreshAgentNumbers")?.addEventListener(
@@ -2960,6 +2960,96 @@ $("refreshAgentNumbers")?.addEventListener(
 $("agentNumbersSearch")?.addEventListener(
   "input",
   renderLiveAgentNumbers
+);
+
+
+/* =========================================
+   SEND SMS TO ALL APPROVED AGENTS
+========================================= */
+
+$("sendAgentAnnouncement")?.addEventListener(
+  "click",
+  async () => {
+
+    const messageBox = $("agentAnnouncementMessage");
+    const status = $("agentAnnouncementStatus");
+    const button = $("sendAgentAnnouncement");
+
+    const message = String(
+      messageBox?.value || ""
+    ).trim();
+
+    if (!message) {
+      status.textContent = "Please write your announcement first.";
+      status.className = "message-box message-error";
+      return;
+    }
+
+    if (message.length > 1000) {
+      status.textContent = "Your message cannot exceed 1000 characters.";
+      status.className = "message-box message-error";
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Send this SMS announcement to all approved registered agents?"
+    );
+
+    if (!confirmed) return;
+
+    button.disabled = true;
+    button.textContent = "Sending...";
+
+    status.textContent = "Submitting your announcement...";
+    status.className = "message-box";
+
+    try {
+
+      const data = await ownerRequest(
+        "/owner/agents/announcement",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            message
+          })
+        }
+      );
+
+      if (!data || !data.success) {
+        throw new Error(
+          data?.message || "Could not send announcement."
+        );
+      }
+
+      status.textContent =
+        "Successfully queued SMS for " +
+        Number(data.queued || 0) +
+        " approved agents.";
+
+      status.className = "message-box message-success";
+
+      messageBox.value = "";
+
+    } catch (error) {
+
+      status.textContent =
+        "SMS sending failed: " + error.message;
+
+      status.className = "message-box message-error";
+
+      console.error(
+        "Agent SMS announcement error:",
+        error
+      );
+
+    } finally {
+
+      button.disabled = false;
+      button.textContent = "SEND SMS TO ALL AGENTS";
+
+    }
+
+  }
 );
       /* =========================================
    AUTOMATIC AGENT LIST REFRESH
