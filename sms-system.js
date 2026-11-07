@@ -323,17 +323,59 @@ async function enqueueWithdrawalRequested(
 
 
 /* =========================================
-   WITHDRAWAL CONFIRMATION SMS
+   WITHDRAWAL PAYMENT CONFIRMATION SMS
+   Notify both OWNER and AGENT
 ========================================= */
 
-async function enqueueWithdrawalPaid(pool, withdrawal) {
+async function enqueueWithdrawalPaid(
+  pool,
+  withdrawal
+) {
   const withdrawalId = Number(withdrawal?.id);
+  const ownerPhone = normalizeGhanaPhone(
+    withdrawal?.ownerPhone
+  );
 
-  if (!Number.isSafeInteger(withdrawalId) || withdrawalId < 1) {
-    throw new Error("Invalid withdrawal ID.");
+  if (
+    !Number.isSafeInteger(withdrawalId) ||
+    withdrawalId < 1 ||
+    !ownerPhone
+  ) {
+    throw new Error(
+      "A valid withdrawal ID and owner phone are required."
+    );
   }
 
-  const result = await pool.query(
+  const withdrawalResult = await pool.query(
+    `
+      SELECT
+        w.id,
+        w.amount,
+        w.phone,
+        a.full_name
+      FROM agent_withdrawals w
+      JOIN agents a ON a.id = w.agent_id
+      WHERE w.id = $1
+        AND w.status = 'paid'
+    `,
+    [withdrawalId]
+  );
+
+  if (!withdrawalResult.rowCount) {
+    return 0;
+  }
+
+  const item = withdrawalResult.rows[0];
+  const amount = Number(item.amount).toFixed(2);
+  const agentName = item.full_name;
+
+  const agentMessage =
+    `Hello ${agentName}, you have received GH₵${amount} from KIELMEN636 for your agent withdrawal. Thank you for doing business with us.`;
+
+  const ownerMessage =
+    `You just sent GH₵${amount} to ${agentName} (${item.phone}) for an agent withdrawal. The payment has been recorded successfully.`;
+
+  const agentResult = await pool.query(
     `
       INSERT INTO sms_messages (
         idempotency_key,
@@ -342,28 +384,53 @@ async function enqueueWithdrawalPaid(pool, withdrawal) {
         message,
         message_type
       )
-      SELECT
-        'withdrawal-paid:' || w.id::text,
-        w.phone,
+      VALUES (
+        $1,
+        $2,
         'KIELMEN636',
-        'Your withdrawal of GH₵' ||
-          TO_CHAR(w.amount, 'FM999999990.00') ||
-          ' has been successfully paid. Thank you for using KIELMEN636.',
+        $3,
         'withdrawal_confirmation'
-      FROM agent_withdrawals w
-      WHERE w.id = $1
-        AND w.status = 'paid'
-        AND w.phone IS NOT NULL
-        AND TRIM(w.phone) <> ''
+      )
       ON CONFLICT (idempotency_key)
       DO NOTHING
       RETURNING id
     `,
-    [withdrawalId]
+    [
+      `withdrawal-paid-agent:${withdrawalId}`,
+      normalizeGhanaPhone(item.phone),
+      agentMessage
+    ]
   );
 
-  return result.rowCount;
-}
+  const ownerResult = await pool.query(
+    `
+      INSERT INTO sms_messages (
+        idempotency_key,
+        phone,
+        sender_id,
+        message,
+        message_type
+      )
+      VALUES (
+        $1,
+        $2,
+        'KIELMEN636',
+        $3,
+        'withdrawal_confirmation'
+      )
+      ON CONFLICT (idempotency_key)
+      DO NOTHING
+      RETURNING id
+    `,
+    [
+      `withdrawal-paid-owner:${withdrawalId}`,
+      ownerPhone,
+      ownerMessage
+    ]
+  );
+
+  return agentResult.rowCount + ownerResult.rowCount;
+       }
 
 /* =========================================
    SAILUP SMS QUEUE WORKER
@@ -1394,6 +1461,7 @@ module.exports = {
   initSmsTables,
   enqueueOrderReceived,
   enqueueAgentAnnouncement,
+  enqueueWithdrawalRequested,
   enqueueWithdrawalPaid,
   createSmsRouter,
   startSmsWorker
