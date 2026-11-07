@@ -4568,6 +4568,226 @@ const result = await pool.query(
 }
 );
 // ======================================================
+// OWNER DASHBOARD: RETRY ALL ELIGIBLE FAILED ORDERS
+// ======================================================
+
+app.post(
+  "/owner/orders/retry-all",
+  requireOwner,
+  async (req, res) => {
+    const client = await pool.connect();
+
+    const results = {
+      attempted: 0,
+      accepted: 0,
+      failed: 0,
+      skipped: 0,
+      details: []
+    };
+
+    try {
+      await client.query("BEGIN");
+
+      // Get ALL paid failed orders without a supplier reference.
+      // This is not limited to the 100 orders shown on the dashboard.
+      const candidates = await client.query(`
+        SELECT
+          reference,
+          phone,
+          network,
+          bundle,
+          amount,
+          supplier_response
+        FROM orders
+        WHERE status = 'paid'
+          AND delivery_status = 'failed'
+          AND supplier_reference IS NULL
+        ORDER BY created_at ASC
+        FOR UPDATE SKIP LOCKED
+      `);
+
+      const eligibleOrders = [];
+
+      for (const order of candidates.rows) {
+        const savedResponse =
+          order.supplier_response &&
+          typeof order.supplier_response === "object"
+            ? order.supplier_response
+            : {};
+
+        const responseText = JSON.stringify(
+          savedResponse
+        ).toLowerCase();
+
+        // Only retry failures clearly caused by insufficient balance.
+        const insufficientBalance =
+          /insufficient|not enough balance|low balance|wallet balance/.test(
+            responseText
+          );
+
+        if (!insufficientBalance) {
+          results.skipped++;
+
+          results.details.push({
+            reference: order.reference,
+            result: "skipped",
+            reason: "Not confirmed as an insufficient-balance failure."
+          });
+
+          continue;
+        }
+
+        eligibleOrders.push(order);
+      }
+
+      // Claim eligible orders before making supplier requests.
+      // This prevents simultaneous Retry All requests from
+      // purchasing the same orders twice.
+      const claimedOrders = [];
+
+      for (const order of eligibleOrders) {
+        const claim = await client.query(
+          `
+            UPDATE orders
+            SET delivery_status = 'processing',
+                updated_at = NOW()
+            WHERE reference = $1
+              AND status = 'paid'
+              AND delivery_status = 'failed'
+              AND supplier_reference IS NULL
+            RETURNING
+              reference,
+              phone,
+              network,
+              bundle,
+              amount
+          `,
+          [order.reference]
+        );
+
+        if (claim.rowCount) {
+          claimedOrders.push(claim.rows[0]);
+        } else {
+          results.skipped++;
+
+          results.details.push({
+            reference: order.reference,
+            result: "skipped",
+            reason: "Order changed or was already claimed."
+          });
+        }
+      }
+
+      await client.query("COMMIT");
+
+      // Process orders one at a time to reduce supplier rate-limit
+      // pressure and avoid simultaneous purchase requests.
+      for (const order of claimedOrders) {
+        results.attempted++;
+
+        try {
+          const purchase = await purchaseDataFromSupplier(
+            order
+          );
+
+          await pool.query(
+            `
+              UPDATE orders
+              SET supplier_reference = $1,
+                  supplier_response = $2::jsonb,
+                  delivery_status = 'processing',
+                  updated_at = NOW()
+              WHERE reference = $3
+                AND status = 'paid'
+            `,
+            [
+              purchase.supplierReference,
+              JSON.stringify(purchase.raw),
+              order.reference
+            ]
+          );
+
+          results.accepted++;
+
+          results.details.push({
+            reference: order.reference,
+            result: "accepted",
+            supplier_reference: purchase.supplierReference
+          });
+
+        } catch (error) {
+          console.error(
+            "Retry All delivery error:",
+            order.reference,
+            error.message
+          );
+
+          await pool.query(
+            `
+              UPDATE orders
+              SET delivery_status = 'failed',
+                  supplier_response = $1::jsonb,
+                  updated_at = NOW()
+              WHERE reference = $2
+                AND status = 'paid'
+                AND delivery_status = 'processing'
+                AND supplier_reference IS NULL
+            `,
+            [
+              JSON.stringify({
+                message: error.message
+              }),
+              order.reference
+            ]
+          ).catch(updateError => {
+            console.error(
+              "Retry All could not save failure:",
+              order.reference,
+              updateError.message
+            );
+          });
+
+          results.failed++;
+
+          results.details.push({
+            reference: order.reference,
+            result: "failed",
+            reason: error.message
+          });
+        }
+      }
+
+      return res.json({
+        success: true,
+        message: "Retry All processing has finished.",
+        summary: results
+      });
+
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+
+      console.error(
+        "Owner Retry All error:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Retry All could not be completed.",
+        error: error.message,
+        summary: results
+      });
+
+    } finally {
+      client.release();
+    }
+  }
+);
+
+// ======================================================
+// OWNER DASHBOARD: TOP AGENTS RANKINGS
+// ======================================================
+// ======================================================
 // OWNER DASHBOARD: TOP AGENTS RANKINGS
 // ======================================================
 
