@@ -251,8 +251,9 @@ async function enqueueAgentAnnouncement(pool, message) {
         'KIELMEN636',
         $1,
         'agent_announcement'
-      FROM agents a
-      WHERE a.phone IS NOT NULL
+            FROM agents a
+      WHERE a.status = 'approved'
+        AND a.phone IS NOT NULL
         AND TRIM(a.phone) <> ''
       RETURNING id
     `,
