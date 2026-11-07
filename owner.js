@@ -1618,72 +1618,7 @@ async function retryOrderDelivery(
     }
   }
 }
-/* =========================================
-RETRY ALL FAILED DATA DELIVERY
-========================================= */
 
-async function retryAllFailedOrders(button) {
-if (!ownerToken) {
-showLogin("Please log in to continue.");
-return;
-}
-
-const confirmed = window.confirm(
-"Retry all eligible failed orders?\n\n" +
-"Only paid orders with a saved insufficient-balance " +
-"failure and no DataMart supplier reference will " +
-"be retried.\n\n" +
-"Orders already accepted by DataMart will be skipped.\n\n" +
-"Continue?"
-);
-
-if (!confirmed) return;
-
-button.disabled = true;
-button.textContent = "Retrying orders...";
-
-showMessage("Retry All is processing your failed orders. Please wait.");
-
-try {
-const data = await ownerRequest(
-"/owner/orders/retry-all",
-{
-method: "POST",
-body: JSON.stringify({})
-}
-);
-
-if (!data.success) {
-  throw new Error(
-    data.message || "Retry All failed."
-  );
-}
-
-showMessage(
-  "Retry All finished. " +
-  "Found: " + data.total_found +
-  " | Attempted: " + data.attempted +
-  " | Accepted: " + data.accepted +
-  " | Skipped: " + data.skipped +
-  " | Failed: " + data.failed
-);
-
-console.table(data.details || []);
-
-await loadOrders();
-
-} catch (error) {
-showMessage(
-"Retry All error: " + error.message
-);
-
-await loadOrders().catch(() => {});
-
-} finally {
-button.disabled = false;
-button.textContent = "Retry All Failed Orders";
-}
-}
 /* =========================================
    RETRY ALL ELIGIBLE FAILED ORDERS
 ========================================= */
