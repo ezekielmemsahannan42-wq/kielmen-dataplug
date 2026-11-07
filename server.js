@@ -3017,22 +3017,29 @@ const availableBalance = Math.max(
 
 
  // ============================================================
-// NOTIFY OWNER: NEW AGENT WITHDRAWAL REQUEST
+// NOTIFY OWNER BY SMS: NEW AGENT WITHDRAWAL REQUEST
 // ============================================================
 
-void sendOwnerNotification(
-  "New Agent Withdrawal Request - Kielmen 636",
-  `A new withdrawal request has been submitted.
+try {
+  await smsSystem.enqueueWithdrawalRequested(
+    pool,
+    {
+      id: withdrawalResult.rows[0].id,
+      ownerPhone: "0533878548"
+    }
+  );
 
-Agent ID: ${req.agentId}
-Withdrawal ID: ${withdrawalResult.rows[0].id}
-Amount: GH₵${Number(withdrawalResult.rows[0].amount).toFixed(2)}
-Phone: ${withdrawalResult.rows[0].phone}
-Provider: ${withdrawalResult.rows[0].provider}
-Status: Pending
+  console.log(
+    "Owner withdrawal request SMS queued:",
+    withdrawalResult.rows[0].id
+  );
 
-Please log in to your owner dashboard to review this request.`
-);
+} catch (smsError) {
+  console.error(
+    "Owner withdrawal request SMS error:",
+    smsError.message
+  );
+}
 
 // Return the normal response to the agent.
 return res.status(201).json({
