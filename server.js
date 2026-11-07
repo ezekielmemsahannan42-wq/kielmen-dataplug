@@ -1176,26 +1176,20 @@ async function syncPendingDataMartOrders() {
   dataMartStatusWorkerRunning = true;
 
   try {
-    const pendingOrders = await pool.query(
+         const pendingOrders = await pool.query(
       `
         SELECT
           reference,
           supplier_reference
         FROM orders
-        const pendingOrders = await pool.query(
-  `
-    SELECT
-      reference,
-      supplier_reference
-    FROM orders
-    WHERE status = 'paid'
-      AND delivery_status IN ('processing', 'on_hold', 'failed')
-      AND supplier_reference IS NOT NULL
-      AND TRIM(supplier_reference) <> ''
-    ORDER BY updated_at ASC
-    LIMIT 20
-  `
-);
+        WHERE status = 'paid'
+          AND delivery_status IN ('processing', 'on_hold', 'failed')
+          AND supplier_reference IS NOT NULL
+          AND TRIM(supplier_reference) <> ''
+        ORDER BY updated_at ASC
+        LIMIT 20
+      `
+    );
 
     for (const order of pendingOrders.rows) {
       try {
