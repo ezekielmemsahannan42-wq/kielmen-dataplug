@@ -1437,12 +1437,21 @@ async function loadOrders() {
         ).toLowerCase();
 
         const delivery = String(
-          order.delivery_status || ""
-        ).toLowerCase();
+  order.delivery_status || ""
+).toLowerCase();
 
-        const canRetry =
-          payment === "paid" &&
-          delivery === "failed";
+const deliveryLabel =
+  ["on_hold", "processing", "waiting", "pending"].includes(delivery)
+    ? "Processing"
+    : delivery === "delivered"
+      ? "Delivered"
+      : delivery === "failed"
+        ? "Failed"
+        : order.delivery_status || "—";
+
+const canRetry =
+  payment === "paid" &&
+  delivery === "failed";
 
         return `
           <tr>
@@ -1483,10 +1492,10 @@ async function loadOrders() {
             </td>
 
             <td>
-              ${escapeHTML(
-                order.delivery_status
-              )}
-            </td>
+  ${escapeHTML(
+    deliveryLabel
+  )}
+</td>
 
             <td>
               ${
