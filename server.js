@@ -3191,6 +3191,50 @@ app.get("/owner/agents", requireOwner, async (_req, res) => {
     });
   }
 });
+// ============================================================
+// OWNER: SEND SMS ANNOUNCEMENT TO ALL APPROVED AGENTS
+// ============================================================
+
+app.post(
+  "/owner/agents/announcement",
+  requireOwner,
+  async (req, res) => {
+    try {
+      const message = String(
+        req.body?.message || ""
+      ).trim();
+
+      if (!message || message.length > 1000) {
+        return res.status(400).json({
+          success: false,
+          message: "Enter a message between 1 and 1000 characters."
+        });
+      }
+
+      const queued = await smsSystem.enqueueAgentAnnouncement(
+        pool,
+        message
+      );
+
+      return res.json({
+        success: true,
+        message: "Agent announcement has been added to the SMS queue.",
+        queued
+      });
+
+    } catch (error) {
+      console.error(
+        "Agent announcement SMS error:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not queue the agent announcement."
+      });
+    }
+  }
+);
 
 app.patch(
   "/owner/agents/:id/status",
