@@ -1578,7 +1578,7 @@ function getDeliveryStatus(order) {
         ""
     ).trim().toLowerCase();
 
-    // Check supplier verification/hold status first.
+        // Show held and verification orders as Processing.
     if (
         [
             "on_hold",
@@ -1588,7 +1588,14 @@ function getDeliveryStatus(order) {
             "verifying",
             "verification",
             "awaiting_verification",
-            "awaiting verification"
+            "awaiting verification",
+            "processing",
+            "in_progress",
+            "queued",
+            "accepted",
+            "submitted",
+            "pending",
+            "waiting"
         ].includes(supplierRaw) ||
         [
             "on_hold",
@@ -1598,14 +1605,21 @@ function getDeliveryStatus(order) {
             "verifying",
             "verification",
             "awaiting_verification",
-            "awaiting verification"
+            "awaiting verification",
+            "processing",
+            "in_progress",
+            "queued",
+            "accepted",
+            "submitted",
+            "pending",
+            "waiting"
         ].includes(raw)
     ) {
         return {
-            label: "On Hold — Verifying",
-            className: "pending",
+            label: "Processing",
+            className: "processing",
             description:
-                "Your payment has been received successfully. Your money is safe and has not been lost. This number is currently undergoing verification by the data supplier. Once verification is completed, your data will be delivered automatically. You do not need to place another order or make another payment."
+                "Your payment has been received successfully. Your order has been accepted and is being processed. Please wait while your data is delivered. You do not need to place another order or make another payment."
         };
     }
 
