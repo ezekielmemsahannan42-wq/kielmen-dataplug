@@ -1684,7 +1684,84 @@ button.disabled = false;
 button.textContent = "Retry All Failed Orders";
 }
 }
+/* =========================================
+   RETRY ALL ELIGIBLE FAILED ORDERS
+========================================= */
 
+async function retryAllFailedOrders(button) {
+  if (!ownerToken) {
+    showLogin(
+      "Please log in to continue."
+    );
+
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "RETRY ALL ELIGIBLE FAILED ORDERS?\n\n" +
+    "This will check ALL paid failed orders " +
+    "in your database, not only the orders " +
+    "currently displayed.\n\n" +
+    "Only orders clearly recorded as failed " +
+    "because of insufficient DataMart balance " +
+    "and without a supplier reference will be retried.\n\n" +
+    "Orders already accepted by DataMart will be skipped.\n\n" +
+    "Make sure your DataMart wallet has enough money.\n\n" +
+    "Continue?"
+  );
+
+  if (!confirmed) return;
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Processing All...";
+  }
+
+  showMessage(
+    "Retry All is processing eligible failed orders. Please wait..."
+  );
+
+  try {
+    const data = await ownerRequest(
+      "/owner/orders/retry-all",
+      {
+        method: "POST",
+        body: JSON.stringify({})
+      }
+    );
+
+    const summary = data.summary || {};
+
+    showMessage(
+      "RETRY ALL FINISHED\n\n" +
+      "Attempted: " + (summary.attempted || 0) + "\n" +
+      "Accepted by DataMart: " + (summary.accepted || 0) + "\n" +
+      "Failed: " + (summary.failed || 0) + "\n" +
+      "Skipped: " + (summary.skipped || 0) + "\n\n" +
+      (data.message || "")
+    );
+
+    console.log(
+      "Retry All details:",
+      summary.details || []
+    );
+
+    await loadOrders();
+
+  } catch (error) {
+    showMessage(
+      "Retry All error: " + error.message
+    );
+
+    await loadOrders().catch(() => {});
+
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "Retry All Failed Orders";
+    }
+  }
+}
 /* =========================================
    AGENT MANAGEMENT
 ========================================= */
@@ -3855,7 +3932,27 @@ function initializeOwnerDashboard() {
       }
     );
   }
+/* RETRY ALL BUTTON */
 
+const retryAllButton = byId(
+  "retryAllOrders"
+);
+
+if (
+  retryAllButton &&
+  !retryAllButton.dataset.ownerBound
+) {
+  retryAllButton.dataset.ownerBound = "true";
+
+  retryAllButton.addEventListener(
+    "click",
+    () => {
+      retryAllFailedOrders(
+        retryAllButton
+      );
+    }
+  );
+}
   /* ORDER SEARCH ENTER */
 
   const orderSearch =
