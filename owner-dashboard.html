@@ -1631,87 +1631,122 @@
           </section>
 
           <!-- AGENT NUMBERS -->
-          <section class="page-section" id="agentNumbers">
-            <div class="section-heading">
-              <div>
-                <h2>Agent Numbers Isolated</h2>
-                <p>Prepare an agent phone list for campaigns without mixing it with other contacts.</p>
-              </div>
-            </div>
+<section class="page-section" id="agentNumbers">
 
-            <div class="notice notice-warning">
-              This workspace runs in your current browser. It does not fetch private agent phone numbers automatically from the backend, and saved contacts may be lost if browser storage is cleared. Only use numbers you are authorised to contact and follow applicable consent and messaging rules.
-            </div>
+  <div class="section-heading">
+    <div>
+      <h2>Agent Numbers Isolated</h2>
+      <p>Live phone directory of registered Kielmen agents.</p>
+    </div>
 
-            <div class="two-columns">
-              <div class="panel">
-                <div class="panel-header">
-                  <div><h3>Import Agent Numbers</h3><p>Paste one phone number per line, or separate them with commas.</p></div>
-                </div>
+    <button
+      type="button"
+      class="btn btn-primary"
+      id="refreshAgentNumbers"
+    >
+      ↻ Refresh Agent List
+    </button>
+  </div>
 
-                <div class="field">
-                  <label for="agentNumbersInput">Phone numbers</label>
-                  <textarea id="agentNumbersInput" placeholder="0240000000&#10;0550000000&#10;233240000000"></textarea>
-                </div>
+  <div class="notice notice-success">
+    Agent phone numbers are retrieved automatically from your
+    registered agent database. Newly registered agents appear
+    when the list is refreshed.
+  </div>
 
-                <div class="field">
-                  <label for="agentNumbersGroup">Group name</label>
-                  <input id="agentNumbersGroup" type="text" placeholder="e.g. Active Agents">
-                </div>
+  <div class="panel">
 
-                <div class="inline-actions">
-                  <button type="button" class="btn btn-primary" id="saveAgentNumbers">Save Numbers</button>
-                  <button type="button" class="btn btn-light" id="clearAgentNumbersInput">Clear Input</button>
-                </div>
-              </div>
+    <div class="panel-header">
+      <div>
+        <h3>Registered Agent Numbers</h3>
+        <p>Live numbers retrieved from your server.</p>
+      </div>
+    </div>
 
-              <div class="panel">
-                <div class="panel-header">
-                  <div><h3>Number Summary</h3><p>Counts calculated from your local list.</p></div>
-                </div>
+    <div class="stat-card" style="margin-bottom:15px">
+      <div class="stat-label">Total Registered Agents</div>
+      <div class="stat-value" id="agentNumbersLiveCount">0</div>
+    </div>
 
-                <div class="stat-card" style="margin-bottom:12px">
-                  <div class="stat-label">Saved Unique Numbers</div>
-                  <div class="stat-value" id="agentNumbersTotal">0</div>
-                </div>
+    <div class="field">
+      <label for="agentNumbersSearch">Search phone number</label>
+      <input
+        type="search"
+        id="agentNumbersSearch"
+        placeholder="Search agent number..."
+      >
+    </div>
 
-                <div class="stat-card" style="margin-bottom:12px">
-                  <div class="stat-label">Selected Group</div>
-                  <div class="stat-value" style="font-size:19px" id="agentNumbersSelectedGroup">All Agents</div>
-                </div>
+    <div class="field">
+      <label for="agentNumbersLiveList">Agent phone numbers</label>
 
-                <div class="field">
-                  <label for="agentNumbersFilter">Filter group</label>
-                  <select id="agentNumbersFilter">
-                    <option value="all">All groups</option>
-                  </select>
-                </div>
+      <textarea
+        id="agentNumbersLiveList"
+        readonly
+        style="min-height:350px"
+        placeholder="Loading registered agent numbers..."
+      ></textarea>
+    </div>
 
-                <div class="inline-actions">
-                  <button type="button" class="btn btn-success" id="exportAgentNumbers">Export CSV</button>
-                  <button type="button" class="btn btn-light" id="copyAgentNumbers">Copy Numbers</button>
-                </div>
-              </div>
-            </div>
+    <div
+      id="agentNumbersLoadStatus"
+      class="message-box"
+      aria-live="polite"
+    ></div>
 
-            <div class="panel">
-              <div class="panel-header">
-                <div><h3>Saved Agent Contacts</h3><p>Remove entries you no longer need.</p></div>
-                <button type="button" class="btn btn-danger btn-small" id="deleteAllAgentNumbers">Delete All Local Contacts</button>
-              </div>
+  </div>
 
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr><th>Phone Number</th><th>Group</th><th>Added</th><th>Action</th></tr>
-                  </thead>
-                  <tbody id="agentNumbersTableBody">
-                    <tr><td colspan="4" class="muted">No local contacts saved yet.</td></tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
+  <!-- AGENT ANNOUNCEMENT SMS -->
+
+  <div class="panel">
+
+    <div class="panel-header">
+      <div>
+        <h3>📢 Send SMS to All Agents</h3>
+        <p>Send an announcement to approved registered agents.</p>
+      </div>
+    </div>
+
+    <div class="field">
+
+      <label for="agentAnnouncementMessage">
+        Write Your Message
+      </label>
+
+      <textarea
+        id="agentAnnouncementMessage"
+        maxlength="1000"
+        placeholder="Type your announcement to all agents..."
+      ></textarea>
+
+      <div class="small muted">
+        Maximum 1,000 characters.
+      </div>
+
+    </div>
+
+    <div class="inline-actions">
+
+      <button
+        type="button"
+        class="btn btn-primary"
+        id="sendAgentAnnouncement"
+      >
+        SEND SMS TO ALL AGENTS
+      </button>
+
+    </div>
+
+    <div
+      id="agentAnnouncementStatus"
+      class="message-box"
+      style="margin-top:16px"
+      aria-live="polite"
+    ></div>
+
+  </div>
+
+</section>
 
           <!-- AGENT RANKINGS -->
           <section class="page-section" id="agentRankings">
@@ -1827,52 +1862,7 @@
             <div class="notice notice-warning">
               Check your recipient list, message content, sender ID and SMS credit estimate before sending. SMS charges may apply. Send only to recipients you are authorised to contact.
             </div>
-            <!-- AGENT ANNOUNCEMENTS -->
-<div class="panel" style="margin-bottom:20px">
-
-  <div class="panel-header">
-    <div>
-      <h3>📢 Agent Announcements</h3>
-      <p>Send an SMS announcement to all registered agents.</p>
-    </div>
-  </div>
-
-  <div class="field">
-    <label for="agentAnnouncementMessage">
-      Announcement Message
-    </label>
-
-    <textarea
-      id="agentAnnouncementMessage"
-      maxlength="1000"
-      placeholder="Type your announcement to all agents..."
-    ></textarea>
-
-    <div class="small muted">
-      Maximum 1,000 characters.
-      Agent phone numbers are retrieved automatically.
-    </div>
-  </div>
-
-  <div class="inline-actions">
-    <button
-      type="button"
-      class="btn btn-primary"
-      id="sendAgentAnnouncement"
-    >
-      Send to All Agents
-    </button>
-  </div>
-
-  <div
-    id="agentAnnouncementStatus"
-    class="message-box"
-    style="margin-top:16px"
-    aria-live="polite"
-  ></div>
-
-</div>
-
+          
             <div class="two-columns">
               <div class="panel">
                 <div class="panel-header">
@@ -2829,218 +2819,148 @@
         }
       });
 
-      /* Agent Numbers Isolated: local-only contact workspace. */
-      const AGENT_CONTACTS_KEY = "kielmen_owner_agent_contacts_v1";
-      let agentContacts = [];
+      /* =========================================
+   LIVE REGISTERED AGENT NUMBERS
+========================================= */
 
-      function normalisePhone(value) {
-        let phone = String(value || "").replace(/[^\d+]/g, "");
-        if (phone.startsWith("+")) phone = phone.slice(1);
-        if (phone.startsWith("00")) phone = phone.slice(2);
-        if (phone.startsWith("0") && phone.length === 10) phone = "233" + phone.slice(1);
-        return phone;
+let liveAgentNumbers = [];
+
+function normaliseLiveAgentPhone(value) {
+  let phone = String(value || "")
+    .replace(/\D/g, "");
+
+  if (phone.startsWith("0") && phone.length === 10) {
+    phone = "233" + phone.slice(1);
+  }
+
+  if (phone.startsWith("233") && phone.length === 12) {
+    return phone;
+  }
+
+  return "";
+}
+
+
+function renderLiveAgentNumbers() {
+
+  const list = $("agentNumbersLiveList");
+  const count = $("agentNumbersLiveCount");
+  const search = (
+    $("agentNumbersSearch")?.value || ""
+  ).replace(/\D/g, "");
+
+  if (!list || !count) return;
+
+  const filtered = liveAgentNumbers.filter(phone =>
+    phone.includes(search)
+  );
+
+  list.value = filtered
+    .map(phone => "0" + phone.slice(3))
+    .join("\n");
+
+  count.textContent = String(liveAgentNumbers.length);
+}
+
+
+/* =========================================
+   LOAD NUMBERS FROM AGENT DATABASE
+========================================= */
+
+async function loadLiveAgentNumbers() {
+
+  const list = $("agentNumbersLiveList");
+  const status = $("agentNumbersLoadStatus");
+  const button = $("refreshAgentNumbers");
+
+  if (list) {
+    list.value = "Loading registered agent numbers...";
+  }
+
+  if (button) {
+    button.disabled = true;
+    button.textContent = "Loading...";
+  }
+
+  try {
+
+    const data = await ownerRequest("/owner/agents");
+
+    if (!data || !data.success) {
+      throw new Error(
+        data?.message || "Could not load registered agents."
+      );
+    }
+
+    const uniqueNumbers = new Set();
+
+    (data.agents || []).forEach(agent => {
+
+      const phone = normaliseLiveAgentPhone(agent.phone);
+
+      if (phone) {
+        uniqueNumbers.add(phone);
       }
 
-      function validPhone(value) {
-        return /^233\d{9}$/.test(value);
-      }
+    });
 
-      function loadAgentContacts() {
-        try {
-          const data = JSON.parse(localStorage.getItem(AGENT_CONTACTS_KEY) || "[]");
-          agentContacts = Array.isArray(data) ? data : [];
-        } catch (_) {
-          agentContacts = [];
-        }
-        renderAgentContacts();
-      }
+    liveAgentNumbers = [...uniqueNumbers].sort();
 
-      function persistAgentContacts() {
-        try {
-          localStorage.setItem(AGENT_CONTACTS_KEY, JSON.stringify(agentContacts));
-          return true;
-        } catch (_) {
-          alert("The browser could not save the contacts. Check available storage.");
-          return false;
-        }
-      }
+    renderLiveAgentNumbers();
 
-      function renderAgentContacts() {
-        const body = $("agentNumbersTableBody");
-        const filter = $("agentNumbersFilter");
-        if (!body || !filter) return;
+    if (status) {
+      status.textContent =
+        "Successfully loaded " +
+        liveAgentNumbers.length +
+        " unique registered agent phone numbers.";
 
-        const selectedGroup = filter.value || "all";
-        const groups = [...new Set(agentContacts.map(contact => contact.group || "Ungrouped"))].sort();
+      status.className = "message-box message-success";
+    }
 
-        const oldValue = selectedGroup;
-        filter.replaceChildren();
+  } catch (error) {
 
-        const allOption = document.createElement("option");
-        allOption.value = "all";
-        allOption.textContent = "All groups";
-        filter.appendChild(allOption);
+    if (list) {
+      list.value = "";
+    }
 
-        groups.forEach(group => {
-          const option = document.createElement("option");
-          option.value = group;
-          option.textContent = group;
-          filter.appendChild(option);
-        });
+    if (status) {
+      status.textContent =
+        "Could not load agent numbers: " + error.message;
 
-        filter.value = groups.includes(oldValue) || oldValue === "all" ? oldValue : "all";
+      status.className = "message-box message-error";
+    }
 
-        const visibleContacts = agentContacts.filter(contact =>
-          filter.value === "all" || (contact.group || "Ungrouped") === filter.value
-        );
+    console.error(
+      "Live agent numbers error:",
+      error
+    );
 
-        $("agentNumbersTotal").textContent = String(visibleContacts.length);
-        $("agentNumbersSelectedGroup").textContent = filter.value === "all" ? "All Agents" : filter.value;
+  } finally {
 
-        body.replaceChildren();
+    if (button) {
+      button.disabled = false;
+      button.textContent = "↻ Refresh Agent List";
+    }
 
-        if (!visibleContacts.length) {
-          const row = document.createElement("tr");
-          const cell = document.createElement("td");
-          cell.colSpan = 4;
-          cell.className = "muted";
-          cell.textContent = "No contacts in this group yet.";
-          row.appendChild(cell);
-          body.appendChild(row);
-          return;
-        }
+  }
 
-        visibleContacts.forEach(contact => {
-          const row = document.createElement("tr");
+}
 
-          [contact.phone, contact.group || "Ungrouped", contact.added || ""].forEach(value => {
-            const cell = document.createElement("td");
-            cell.textContent = value;
-            row.appendChild(cell);
-          });
 
-          const actionCell = document.createElement("td");
-          const removeButton = document.createElement("button");
-          removeButton.type = "button";
-          removeButton.className = "btn btn-danger btn-small";
-          removeButton.textContent = "Remove";
-          removeButton.addEventListener("click", function () {
-            agentContacts = agentContacts.filter(item => item.id !== contact.id);
-            if (persistAgentContacts()) renderAgentContacts();
-          });
+/* =========================================
+   REFRESH AND SEARCH
+========================================= */
 
-          actionCell.appendChild(removeButton);
-          row.appendChild(actionCell);
-          body.appendChild(row);
-        });
-      }
+$("refreshAgentNumbers")?.addEventListener(
+  "click",
+  loadLiveAgentNumbers
+);
 
-      $("agentNumbersFilter")?.addEventListener("change", renderAgentContacts);
 
-      $("saveAgentNumbers")?.addEventListener("click", function () {
-        const raw = $("agentNumbersInput")?.value || "";
-        const group = ($("agentNumbersGroup")?.value || "").trim() || "Ungrouped";
-
-        const candidates = raw.split(/[\s,;]+/).map(normalisePhone).filter(Boolean);
-
-        if (!candidates.length) {
-          alert("Enter at least one phone number.");
-          return;
-        }
-
-        const invalid = candidates.filter(phone => !validPhone(phone));
-        if (invalid.length) {
-          alert("Some numbers are invalid. Use Ghanaian numbers such as 0240000000 or 233240000000. Invalid numbers: " + invalid.slice(0, 5).join(", "));
-          return;
-        }
-
-        const existing = new Set(agentContacts.map(contact => contact.phone));
-        let added = 0;
-
-        candidates.forEach(phone => {
-          if (existing.has(phone)) return;
-
-          agentContacts.push({
-            id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2),
-            phone,
-            group,
-            added: new Date().toLocaleString()
-          });
-
-          existing.add(phone);
-          added++;
-        });
-
-        if (persistAgentContacts()) {
-          $("agentNumbersInput").value = "";
-          renderAgentContacts();
-          alert("Saved " + added + " new number(s). Duplicate numbers were skipped.");
-        }
-      });
-
-      $("clearAgentNumbersInput")?.addEventListener("click", function () {
-        if ($("agentNumbersInput")) $("agentNumbersInput").value = "";
-      });
-
-      $("deleteAllAgentNumbers")?.addEventListener("click", function () {
-        if (!agentContacts.length) {
-          alert("There are no saved local contacts.");
-          return;
-        }
-
-        if (!confirm("Delete all locally saved agent contacts from this browser? This does not delete server records.")) return;
-
-        agentContacts = [];
-        if (persistAgentContacts()) renderAgentContacts();
-      });
-
-      $("exportAgentNumbers")?.addEventListener("click", function () {
-        const selectedGroup = $("agentNumbersFilter")?.value || "all";
-        const rows = agentContacts.filter(contact =>
-          selectedGroup === "all" || (contact.group || "Ungrouped") === selectedGroup
-        );
-
-        if (!rows.length) {
-          alert("There are no numbers to export.");
-          return;
-        }
-
-        const csv = [
-          ["Phone", "Group", "Added"].map(csvEscape).join(","),
-          ...rows.map(contact => [
-            contact.phone, contact.group || "Ungrouped", contact.added || ""
-          ].map(csvEscape).join(","))
-        ].join("\r\n");
-
-        downloadText(csv, "kielmen-agent-numbers.csv", "text/csv;charset=utf-8;");
-      });
-
-      $("copyAgentNumbers")?.addEventListener("click", async function () {
-        const selectedGroup = $("agentNumbersFilter")?.value || "all";
-        const rows = agentContacts.filter(contact =>
-          selectedGroup === "all" || (contact.group || "Ungrouped") === selectedGroup
-        );
-
-        if (!rows.length) {
-          alert("There are no numbers to copy.");
-          return;
-        }
-
-        const text = rows.map(contact => contact.phone).join("\n");
-
-        try {
-          await navigator.clipboard.writeText(text);
-          alert("Copied " + rows.length + " phone number(s).");
-        } catch (_) {
-          const textArea = document.createElement("textarea");
-          textArea.value = text;
-          document.body.appendChild(textArea);
-          textArea.select();
-          const copied = document.execCommand("copy");
-          textArea.remove();
-          alert(copied ? "Copied " + rows.length + " phone number(s)." : "Could not copy numbers. Please try again.");
-        }
-      });
+$("agentNumbersSearch")?.addEventListener(
+  "input",
+  renderLiveAgentNumbers
+);
 
       function updateSessionInformation() {
         const tokenPresent = !!sessionStorage.getItem("kielmen_owner_token");
@@ -3060,8 +2980,8 @@
         if ($("footerYear")) $("footerYear").textContent = String(new Date().getFullYear());
 
         loadEmailPreferences();
-        loadAgentContacts();
-        updateSessionInformation();
+loadLiveAgentNumbers();
+updateSessionInformation();
 
         const requestedPage = location.hash.replace(/^#/, "");
         if (pageTitles[requestedPage]) goToPage(requestedPage);
