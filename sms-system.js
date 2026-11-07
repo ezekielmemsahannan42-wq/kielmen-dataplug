@@ -98,6 +98,24 @@ async function initSmsTables(pool) {
 
     )
   `);
+     // Ensure existing databases allow agent announcement SMS.
+  await pool.query(`
+    ALTER TABLE sms_messages
+    DROP CONSTRAINT IF EXISTS sms_messages_message_type_check
+  `);
+
+  await pool.query(`
+    ALTER TABLE sms_messages
+    ADD CONSTRAINT sms_messages_message_type_check
+    CHECK (
+      message_type IN (
+        'order_notification',
+        'promotional',
+        'agent_announcement',
+        'withdrawal_confirmation'
+      )
+    )
+  `);
 
 
   await pool.query(`
