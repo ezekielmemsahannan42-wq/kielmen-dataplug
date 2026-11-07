@@ -5675,9 +5675,8 @@ app.get("/order-status/:reference", async (req, res) => {
     let supplier_status = null;
     let supplier_status_message = null;
 
-    // Check DataMart only when an existing supplier
-    // reference is available. This does NOT purchase again.
-
+    // Check only an existing DataMart order.
+    // This section NEVER creates or purchases another order.
     if (order.supplier_reference && DATAMART_API_KEY) {
       try {
         const path =
@@ -5696,22 +5695,25 @@ app.get("/order-status/:reference", async (req, res) => {
           JSON.stringify(supplierResult)
         );
 
-        // DataMart's current order status is the primary status.
+        const supplierData =
+          supplierResult.data || {};
+
+        const apiResponse =
+          supplierData.apiResponse || {};
+
+        // DataMart's current order status is the main status.
         const normalizedStatus = String(
-          supplierResult.data?.orderStatus ||
-          supplierResult.data?.delivery_status ||
-          supplierResult.data?.status ||
+          supplierData.orderStatus ||
+          supplierData.delivery_status ||
+          supplierData.status ||
           supplierResult.orderStatus ||
           supplierResult.delivery_status ||
           supplierResult.status ||
           ""
         ).trim().toLowerCase();
 
-        const apiResponse =
-          supplierResult.data?.apiResponse || {};
-
         const processingMethod = String(
-          supplierResult.data?.processingMethod ||
+          supplierData.processingMethod ||
           supplierResult.processingMethod ||
           apiResponse.processingMethod ||
           ""
@@ -5719,7 +5721,7 @@ app.get("/order-status/:reference", async (req, res) => {
 
         const apiMessage = String(
           apiResponse.message ||
-          supplierResult.data?.message ||
+          supplierData.message ||
           supplierResult.message ||
           ""
         ).trim().toLowerCase();
@@ -5730,20 +5732,48 @@ app.get("/order-status/:reference", async (req, res) => {
 
         let mappedStatus = null;
 
-        // ON HOLD — MANUAL PROCESSING / VERIFICATION
+        // ----------------------------------------------------
+        // ON HOLD — VERIFYING / MANUAL PROCESSING
+        // This check must come BEFORE ordinary processing.
+        // ----------------------------------------------------
 
         const isOnHold =
-          supplierResponseText.includes("beneficiary not allowed") ||
-          supplierResponseText.includes("on hold") ||
-          supplierResponseText.includes("verifying") ||
-          apiMessage.includes("manual processing") ||
-          apiMessage.includes("verifying") ||
+          [
+            "on_hold",
+            "on hold",
+            "hold",
+            "verifying",
+            "verification"
+          ].includes(normalizedStatus) ||
+
+          supplierResponseText.includes(
+            "beneficiary not allowed"
+          ) ||
+
+          supplierResponseText.includes(
+            "on hold"
+          ) ||
+
+          supplierResponseText.includes(
+            "verifying"
+          ) ||
+
+          apiMessage.includes(
+            "manual processing"
+          ) ||
+
+          apiMessage.includes(
+            "stored for manual processing"
+          ) ||
+
           processingMethod === "manual";
 
         if (isOnHold) {
           mappedStatus = "on_hold";
 
+        // ----------------------------------------------------
         // DELIVERED
+        // ----------------------------------------------------
 
         } else if (
           [
@@ -5756,21 +5786,9 @@ app.get("/order-status/:reference", async (req, res) => {
         ) {
           mappedStatus = "delivered";
 
-        // PROCESSING
-
-        } else if (
-          normalizedStatus === "processing"
-        ) {
-          mappedStatus = "processing";
-
-        // PENDING
-
-        } else if (
-          normalizedStatus === "pending"
-        ) {
-          mappedStatus = "pending";
-
+        // ----------------------------------------------------
         // FAILED
+        // ----------------------------------------------------
 
         } else if (
           [
@@ -5781,11 +5799,30 @@ app.get("/order-status/:reference", async (req, res) => {
           ].includes(normalizedStatus)
         ) {
           mappedStatus = "failed";
+
+        // ----------------------------------------------------
+        // PENDING
+        // ----------------------------------------------------
+
+        } else if (
+          normalizedStatus === "pending"
+        ) {
+          mappedStatus = "pending";
+
+        // ----------------------------------------------------
+        // PROCESSING
+        // ----------------------------------------------------
+
+        } else if (
+          normalizedStatus === "processing"
+        ) {
+          mappedStatus = "processing";
         }
 
-        // Update only when DataMart gives a recognised status.
-        // Unknown responses must not overwrite Kielmen's
-        // last saved delivery status.
+        // ----------------------------------------------------
+        // UPDATE ONLY WHEN DATAMART RETURNS A RECOGNISED
+        // STATUS.
+        // ----------------------------------------------------
 
         if (mappedStatus) {
           await pool.query(
@@ -5811,23 +5848,24 @@ app.get("/order-status/:reference", async (req, res) => {
 
           order.delivery_status = mappedStatus;
 
+          console.log(
+            "KIELMEN ORDER STATUS UPDATED:",
+            reference,
+            "=>",
+            mappedStatus
+          );
+
         } else {
+          // Do not guess when DataMart gives an unknown status.
           supplier_status_message =
             "DataMart returned an unrecognised status. " +
-            "The last saved delivery status has been preserved.";
-
-          console.log(
-            "Unrecognised DataMart order status:",
-            normalizedStatus,
-            "Reference:",
-            reference
-          );
+            "The last saved Kielmen status has been preserved.";
         }
 
       } catch (supplierError) {
         supplier_status_message =
-          "Could not refresh DataMart status; " +
-          "showing the last saved status.";
+          "Could not refresh DataMart status. " +
+          "The last saved Kielmen status has been preserved.";
 
         console.error(
           "DataMart status check error:",
