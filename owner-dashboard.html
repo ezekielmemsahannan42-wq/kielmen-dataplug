@@ -2961,6 +2961,97 @@ $("agentNumbersSearch")?.addEventListener(
   "input",
   renderLiveAgentNumbers
 );
+      /* =========================================
+   AUTOMATIC AGENT LIST REFRESH
+========================================= */
+
+setInterval(() => {
+  if (
+    document.visibilityState === "visible" &&
+    document.getElementById("agentNumbers")
+  ) {
+    loadLiveAgentNumbers();
+  }
+}, 30000);
+
+
+/* =========================================
+   SEND SMS TO ALL APPROVED AGENTS
+========================================= */
+
+$("sendAgentAnnouncement")?.addEventListener(
+  "click",
+  async function () {
+
+    const messageInput = $("agentAnnouncementMessage");
+    const status = $("agentAnnouncementStatus");
+    const button = $("sendAgentAnnouncement");
+
+    const message = messageInput?.value.trim() || "";
+
+    if (!message) {
+      status.textContent = "Please write your message first.";
+      status.className = "message-box message-error";
+      return;
+    }
+
+    if (message.length > 1000) {
+      status.textContent = "Your message cannot exceed 1,000 characters.";
+      status.className = "message-box message-error";
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Send this SMS announcement to all approved registered agents?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+
+      button.disabled = true;
+      button.textContent = "Sending...";
+
+      status.textContent = "Submitting your SMS announcement...";
+      status.className = "message-box";
+
+      const result = await ownerRequest(
+        "/owner/sms/announcements",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            message
+          })
+        }
+      );
+
+      status.textContent =
+        "Success! Your announcement has been queued for " +
+        result.recipientCount +
+        " approved agents.";
+
+      status.className = "message-box message-success";
+
+      messageInput.value = "";
+
+    } catch (error) {
+
+      status.textContent =
+        "SMS could not be submitted: " + error.message;
+
+      status.className = "message-box message-error";
+
+    } finally {
+
+      button.disabled = false;
+      button.textContent = "SEND SMS TO ALL AGENTS";
+
+    }
+
+  }
+);
 
       function updateSessionInformation() {
         const tokenPresent = !!sessionStorage.getItem("kielmen_owner_token");
