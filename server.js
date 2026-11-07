@@ -6052,16 +6052,79 @@ function normalizeSailupRecipients(input) {
 
   return [...new Set(normalized)];
 }
+// CALCULATE SMS SEGMENTS BEFORE SAILUP SUBMISSION
+function calculateSailupSmsSegments(message) {
+  const text = String(message || "");
+
+  const gsmBasic =
+    "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ" +
+    " !\"#¤%&'()*+,-./0123456789:;<=>?¡" +
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿" +
+    "abcdefghijklmnopqrstuvwxyzäöñüà";
+
+  const gsmExtended = "^{}\\[~]|€\f";
+
+  let septets = 0;
+  let isGsm = true;
+
+  for (const character of text) {
+    if (gsmBasic.includes(character)) {
+      septets += 1;
+    } else if (gsmExtended.includes(character)) {
+      septets += 2;
+    } else {
+      isGsm = false;
+      break;
+    }
+  }
+
+  if (isGsm) {
+    return {
+      encoding: "GSM-7",
+      segments: septets <= 160
+        ? 1
+        : Math.ceil(septets / 153)
+    };
+  }
+
+  return {
+    encoding: "Unicode",
+    segments: text.length <= 70
+      ? 1
+      : Math.ceil(text.length / 67)
+  };
+}
 // SEND QUEUED SMS THROUGH SAILUP
 async function sendQueuedSmsThroughSailup({ phone, message }) {
   const { senderId, senderApproved } = getSailupConfig();
 
   if (!senderId) {
-    throw new Error("SAILUP_SENDER_ID is not configured.");
+    throw new Error(
+      "SAILUP_SENDER_ID is not configured."
+    );
   }
 
   if (!senderApproved) {
-    throw new Error("Sailup sender ID is not approved.");
+    throw new Error(
+      "Sailup sender ID is not approved."
+    );
+  }
+
+  if (!message || !String(message).trim()) {
+    throw new Error(
+      "SMS message cannot be empty."
+    );
+  }
+
+  const smsInfo = calculateSailupSmsSegments(message);
+
+  if (smsInfo.segments > 12) {
+    throw new Error(
+      `SMS rejected before Sailup submission. ` +
+      `Message contains ${smsInfo.segments} segments. ` +
+      `Maximum allowed is 12. ` +
+      `Encoding: ${smsInfo.encoding}.`
+    );
   }
 
   const recipients = normalizeSailupRecipients([phone]);
