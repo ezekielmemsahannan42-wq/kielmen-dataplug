@@ -241,6 +241,63 @@ async function enqueueOrderReceived(pool, order) {
 
 }
 /* =========================================
+   SMS SEGMENT CALCULATOR
+========================================= */
+
+function calculateSmsSegments(message) {
+  const text = String(message || "");
+
+  const gsmBasic =
+    "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ" +
+    " !\"#¤%&'()*+,-./0123456789:;<=>?¡" +
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿" +
+    "abcdefghijklmnopqrstuvwxyzäöñüà";
+
+  const gsmExtended = "^{}\\[~]|€\f";
+
+  let gsmSeptets = 0;
+  let isGsm = true;
+
+  for (const character of text) {
+    if (gsmBasic.includes(character)) {
+      gsmSeptets += 1;
+    } else if (gsmExtended.includes(character)) {
+      gsmSeptets += 2;
+    } else {
+      isGsm = false;
+      break;
+    }
+  }
+
+  if (isGsm) {
+    const segments =
+      gsmSeptets <= 160
+        ? 1
+        : Math.ceil(gsmSeptets / 153);
+
+    return {
+      encoding: "GSM-7",
+      segments,
+      characters: text.length
+    };
+  }
+
+  const unicodeUnits = text.length;
+
+  const segments =
+    unicodeUnits <= 70
+      ? 1
+      : Math.ceil(unicodeUnits / 67);
+
+  return {
+    encoding: "Unicode",
+    segments,
+    characters: unicodeUnits
+  };
+}
+
+
+/* =========================================
    AGENT ANNOUNCEMENT SMS
 ========================================= */
 
@@ -248,7 +305,20 @@ async function enqueueAgentAnnouncement(pool, message) {
   const text = String(message || "").trim();
 
   if (!text || text.length > 1000) {
-    throw new Error("Announcement must contain 1–1000 characters.");
+    throw new Error(
+      "Announcement must contain 1–1000 characters."
+    );
+  }
+
+  const smsInfo = calculateSmsSegments(text);
+
+  if (smsInfo.segments > 12) {
+    throw new Error(
+      `Your announcement is ${smsInfo.segments} SMS segments. ` +
+      `Sailup allows a maximum of 12 segments. ` +
+      `Encoding: ${smsInfo.encoding}. ` +
+      `Shorten the message or remove emojis and special characters.`
+    );
   }
 
   const result = await pool.query(
@@ -269,7 +339,7 @@ async function enqueueAgentAnnouncement(pool, message) {
         'KIELMEN636',
         $1,
         'agent_announcement'
-            FROM agents a
+      FROM agents a
       WHERE a.status = 'approved'
         AND a.phone IS NOT NULL
         AND TRIM(a.phone) <> ''
@@ -1058,11 +1128,19 @@ router.post("/announcements", async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Agent announcement SMS:", error.message);
+    console.error(
+      "Agent announcement SMS:",
+      error.message
+    );
 
-    return res.status(500).json({
+    return res.status(
+      error.message.includes("SMS segments") ||
+      error.message.includes("Announcement must contain")
+        ? 400
+        : 500
+    ).json({
       success: false,
-      message: "Could not queue agent announcement."
+      message: error.message || "Could not queue agent announcement."
     });
   }
 });
