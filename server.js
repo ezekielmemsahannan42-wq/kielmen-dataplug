@@ -1134,6 +1134,7 @@ async function refreshSupplierOrderStatus(supplierReference) {
   const data = result.data || {};
   const apiResponse = data.apiResponse || {};
 
+  // DataMart's current order status is the primary source.
   const status = String(
     data.orderStatus ||
     data.delivery_status ||
@@ -1144,13 +1145,47 @@ async function refreshSupplierOrderStatus(supplierReference) {
     ""
   ).trim().toLowerCase();
 
-  const apiStatus = String(
-    apiResponse.status || ""
+  const processingMethod = String(
+    data.processingMethod ||
+    result.processingMethod ||
+    apiResponse.processingMethod ||
+    ""
   ).trim().toLowerCase();
 
   const responseText = JSON.stringify(result).toLowerCase();
 
-  // 1. Check confirmed delivery FIRST.
+  // --------------------------------------------------
+  // 1. ON HOLD — VERIFYING / MANUAL PROCESSING
+  // --------------------------------------------------
+
+  const isOnHold =
+    [
+      "on_hold",
+      "on hold",
+      "hold",
+      "verifying",
+      "verification"
+    ].includes(status) ||
+
+    responseText.includes("beneficiary not allowed") ||
+    responseText.includes("on hold") ||
+    responseText.includes("verifying") ||
+
+    processingMethod === "manual" ||
+
+    responseText.includes("manual processing");
+
+  if (isOnHold) {
+    return {
+      status: "on_hold",
+      raw: result
+    };
+  }
+
+  // --------------------------------------------------
+  // 2. DELIVERED
+  // --------------------------------------------------
+
   if (
     [
       "delivered",
@@ -1166,7 +1201,10 @@ async function refreshSupplierOrderStatus(supplierReference) {
     };
   }
 
-  // 2. Check failed orders.
+  // --------------------------------------------------
+  // 3. FAILED
+  // --------------------------------------------------
+
   if (
     [
       "failed",
@@ -1181,52 +1219,49 @@ async function refreshSupplierOrderStatus(supplierReference) {
     };
   }
 
-      // 3. Check genuine orders that are on hold.
+  // --------------------------------------------------
+  // 4. PENDING
+  // --------------------------------------------------
 
-  const processingMethod = String(
-    data.processingMethod ||
-    result.processingMethod ||
-    ""
-  ).trim().toLowerCase();
-
-  const genuineHold =
-  responseText.includes("beneficiary not allowed") ||
-  responseText.includes("on hold") ||
-  responseText.includes("verifying");
-
-if (genuineHold) {
-  return {
-    status: "on_hold",
-    raw: result
-  };
-}
-
-  // 4. Orders accepted but not yet delivered.
   if (
     [
       "pending",
-      "waiting",
-      "processing"
-    ].includes(status) ||
-    apiStatus === "pending"
+      "waiting"
+    ].includes(status)
   ) {
+    return {
+      status: "pending",
+      raw: result
+    };
+  }
+
+  // --------------------------------------------------
+  // 5. PROCESSING
+  // --------------------------------------------------
+
+  if (status === "processing") {
     return {
       status: "processing",
       raw: result
     };
   }
 
-  // 5. Unknown status: do not falsely mark as delivered.
+  // --------------------------------------------------
+  // 6. UNKNOWN STATUS
+  // Do not overwrite Kielmen's saved status.
+  // --------------------------------------------------
+
   return {
-    status: "processing",
+    status: null,
     raw: result
   };
 }
 
+
 /* ============================================================
    AUTOMATIC DATAMART DELIVERY STATUS SYNCHRONIZATION
-   Checks pending orders and updates Kielmen when DataMart
-   confirms that an order has been delivered.
+   Checks existing supplier orders and synchronizes
+   DataMart statuses with Kielmen.
 ============================================================ */
 
 let dataMartStatusWorkerRunning = false;
@@ -1239,14 +1274,19 @@ async function syncPendingDataMartOrders() {
   dataMartStatusWorkerRunning = true;
 
   try {
-         const pendingOrders = await pool.query(
+    const pendingOrders = await pool.query(
       `
         SELECT
           reference,
           supplier_reference
         FROM orders
         WHERE status = 'paid'
-          AND delivery_status IN ('processing', 'on_hold', 'failed')
+          AND delivery_status IN (
+            'pending',
+            'processing',
+            'on_hold',
+            'failed'
+          )
           AND supplier_reference IS NOT NULL
           AND TRIM(supplier_reference) <> ''
         ORDER BY updated_at ASC
@@ -1256,58 +1296,66 @@ async function syncPendingDataMartOrders() {
 
     for (const order of pendingOrders.rows) {
       try {
+        // Check the existing DataMart order only.
+        // NEVER initiate another purchase here.
         const supplier = await refreshSupplierOrderStatus(
           order.supplier_reference
         );
 
-        const supplierStatus = String(supplier.status || "").toLowerCase();
-
-      const deliveryStatus =
-  supplier.status === "delivered"
-    ? "delivered"
-    : supplier.status === "failed"
-      ? "failed"
-      : supplier.status === "on_hold"
-        ? "on_hold"
-        : "processing";
-
-const result = await pool.query(
-    `
-    UPDATE orders
-    SET
-        delivery_status = $1::text,
-        supplier_response = $2::jsonb,
-        delivered_at = CASE
-            WHEN $1::text = 'delivered'
-            THEN COALESCE(delivered_at, NOW())
-            ELSE delivered_at
-        END,
-        updated_at = NOW()
-    WHERE reference = $3::text
-      AND supplier_reference = $4::text
-      AND status = 'paid'
-      AND delivery_status IN ('processing', 'on_hold', 'failed')
-    RETURNING reference, delivery_status
-    `,
-    [
-        deliveryStatus,
-        JSON.stringify(supplier.raw),
-        order.reference,
-        order.supplier_reference
-    ]
-);
-
-        if (result.rowCount && supplier.status === "delivered") {
+        // Unknown status: preserve the last saved status.
+        if (!supplier.status) {
           console.log(
-            "DATAMART DELIVERY CONFIRMED:",
+            "DATAMART UNKNOWN STATUS - PRESERVED:",
             order.reference
           );
+
+          continue;
         }
 
-        if (result.rowCount && supplier.status === "failed") {
+        const deliveryStatus = supplier.status;
+
+        const result = await pool.query(
+          `
+            UPDATE orders
+            SET
+              delivery_status = $1,
+              supplier_response = $2::jsonb,
+
+              delivered_at = CASE
+                WHEN $1 = 'delivered'
+                THEN COALESCE(delivered_at, NOW())
+                ELSE delivered_at
+              END,
+
+              updated_at = NOW()
+
+            WHERE reference = $3
+              AND supplier_reference = $4
+              AND status = 'paid'
+
+              AND delivery_status IN (
+                'pending',
+                'processing',
+                'on_hold',
+                'failed'
+              )
+
+            RETURNING reference, delivery_status
+          `,
+          [
+            deliveryStatus,
+            JSON.stringify(supplier.raw),
+            order.reference,
+            order.supplier_reference
+          ]
+        );
+
+        if (result.rowCount) {
           console.log(
-            "DATAMART DELIVERY FAILED:",
-            order.reference
+            "KIELMEN ORDER STATUS SYNCHRONIZED:",
+            order.reference,
+            "=>",
+            deliveryStatus
           );
         }
 
