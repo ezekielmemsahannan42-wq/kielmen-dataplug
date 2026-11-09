@@ -4863,6 +4863,52 @@ app.post(
   }
 );
 // ======================================================
+// OWNER: GET ALL PAID REFUNDED ORDERS ELIGIBLE FOR REVIEW
+// ======================================================
+
+app.get(
+  "/owner/orders/refunded-recovery-candidates",
+  requireOwner,
+  async (req, res) => {
+    try {
+      const result = await pool.query(`
+        SELECT
+          reference,
+          phone,
+          network,
+          bundle,
+          supplier_reference,
+          delivery_status
+        FROM orders
+        WHERE status = 'paid'
+          AND delivery_status = 'refunded'
+          AND supplier_reference IS NOT NULL
+          AND TRIM(supplier_reference) <> ''
+        ORDER BY updated_at ASC
+      `);
+
+      return res.json({
+        success: true,
+        count: result.rowCount,
+        orders: result.rows
+      });
+
+    } catch (error) {
+      console.error(
+        "Refund recovery candidates:",
+        error.message
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Could not load refunded orders."
+      });
+    }
+  }
+);
+
+// ======================================================
 // OWNER DASHBOARD: RETRY ALL ELIGIBLE FAILED ORDERS
 // ======================================================
 
