@@ -1,0 +1,40 @@
+
+name: Update Kielmen Agent SEO Pages
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  update-seo:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get website repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate agent pages and sitemap
+        run: node scripts/generate-sitemap.js
+
+      - name: Save updated SEO pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+
+          if ! git diff --cached --quiet; then
+            git commit -m "Automatically update agent SEO pages and sitemap"
+            git push
+          else
+            echo "No SEO changes to publish."
+          fi
