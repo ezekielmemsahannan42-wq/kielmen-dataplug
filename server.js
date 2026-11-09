@@ -1258,15 +1258,16 @@ for (const order of pendingOrders.rows) {
 
     const deliveryStatus = supplier.status;
 
+    
     const update = await pool.query(
       `
         UPDATE orders
         SET
-          delivery_status = $1,
+          delivery_status = $1::varchar(30),
           supplier_response = $2::jsonb,
 
           delivered_at = CASE
-            WHEN $1 = 'delivered'
+            WHEN $1::varchar(30) = 'delivered'
             THEN COALESCE(delivered_at, NOW())
             ELSE delivered_at
           END,
@@ -1292,6 +1293,7 @@ for (const order of pendingOrders.rows) {
         order.supplier_reference
       ]
     );
+
 
     if (update.rowCount) {
       console.log(
