@@ -2545,6 +2545,51 @@ return res.status(500).json({
 });
 
 // ============================================================
+// PUBLIC LIST OF APPROVED AGENT STORES — FOR SEO SITEMAP
+// ============================================================
+
+app.get("/agents/public-stores", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        business_name,
+        store_slug,
+        updated_at
+      FROM agents
+      WHERE status = 'approved'
+        AND store_slug IS NOT NULL
+        AND TRIM(store_slug) <> ''
+        AND store_slug ~ '^[a-z0-9_-]{1,100}$'
+      ORDER BY business_name ASC
+      LIMIT 50000
+    `);
+
+    const stores = result.rows.map(agent => ({
+      businessName: agent.business_name,
+      storeSlug: agent.store_slug,
+      updatedAt: agent.updated_at
+    }));
+
+    res.set("Cache-Control", "public, max-age=300");
+
+    return res.json({
+      success: true,
+      totalStores: stores.length,
+      stores
+    });
+
+  } catch (error) {
+    console.error("Public agent stores:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "Could not load public agent stores."
+    });
+  }
+});
+
+
+// ============================================================
 // 11. AGENT PRICES
 // ============================================================
 
