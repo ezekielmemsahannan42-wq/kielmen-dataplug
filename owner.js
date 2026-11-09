@@ -1453,13 +1453,21 @@ const deliveryLabel =
             ? "Failed"
             : order.delivery_status || "—";
 
+
 const canRetry =
   payment === "paid" &&
-  delivery === "failed";
+  delivery === "failed" &&
+  !order.supplier_reference;
+
+const canRetriggerCancelled =
+  payment === "paid" &&
+  delivery === "failed" &&
+  Boolean(order.supplier_reference);
 
 const canRecoverRefunded =
   payment === "paid" &&
   delivery === "refunded";
+
 
         return `
           <tr>
@@ -1507,6 +1515,24 @@ const canRecoverRefunded =
 
                         <td>
               ${
+                 canRetriggerCancelled
+  ? `
+    <button
+      type="button"
+      class="button"
+      style="
+        background:#7c3aed;
+        color:white;
+        padding:9px 12px;
+      "
+      data-retrigger-cancelled="${
+        escapeHTML(order.reference)
+      }"
+    >
+      Re-trigger Cancelled
+    </button>
+  `
+  :
                 canRecoverRefunded
                   ? `
                     <button
@@ -3862,6 +3888,10 @@ function initializeOwnerDashboard() {
           event.target.closest(
             "[data-recover-refunded]"
           );
+         const cancelledButton =
+  event.target.closest(
+    "[data-retrigger-cancelled]"
+  );
 
         if (retryButton && !retryButton.disabled) {
           retryOrderDelivery(
@@ -3878,9 +3908,105 @@ function initializeOwnerDashboard() {
             recoverButton
           );
         }
+         if (
+  cancelledButton &&
+  !cancelledButton.disabled
+) {
+  retriggerCancelledOrder(
+    cancelledButton.dataset.retriggerCancelled,
+    cancelledButton
+  );
+             }
       }
     );
   }
+     
+/* =========================================
+   RE-TRIGGER ONE CANCELLED DATAMART ORDER
+========================================= */
+
+async function retriggerCancelledOrder(
+  reference,
+  button
+) {
+  if (!ownerToken) {
+    showLogin("Please log in to continue.");
+    return;
+  }
+
+  if (!reference) {
+    showMessage("Order reference is missing.");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "RE-TRIGGER THIS CANCELLED ORDER?\n\n" +
+    "Reference: " + reference + "\n\n" +
+    "IMPORTANT:\n" +
+    "1. Confirm the original DataMart order is cancelled.\n" +
+    "2. Confirm the refund has returned to your DataMart wallet.\n" +
+    "3. A new purchase will deduct money from that wallet.\n" +
+    "4. The customer will NOT pay again.\n\n" +
+    "Have you confirmed the wallet refund?\n\n" +
+    "Continue?"
+  );
+
+  if (!confirmed) return;
+
+  const originalText =
+    button?.textContent || "Re-trigger Cancelled";
+
+  try {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Re-triggering...";
+    }
+
+    showMessage(
+      "Checking cancellation and wallet refund for " +
+      reference + "..."
+    );
+
+    const result = await ownerRequest(
+      "/owner/orders/" +
+      encodeURIComponent(reference) +
+      "/retrigger-cancelled",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          confirmWalletRefund: true
+        })
+      }
+    );
+
+    if (!result || result.success !== true) {
+      throw new Error(
+        result?.message ||
+        "The server did not confirm the new purchase."
+      );
+    }
+
+    showMessage(
+      result.message ||
+      "DataMart accepted the new purchase. Check delivery status."
+    );
+
+  } catch (error) {
+    showMessage(
+      "Re-trigger result: " + error.message +
+      ". Check DataMart before trying again."
+    );
+
+  } finally {
+    await loadOrders().catch(() => {});
+
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+}
+
      
 
 /* =========================================
