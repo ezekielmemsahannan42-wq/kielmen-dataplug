@@ -3880,6 +3880,7 @@ function initializeOwnerDashboard() {
         }
       }
     );
+  }
      
 /* RETRY ALL BUTTON */
 
