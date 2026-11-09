@@ -3882,7 +3882,11 @@ function initializeOwnerDashboard() {
     );
   }
      
-/* RETRY ALL BUTTON */
+/* =========================================
+   RECOVER ONE REFUNDED ORDER
+========================================= */
+
+async function recoverRefundedOrder(
 
 const retryAllButton = byId(
   "retryAllOrders"
