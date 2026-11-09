@@ -1394,59 +1394,72 @@
 
             <div class="panel">
               <div class="toolbar">
-                <div class="field">
-                  <label for="orderSearch">Search by reference or phone</label>
-                  <input id="orderSearch" type="search" placeholder="Enter order reference or phone">
-                </div>
 
-                <div class="field">
-                  <label for="orderPaymentFilter">Payment status</label>
-                  <select id="orderPaymentFilter">
-                    <option value="">All payment statuses</option>
-                    <option value="paid">Paid</option>
-                    <option value="pending">Pending</option>
-                    <option value="failed">Failed</option>
-                    <option value="success">Success</option>
-                  </select>
-                </div>
+  <div class="field">
+    <label for="orderSearch">
+      Search by reference or phone
+    </label>
+    <input
+      id="orderSearch"
+      type="search"
+      placeholder="Enter order reference or phone"
+    >
+  </div>
 
-                <div class="field">
-                  <label for="orderDeliveryFilter">Delivery status</label>
-                  <select id="orderDeliveryFilter">
-                    <option value="">All delivery statuses</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="pending">Pending</option>
-                    <option value="failed">Failed</option>
-                    <option value="processing">Processing</option>
-                  </select>
-                </div>
+  <div class="field">
+    <label for="orderPaymentFilter">
+      Payment status
+    </label>
+    <select id="orderPaymentFilter">
+      <option value="">All payment statuses</option>
+      <option value="paid">Paid</option>
+      <option value="pending">Pending</option>
+      <option value="failed">Failed</option>
+      <option value="success">Success</option>
+    </select>
+  </div>
 
-              <button
-  type="button"
-  class="btn btn-primary"
-  id="retryAllOrders"
-  style="background:#b45309;color:white;"
->
-  Retry All Failed Orders
-</button>
+  <div class="field">
+    <label for="orderDeliveryFilter">
+      Delivery status
+    </label>
+    <select id="orderDeliveryFilter">
+      <option value="">All delivery statuses</option>
+      <option value="delivered">Delivered</option>
+      <option value="pending">Pending</option>
+      <option value="failed">Failed</option>
+      <option value="processing">Processing</option>
+      <option value="on_hold">On Hold</option>
+      <option value="refunded">Refunded</option>
+    </select>
+  </div>
 
-<button
-  type="button"
-  class="btn btn-primary"
-  id="searchOrders"
->
-  🔍 Search
-</button>
-                <button
-type="button"
-class="btn btn-primary"
-id="retryAllOrders"
-style="background:#ca8a04;color:#030712;"
+  <button
+    type="button"
+    class="btn btn-primary"
+    id="searchOrders"
+  >
+    🔍 Search
+  </button>
 
-«»
+  <button
+    type="button"
+    class="btn btn-primary"
+    id="retryAllOrders"
+    style="background:#b45309;color:white;"
+  >
+    Retry All Failed Orders
+  </button>
 
-Retry All Failed Orders
-                  </button>
+  <button
+    type="button"
+    class="btn btn-primary"
+    id="recoverAllRefundedOrders"
+    style="background:#15803d;color:white;"
+  >
+    Recover All Refunded Orders
+  </button>
+
               </div>
 
               <div class="table-wrap">
