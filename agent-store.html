@@ -4,8 +4,14 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#ffffff">
-  <meta name="description" content="Buy MTN, Telecel and AirtelTigo data bundles from your trusted data agent.">
+    <meta name="description" id="seoDescription" content="Buy MTN, Telecel and AirtelTigo data bundles from your trusted data agent in Ghana.">
   <meta name="robots" content="index, follow">
+  <link rel="canonical" id="seoCanonical" href="https://kielmen.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Kielmen 636 Dataplug">
+  <meta property="og:title" id="seoOgTitle" content="Agent Data Store | Kielmen 636 Dataplug">
+  <meta property="og:description" id="seoOgDescription" content="Buy affordable data bundles from a trusted agent in Ghana.">
+  <meta property="og:url" id="seoOgUrl" content="https://kielmen.com/">
   <title>Agent Data Store | Kielmen 636 Dataplug</title>
 
   <style>
@@ -1601,7 +1607,70 @@ function setBusinessDetails() {
 
   el.summaryAgent.textContent = name;
 
-  document.title = name + " | Agent Data Store";
+    // UPDATE GOOGLE SEO DETAILS FOR THIS AGENT STORE
+  const seoTitle =
+    name + " Data Bundles | MTN, Telecel & AirtelTigo | Kielmen";
+
+  const seoDescription = (
+    description ||
+    "Buy MTN, Telecel and AirtelTigo data bundles from " + name + " in Ghana."
+  ).slice(0, 155);
+
+  const seoUrl =
+    "https://kielmen.com/" +
+    encodeURIComponent(storeSlug);
+
+  document.title = seoTitle;
+
+  const seoDescriptionTag =
+    document.getElementById("seoDescription");
+
+  const seoCanonicalTag =
+    document.getElementById("seoCanonical");
+
+  const seoOgTitleTag =
+    document.getElementById("seoOgTitle");
+
+  const seoOgDescriptionTag =
+    document.getElementById("seoOgDescription");
+
+  const seoOgUrlTag =
+    document.getElementById("seoOgUrl");
+
+  if (seoDescriptionTag) {
+    seoDescriptionTag.setAttribute(
+      "content",
+      seoDescription
+    );
+  }
+
+  if (seoCanonicalTag) {
+    seoCanonicalTag.setAttribute(
+      "href",
+      seoUrl
+    );
+  }
+
+  if (seoOgTitleTag) {
+    seoOgTitleTag.setAttribute(
+      "content",
+      seoTitle
+    );
+  }
+
+  if (seoOgDescriptionTag) {
+    seoOgDescriptionTag.setAttribute(
+      "content",
+      seoDescription
+    );
+  }
+
+  if (seoOgUrlTag) {
+    seoOgUrlTag.setAttribute(
+      "content",
+      seoUrl
+    );
+  }
 
   // Display the agent's WhatsApp group invitation button.
   setWhatsAppGroupButton();
