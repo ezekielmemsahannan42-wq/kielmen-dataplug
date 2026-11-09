@@ -3882,11 +3882,258 @@ function initializeOwnerDashboard() {
     );
   }
      
+
 /* =========================================
    RECOVER ONE REFUNDED ORDER
 ========================================= */
 
 async function recoverRefundedOrder(
+  reference,
+  button
+) {
+  if (!ownerToken) {
+    showLogin("Please log in to continue.");
+    return;
+  }
+
+  if (!reference) {
+    showMessage("Order reference is missing.");
+    return;
+  }
+
+  const confirmed = window.confirm(
+    "RECOVER THIS REFUNDED ORDER?\n\n" +
+    "Reference: " + reference + "\n\n" +
+    "The purchase will use your DataMart wallet.\n" +
+    "The customer will NOT pay again.\n\n" +
+    "Continue?"
+  );
+
+  if (!confirmed) return;
+
+  const originalText =
+    button?.textContent || "Recover Refunded";
+
+  try {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Recovering...";
+    }
+
+    showMessage(
+      "Recovering order " + reference + "..."
+    );
+
+    const result = await ownerRequest(
+      "/owner/orders/" +
+      encodeURIComponent(reference) +
+      "/recover-refunded",
+      {
+        method: "POST",
+        body: JSON.stringify({})
+      }
+    );
+
+    if (!result || result.success !== true) {
+      throw new Error(
+        result?.message ||
+        "The server did not confirm recovery."
+      );
+    }
+
+    showMessage(
+      result.message ||
+      "Recovery request accepted. Check delivery status."
+    );
+
+  } catch (error) {
+    showMessage(
+      "Recovery failed: " + error.message
+    );
+
+  } finally {
+    await loadOrders().catch(() => {});
+
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+}
+
+
+/* =========================================
+   LOAD REFUNDED RECOVERY CANDIDATES
+========================================= */
+
+async function loadRefundedRecoveryCandidates() {
+  const result = await ownerRequest(
+    "/owner/orders/refunded-recovery-candidates"
+  );
+
+  if (!result || result.success !== true) {
+    throw new Error(
+      result?.message ||
+      "Could not load refunded orders."
+    );
+  }
+
+  return Array.isArray(result.orders)
+    ? result.orders
+    : [];
+}
+
+
+/* =========================================
+   RECOVER ALL REFUNDED ORDERS
+========================================= */
+
+async function recoverAllRefundedOrders(button) {
+  if (!ownerToken) {
+    showLogin("Please log in to continue.");
+    return;
+  }
+
+  const originalText =
+    button?.textContent ||
+    "Recover All Refunded Orders";
+
+  try {
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Loading orders...";
+    }
+
+    showMessage(
+      "Checking all eligible refunded orders..."
+    );
+
+    const orders =
+      await loadRefundedRecoveryCandidates();
+
+    if (orders.length === 0) {
+      showMessage(
+        "There are no eligible refunded orders to recover."
+      );
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "FOUND " + orders.length +
+      " REFUNDED ORDER(S).\n\n" +
+      "Recover them one at a time using your DataMart wallet?\n\n" +
+      "Customers will NOT pay again.\n\n" +
+      "Continue?"
+    );
+
+    if (!confirmed) return;
+
+    let successful = 0;
+    let failed = 0;
+
+    for (let i = 0; i < orders.length; i++) {
+      const reference = orders[i].reference;
+
+      if (!reference) {
+        failed++;
+        continue;
+      }
+
+      if (button) {
+        button.textContent =
+          "Recovering " + (i + 1) +
+          " of " + orders.length;
+      }
+
+      showMessage(
+        "Recovering " + reference +
+        " (" + (i + 1) +
+        " of " + orders.length + ")..."
+      );
+
+      try {
+        const result = await ownerRequest(
+          "/owner/orders/" +
+          encodeURIComponent(reference) +
+          "/recover-refunded",
+          {
+            method: "POST",
+            body: JSON.stringify({})
+          }
+        );
+
+        if (!result || result.success !== true) {
+          throw new Error(
+            result?.message ||
+            "Recovery was not confirmed."
+          );
+        }
+
+        successful++;
+
+      } catch (error) {
+        failed++;
+
+        console.error(
+          "Recovery failed for " + reference,
+          error
+        );
+      }
+    }
+
+    await loadOrders();
+
+    showMessage(
+      "RECOVERY FINISHED\n\n" +
+      "Successful: " + successful + "\n" +
+      "Failed: " + failed + "\n" +
+      "Total checked: " + orders.length
+    );
+
+  } catch (error) {
+    showMessage(
+      "Recover All error: " + error.message
+    );
+
+    await loadOrders().catch(() => {});
+
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  }
+}
+
+
+/* =========================================
+   RECOVER ALL BUTTON LISTENER
+========================================= */
+
+const recoverAllButton = byId(
+  "recoverAllRefundedOrders"
+);
+
+if (
+  recoverAllButton &&
+  !recoverAllButton.dataset.ownerBound
+) {
+  recoverAllButton.dataset.ownerBound = "true";
+
+  recoverAllButton.addEventListener(
+    "click",
+    () => {
+      recoverAllRefundedOrders(
+        recoverAllButton
+      );
+    }
+  );
+}
+
+
+/* =========================================
+   RETRY ALL BUTTON
+========================================= */
 
 const retryAllButton = byId(
   "retryAllOrders"
