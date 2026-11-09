@@ -4491,6 +4491,382 @@ app.post(
 );
 
 // ============================================================
+// OWNER: RE-TRIGGER A CONFIRMED DATAMART-CANCELLED ORDER
+// ============================================================
+
+app.post(
+  "/owner/orders/:reference/retrigger-cancelled",
+  requireOwner,
+  async (req, res) => {
+    const reference = String(
+      req.params.reference || ""
+    ).trim();
+
+    if (!reference || reference.length > 100) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order reference."
+      });
+    }
+
+    if (req.body?.confirmWalletRefund !== true) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Confirm that the DataMart refund has returned to your wallet."
+      });
+    }
+
+    let attemptId = null;
+
+    try {
+      // 1. Load the original customer order.
+      const existing = await pool.query(
+        `
+          SELECT
+            reference,
+            phone,
+            network,
+            bundle,
+            amount,
+            status,
+            delivery_status,
+            supplier_reference
+          FROM orders
+          WHERE reference = $1
+        `,
+        [reference]
+      );
+
+      if (!existing.rowCount) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found."
+        });
+      }
+
+      const order = existing.rows[0];
+
+      if (order.status !== "paid") {
+        return res.status(409).json({
+          success: false,
+          message: "This customer order is not paid."
+        });
+      }
+
+      if (!order.supplier_reference) {
+        return res.status(409).json({
+          success: false,
+          message:
+            "The original DataMart reference is missing."
+        });
+      }
+
+      // 2. Verify the original supplier order.
+      const supplier = await refreshSupplierOrderStatus(
+        order.supplier_reference
+      );
+
+      const supplierData = supplier.raw?.data || {};
+
+      const originalSupplierStatus = String(
+        supplierData.orderStatus ||
+        supplierData.delivery_status ||
+        supplierData.status ||
+        supplier.raw?.orderStatus ||
+        supplier.raw?.delivery_status ||
+        supplier.raw?.status ||
+        ""
+      ).trim().toLowerCase();
+
+      if (
+        !["cancelled", "canceled"].includes(
+          originalSupplierStatus
+        )
+      ) {
+        return res.status(409).json({
+          success: false,
+          supplier_status: originalSupplierStatus,
+          message:
+            "DataMart has not confirmed cancellation. No new purchase was made."
+        });
+      }
+
+      // 3. Lock the order and create a unique recovery attempt.
+      const client = await pool.connect();
+
+      try {
+        await client.query("BEGIN");
+
+        const locked = await client.query(
+          `
+            SELECT
+              reference,
+              phone,
+              network,
+              bundle,
+              amount,
+              status,
+              delivery_status,
+              supplier_reference
+            FROM orders
+            WHERE reference = $1
+            FOR UPDATE
+          `,
+          [reference]
+        );
+
+        if (!locked.rowCount) {
+          await client.query("ROLLBACK");
+
+          return res.status(404).json({
+            success: false,
+            message: "Order not found."
+          });
+        }
+
+        const current = locked.rows[0];
+
+        if (
+          current.status !== "paid" ||
+          current.supplier_reference !==
+            order.supplier_reference
+        ) {
+          await client.query("ROLLBACK");
+
+          return res.status(409).json({
+            success: false,
+            message:
+              "The order changed. Refresh and check again."
+          });
+        }
+
+        if (
+          ["delivered", "completed", "success", "successful"]
+            .includes(
+              String(current.delivery_status).toLowerCase()
+            )
+        ) {
+          await client.query("ROLLBACK");
+
+          return res.status(409).json({
+            success: false,
+            message: "This order is already delivered."
+          });
+        }
+
+        const activeAttempt = await client.query(
+          `
+            SELECT id
+            FROM order_recovery_attempts
+            WHERE order_reference = $1
+              AND attempt_status IN (
+                'submitting',
+                'unknown'
+              )
+            LIMIT 1
+          `,
+          [reference]
+        );
+
+        if (activeAttempt.rowCount) {
+          await client.query("ROLLBACK");
+
+          return res.status(409).json({
+            success: false,
+            message:
+              "A previous attempt has an uncertain result. Check DataMart before trying again."
+          });
+        }
+
+        const attemptNumberResult = await client.query(
+          `
+            SELECT COALESCE(MAX(attempt_number), 0) + 1
+              AS next_attempt
+            FROM order_recovery_attempts
+            WHERE order_reference = $1
+          `,
+          [reference]
+        );
+
+        const attemptNumber = Number(
+          attemptNumberResult.rows[0].next_attempt
+        );
+
+        const idempotencyKey =
+          `kielmen-cancel-recovery-${reference}-` +
+          `${attemptNumber}-${crypto.randomUUID()}`;
+
+        const inserted = await client.query(
+          `
+            INSERT INTO order_recovery_attempts (
+              order_reference,
+              attempt_number,
+              old_supplier_reference,
+              idempotency_key,
+              attempt_status
+            )
+            VALUES ($1, $2, $3, $4, 'submitting')
+            RETURNING id
+          `,
+          [
+            reference,
+            attemptNumber,
+            current.supplier_reference,
+            idempotencyKey
+          ]
+        );
+
+        attemptId = inserted.rows[0].id;
+
+        await client.query("COMMIT");
+
+        order.recoveryIdempotencyKey =
+          idempotencyKey;
+
+      } catch (error) {
+        await client.query("ROLLBACK").catch(() => {});
+        throw error;
+      } finally {
+        client.release();
+      }
+
+      // 4. Purchase again using the DataMart wallet.
+      // The customer is NOT charged again.
+      const purchase = await purchaseDataFromSupplier(
+        order,
+        order.recoveryIdempotencyKey
+      );
+
+      // 5. Detect manual processing or verification.
+      const newSupplierData = purchase.raw?.data || {};
+      const apiResponse = newSupplierData.apiResponse || {};
+
+      const processingMethod = String(
+        newSupplierData.processingMethod ||
+        purchase.raw?.processingMethod ||
+        apiResponse.processingMethod ||
+        ""
+      ).trim().toLowerCase();
+
+      const supplierMessage = String(
+        apiResponse.message ||
+        newSupplierData.message ||
+        purchase.raw?.message ||
+        ""
+      ).trim().toLowerCase();
+
+      const responseText = JSON.stringify(
+        purchase.raw
+      ).toLowerCase();
+
+      const isOnHold =
+        processingMethod === "manual" ||
+        supplierMessage.includes("manual processing") ||
+        supplierMessage.includes("stored for manual processing") ||
+        supplierMessage.includes("verifying") ||
+        supplierMessage.includes("on hold") ||
+        responseText.includes("beneficiary not allowed") ||
+        responseText.includes("stored for manual processing");
+
+      const newDeliveryStatus = isOnHold
+        ? "on_hold"
+        : "processing";
+
+      // 6. Save the new supplier reference on the SAME order.
+      await pool.query(
+        `
+          UPDATE orders
+          SET
+            supplier_reference = $1,
+            supplier_response = $2::jsonb,
+            delivery_status = $3,
+            delivered_at = NULL,
+            updated_at = NOW()
+          WHERE reference = $4
+            AND status = 'paid'
+        `,
+        [
+          purchase.supplierReference,
+          JSON.stringify(purchase.raw),
+          newDeliveryStatus,
+          reference
+        ]
+      );
+
+      // 7. Save recovery history.
+      await pool.query(
+        `
+          UPDATE order_recovery_attempts
+          SET
+            new_supplier_reference = $1,
+            attempt_status = 'accepted',
+            response = $2::jsonb,
+            updated_at = NOW()
+          WHERE id = $3
+        `,
+        [
+          purchase.supplierReference,
+          JSON.stringify(purchase.raw),
+          attemptId
+        ]
+      );
+
+      return res.json({
+        success: true,
+        paid: true,
+        reference,
+        delivery_status: newDeliveryStatus,
+        supplier_reference: purchase.supplierReference,
+        message: isOnHold
+          ? "DataMart accepted the new purchase. Order is On Hold for verification."
+          : "DataMart accepted the new purchase. Order is now Processing."
+      });
+
+    } catch (error) {
+      console.error(
+        "Cancelled order recovery error:",
+        reference,
+        error.message
+      );
+
+      if (attemptId !== null) {
+        await pool.query(
+          `
+            UPDATE order_recovery_attempts
+            SET
+              attempt_status = 'unknown',
+              response = $1::jsonb,
+              updated_at = NOW()
+            WHERE id = $2
+          `,
+          [
+            JSON.stringify({
+              message: error.message
+            }),
+            attemptId
+          ]
+        ).catch(updateError => {
+          console.error(
+            "Could not save cancelled recovery attempt:",
+            updateError.message
+          );
+        });
+      }
+
+      return res.status(502).json({
+        success: false,
+        paid: true,
+        reference,
+        message:
+          "The new purchase result could not be confirmed. Do not retry blindly. Check DataMart first."
+      });
+    }
+  }
+);
+
+
+// ============================================================
 // OWNER: RECOVER A CONFIRMED DATAMART-REFUNDED ORDER
 // ============================================================
 
