@@ -1441,17 +1441,25 @@ async function loadOrders() {
 ).toLowerCase();
 
 const deliveryLabel =
-  ["on_hold", "processing", "waiting", "pending"].includes(delivery)
-    ? "Processing"
-    : delivery === "delivered"
-      ? "Delivered"
-      : delivery === "failed"
-        ? "Failed"
-        : order.delivery_status || "—";
+  delivery === "refunded"
+    ? "Refunded"
+    : delivery === "on_hold"
+      ? "On Hold"
+      : ["processing", "waiting", "pending"].includes(delivery)
+        ? "Processing"
+        : delivery === "delivered"
+          ? "Delivered"
+          : delivery === "failed"
+            ? "Failed"
+            : order.delivery_status || "—";
 
 const canRetry =
   payment === "paid" &&
   delivery === "failed";
+
+const canRecoverRefunded =
+  payment === "paid" &&
+  delivery === "refunded";
 
         return `
           <tr>
@@ -1497,28 +1505,43 @@ const canRetry =
   )}
 </td>
 
-            <td>
+                        <td>
               ${
-                canRetry
+                canRecoverRefunded
                   ? `
                     <button
                       type="button"
                       class="button"
                       style="
-                        background:#ca8a04;
-                        color:#030712;
+                        background:#15803d;
+                        color:white;
                         padding:9px 12px;
                       "
-                      data-retry-delivery="${
-                        escapeHTML(
-                          order.reference
-                        )
+                      data-recover-refunded="${
+                        escapeHTML(order.reference)
                       }"
                     >
-                      Retry Delivery
+                      Recover Refunded
                     </button>
                   `
-                  : "—"
+                  : canRetry
+                    ? `
+                      <button
+                        type="button"
+                        class="button"
+                        style="
+                          background:#ca8a04;
+                          color:#030712;
+                          padding:9px 12px;
+                        "
+                        data-retry-delivery="${
+                          escapeHTML(order.reference)
+                        }"
+                      >
+                        Retry Delivery
+                      </button>
+                    `
+                    : "—"
               }
             </td>
           </tr>
@@ -3827,28 +3850,36 @@ function initializeOwnerDashboard() {
     ordersBody.dataset.ownerBound =
       "true";
 
-    ordersBody.addEventListener(
+        ordersBody.addEventListener(
       "click",
       event => {
-        const button =
+        const retryButton =
           event.target.closest(
             "[data-retry-delivery]"
           );
 
-        if (
-          !button ||
-          button.disabled
-        ) {
+        const recoverButton =
+          event.target.closest(
+            "[data-recover-refunded]"
+          );
+
+        if (retryButton && !retryButton.disabled) {
+          retryOrderDelivery(
+            retryButton.dataset.retryDelivery,
+            retryButton
+          );
+
           return;
         }
 
-        retryOrderDelivery(
-          button.dataset.retryDelivery,
-          button
-        );
+        if (recoverButton && !recoverButton.disabled) {
+          recoverRefundedOrder(
+            recoverButton.dataset.recoverRefunded,
+            recoverButton
+          );
+        }
       }
     );
-  }
      
 /* RETRY ALL BUTTON */
 
