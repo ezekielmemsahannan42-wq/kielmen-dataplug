@@ -1130,6 +1130,7 @@ setInterval(() => {
   }
 }, 30000);
 
+
 function orderSearchFields(order){
   return [
     order.network,order.bundle,order.status,order.payment_status,
@@ -1140,17 +1141,49 @@ function orderSearchFields(order){
   ];
 }
 
+// Convert saved server statuses into customer-friendly labels.
+function formatAgentDeliveryStatus(value){
+  const status=String(value||"").trim().toLowerCase();
+
+  const labels={
+    pending:"Pending",
+    waiting:"Pending",
+    processing:"Processing",
+    on_hold:"On Hold",
+    hold:"On Hold",
+    verifying:"On Hold",
+    completed:"Delivered",
+    complete:"Delivered",
+    delivered:"Delivered",
+    success:"Delivered",
+    successful:"Delivered",
+    failed:"Failed",
+    rejected:"Failed",
+    cancelled:"Failed",
+    canceled:"Failed",
+    refunded:"Refunded"
+  };
+
+  return labels[status] || (status ? status : "Not provided");
+}
+
 function renderOrders(){
   const target=document.getElementById("ordersList");
   const term=document.getElementById("orderSearch").value.trim().toLowerCase();
+
   const filtered=orders.filter(order=>
-    orderSearchFields(order).some(value=>String(value??"").toLowerCase().includes(term))
+    orderSearchFields(order).some(value=>
+      String(value??"").toLowerCase().includes(term)
+    )
   );
 
-  document.getElementById("orderCount").textContent=filtered.length+" of "+orders.length+" orders";
+  document.getElementById("orderCount").textContent=
+    filtered.length+" of "+orders.length+" orders";
 
   if(!filtered.length){
-    target.textContent=term?"No orders match your search.":"No orders were returned for this agent account.";
+    target.textContent=term
+      ?"No orders match your search."
+      :"No orders were returned for this agent account.";
     return;
   }
 
@@ -1158,7 +1191,11 @@ function renderOrders(){
     const network=order.network||"Network";
     const bundle=order.bundle||"Bundle";
     const payment=order.payment_status||order.paymentStatus||order.status||"Unknown";
-    const delivery=order.delivery_status||order.deliveryStatus||"Not provided";
+
+    const delivery=formatAgentDeliveryStatus(
+      order.delivery_status||order.deliveryStatus
+    );
+
     const phone=order.phone||order.customer_phone||order.customerPhone||"Not provided";
     const reference=order.reference||order.reference_code||order.transaction_reference||"Not available";
     const amount=order.amount??order.total??0;
@@ -1172,12 +1209,18 @@ function renderOrders(){
       <p class="stat-note">Reference: ${escapeHTML(reference)}</p>
       <p class="stat-note">Customer phone: ${escapeHTML(phone)}</p>
       <p class="stat-note">Order date: ${escapeHTML(date)}</p>
-      <p>Payment status: <span class="order-status">${escapeHTML(payment)}</span></p>
-      <p>Delivery status: <span class="order-status">${escapeHTML(delivery)}</span></p>
+      <p>Payment status:
+        <span class="order-status">${escapeHTML(payment)}</span>
+      </p>
+      <p>Delivery status:
+        <span class="order-status">${escapeHTML(delivery)}</span>
+      </p>
       <strong>${money(amount)}</strong>
     </article>`;
   }).join("");
 }
+
+
 
 function renderRecentOrders(){
   const target=document.getElementById("recentOrders");
@@ -1189,14 +1232,20 @@ function renderRecentOrders(){
 
   target.innerHTML=orders.slice(0,3).map(order=>{
     const reference=order.reference||order.reference_code||order.transaction_reference||"Not available";
+
+    const delivery=formatAgentDeliveryStatus(
+      order.delivery_status||order.deliveryStatus
+    );
+
     return `<div class="message">
       <strong>${escapeHTML(order.network||"Network")} · ${escapeHTML(order.bundle||"Bundle")}</strong>
       <p>Reference: ${escapeHTML(reference)}</p>
-      <p>Status: ${escapeHTML(order.status||"unknown")}</p>
+      <p>Delivery status: ${escapeHTML(delivery)}</p>
       <strong>${money(order.amount??order.total??0)}</strong>
     </div>`;
   }).join("");
 }
+
 
 /* PERFORMANCE STATISTICS */
 async function loadStats(){
