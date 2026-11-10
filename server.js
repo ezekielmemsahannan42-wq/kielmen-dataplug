@@ -1160,79 +1160,99 @@ try {
 // UNIFIED DATAMART STATUS MAPPING
 // ============================================================
 
+
 function mapDataMartOrderStatus(result) {
-const data = result?.data || {};
+  const data = result?.data || {};
+  const apiResponse = data.apiResponse || {};
 
-// DataMart's current order status takes priority.
-const status = String(
-data.orderStatus ||
-data.delivery_status ||
-data.status ||
-result?.orderStatus ||
-result?.delivery_status ||
-result?.status ||
-""
-).trim().toLowerCase();
+  const processingMethod = String(
+    data.processingMethod || ""
+  ).trim().toLowerCase();
 
-const message = String(
-data.message ||
-result?.message ||
-data.apiResponse?.message ||
-""
-).trim().toLowerCase();
+  const apiStatus = String(
+    apiResponse.status || ""
+  ).trim().toLowerCase();
 
-// 1. PENDING
-if (["pending", "waiting"].includes(status)) {
-if (
-message.includes("verifying") ||
-message.includes("on hold") ||
-message.includes("beneficiary not allowed") ||
-message.includes("manual processing")
-) {
-return "on_hold";
+  const message = String(
+    apiResponse.message ||
+    data.message ||
+    result?.message ||
+    ""
+  ).trim().toLowerCase();
+
+  // Manual orders awaiting processing must not appear delivered.
+  const isManualPending =
+    processingMethod === "manual" &&
+    ["pending", "waiting"].includes(apiStatus);
+
+  // Use the API's pending status for manual orders.
+  const status = String(
+    isManualPending
+      ? apiStatus
+      : (
+          data.orderStatus ||
+          data.delivery_status ||
+          data.status ||
+          apiResponse.status ||
+          result?.orderStatus ||
+          result?.delivery_status ||
+          result?.status ||
+          ""
+        )
+  ).trim().toLowerCase();
+
+  // 1. PENDING
+  if (["pending", "waiting"].includes(status)) {
+    if (
+      message.includes("verifying") ||
+      message.includes("on hold") ||
+      message.includes("beneficiary not allowed") ||
+      message.includes("manual processing")
+    ) {
+      return "on_hold";
+    }
+
+    return "pending";
+  }
+
+  // 2. PROCESSING
+  if (status === "processing") {
+    return "processing";
+  }
+
+  // 3. ON HOLD
+  if (
+    ["on_hold", "on hold", "hold", "verifying", "verification"]
+      .includes(status)
+  ) {
+    return "on_hold";
+  }
+
+  // 4. DELIVERED
+  if (
+    ["completed", "complete", "delivered", "success", "successful"]
+      .includes(status)
+  ) {
+    return "delivered";
+  }
+
+  // 5. FAILED
+  if (
+    ["failed", "rejected", "cancelled", "canceled"]
+      .includes(status)
+  ) {
+    return "failed";
+  }
+
+  // 6. REFUNDED
+  if (status === "refunded") {
+    return "refunded";
+  }
+
+  // Unknown status: preserve the last known Kielmen status.
+  return null;
 }
 
-return "pending";
-
-}
-
-// 2. PROCESSING
-if (status === "processing") {
-return "processing";
-}
-
-// 3. ON HOLD
-if (
-["on_hold", "on hold", "hold", "verifying", "verification"]
-.includes(status)
-) {
-return "on_hold";
-}
-
-// 4. DELIVERED
-if (
-["completed", "complete", "delivered", "success", "successful"]
-.includes(status)
-) {
-return "delivered";
-}
-
-// 5. FAILED
-if (
-["failed", "rejected", "cancelled", "canceled"]
-.includes(status)
-) {
-return "failed";
-}
-
-// 6. REFUNDED
-if (status === "refunded") {
-return "refunded";
-}
-
-// Unknown status: preserve the last known Kielmen status.
-return null;
-}
 
 // ============================================================
 // REFRESH EXISTING DATAMART ORDER STATUS
