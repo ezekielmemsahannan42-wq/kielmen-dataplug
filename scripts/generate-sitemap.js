@@ -37,6 +37,24 @@ function replaceMeta(html, id, replacement) {
   return html.replace(pattern, replacement);
 }
 
+// Insert real agent content into the HTML before JavaScript runs.
+function replaceElementContent(html, id, content) {
+  const pattern = new RegExp(
+    `(<([a-z][\\w:-]*)\\b[^>]*\\bid="${id}"[^>]*>)[\\s\\S]*?(<\\/\\2>)`,
+    "i"
+  );
+
+  if (!pattern.test(html)) {
+    throw new Error(`Could not find HTML element: ${id}`);
+  }
+
+  return html.replace(
+    pattern,
+    (_match, openingTag, _tagName, closingTag) =>
+      `${openingTag}${content}${closingTag}`
+  );
+}
+
 function getPreviousSlugs() {
   try {
     return JSON.parse(fs.readFileSync(TRACK_FILE, "utf8"));
@@ -93,8 +111,7 @@ async function main() {
       ".kielmen-agent-store-generated"
     );
 
-    // Do not overwrite an existing folder that this script
-    // did not create.
+    // Never overwrite a folder not created by this script.
     if (
       fs.existsSync(folder) &&
       !fs.existsSync(marker)
@@ -116,40 +133,69 @@ async function main() {
 
     let html = template;
 
+    // Page title.
     html = html.replace(
       /<title>[\s\S]*?<\/title>/i,
       `<title>${escapeHtml(title)}</title>`
     );
 
+    // SEO description.
     html = replaceMeta(
       html,
       "seoDescription",
       `<meta name="description" id="seoDescription" content="${escapeHtml(description)}">`
     );
 
+    // Canonical URL.
+    const canonicalPattern =
+      /<link\b[^>]*\bid="seoCanonical"[^>]*>/i;
+
+    if (!canonicalPattern.test(html)) {
+      throw new Error("Could not find the canonical SEO link.");
+    }
+
     html = html.replace(
-      /<link\b[^>]*\bid="seoCanonical"[^>]*>/i,
+      canonicalPattern,
       `<link rel="canonical" id="seoCanonical" href="${pageUrl}">`
     );
 
+    // Open Graph title.
     html = replaceMeta(
       html,
       "seoOgTitle",
       `<meta property="og:title" id="seoOgTitle" content="${escapeHtml(title)}">`
     );
 
+    // Open Graph description.
     html = replaceMeta(
       html,
       "seoOgDescription",
       `<meta property="og:description" id="seoOgDescription" content="${escapeHtml(description)}">`
     );
 
+    // Open Graph URL.
     html = replaceMeta(
       html,
       "seoOgUrl",
       `<meta property="og:url" id="seoOgUrl" content="${pageUrl}">`
     );
 
+    // IMPORTANT:
+    // Put the real agent name and description directly into
+    // the HTML so search engines can find them immediately.
+    html = replaceElementContent(
+      html,
+      "heroBusinessName",
+      escapeHtml(businessName)
+    );
+
+    html = replaceElementContent(
+      html,
+      "storeDescription",
+      escapeHtml(description)
+    );
+
+    // Give the storefront its correct agent slug.
     const slugScript =
       `<script>window.__KIELMEN_STORE_SLUG__=${JSON.stringify(slug)};</script>`;
 
@@ -158,6 +204,7 @@ async function main() {
       head => head + "\n" + slugScript
     );
 
+    // Generate the agent's individual page.
     fs.writeFileSync(
       path.join(folder, "index.html"),
       html
@@ -183,8 +230,7 @@ async function main() {
     });
   }
 
-  // Remove old generated pages for agents no longer
-  // present in the approved public-store list.
+  // Remove old generated pages for agents no longer approved.
   for (const oldSlug of previousSlugs) {
     if (
       !/^[a-z0-9_-]{1,100}$/.test(oldSlug) ||
@@ -204,11 +250,13 @@ async function main() {
     }
   }
 
+  // Save the current list of generated stores.
   fs.writeFileSync(
     TRACK_FILE,
     JSON.stringify(currentSlugs, null, 2) + "\n"
   );
 
+  // Generate sitemap.xml.
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${sitemapUrls.map(item => `  <url>
@@ -222,6 +270,7 @@ ${item.lastmod ? `    <lastmod>${item.lastmod}</lastmod>\n` : ""}  </url>`).join
     sitemap
   );
 
+  // Generate robots.txt.
   fs.writeFileSync(
     path.join(ROOT, "robots.txt"),
     `User-agent: *
