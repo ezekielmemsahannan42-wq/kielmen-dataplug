@@ -526,10 +526,10 @@ async function main() {
     const pageUrl = `${SITE_URL}/${slug}/`;
 
     const title =
-      `${businessName} Data Bundles | MTN, Telecel & AirtelTigo | Kielmen`;
+  `${businessName} | Data Bundles in Ghana - MTN, Telecel & AirtelTigo`;
 
-    const description =
-      `Buy MTN, Telecel and AirtelTigo data bundles from ${businessName} in Ghana. Visit this agent's Kielmen 636 Dataplug store.`;
+const description =
+  `Buy affordable MTN, Telecel and AirtelTigo data bundles from ${businessName} in Ghana. Shop online directly from ${businessName}.`;
 
     let html = template;
 
