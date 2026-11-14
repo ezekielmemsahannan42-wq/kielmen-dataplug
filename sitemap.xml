@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://kielmen.com/</loc>
-    <lastmod>2026-11-13</lastmod>
+    <lastmod>2026-11-14</lastmod>
   </url>
   <url>
     <loc>https://kielmen.com/24-7-data-hub/</loc>
@@ -165,12 +165,12 @@
     <lastmod>2026-10-28</lastmod>
   </url>
   <url>
-    <loc>https://kielmen.com/clara_2/</loc>
-    <lastmod>2026-11-06</lastmod>
-  </url>
-  <url>
     <loc>https://kielmen.com/clara/</loc>
     <lastmod>2026-10-31</lastmod>
+  </url>
+  <url>
+    <loc>https://kielmen.com/clara_2/</loc>
+    <lastmod>2026-11-06</lastmod>
   </url>
   <url>
     <loc>https://kielmen.com/clarex-falaa-data/</loc>
@@ -363,6 +363,10 @@
   <url>
     <loc>https://kielmen.com/lincoln-s-data-hub/</loc>
     <lastmod>2026-10-30</lastmod>
+  </url>
+  <url>
+    <loc>https://kielmen.com/mahamasans/</loc>
+    <lastmod>2026-11-13</lastmod>
   </url>
   <url>
     <loc>https://kielmen.com/malonzy/</loc>
@@ -650,6 +654,6 @@
   </url>
   <url>
     <loc>https://kielmen.com/agents/</loc>
-    <lastmod>2026-11-13</lastmod>
+    <lastmod>2026-11-14</lastmod>
   </url>
 </urlset>
