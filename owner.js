@@ -1881,6 +1881,9 @@ async function loadAgentDetails(id) {
 
   if (!panel) return;
 
+  // Make the details panel visible before loading.
+  panel.classList.remove("hidden");
+
   panel.textContent =
     "Loading agent details...";
 
