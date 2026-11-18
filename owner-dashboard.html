@@ -1742,6 +1742,17 @@
     📊 Export Numbers (.CSV)
   </button>
     </div>
+    <div class="inline-actions" style="margin:12px 0 18px;">
+  <button type="button" class="btn btn-primary"
+    id="exportAgentNumbersTxt">
+    Export WhatsApp Numbers (.TXT)
+  </button>
+
+  <button type="button" class="btn btn-success"
+    id="exportAgentNumbersCsv">
+    Export WhatsApp Contacts (.CSV)
+  </button>
+    </div>
 
     <div
       id="agentNumbersLoadStatus"
@@ -2874,15 +2885,15 @@
         }
       });
 
-      /* =========================================
+ 
+/* =========================================
    LIVE REGISTERED AGENT NUMBERS
 ========================================= */
 
 let liveAgentNumbers = [];
 
 function normaliseLiveAgentPhone(value) {
-  let phone = String(value || "")
-    .replace(/\D/g, "");
+  let phone = String(value || "").replace(/\D/g, "");
 
   if (phone.startsWith("0") && phone.length === 10) {
     phone = "233" + phone.slice(1);
@@ -2895,82 +2906,32 @@ function normaliseLiveAgentPhone(value) {
   return "";
 }
 
-
 function renderLiveAgentNumbers() {
-
   const list = $("agentNumbersLiveList");
   const count = $("agentNumbersLiveCount");
+
   const search = (
     $("agentNumbersSearch")?.value || ""
   ).replace(/\D/g, "");
 
   if (!list || !count) return;
 
-  const filtered = liveAgentNumbers.filter(phone =>
-    phone.includes(search)
+  const filtered = liveAgentNumbers.filter(agent =>
+    agent.phone.includes(search)
   );
 
   list.value = filtered
-    .map(phone => "0" + phone.slice(3))
+    .map(agent => "0" + agent.phone.slice(3))
     .join("\n");
 
   count.textContent = String(liveAgentNumbers.length);
 }
-      // =========================================
-// EXPORT REGISTERED AGENT WHATSAPP NUMBERS
-// =========================================
-
-function exportRegisteredAgentNumbers(format) {
-  const numbers = [...new Set(liveAgentNumbers)]
-    .filter(phone => /^233\d{9}$/.test(phone))
-    .sort();
-
-  if (!numbers.length) {
-    alert("No registered agent phone numbers are available. Refresh the agent list first.");
-    return;
-  }
-
-  if (format === "txt") {
-    const content = numbers.join("\n");
-
-    downloadText(
-      content,
-      "kielmen-registered-agent-whatsapp-numbers.txt",
-      "text/plain;charset=utf-8;"
-    );
-  }
-
-  if (format === "csv") {
-    const content = [
-      "Phone Number",
-      ...numbers.map(phone => `"${phone}"`)
-    ].join("\n");
-
-    downloadText(
-      content,
-      "kielmen-registered-agent-whatsapp-numbers.csv",
-      "text/csv;charset=utf-8;"
-    );
-  }
-
-  alert(numbers.length + " unique agent numbers exported successfully.");
-}
-
-$("exportAgentNumbersTxt")?.addEventListener("click", () => {
-  exportRegisteredAgentNumbers("txt");
-});
-
-$("exportAgentNumbersCsv")?.addEventListener("click", () => {
-  exportRegisteredAgentNumbers("csv");
-});
-
 
 /* =========================================
-   LOAD NUMBERS FROM AGENT DATABASE
+   LOAD REGISTERED AGENTS
 ========================================= */
 
 async function loadLiveAgentNumbers() {
-
   const list = $("agentNumbersLiveList");
   const status = $("agentNumbersLoadStatus");
   const button = $("refreshAgentNumbers");
@@ -2985,7 +2946,6 @@ async function loadLiveAgentNumbers() {
   }
 
   try {
-
     const data = await ownerRequest("/owner/agents");
 
     if (!data || !data.success) {
@@ -2994,19 +2954,25 @@ async function loadLiveAgentNumbers() {
       );
     }
 
-    const uniqueNumbers = new Set();
+    const uniqueAgents = new Map();
 
     (data.agents || []).forEach(agent => {
-
       const phone = normaliseLiveAgentPhone(agent.phone);
 
-      if (phone) {
-        uniqueNumbers.add(phone);
-      }
+      const name = String(
+        agent.full_name || agent.business_name || "Kielmen Agent"
+      ).trim();
 
+      if (phone && !uniqueAgents.has(phone)) {
+        uniqueAgents.set(phone, {
+          name,
+          phone
+        });
+      }
     });
 
-    liveAgentNumbers = [...uniqueNumbers].sort();
+    liveAgentNumbers = [...uniqueAgents.values()]
+      .sort((a, b) => a.name.localeCompare(b.name));
 
     renderLiveAgentNumbers();
 
@@ -3014,16 +2980,13 @@ async function loadLiveAgentNumbers() {
       status.textContent =
         "Successfully loaded " +
         liveAgentNumbers.length +
-        " unique registered agent phone numbers.";
+        " unique registered agent contacts.";
 
       status.className = "message-box message-success";
     }
 
   } catch (error) {
-
-    if (list) {
-      list.value = "";
-    }
+    if (list) list.value = "";
 
     if (status) {
       status.textContent =
@@ -3032,25 +2995,73 @@ async function loadLiveAgentNumbers() {
       status.className = "message-box message-error";
     }
 
-    console.error(
-      "Live agent numbers error:",
-      error
-    );
+    console.error("Live agent numbers error:", error);
 
   } finally {
-
     if (button) {
       button.disabled = false;
       button.textContent = "↻ Refresh Agent List";
     }
-
   }
-
 }
 
+/* =========================================
+   EXPORT WHATSAPP CONTACTS
+========================================= */
+
+function exportRegisteredAgentNumbers(format) {
+  if (!liveAgentNumbers.length) {
+    alert("Refresh the agent list first.");
+    return;
+  }
+
+  if (format === "txt") {
+    const content = liveAgentNumbers
+      .map(agent => agent.phone)
+      .join("\n");
+
+    downloadText(
+      content,
+      "kielmen-agent-whatsapp-numbers.txt",
+      "text/plain;charset=utf-8;"
+    );
+
+    return;
+  }
+
+  if (format === "csv") {
+    const rows = [
+      ["Name", "Mobile Number"],
+      ...liveAgentNumbers.map(agent => [
+        agent.name,
+        agent.phone
+      ])
+    ];
+
+    const csv = rows.map(row =>
+      row.map(value =>
+        '"' + String(value).replace(/"/g, '""') + '"'
+      ).join(",")
+    ).join("\r\n");
+
+    downloadText(
+      csv,
+      "kielmen-agent-whatsapp-contacts.csv",
+      "text/csv;charset=utf-8;"
+    );
+  }
+}
+
+$("exportAgentNumbersTxt")?.addEventListener("click", () => {
+  exportRegisteredAgentNumbers("txt");
+});
+
+$("exportAgentNumbersCsv")?.addEventListener("click", () => {
+  exportRegisteredAgentNumbers("csv");
+});
 
 /* =========================================
-   REFRESH, SEARCH AND SEND AGENT SMS
+   REFRESH AND SEARCH
 ========================================= */
 
 $("refreshAgentNumbers")?.addEventListener(
@@ -3058,11 +3069,11 @@ $("refreshAgentNumbers")?.addEventListener(
   loadLiveAgentNumbers
 );
 
-
 $("agentNumbersSearch")?.addEventListener(
   "input",
   renderLiveAgentNumbers
 );
+     
 
 
 /* =========================================
