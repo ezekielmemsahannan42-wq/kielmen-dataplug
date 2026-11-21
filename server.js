@@ -7797,19 +7797,6 @@ app.post("/paystack-webhook", async (req, res) => {
     }
 
 
-      console.log(
-        "Automatic Paystack processing:",
-        reference,
-        result.delivery_status,
-        result.message
-      );
-    } catch (error) {
-      console.error(
-        "Paystack webhook processing failed:",
-        reference,
-        error.message
-      );
-    }
   } catch (error) {
     console.error(
       "Paystack webhook error:",
