@@ -1371,6 +1371,21 @@ function mapDataMartOrderStatus(result) {
   ).trim().toLowerCase();
 
   const isManual = processingMethods.includes("manual");
+    const nestedStatus = String(
+    apiResponse.status || ""
+  ).trim().toLowerCase();
+
+  // Manual orders awaiting supplier processing must remain on hold.
+  if (
+    isManual &&
+    (
+      ["pending", "waiting"].includes(nestedStatus) ||
+      message.includes("stored for manual processing") ||
+      message.includes("manual processing")
+    )
+  ) {
+    return "on_hold";
+  }
 
   // Manual orders that are still waiting must remain on hold.
   if (
