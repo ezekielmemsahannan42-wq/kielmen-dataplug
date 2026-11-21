@@ -2342,12 +2342,22 @@ function renderOrderResults(orders) {
           "Pending"
         )
       ],
-      [
+            [
         "Delivery",
         safeText(
-          order.delivery_status ||
-          order.deliveryStatus ||
-          order.status,
+          String(
+            order.delivery_status ||
+            order.deliveryStatus ||
+            order.status ||
+            "Pending"
+          ).trim().toLowerCase() === "failed"
+            ? "Processing"
+            : (
+                order.delivery_status ||
+                order.deliveryStatus ||
+                order.status ||
+                "Pending"
+              ),
           "Pending"
         )
       ]
