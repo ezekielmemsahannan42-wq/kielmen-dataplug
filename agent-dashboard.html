@@ -79,6 +79,36 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .welcome p{color:#d8e2ed;line-height:1.7}
 .agent-code{display:inline-block;padding:8px 12px;margin:5px 0 14px;border:1px solid #ffffff30;border-radius:9px;background:#ffffff10}
 .welcome .btn{border-color:#ffffff35;background:#ffffff12;color:#fff}
+  .home-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-top:18px;
+}
+
+.home-action{
+  min-height:58px;
+  padding:14px 8px;
+  border:0;
+  border-radius:13px;
+  font-size:15px;
+  font-weight:800;
+  text-align:center;
+}
+
+.home-action-buy{
+  background:#078454;
+  color:#ffffff;
+}
+
+.home-action-deposit{
+  background:#eab308;
+  color:#111827;
+}
+
+.home-action:active{
+  transform:scale(.98);
+}
 
 .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
 .card{min-width:0;padding:18px;margin-bottom:15px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);box-shadow:var(--shadow)}
@@ -223,6 +253,21 @@ footer{padding:20px 0 30px;text-align:center;color:#94a3b8;font-size:11px}
       <p id="welcomeDetails">Manage your data business in one place.</p>
       <div class="agent-code">Agent Code: <strong id="agentCode">Loading...</strong></div><br>
       <button class="btn" type="button" onclick="agentLogout()">Sign Out</button>
+      <div class="home-actions">
+  <button
+    class="home-action home-action-buy"
+    type="button"
+    onclick="showPage('buyData')">
+    🛒 Buy Data
+  </button>
+
+  <button
+    class="home-action home-action-deposit"
+    type="button"
+    onclick="showPage('wallet')">
+    💳 Deposit
+  </button>
+      </div>
     </div>
     <div class="btn-row" style="margin-top:18px;max-width:420px">
   <button class="btn btn-primary" type="button"
@@ -1119,9 +1164,22 @@ async function submitAgentDataPurchase(method) {
       return;
     }
 
-    buyMessage(
-      data.result.message || "Your order has been submitted."
-    );
+    const successMessage = method === "wallet"
+  ? "Wallet payment successful! Your order has been received and is being processed. Please check Orders for delivery updates."
+  : "Your order has been received successfully.";
+
+buyMessage(successMessage);
+
+document.getElementById("buyDataMessage")
+  .classList.add("success");
+
+if (method === "wallet") {
+  window.alert(
+    "SUCCESS!\n\n" +
+    "Your wallet payment was successful.\n\n" +
+    "Your order has been received. Please check your Orders page for delivery updates."
+  );
+}
 
     await Promise.all([
       loadAgentWallet(),
