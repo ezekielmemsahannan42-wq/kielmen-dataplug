@@ -1093,12 +1093,25 @@ async function submitAgentDataPurchase(method) {
     });
 
     if (
-      !data.response.ok ||
-      data.result?.success !== true
-    ) {
-      throw new Error(
-        data.result?.message || "Could not submit your order."
-      );
+  !data.response.ok ||
+  data.result?.success !== true
+) {
+  if (data.result?.paid === true) {
+    buyMessage(
+      "Your wallet has been charged, but your order is still being processed. Please do not submit the order again. Kindly contact Kielmen Support for assistance."
+    );
+
+    await Promise.all([
+      loadAgentWallet(),
+      loadOrders()
+    ]);
+
+    return;
+  }
+
+  throw new Error(
+    data.result?.message || "Could not submit your order."
+  );
     }
 
     if (data.result.authorization_url) {
