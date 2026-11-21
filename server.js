@@ -1334,16 +1334,33 @@ try {
 // ============================================================
 
 
+
 function mapDataMartOrderStatus(result) {
   const data = result?.data || {};
   const apiResponse = data.apiResponse || {};
 
-  const processingMethod = String(
-    data.processingMethod || ""
-  ).trim().toLowerCase();
+  // Check both the main response and nested API response.
+  const processingMethods = [
+    data.processingMethod,
+    apiResponse.processingMethod,
+    result?.processingMethod
+  ]
+    .map(value => String(value || "").trim().toLowerCase())
+    .filter(Boolean);
 
   const apiStatus = String(
     apiResponse.status || ""
+  ).trim().toLowerCase();
+
+  const status = String(
+    data.orderStatus ||
+    data.delivery_status ||
+    data.status ||
+    apiStatus ||
+    result?.orderStatus ||
+    result?.delivery_status ||
+    result?.status ||
+    ""
   ).trim().toLowerCase();
 
   const message = String(
@@ -1353,26 +1370,15 @@ function mapDataMartOrderStatus(result) {
     ""
   ).trim().toLowerCase();
 
-  // Manual orders awaiting processing must not appear delivered.
-  const isManualPending =
-    processingMethod === "manual" &&
-    ["pending", "waiting"].includes(apiStatus);
+  const isManual = processingMethods.includes("manual");
 
-  // Use the API's pending status for manual orders.
-  const status = String(
-    isManualPending
-      ? apiStatus
-      : (
-          data.orderStatus ||
-          data.delivery_status ||
-          data.status ||
-          apiResponse.status ||
-          result?.orderStatus ||
-          result?.delivery_status ||
-          result?.status ||
-          ""
-        )
-  ).trim().toLowerCase();
+  // Manual orders that are still waiting must remain on hold.
+  if (
+    isManual &&
+    ["pending", "waiting"].includes(status)
+  ) {
+    return "on_hold";
+  }
 
   // 1. PENDING
   if (["pending", "waiting"].includes(status)) {
@@ -1380,7 +1386,8 @@ function mapDataMartOrderStatus(result) {
       message.includes("verifying") ||
       message.includes("on hold") ||
       message.includes("beneficiary not allowed") ||
-      message.includes("manual processing")
+      message.includes("manual processing") ||
+      message.includes("stored for manual processing")
     ) {
       return "on_hold";
     }
@@ -1425,6 +1432,7 @@ function mapDataMartOrderStatus(result) {
   // Unknown status: preserve the last known Kielmen status.
   return null;
 }
+
 
 
 // ============================================================
