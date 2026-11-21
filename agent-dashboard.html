@@ -191,6 +191,8 @@ footer{padding:20px 0 30px;text-align:center;color:#94a3b8;font-size:11px}
   <button class="side-link" data-page="store" type="button"><span class="side-icon">▣</span>My Store</button>
   <button class="side-link" data-page="prices" type="button"><span class="side-icon">₵</span>My Selling Prices</button>
   <button class="side-link" data-page="orders" type="button"><span class="side-icon">▤</span>Orders & Payments</button>
+  <button class="side-link" data-page="buyData" type="button"><span class="side-icon">🛒</span>Buy Data</button>
+<button class="side-link" data-page="wallet" type="button"><span class="side-icon">👛</span>My Wallet</button>
   <div class="side-divider"></div>
   <div class="sidebar-caption">Account Settings</div>
   <button class="side-link" data-page="profile" type="button"><span class="side-icon">◎</span>Account Information</button>
@@ -297,6 +299,125 @@ footer{padding:20px 0 30px;text-align:center;color:#94a3b8;font-size:11px}
     <div class="order-search"><span>⌕</span><input type="search" id="orderSearch" placeholder="Search phone, reference, network..." aria-label="Search orders"><button type="button" id="clearOrderSearch">Clear</button></div>
     <p class="order-count" id="orderCount">Loading orders...</p>
     <div id="ordersList" class="message">Loading orders...</div>
+  </div>
+</section>
+  <!-- BUY DATA PAGE -->
+<section class="page" id="buyData">
+  <div class="page-heading">
+    <div>
+      <h1>Buy Data</h1>
+      <p>Buy data bundles directly for your customers.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="field">
+      <label for="buyNetwork">Select Network</label>
+      <select id="buyNetwork">
+        <option value="MTN">MTN</option>
+        <option value="Telecel">Telecel</option>
+        <option value="AirtelTigo">AirtelTigo</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="buyBundle">Select Bundle</label>
+      <select id="buyBundle">
+        <option value="">Select a bundle</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="buyPhone">Recipient Phone Number</label>
+      <input id="buyPhone" type="tel"
+        placeholder="0241234567" maxlength="15">
+    </div>
+
+    <div class="notice">
+      <p>Bundle cost: <strong id="buyPrice">GH₵0.00</strong></p>
+      <p>Wallet balance: <strong id="buyWalletBalance">GH₵0.00</strong></p>
+    </div>
+
+    <button class="btn btn-primary btn-block"
+      id="walletBuyButton" type="button">
+      Pay with Kielmen Wallet
+    </button>
+
+    <button class="btn btn-block"
+      id="paystackBuyButton" type="button">
+      Pay Directly with Paystack
+    </button>
+
+    <p id="buyDataMessage" class="message" aria-live="polite"></p>
+  </div>
+</section>
+
+<!-- MY WALLET PAGE -->
+<section class="page" id="wallet">
+  <div class="page-heading">
+    <div>
+      <h1>My Wallet</h1>
+      <p>Deposit money and use your wallet to buy data.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="stat-label">Available Wallet Balance</div>
+    <div class="stat-value green" id="agentWalletBalance">
+      GH₵0.00
+    </div>
+    <button class="btn btn-block" id="refreshWalletButton"
+      type="button">Refresh Wallet</button>
+  </div>
+
+  <div class="card">
+    <h3>Deposit into Wallet</h3>
+
+    <div class="field">
+      <label for="walletDepositAmount">Amount to Add</label>
+      <input id="walletDepositAmount" type="number"
+        min="1" step="0.01" placeholder="100.00">
+    </div>
+
+    <div class="notice">
+      <p>Charges fee (4.5%):
+        <strong id="walletDepositFee">GH₵0.00</strong>
+      </p>
+      <p>Total payment:
+        <strong id="walletDepositTotal">GH₵0.00</strong>
+      </p>
+      <p>Amount credited:
+        <strong id="walletDepositCredit">GH₵0.00</strong>
+      </p>
+    </div>
+
+    <div class="field">
+      <label for="walletPaymentMethod">Payment Method</label>
+      <select id="walletPaymentMethod">
+        <option value="paystack">Paystack</option>
+        <option value="momo">MTN Mobile Money</option>
+      </select>
+    </div>
+
+    <div class="field" id="walletMomoPhoneField" hidden>
+      <label for="walletMomoPhone">MTN MoMo Number</label>
+      <input id="walletMomoPhone" type="tel"
+        placeholder="0241234567" maxlength="15">
+    </div>
+
+    <button class="btn btn-primary btn-block"
+      id="walletDepositButton" type="button">
+      Continue to Payment
+    </button>
+
+    <p id="walletMessage" class="message" aria-live="polite"></p>
+  </div>
+
+  <div class="card">
+    <h3>Wallet Transactions</h3>
+    <div id="walletTransactions" class="message">
+      Loading transactions...
+    </div>
   </div>
 </section>
 
@@ -589,6 +710,390 @@ async function apiRequest(path,options={}){
 function getBasePrice(network,bundle){
   return Number(BASE_PRICES[network]?.[bundle]??0);
 }
+  
+/* =========================================
+   AGENT WALLET AND BUY DATA
+========================================= */
+
+let agentWalletBalance = 0;
+
+function walletMessage(message, error = false) {
+  const el = document.getElementById("walletMessage");
+  el.textContent = message;
+  el.className = error ? "message error" : "message";
+}
+
+function buyMessage(message, error = false) {
+  const el = document.getElementById("buyDataMessage");
+  el.textContent = message;
+  el.className = error ? "message error" : "message";
+}
+
+/* DEPOSIT FEE PREVIEW */
+
+function previewWalletDeposit() {
+  const amount = Number(
+    document.getElementById("walletDepositAmount").value
+  ) || 0;
+
+  const validAmount = Math.max(0, amount);
+  const fee = Math.round(validAmount * 4.5) / 100;
+  const total = Math.round((validAmount + fee) * 100) / 100;
+
+  document.getElementById("walletDepositFee").textContent =
+    money(fee);
+
+  document.getElementById("walletDepositTotal").textContent =
+    money(total);
+
+  document.getElementById("walletDepositCredit").textContent =
+    money(validAmount);
+}
+
+/* LOAD WALLET BALANCE AND TRANSACTIONS */
+
+async function loadAgentWallet() {
+  const balanceEl = document.getElementById("agentWalletBalance");
+  const buyBalanceEl = document.getElementById("buyWalletBalance");
+  const transactionEl = document.getElementById("walletTransactions");
+
+  try {
+    const [walletData, transactionData] = await Promise.all([
+      apiRequest("/agents/wallet"),
+      apiRequest("/agents/wallet/transactions")
+    ]);
+
+    if (
+      !walletData.response.ok ||
+      walletData.result?.success !== true
+    ) {
+      throw new Error(
+        walletData.result?.message || "Could not load wallet."
+      );
+    }
+
+    agentWalletBalance = Number(walletData.result.balance || 0);
+
+    balanceEl.textContent = money(agentWalletBalance);
+    buyBalanceEl.textContent = money(agentWalletBalance);
+
+    const transactions = Array.isArray(
+      transactionData.result?.transactions
+    ) ? transactionData.result.transactions : [];
+
+    transactionEl.replaceChildren();
+
+    if (!transactions.length) {
+      transactionEl.textContent = "No wallet transactions yet.";
+      return;
+    }
+
+    transactions.forEach(tx => {
+      const row = document.createElement("div");
+      row.className = "profile-line";
+
+      const left = document.createElement("div");
+      const title = document.createElement("strong");
+      const details = document.createElement("div");
+
+      title.textContent =
+        tx.description || tx.transaction_type || "Wallet transaction";
+
+      details.className = "stat-note";
+      details.textContent =
+        (tx.created_at
+          ? new Date(tx.created_at).toLocaleString()
+          : "") +
+        (tx.reference ? " · " + tx.reference : "");
+
+      left.append(title, details);
+
+      const amount = document.createElement("strong");
+      amount.textContent = money(tx.amount);
+      amount.className =
+        Number(tx.amount) >= 0 ? "green" : "red";
+
+      row.append(left, amount);
+      transactionEl.appendChild(row);
+    });
+
+  } catch (error) {
+    balanceEl.textContent = "Unavailable";
+    buyBalanceEl.textContent = "Unavailable";
+    transactionEl.textContent = error.message;
+  }
+}
+
+/* DISPLAY DATA BUNDLES */
+
+function renderBuyBundles() {
+  const network = document.getElementById("buyNetwork").value;
+  const select = document.getElementById("buyBundle");
+
+  select.replaceChildren(
+    new Option("Select a bundle", "")
+  );
+
+  Object.keys(BASE_PRICES[network] || {}).forEach(bundle => {
+    select.add(
+      new Option(
+        bundle + " — " + money(BASE_PRICES[network][bundle]),
+        bundle
+      )
+    );
+  });
+
+  updateBuyPrice();
+}
+
+function updateBuyPrice() {
+  const network = document.getElementById("buyNetwork").value;
+  const bundle = document.getElementById("buyBundle").value;
+
+  const price = getBasePrice(network, bundle);
+
+  document.getElementById("buyPrice").textContent =
+    money(price);
+}
+
+/* WALLET DEPOSIT */
+
+async function startWalletDeposit() {
+  const button = document.getElementById("walletDepositButton");
+
+  const amount = Number(
+    document.getElementById("walletDepositAmount").value
+  );
+
+  const method =
+    document.getElementById("walletPaymentMethod").value;
+
+  const phone =
+    document.getElementById("walletMomoPhone").value.trim();
+
+  if (
+    !Number.isFinite(amount) ||
+    amount < 1 ||
+    Math.round(amount * 100) !== amount * 100
+  ) {
+    walletMessage("Enter an amount of at least GH₵1.00.", true);
+    return;
+  }
+
+  if (
+    method === "momo" &&
+    !/^(0\d{9}|233\d{9}|\+233\d{9})$/.test(
+      phone.replace(/\s/g, "")
+    )
+  ) {
+    walletMessage("Enter a valid Ghana MTN MoMo number.", true);
+    return;
+  }
+
+  const fee = Math.round(amount * 4.5) / 100;
+  const total = Math.round((amount + fee) * 100) / 100;
+
+  const confirmed = window.confirm(
+    "Wallet credit: " + money(amount) +
+    "\nCharges fee (4.5%): " + money(fee) +
+    "\nTotal payment: " + money(total) +
+    "\n\nContinue?"
+  );
+
+  if (!confirmed) return;
+
+  button.disabled = true;
+  walletMessage("Starting your deposit...");
+
+  try {
+    const data = await apiRequest(
+      "/agents/wallet/deposits/initialize",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          amount,
+          method,
+          phone
+        })
+      }
+    );
+
+    if (
+      !data.response.ok ||
+      data.result?.success !== true
+    ) {
+      throw new Error(
+        data.result?.message || "Could not start deposit."
+      );
+    }
+
+    if (data.result.authorization_url) {
+      window.location.href = data.result.authorization_url;
+      return;
+    }
+
+    walletMessage(
+      data.result.message ||
+      "Approve the payment prompt on your phone. Your wallet will be credited after payment confirmation."
+    );
+
+    const reference = data.result.reference;
+
+    if (!reference) {
+      throw new Error("Payment reference was not returned.");
+    }
+
+    let attempts = 0;
+
+    const timer = setInterval(async () => {
+      attempts++;
+
+      try {
+        const status = await apiRequest(
+          "/agents/wallet/deposits/" +
+          encodeURIComponent(reference) +
+          "/status"
+        );
+
+        if (
+          status.result?.deposit?.status === "successful"
+        ) {
+          clearInterval(timer);
+
+          walletMessage(
+            "Payment confirmed. Your wallet has been credited."
+          );
+
+          await loadAgentWallet();
+        } else if (attempts >= 36) {
+          clearInterval(timer);
+
+          walletMessage(
+            "Payment is still awaiting confirmation. Refresh your wallet later. Do not pay again."
+          );
+        }
+      } catch (error) {
+        if (attempts >= 36) clearInterval(timer);
+      }
+    }, 5000);
+
+  } catch (error) {
+    walletMessage(error.message, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+/* BUY DATA USING WALLET */
+
+async function buyDataWithWallet() {
+  await submitAgentDataPurchase("wallet");
+}
+
+/* BUY DATA DIRECTLY WITH PAYSTACK */
+
+async function buyDataWithPaystack() {
+  await submitAgentDataPurchase("paystack");
+}
+
+/* SUBMIT DATA PURCHASE */
+
+async function submitAgentDataPurchase(method) {
+  const walletButton = document.getElementById("walletBuyButton");
+  const paystackButton = document.getElementById("paystackBuyButton");
+
+  const network = document.getElementById("buyNetwork").value;
+  const bundle = document.getElementById("buyBundle").value;
+  const phone = document.getElementById("buyPhone").value.trim();
+
+  const amount = getBasePrice(network, bundle);
+
+  if (!bundle || amount <= 0) {
+    buyMessage("Select a valid data bundle.", true);
+    return;
+  }
+
+  if (
+    !/^(0\d{9}|233\d{9}|\+233\d{9})$/.test(
+      phone.replace(/\s/g, "")
+    )
+  ) {
+    buyMessage("Enter a valid Ghana recipient phone number.", true);
+    return;
+  }
+
+  if (
+    method === "wallet" &&
+    agentWalletBalance < amount
+  ) {
+    buyMessage(
+      "Insufficient wallet balance. Please deposit money first.",
+      true
+    );
+    return;
+  }
+
+  const paymentName =
+    method === "wallet" ? "Kielmen Wallet" : "Paystack";
+
+  if (!window.confirm(
+    "Buy " + network + " " + bundle +
+    "\nRecipient: " + phone +
+    "\nAmount: " + money(amount) +
+    "\nPayment: " + paymentName +
+    "\n\nContinue?"
+  )) return;
+
+  walletButton.disabled = true;
+  paystackButton.disabled = true;
+
+  buyMessage("Submitting your order...");
+
+  try {
+    const path = method === "wallet"
+      ? "/agents/buy-data/wallet"
+      : "/agents/buy-data/paystack/initialize";
+
+    const data = await apiRequest(path, {
+      method: "POST",
+      body: JSON.stringify({
+        network,
+        bundle,
+        phone
+      })
+    });
+
+    if (
+      !data.response.ok ||
+      data.result?.success !== true
+    ) {
+      throw new Error(
+        data.result?.message || "Could not submit your order."
+      );
+    }
+
+    if (data.result.authorization_url) {
+      window.location.href = data.result.authorization_url;
+      return;
+    }
+
+    buyMessage(
+      data.result.message || "Your order has been submitted."
+    );
+
+    await Promise.all([
+      loadAgentWallet(),
+      loadOrders()
+    ]);
+
+  } catch (error) {
+    buyMessage(error.message, true);
+  } finally {
+    walletButton.disabled = false;
+    paystackButton.disabled = false;
+  }
+}
+
 
 /* AUTHENTICATION */
 async function verifyAgent(){
@@ -717,7 +1222,8 @@ document.getElementById("settingsToggle").addEventListener("click",()=>{
 
 const ALLOWED_PAGES=[
   "home","store","prices","orders","profile","withdrawals",
-  "passwordSettings","phoneSettings","communitySettings","announcements"
+  "passwordSettings","phoneSettings","communitySettings",
+  "announcements","buyData","wallet"
 ];
 
 function showPage(pageId){
@@ -739,6 +1245,14 @@ function showPage(pageId){
   if(pageId==="withdrawals")loadWithdrawals();
   if(pageId==="orders")renderOrders();
   if(pageId==="announcements")loadAnnouncements();
+  if(pageId==="wallet"){
+  loadAgentWallet();
+}
+
+if(pageId==="buyData"){
+  loadAgentWallet();
+  renderBuyBundles();
+}
 
   closeSidebar();
   window.scrollTo({top:0,behavior:"smooth"});
@@ -1886,6 +2400,37 @@ document.getElementById("clearOrderSearch").addEventListener("click",()=>{
 });
 
 document.getElementById("priceNetwork").addEventListener("change",renderPrices);
+  /* WALLET AND BUY DATA BUTTONS */
+
+document.getElementById("buyNetwork")
+  .addEventListener("change", renderBuyBundles);
+
+document.getElementById("buyBundle")
+  .addEventListener("change", updateBuyPrice);
+
+document.getElementById("walletDepositAmount")
+  .addEventListener("input", previewWalletDeposit);
+
+document.getElementById("walletPaymentMethod")
+  .addEventListener("change", () => {
+    const method =
+      document.getElementById("walletPaymentMethod").value;
+
+    document.getElementById("walletMomoPhoneField").hidden =
+      method !== "momo";
+  });
+
+document.getElementById("walletDepositButton")
+  .addEventListener("click", startWalletDeposit);
+
+document.getElementById("refreshWalletButton")
+  .addEventListener("click", loadAgentWallet);
+
+document.getElementById("walletBuyButton")
+  .addEventListener("click", buyDataWithWallet);
+
+document.getElementById("paystackBuyButton")
+  .addEventListener("click", buyDataWithPaystack);
 
 document.addEventListener("keydown",event=>{
   if(event.key==="Escape")closeSidebar();
