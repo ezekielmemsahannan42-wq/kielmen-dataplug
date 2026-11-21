@@ -677,35 +677,53 @@ function setMessage(title,description,error=false){
   element.hidden=false;
 }
 
-async function apiRequest(path,options={}){
-  const token=sessionStorage.getItem("k636_agent_token");
 
-  const headers={
-    ...(options.headers||{})
+async function apiRequest(path, options = {}) {
+  const token = sessionStorage.getItem("k636_agent_token");
+
+  const headers = {
+    ...(options.headers || {})
   };
 
-  if(!(options.body instanceof FormData)){
-    headers["Content-Type"]="application/json";
+  if (!(options.body instanceof FormData)) {
+    headers["Content-Type"] = "application/json";
   }
 
-  if(token)headers.Authorization="Bearer "+token;
+  if (token) {
+    headers.Authorization = "Bearer " + token;
+  }
 
-  const response=await fetch(AGENT_API+path,{
+  const response = await fetch(AGENT_API + path, {
     ...options,
     headers,
-    credentials:"omit"
+    credentials: "omit"
   });
 
-  let result={};
+  const responseText = await response.text();
 
-  try{
-    result=await response.json();
-  }catch{
-    throw new Error("The server returned an invalid response.");
+  let result = {};
+
+  try {
+    result = responseText ? JSON.parse(responseText) : {};
+  } catch {
+    const preview = responseText
+      .replace(/\s+/g, " ")
+      .slice(0, 180);
+
+    throw new Error(
+      "API returned non-JSON response. HTTP " +
+      response.status +
+      ". Response: " +
+      (preview || "Empty response")
+    );
   }
 
-  return {response,result};
+  return {
+    response,
+    result
+  };
 }
+
 
 function getBasePrice(network,bundle){
   return Number(BASE_PRICES[network]?.[bundle]??0);
