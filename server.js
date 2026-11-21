@@ -637,11 +637,62 @@ async function createAgentTables() {
     ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ
   `);
 
+  
   await pool.query(`
     CREATE INDEX IF NOT EXISTS agents_status_idx
     ON agents(status)
   `);
+
+  // ============================================================
+  // KIELMEN AGENT WALLET TABLES
+  // ============================================================
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS agent_wallets (
+      agent_id BIGINT PRIMARY KEY
+        REFERENCES agents(id) ON DELETE CASCADE,
+      balance NUMERIC(12,2) NOT NULL DEFAULT 0
+        CHECK (balance >= 0),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS agent_wallet_deposits (
+      id BIGSERIAL PRIMARY KEY,
+      agent_id BIGINT NOT NULL REFERENCES agents(id),
+      reference VARCHAR(100) UNIQUE NOT NULL,
+      deposit_amount NUMERIC(12,2) NOT NULL,
+      fee_amount NUMERIC(12,2) NOT NULL,
+      total_amount NUMERIC(12,2) NOT NULL,
+      payment_method VARCHAR(20) NOT NULL,
+      payment_phone VARCHAR(20),
+      status VARCHAR(30) NOT NULL DEFAULT 'pending',
+      paystack_status VARCHAR(40),
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      credited_at TIMESTAMPTZ
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS agent_wallet_transactions (
+      id BIGSERIAL PRIMARY KEY,
+      agent_id BIGINT NOT NULL REFERENCES agents(id),
+      reference VARCHAR(100) UNIQUE NOT NULL,
+      transaction_type VARCHAR(30) NOT NULL,
+      amount NUMERIC(12,2) NOT NULL,
+      description VARCHAR(255) NOT NULL DEFAULT '',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS
+      agent_wallet_transactions_agent_idx
+    ON agent_wallet_transactions(agent_id, created_at DESC)
+  `);
 }
+
 async function createAgentStoreSlugHistoryTable() {
   await pool.query(`
     CREATE TABLE IF NOT EXISTS agent_store_slug_history (
@@ -931,6 +982,128 @@ async function getOrderByReference(reference) {
 
   return result.rows[0] || null;
 }
+
+// ============================================================
+// VERIFY AND CREDIT AGENT WALLET DEPOSIT
+// ============================================================
+
+async function processSuccessfulWalletDeposit(reference) {
+  const found = await pool.query(
+    `SELECT *
+     FROM agent_wallet_deposits
+     WHERE reference = $1`,
+    [reference]
+  );
+
+  if (!found.rowCount) return null;
+
+  const payment = await paystackRequest(
+    `/transaction/verify/${encodeURIComponent(reference)}`
+  );
+
+  const deposit = found.rows[0];
+
+  const expectedAmount =
+    amountToPesewas(deposit.total_amount);
+
+  if (
+    payment.status !== "success" ||
+    String(payment.reference || "") !== reference ||
+    String(payment.currency || "").toUpperCase() !== "GHS" ||
+    Number(payment.amount) !== expectedAmount
+  ) {
+    throw new Error("Wallet deposit payment verification failed.");
+  }
+
+  const client = await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    const locked = await client.query(
+      `SELECT *
+       FROM agent_wallet_deposits
+       WHERE reference = $1
+       FOR UPDATE`,
+      [reference]
+    );
+
+    if (!locked.rowCount) {
+      throw new Error("Wallet deposit not found.");
+    }
+
+    const current = locked.rows[0];
+
+    if (current.status === "successful") {
+      await client.query("COMMIT");
+
+      return {
+        success: true,
+        credited: true,
+        alreadyCredited: true,
+        reference
+      };
+    }
+
+    if (current.status !== "pending") {
+      throw new Error("Wallet deposit is not pending.");
+    }
+
+    await client.query(
+      `INSERT INTO agent_wallets (agent_id, balance)
+       VALUES ($1, 0)
+       ON CONFLICT (agent_id) DO NOTHING`,
+      [current.agent_id]
+    );
+
+    await client.query(
+      `UPDATE agent_wallets
+       SET balance = balance + $1,
+           updated_at = NOW()
+       WHERE agent_id = $2`,
+      [current.deposit_amount, current.agent_id]
+    );
+
+    await client.query(
+      `INSERT INTO agent_wallet_transactions
+       (agent_id, reference, transaction_type, amount, description)
+       VALUES ($1, $2, 'deposit', $3, $4)
+       ON CONFLICT (reference) DO NOTHING`,
+      [
+        current.agent_id,
+        `WALLET-${reference}`,
+        current.deposit_amount,
+        "Wallet deposit credited"
+      ]
+    );
+
+    await client.query(
+      `UPDATE agent_wallet_deposits
+       SET status = 'successful',
+           paystack_status = $1,
+           credited_at = NOW()
+       WHERE reference = $2`,
+      [payment.status, reference]
+    );
+
+    await client.query("COMMIT");
+
+    return {
+      success: true,
+      credited: true,
+      alreadyCredited: false,
+      reference
+    };
+
+  } catch (error) {
+    await client.query("ROLLBACK").catch(() => {});
+    throw error;
+
+  } finally {
+    client.release();
+  }
+}
+
   // ============================================================
 // AUTOMATIC PAYSTACK PAYMENT VERIFICATION + DATA DELIVERY
 // ============================================================
@@ -2980,6 +3153,630 @@ app.get(
     }
   }
 );
+
+// ============================================================
+// AGENT WALLET API
+// ============================================================
+
+// GET WALLET BALANCE
+app.get(
+  "/agents/wallet",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      await pool.query(
+        `INSERT INTO agent_wallets (agent_id, balance)
+         VALUES ($1, 0)
+         ON CONFLICT (agent_id) DO NOTHING`,
+        [req.agentId]
+      );
+
+      const result = await pool.query(
+        `SELECT balance
+         FROM agent_wallets
+         WHERE agent_id = $1`,
+        [req.agentId]
+      );
+
+      return res.json({
+        success: true,
+        balance: Number(result.rows[0].balance)
+      });
+
+    } catch (error) {
+      console.error("Agent wallet:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not load wallet balance."
+      });
+    }
+  }
+);
+
+// GET WALLET TRANSACTIONS
+app.get(
+  "/agents/wallet/transactions",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `SELECT reference, transaction_type,
+                amount, description, created_at
+         FROM agent_wallet_transactions
+         WHERE agent_id = $1
+         ORDER BY created_at DESC
+         LIMIT 100`,
+        [req.agentId]
+      );
+
+      return res.json({
+        success: true,
+        transactions: result.rows.map(item => ({
+          ...item,
+          amount: Number(item.amount)
+        }))
+      });
+
+    } catch (error) {
+      console.error("Wallet transactions:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not load wallet transactions."
+      });
+    }
+  }
+);
+
+// INITIALIZE WALLET DEPOSIT
+app.post(
+  "/agents/wallet/deposits/initialize",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    const depositAmount = Number(req.body?.amount);
+
+    // The dashboard sends "momo".
+    // Accept both names for compatibility.
+    const submittedMethod = String(
+      req.body?.method || "paystack"
+    ).trim().toLowerCase();
+
+    const method =
+      submittedMethod === "momo" ||
+      submittedMethod === "mtn_momo"
+        ? "mtn_momo"
+        : submittedMethod;
+
+    const momoPhone = normalizePhone(req.body?.phone || "");
+
+    if (
+      !Number.isFinite(depositAmount) ||
+      depositAmount < 1 ||
+      Math.abs(
+        depositAmount * 100 -
+        Math.round(depositAmount * 100)
+      ) > 0.000001
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter a valid deposit of at least GH₵1.00."
+      });
+    }
+
+    if (!["paystack", "mtn_momo"].includes(method)) {
+      return res.status(400).json({
+        success: false,
+        message: "Choose Paystack or MTN MoMo."
+      });
+    }
+
+    if (
+      method === "mtn_momo" &&
+      !validGhanaPhone(momoPhone)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Enter a valid Ghana MTN MoMo number."
+      });
+    }
+
+    // 4.5% wallet deposit fee.
+    const depositPesewas = amountToPesewas(depositAmount);
+    const feePesewas = Math.round(depositPesewas * 0.045);
+    const totalPesewas = depositPesewas + feePesewas;
+
+    const fee = feePesewas / 100;
+    const total = totalPesewas / 100;
+
+    const reference =
+      `K636W-${Date.now()}-` +
+      crypto.randomBytes(5).toString("hex");
+
+    try {
+      const agentResult = await pool.query(
+        `SELECT email
+         FROM agents
+         WHERE id = $1
+           AND status = 'approved'`,
+        [req.agentId]
+      );
+
+      if (!agentResult.rowCount) {
+        return res.status(403).json({
+          success: false,
+          message: "Your agent account is not approved."
+        });
+      }
+
+      await pool.query(
+        `INSERT INTO agent_wallet_deposits
+         (agent_id, reference, deposit_amount,
+          fee_amount, total_amount, payment_method,
+          payment_phone)
+         VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+        [
+          req.agentId,
+          reference,
+          depositPesewas / 100,
+          fee,
+          total,
+          method,
+          method === "mtn_momo" ? momoPhone : null
+        ]
+      );
+
+      let payment;
+
+      if (method === "mtn_momo") {
+        payment = await paystackRequest(
+          "/charge",
+          "POST",
+          {
+            email: agentResult.rows[0].email,
+            amount: totalPesewas,
+            currency: "GHS",
+            reference,
+            mobile_money: {
+              phone: momoPhone,
+              provider: "mtn"
+            },
+            metadata: {
+              purpose: "agent_wallet_deposit",
+              agent_id: String(req.agentId),
+              deposit_reference: reference
+            }
+          }
+        );
+
+        return res.json({
+          success: true,
+          reference,
+          depositAmount: depositPesewas / 100,
+          fee,
+          total,
+          paymentMethod: "momo",
+          paymentStatus: payment.status,
+          displayText:
+            payment.display_text ||
+            payment.message ||
+            "Follow the payment instructions on your phone."
+        });
+      }
+
+      payment = await paystackRequest(
+        "/transaction/initialize",
+        "POST",
+        {
+          email: agentResult.rows[0].email,
+          amount: totalPesewas,
+          currency: "GHS",
+          reference,
+          callback_url:
+            `${FRONTEND_BASE_URL}/agent-dashboard.html?wallet_ref=` +
+            encodeURIComponent(reference),
+          metadata: {
+            purpose: "agent_wallet_deposit",
+            agent_id: String(req.agentId),
+            deposit_reference: reference
+          }
+        }
+      );
+
+      return res.json({
+        success: true,
+        reference,
+        depositAmount: depositPesewas / 100,
+        fee,
+        total,
+        authorization_url: payment.authorization_url
+      });
+
+    } catch (error) {
+      console.error("Wallet deposit initialize:", error.message);
+
+      await pool.query(
+        `UPDATE agent_wallet_deposits
+         SET status = 'initialization_failed'
+         WHERE reference = $1
+           AND status = 'pending'`,
+        [reference]
+      ).catch(() => {});
+
+      return res.status(502).json({
+        success: false,
+        message: "Could not start wallet payment."
+      });
+    }
+  }
+);
+
+// CHECK WALLET DEPOSIT STATUS
+app.get(
+  "/agents/wallet/deposits/:reference/status",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    try {
+      const reference = String(
+        req.params.reference || ""
+      ).trim();
+
+      const result = await pool.query(
+        `SELECT reference, deposit_amount,
+                fee_amount, total_amount, status
+         FROM agent_wallet_deposits
+         WHERE reference = $1
+           AND agent_id = $2`,
+        [reference, req.agentId]
+      );
+
+      if (!result.rowCount) {
+        return res.status(404).json({
+          success: false,
+          message: "Deposit not found."
+        });
+      }
+
+      let deposit = result.rows[0];
+
+      if (deposit.status === "pending") {
+        const processed =
+          await processSuccessfulWalletDeposit(reference)
+            .catch(() => null);
+
+        if (processed?.credited) {
+          deposit.status = "successful";
+        }
+      }
+
+      return res.json({
+        success: true,
+        deposit
+      });
+
+    } catch (error) {
+      console.error("Wallet deposit status:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not check deposit status."
+      });
+    }
+  }
+);
+
+// ============================================================
+// BUY DATA USING KIELMEN WALLET
+// ============================================================
+
+app.post(
+  "/agents/buy-data/wallet",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    const network = normalizeNetwork(req.body?.network);
+    const bundle = normalizeBundle(req.body?.bundle);
+    const phone = normalizePhone(req.body?.phone);
+
+    const amount = AGENT_BASE_PRICES[network]?.[bundle];
+
+    if (
+      !network ||
+      !bundle ||
+      amount === undefined ||
+      !validGhanaPhone(phone)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Check the network, bundle and phone number."
+      });
+    }
+
+    const reference =
+      `K636AW-${Date.now()}-` +
+      crypto.randomBytes(5).toString("hex");
+
+    const client = await pool.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      await client.query(
+        `INSERT INTO agent_wallets (agent_id, balance)
+         VALUES ($1, 0)
+         ON CONFLICT (agent_id) DO NOTHING`,
+        [req.agentId]
+      );
+
+      const wallet = await client.query(
+        `SELECT balance
+         FROM agent_wallets
+         WHERE agent_id = $1
+         FOR UPDATE`,
+        [req.agentId]
+      );
+
+      if (Number(wallet.rows[0].balance) < amount) {
+        await client.query("ROLLBACK");
+
+        return res.status(400).json({
+          success: false,
+          message: "Insufficient wallet balance."
+        });
+      }
+
+      await client.query(
+        `INSERT INTO orders
+         (reference, email, phone, network, bundle,
+          amount, status, delivery_status,
+          agent_id, agent_base_price)
+         SELECT $1, email, $2, $3, $4, $5,
+                'paid', 'processing', id, $5
+         FROM agents
+         WHERE id = $6`,
+        [
+          reference,
+          phone,
+          network,
+          bundle,
+          amount,
+          req.agentId
+        ]
+      );
+
+      await client.query(
+        `UPDATE agent_wallets
+         SET balance = balance - $1,
+             updated_at = NOW()
+         WHERE agent_id = $2`,
+        [amount, req.agentId]
+      );
+
+      await client.query(
+        `INSERT INTO agent_wallet_transactions
+         (agent_id, reference, transaction_type,
+          amount, description)
+         VALUES ($1,$2,'purchase',$3,$4)`,
+        [
+          req.agentId,
+          `BUY-${reference}`,
+          -amount,
+          `${network} ${bundle} data purchase`
+        ]
+      );
+
+      await client.query("COMMIT");
+
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+
+      console.error("Wallet purchase:", error.message);
+
+      return res.status(500).json({
+        success: false,
+        message: "Could not create your data order."
+      });
+
+    } finally {
+      client.release();
+    }
+
+    // Send the order to DataMart.
+    try {
+      const purchase = await purchaseDataFromSupplier({
+        reference,
+        phone,
+        network,
+        bundle,
+        amount
+      });
+
+      const supplierData = purchase.raw?.data || {};
+      const apiResponse = supplierData.apiResponse || {};
+      const responseText =
+        JSON.stringify(purchase.raw).toLowerCase();
+
+      const onHold =
+        String(
+          supplierData.processingMethod ||
+          purchase.raw?.processingMethod ||
+          apiResponse.processingMethod ||
+          ""
+        ).toLowerCase() === "manual" ||
+        responseText.includes("manual processing") ||
+        responseText.includes("verifying") ||
+        responseText.includes("on hold");
+
+      const deliveryStatus = onHold
+        ? "on_hold"
+        : "processing";
+
+      await pool.query(
+        `UPDATE orders
+         SET supplier_reference = $1,
+             supplier_response = $2::jsonb,
+             delivery_status = $3,
+             updated_at = NOW()
+         WHERE reference = $4
+           AND agent_id = $5`,
+        [
+          purchase.supplierReference,
+          JSON.stringify(purchase.raw),
+          deliveryStatus,
+          reference,
+          req.agentId
+        ]
+      );
+
+      return res.status(201).json({
+        success: true,
+        reference,
+        amount,
+        delivery_status: deliveryStatus,
+        message: "Your order has been sent to DataMart."
+      });
+
+    } catch (error) {
+      console.error(
+        "Agent DataMart purchase:",
+        reference,
+        error.message
+      );
+
+      await pool.query(
+        `UPDATE orders
+         SET delivery_status = 'failed',
+             supplier_response = $1::jsonb,
+             updated_at = NOW()
+         WHERE reference = $2
+           AND agent_id = $3`,
+        [
+          JSON.stringify({ message: error.message }),
+          reference,
+          req.agentId
+        ]
+      ).catch(() => {});
+
+      return res.status(502).json({
+        success: false,
+        paid: true,
+        reference,
+        message:
+          "Your wallet was charged, but DataMart did not confirm delivery. Do not submit the order again. Contact support so the order can be checked."
+      });
+    }
+  }
+);
+
+// ============================================================
+// BUY DATA DIRECTLY WITH PAYSTACK
+// ============================================================
+
+app.post(
+  "/agents/buy-data/paystack/initialize",
+  requireAgent,
+  requireApprovedAgent,
+  async (req, res) => {
+    const network = normalizeNetwork(req.body?.network);
+    const bundle = normalizeBundle(req.body?.bundle);
+    const phone = normalizePhone(req.body?.phone);
+
+    const amount = AGENT_BASE_PRICES[network]?.[bundle];
+
+    if (
+      !network ||
+      !bundle ||
+      amount === undefined ||
+      !validGhanaPhone(phone)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Check the network, bundle and phone number."
+      });
+    }
+
+    try {
+      const agentResult = await pool.query(
+        `SELECT id, email
+         FROM agents
+         WHERE id = $1
+           AND status = 'approved'`,
+        [req.agentId]
+      );
+
+      if (!agentResult.rowCount) {
+        return res.status(403).json({
+          success: false,
+          message: "Agent account is not approved."
+        });
+      }
+
+      const reference =
+        `K636AP-${Date.now()}-` +
+        crypto.randomBytes(5).toString("hex");
+
+      await pool.query(
+        `INSERT INTO orders
+         (reference, email, phone, network, bundle,
+          amount, status, delivery_status,
+          agent_id, agent_base_price)
+         VALUES ($1,$2,$3,$4,$5,$6,
+                 'pending','not_started',$7,$6)`,
+        [
+          reference,
+          agentResult.rows[0].email,
+          phone,
+          network,
+          bundle,
+          amount,
+          req.agentId
+        ]
+      );
+
+      const payment = await paystackRequest(
+        "/transaction/initialize",
+        "POST",
+        {
+          email: agentResult.rows[0].email,
+          amount: amountToPesewas(amount),
+          currency: "GHS",
+          reference,
+          callback_url:
+            `${FRONTEND_BASE_URL}/agent-dashboard.html?buy_ref=` +
+            encodeURIComponent(reference),
+          metadata: {
+            purpose: "agent_data_purchase",
+            agent_id: String(req.agentId),
+            order_reference: reference,
+            phone,
+            network,
+            bundle
+          }
+        }
+      );
+
+      return res.json({
+        success: true,
+        reference,
+        amount,
+        authorization_url: payment.authorization_url
+      });
+
+    } catch (error) {
+      console.error("Agent Paystack purchase:", error.message);
+
+      return res.status(502).json({
+        success: false,
+        message: "Could not start Paystack payment."
+      });
+    }
+  }
+);
+
 
 // Submit a withdrawal request.
 app.post(
@@ -6926,13 +7723,56 @@ app.post("/paystack-webhook", async (req, res) => {
       return res.sendStatus(400);
     }
 
-    // Respond promptly to Paystack. Processing continues
-    // in the backend even if the customer has closed the page.
+    
+    // Respond promptly to Paystack.
     res.sendStatus(200);
 
-    // Verify payment against Paystack and trigger delivery.
+    // First check whether this reference is a wallet deposit.
     try {
-      const result = await processSuccessfulPayment(reference);
+      const walletResult =
+        await processSuccessfulWalletDeposit(reference);
+
+      if (walletResult) {
+        console.log(
+          "Agent wallet deposit processed:",
+          reference,
+          walletResult.credited
+        );
+
+        return;
+      }
+
+    } catch (error) {
+      console.error(
+        "Wallet deposit webhook processing failed:",
+        reference,
+        error.message
+      );
+
+      return;
+    }
+
+    // If it is not a wallet deposit, process the
+    // existing public customer order as before.
+    try {
+      const result =
+        await processSuccessfulPayment(reference);
+
+      console.log(
+        "Automatic Paystack processing:",
+        reference,
+        result.delivery_status,
+        result.message
+      );
+
+    } catch (error) {
+      console.error(
+        "Paystack webhook processing failed:",
+        reference,
+        error.message
+      );
+    }
+
 
       console.log(
         "Automatic Paystack processing:",
