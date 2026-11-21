@@ -1651,16 +1651,25 @@ function getDeliveryStatus(order) {
         };
     }
 
-    if (
-        ["failed", "delivery_failed", "rejected", "error"].includes(raw)
-    ) {
-        return {
-            label: "Delivery Failed",
-            className: "failed",
-            description:
-                "There is an issue with your data delivery. Please contact support."
-        };
-    }
+    
+if (raw === "failed") {
+    return {
+        label: "Processing",
+        className: "processing",
+        description:
+            "Your order is being processed. Please check again for updates."
+    };
+}
+
+if (["delivery_failed", "rejected", "error"].includes(raw)) {
+    return {
+        label: "Delivery Failed",
+        className: "failed",
+        description:
+            "There is an issue with your data delivery. Please contact support."
+    };
+}
+
 
     if (
         [
