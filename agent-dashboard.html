@@ -230,6 +230,73 @@ footer{padding:20px 0 30px;text-align:center;color:#94a3b8;font-size:11px}
 .stat-value.gold {
   color: #a16207 !important;
 }
+  
+/* KIELMEN FLOATING SUPPORT BUTTONS */
+#kielmenSupportDock {
+  position: fixed;
+  right: 18px;
+  bottom: 90px;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: center;
+}
+
+.kielmen-float-btn {
+  position: relative;
+  width: 58px;
+  height: 58px;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 5px 18px rgba(0,0,0,.3);
+  text-decoration: none;
+}
+
+#kielmenWhatsAppBtn {
+  background: #087d43;
+  color: white;
+  font-size: 29px;
+}
+
+#kielmenWhatsAppBtn .notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -3px;
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: #e60023;
+  color: white;
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+#kielmenAIButton {
+  background: #5714d6;
+  color: white;
+  font-size: 26px;
+}
+
+.kielmen-float-btn:active {
+  transform: scale(.94);
+}
+
+@media(max-width:480px) {
+  #kielmenSupportDock {
+    right: 13px;
+    bottom: 85px;
+  }
+}
+
 </style>
 </head>
 
