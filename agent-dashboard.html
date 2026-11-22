@@ -296,6 +296,169 @@ footer{padding:20px 0 30px;text-align:center;color:#94a3b8;font-size:11px}
     bottom: 85px;
   }
 }
+  
+/* KIELMEN CHAT WINDOW */
+#kielmenChatPanel {
+  position: fixed;
+  right: 16px;
+  bottom: 165px;
+  width: min(370px, calc(100vw - 28px));
+  height: 470px;
+  max-height: calc(100dvh - 190px);
+  background: var(--card, #171717);
+  color: var(--text, #fff);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 18px;
+  box-shadow: 0 12px 40px rgba(0,0,0,.4);
+  z-index: 100000;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#kielmenChatPanel.open {
+  display: flex;
+}
+
+#kielmenChatHeader {
+  background: #5714d6;
+  color: white;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#kielmenChatMessages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kielmen-chat-message {
+  padding: 11px 13px;
+  border-radius: 14px;
+  max-width: 88%;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.kielmen-chat-message.bot {
+  background: #303030;
+  color: white;
+  align-self: flex-start;
+}
+
+.kielmen-chat-message.user {
+  background: #5714d6;
+  color: white;
+  align-self: flex-end;
+}
+
+#kielmenChatForm {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid rgba(128,128,128,.25);
+}
+
+#kielmenChatInput {
+  flex: 1;
+  min-width: 0;
+  padding: 12px;
+  border-radius: 22px;
+  border: 1px solid #777;
+  background: transparent;
+  color: inherit;
+  font-size: 14px;
+}
+
+#kielmenChatSend {
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  background: #5714d6;
+  color: white;
+  font-size: 19px;
+  cursor: pointer;
+}
+
+#kielmenChatClose {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 25px;
+  cursor: pointer;
+}
+
+<!-- KIELMEN FLOATING SUPPORT BUTTONS -->
+<div id="kielmenSupportDock">
+
+  <a
+    href="https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S"
+    target="_blank"
+    rel="noopener noreferrer"
+    id="kielmenWhatsAppBtn"
+    class="kielmen-float-btn"
+    aria-label="Official Kielmen WhatsApp Channel"
+  >
+    <span>◉</span>
+    <span class="notification-badge">1</span>
+  </a>
+
+  <button
+    type="button"
+    id="kielmenAIButton"
+    class="kielmen-float-btn"
+    aria-label="Open Kielmen Support Chat"
+  >
+    💬
+  </button>
+
+</div>
+
+<!-- KIELMEN CUSTOMER SUPPORT CHAT -->
+<div id="kielmenChatPanel">
+
+  <div id="kielmenChatHeader">
+    <div>
+      <strong id="kielmenAssistantName">Cristina</strong>
+      <div style="font-size:12px;margin-top:4px;">
+        Kielmen Customer Support · Online
+      </div>
+    </div>
+
+    <button id="kielmenChatClose" type="button"
+      aria-label="Close chat">×</button>
+  </div>
+
+  <div id="kielmenChatMessages">
+    <div class="kielmen-chat-message bot">
+      Hiii! 👋 I'm Cristina. Welcome to Kielmen!
+      How can I help you today? 😊
+    </div>
+  </div>
+
+  <form id="kielmenChatForm">
+    <input
+      id="kielmenChatInput"
+      type="text"
+      placeholder="Type your message..."
+      autocomplete="off"
+      required
+    >
+
+    <button id="kielmenChatSend" type="submit">
+      ➤
+    </button>
+  </form>
+
+</div>
 
 </style>
 </head>
@@ -2620,6 +2783,108 @@ document.getElementById("paystackBuyButton")
 document.addEventListener("keydown",event=>{
   if(event.key==="Escape")closeSidebar();
 });
+  
+/* KIELMEN CUSTOMER SUPPORT CHAT */
+
+const kielmenSupportNames = [
+  "Cristina", "Francis", "Emmanuel", "Grace",
+  "Jessica", "Kelvin", "Angela", "Bernard",
+  "Priscilla", "Richard", "Linda", "Daniel",
+  "Esther", "Samuel", "Michelle", "George",
+  "Rebecca", "Isaac", "Vivian", "Nathan",
+  "Deborah", "Joseph", "Patricia", "Benjamin",
+  "Michael", "Abigail", "David", "Mary",
+  "Peter", "Ruth", "Alexander", "Monica",
+  "Stephen", "Felicia", "Joshua", "Hannah",
+  "Nicholas", "Sandra", "Anthony", "Joyce",
+  "Matthew", "Gloria", "Andrew", "Comfort",
+  "Charles", "Diana", "Patrick", "Eunice"
+];
+
+const kielmenAssistantName =
+  document.getElementById("kielmenAssistantName");
+
+const kielmenChatPanel =
+  document.getElementById("kielmenChatPanel");
+
+const kielmenChatMessages =
+  document.getElementById("kielmenChatMessages");
+
+const kielmenChatInput =
+  document.getElementById("kielmenChatInput");
+
+function updateKielmenAssistant() {
+  // Ghana time (UTC+0): change name every 30 minutes.
+  const slot = Math.floor(Date.now() / 1800000);
+  const index = slot % kielmenSupportNames.length;
+  const name = kielmenSupportNames[index];
+
+  kielmenAssistantName.textContent = name;
+
+  const firstMessage = kielmenChatMessages.firstElementChild;
+
+  if (firstMessage && firstMessage.dataset.greeting === "true") {
+    firstMessage.textContent =
+      "Hiii! 👋 I'm " + name +
+      ". Welcome to Kielmen! How can I help you today? 😊";
+  }
+}
+
+updateKielmenAssistant();
+
+// Check for a new name every minute.
+setInterval(updateKielmenAssistant, 60000);
+
+// Open chat.
+document.getElementById("kielmenAIButton")
+  .addEventListener("click", () => {
+    kielmenChatPanel.classList.add("open");
+    kielmenChatInput.focus();
+  });
+
+// Close chat.
+document.getElementById("kielmenChatClose")
+  .addEventListener("click", () => {
+    kielmenChatPanel.classList.remove("open");
+  });
+
+// Add the initial greeting marker.
+if (kielmenChatMessages.firstElementChild) {
+  kielmenChatMessages.firstElementChild.dataset.greeting = "true";
+}
+
+// Display chat messages safely.
+function addKielmenMessage(message, sender) {
+  const bubble = document.createElement("div");
+
+  bubble.className =
+    "kielmen-chat-message " + sender;
+
+  bubble.textContent = message;
+
+  kielmenChatMessages.appendChild(bubble);
+  kielmenChatMessages.scrollTop =
+    kielmenChatMessages.scrollHeight;
+}
+
+// Send agent message.
+document.getElementById("kielmenChatForm")
+  .addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const message = kielmenChatInput.value.trim();
+
+    if (!message) return;
+
+    addKielmenMessage(message, "user");
+    kielmenChatInput.value = "";
+
+    addKielmenMessage(
+      "Please wait while I connect you to Kielmen Support...",
+      "bot"
+    );
+  });
+
 
 /* START */
 verifyAgent();
