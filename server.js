@@ -1340,14 +1340,13 @@ function mapDataMartOrderStatus(result) {
   const data = result?.data || {};
   const apiResponse = data.apiResponse || {};
 
-  const statuses = [
+    const statuses = [
     data.orderStatus,
     data.delivery_status,
     data.status,
     apiResponse.status,
     result?.orderStatus,
-    result?.delivery_status,
-    result?.status
+    result?.delivery_status
   ]
     .map(value => String(value || "").trim().toLowerCase())
     .filter(Boolean);
