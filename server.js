@@ -1335,11 +1335,23 @@ try {
 
 
 
+
 function mapDataMartOrderStatus(result) {
   const data = result?.data || {};
   const apiResponse = data.apiResponse || {};
 
-  // Check both the main response and nested API response.
+  const statuses = [
+    data.orderStatus,
+    data.delivery_status,
+    data.status,
+    apiResponse.status,
+    result?.orderStatus,
+    result?.delivery_status,
+    result?.status
+  ]
+    .map(value => String(value || "").trim().toLowerCase())
+    .filter(Boolean);
+
   const processingMethods = [
     data.processingMethod,
     apiResponse.processingMethod,
@@ -1348,21 +1360,6 @@ function mapDataMartOrderStatus(result) {
     .map(value => String(value || "").trim().toLowerCase())
     .filter(Boolean);
 
-  const apiStatus = String(
-    apiResponse.status || ""
-  ).trim().toLowerCase();
-
-  const status = String(
-    data.orderStatus ||
-    data.delivery_status ||
-    data.status ||
-    apiStatus ||
-    result?.orderStatus ||
-    result?.delivery_status ||
-    result?.status ||
-    ""
-  ).trim().toLowerCase();
-
   const message = String(
     apiResponse.message ||
     data.message ||
@@ -1370,39 +1367,57 @@ function mapDataMartOrderStatus(result) {
     ""
   ).trim().toLowerCase();
 
-  const isManual = processingMethods.includes("manual");
-    const nestedStatus = String(
-    apiResponse.status || ""
-  ).trim().toLowerCase();
+  // A confirmed delivery must override an old manual-processing message.
+  if (
+    statuses.some(status =>
+      ["delivered", "completed", "complete", "success", "successful"]
+        .includes(status)
+    )
+  ) {
+    return "delivered";
+  }
 
-  // Manual orders awaiting supplier processing must remain on hold.
+  // Preserve explicit refunded status.
+  if (statuses.includes("refunded")) {
+    return "refunded";
+  }
+
+  // Confirmed final failures.
+  if (
+    statuses.some(status =>
+      ["failed", "rejected", "cancelled", "canceled"]
+        .includes(status)
+    )
+  ) {
+    return "failed";
+  }
+
+  const isManual = processingMethods.includes("manual");
+
+  // Manual orders still awaiting processing remain on hold.
   if (
     isManual &&
     (
-      ["pending", "waiting"].includes(nestedStatus) ||
-      message.includes("stored for manual processing") ||
-      message.includes("manual processing")
+      statuses.some(status =>
+        ["pending", "waiting"].includes(status)
+      ) ||
+      message.includes("manual processing") ||
+      message.includes("stored for manual processing")
     )
   ) {
     return "on_hold";
   }
 
-  // Manual orders that are still waiting must remain on hold.
   if (
-    isManual &&
-    ["pending", "waiting"].includes(status)
+    statuses.some(status =>
+      ["pending", "waiting"].includes(status)
+    )
   ) {
-    return "on_hold";
-  }
-
-  // 1. PENDING
-  if (["pending", "waiting"].includes(status)) {
     if (
       message.includes("verifying") ||
       message.includes("on hold") ||
       message.includes("beneficiary not allowed") ||
-      message.includes("manual processing") ||
-      message.includes("stored for manual processing")
+      message.includes("manual processing")
     ) {
       return "on_hold";
     }
@@ -1410,43 +1425,23 @@ function mapDataMartOrderStatus(result) {
     return "pending";
   }
 
-  // 2. PROCESSING
-  if (status === "processing") {
+  if (statuses.includes("processing")) {
     return "processing";
   }
 
-  // 3. ON HOLD
   if (
-    ["on_hold", "on hold", "hold", "verifying", "verification"]
-      .includes(status)
+    statuses.some(status =>
+      ["on_hold", "on hold", "hold", "verifying", "verification"]
+        .includes(status)
+    )
   ) {
     return "on_hold";
   }
 
-  // 4. DELIVERED
-  if (
-    ["completed", "complete", "delivered", "success", "successful"]
-      .includes(status)
-  ) {
-    return "delivered";
-  }
-
-  // 5. FAILED
-  if (
-    ["failed", "rejected", "cancelled", "canceled"]
-      .includes(status)
-  ) {
-    return "failed";
-  }
-
-  // 6. REFUNDED
-  if (status === "refunded") {
-    return "refunded";
-  }
-
-  // Unknown status: preserve the last known Kielmen status.
+  // Unknown status: do not overwrite the existing Kielmen status.
   return null;
 }
+
 
 
 
