@@ -1350,11 +1350,12 @@ try {
 
 
 
+
 function mapDataMartOrderStatus(result) {
   const data = result?.data || {};
   const apiResponse = data.apiResponse || {};
 
-    const statuses = [
+  const statuses = [
     data.orderStatus,
     data.delivery_status,
     data.status,
@@ -1380,7 +1381,7 @@ function mapDataMartOrderStatus(result) {
     ""
   ).trim().toLowerCase();
 
-  // A confirmed delivery must override an old manual-processing message.
+  // 1. Confirmed successful delivery.
   if (
     statuses.some(status =>
       ["delivered", "completed", "complete", "success", "successful"]
@@ -1390,12 +1391,12 @@ function mapDataMartOrderStatus(result) {
     return "delivered";
   }
 
-  // Preserve explicit refunded status.
+  // 2. Refunded orders.
   if (statuses.includes("refunded")) {
     return "refunded";
   }
 
-  // Confirmed final failures.
+  // 3. Confirmed final failure.
   if (
     statuses.some(status =>
       ["failed", "rejected", "cancelled", "canceled"]
@@ -1405,11 +1406,22 @@ function mapDataMartOrderStatus(result) {
     return "failed";
   }
 
-  const isManual = processingMethods.includes("manual");
-
-  // Manual orders still awaiting processing remain on hold.
+  // 4. Explicit hold or verification status.
   if (
-    isManual &&
+    statuses.some(status =>
+      ["on_hold", "on hold", "hold", "verifying", "verification"]
+        .includes(status)
+    ) ||
+    message.includes("verifying") ||
+    message.includes("on hold") ||
+    message.includes("beneficiary not allowed")
+  ) {
+    return "on_hold";
+  }
+
+  // 5. Manual orders awaiting processing remain on hold.
+  if (
+    processingMethods.includes("manual") &&
     (
       statuses.some(status =>
         ["pending", "waiting"].includes(status)
@@ -1421,39 +1433,24 @@ function mapDataMartOrderStatus(result) {
     return "on_hold";
   }
 
+  // 6. Processing takes priority over pending.
+  if (statuses.includes("processing")) {
+    return "processing";
+  }
+
+  // 7. Ordinary pending orders.
   if (
     statuses.some(status =>
       ["pending", "waiting"].includes(status)
     )
   ) {
-    if (
-      message.includes("verifying") ||
-      message.includes("on hold") ||
-      message.includes("beneficiary not allowed") ||
-      message.includes("manual processing")
-    ) {
-      return "on_hold";
-    }
-
     return "pending";
   }
 
-  if (statuses.includes("processing")) {
-    return "processing";
-  }
-
-  if (
-    statuses.some(status =>
-      ["on_hold", "on hold", "hold", "verifying", "verification"]
-        .includes(status)
-    )
-  ) {
-    return "on_hold";
-  }
-
-  // Unknown status: do not overwrite the existing Kielmen status.
+  // 8. Unknown response: preserve existing Kielmen status.
   return null;
 }
+
 
 
 
