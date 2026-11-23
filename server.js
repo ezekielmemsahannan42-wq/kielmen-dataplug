@@ -884,20 +884,34 @@ async function dataMartRequest(
 
 function supplierReferenceFrom(result) {
   const candidates = [
+    // Prefer DataMart's actual supplier reference.
+    result && result.data && result.data.reference,
+    result && result.data && result.data.orderReference,
+    result && result.data && result.data.order_reference,
+
+    // Check alternative nested response fields.
+    result && result.data && result.data.trackingId,
+
+    // Check root-level fields only as fallbacks.
     result && result.reference,
     result && result.orderReference,
     result && result.order_reference,
-    result && result.data && result.data.reference,
-    result && result.data && result.data.orderReference,
-    result && result.data && result.data.order_reference
+    result && result.trackingId
   ];
 
   return (
-    candidates.find(
-      value =>
-        typeof value === "string" &&
-        value.trim()
-    ) || null
+    candidates.find(value => {
+      if (typeof value !== "string") return false;
+
+      const reference = value.trim();
+
+      if (!reference) return false;
+
+      // Never accept Kielmen's own order reference.
+      if (/^K636-/i.test(reference)) return false;
+
+      return true;
+    })?.trim() || null
   );
 }
 
