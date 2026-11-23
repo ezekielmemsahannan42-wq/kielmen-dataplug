@@ -2989,47 +2989,41 @@ app.put(
               ), 0
             ) AS total_sales,
 
-            COALESCE(
-              SUM(amount - agent_base_price) FILTER (
-                WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-                  AND agent_base_price IS NOT NULL
-                  AND supplier_reference IS NOT NULL
-                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
-                    IN ('processing', 'delivered', 'completed', 'success', 'successful')
-              ), 0
-            ) AS estimated_profit,
+           COALESCE(
+  SUM(amount - agent_base_price) FILTER (
+    WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+      AND agent_base_price IS NOT NULL
+      AND LOWER(TRIM(COALESCE(delivery_status, ''))) <> 'refunded'
+  ), 0
+) AS estimated_profit, 
 
             COALESCE(
-              SUM(amount - agent_base_price) FILTER (
-                WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-                  AND agent_base_price IS NOT NULL
-                  AND supplier_reference IS NOT NULL
-                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
-                    IN ('processing', 'delivered', 'completed', 'success', 'successful')
-                  AND created_at < (
-                    date_trunc(
-                      'day',
-                      NOW() AT TIME ZONE 'Africa/Accra'
-                    ) AT TIME ZONE 'Africa/Accra'
-                  )
-              ), 0
-            ) AS previous_profit,
+  SUM(amount - agent_base_price) FILTER (
+    WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+      AND agent_base_price IS NOT NULL
+      AND LOWER(TRIM(COALESCE(delivery_status, ''))) <> 'refunded'
+      AND created_at < (
+        date_trunc(
+          'day',
+          NOW() AT TIME ZONE 'Africa/Accra'
+        ) AT TIME ZONE 'Africa/Accra'
+      )
+  ), 0
+) AS previous_profit,
 
-            COALESCE(
-              SUM(amount - agent_base_price) FILTER (
-                WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
-                  AND agent_base_price IS NOT NULL
-                  AND supplier_reference IS NOT NULL
-                  AND LOWER(TRIM(COALESCE(delivery_status, '')))
-                    IN ('processing', 'delivered', 'completed', 'success', 'successful')
-                  AND created_at >= (
-                    date_trunc(
-                      'day',
-                      NOW() AT TIME ZONE 'Africa/Accra'
-                    ) AT TIME ZONE 'Africa/Accra'
-                  )
-              ), 0
-            ) AS today_profit,
+          COALESCE(
+  SUM(amount - agent_base_price) FILTER (
+    WHERE LOWER(TRIM(COALESCE(status, ''))) = 'paid'
+      AND agent_base_price IS NOT NULL
+      AND LOWER(TRIM(COALESCE(delivery_status, ''))) <> 'refunded'
+      AND created_at >= (
+        date_trunc(
+          'day',
+          NOW() AT TIME ZONE 'Africa/Accra'
+        ) AT TIME ZONE 'Africa/Accra'
+      )
+  ), 0
+) AS today_profit,
 
             COALESCE(
               SUM(amount - agent_base_price) FILTER (
@@ -3900,9 +3894,7 @@ earnings AS (
   WHERE o.agent_id = $1
     AND LOWER(TRIM(COALESCE(o.status, ''))) = 'paid'
     AND o.agent_base_price IS NOT NULL
-    AND o.supplier_reference IS NOT NULL
-    AND LOWER(TRIM(COALESCE(o.delivery_status, '')))
-      IN ('processing', 'delivered', 'completed', 'success', 'successful')
+    AND LOWER(TRIM(COALESCE(o.delivery_status, ''))) <> 'refunded'
 ),
 
 withdrawals AS (
