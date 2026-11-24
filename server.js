@@ -1351,28 +1351,29 @@ try {
 
 
 
+
 function mapDataMartOrderStatus(result) {
   const data = result?.data || {};
   const apiResponse = data.apiResponse || {};
 
-  const statuses = [
-    data.orderStatus,
-    data.delivery_status,
-    data.status,
-    apiResponse.status,
-    result?.orderStatus,
-    result?.delivery_status
-  ]
-    .map(value => String(value || "").trim().toLowerCase())
-    .filter(Boolean);
+  // Prefer DataMart's nested API status because it may be
+  // newer than the outer order status.
+  const status = String(
+    apiResponse.status ||
+    data.status ||
+    data.delivery_status ||
+    data.orderStatus ||
+    result?.delivery_status ||
+    result?.orderStatus ||
+    ""
+  ).trim().toLowerCase();
 
-  const processingMethods = [
-    data.processingMethod,
-    apiResponse.processingMethod,
-    result?.processingMethod
-  ]
-    .map(value => String(value || "").trim().toLowerCase())
-    .filter(Boolean);
+  const processingMethod = String(
+    apiResponse.processingMethod ||
+    data.processingMethod ||
+    result?.processingMethod ||
+    ""
+  ).trim().toLowerCase();
 
   const message = String(
     apiResponse.message ||
@@ -1381,51 +1382,32 @@ function mapDataMartOrderStatus(result) {
     ""
   ).trim().toLowerCase();
 
-  // 1. Confirmed successful delivery.
+  // Completed delivery
   if (
-    statuses.some(status =>
-      ["delivered", "completed", "complete", "success", "successful"]
-        .includes(status)
-    )
+    ["delivered", "completed", "complete", "success", "successful"]
+      .includes(status)
   ) {
     return "delivered";
   }
 
-  // 2. Refunded orders.
-  if (statuses.includes("refunded")) {
+  // Refunded
+  if (status === "refunded") {
     return "refunded";
   }
 
-  // 3. Confirmed final failure.
+  // Final failure
   if (
-    statuses.some(status =>
-      ["failed", "rejected", "cancelled", "canceled"]
-        .includes(status)
-    )
+    ["failed", "rejected", "cancelled", "canceled"]
+      .includes(status)
   ) {
     return "failed";
   }
 
-  // 4. Explicit hold or verification status.
+  // Manual orders awaiting supplier processing
   if (
-    statuses.some(status =>
-      ["on_hold", "on hold", "hold", "verifying", "verification"]
-        .includes(status)
-    ) ||
-    message.includes("verifying") ||
-    message.includes("on hold") ||
-    message.includes("beneficiary not allowed")
-  ) {
-    return "on_hold";
-  }
-
-  // 5. Manual orders awaiting processing remain on hold.
-  if (
-    processingMethods.includes("manual") &&
+    processingMethod === "manual" &&
     (
-      statuses.some(status =>
-        ["pending", "waiting"].includes(status)
-      ) ||
+      ["pending", "waiting"].includes(status) ||
       message.includes("manual processing") ||
       message.includes("stored for manual processing")
     )
@@ -1433,23 +1415,39 @@ function mapDataMartOrderStatus(result) {
     return "on_hold";
   }
 
-  // 6. Processing takes priority over pending.
-  if (statuses.includes("processing")) {
+  // Processing must not be mistaken for pending
+  if (
+    ["processing", "in progress", "in_progress"].includes(status)
+  ) {
     return "processing";
   }
 
-  // 7. Ordinary pending orders.
-  if (
-    statuses.some(status =>
-      ["pending", "waiting"].includes(status)
-    )
-  ) {
+  // Pending / waiting
+  if (["pending", "waiting"].includes(status)) {
+    if (
+      message.includes("verifying") ||
+      message.includes("on hold") ||
+      message.includes("beneficiary not allowed") ||
+      message.includes("manual processing")
+    ) {
+      return "on_hold";
+    }
+
     return "pending";
   }
 
-  // 8. Unknown response: preserve existing Kielmen status.
+  // Other hold statuses
+  if (
+    ["on_hold", "on hold", "hold", "verifying", "verification"]
+      .includes(status)
+  ) {
+    return "on_hold";
+  }
+
+  // Unknown status: preserve Kielmen's existing status.
   return null;
 }
+
 
 
 
