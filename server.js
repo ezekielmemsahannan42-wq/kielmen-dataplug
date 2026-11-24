@@ -7562,6 +7562,74 @@ return res.status(500).json({
 }
 });
 
+async function refreshTrackedOrders(orders) {
+  const refreshedOrders = [];
+
+  for (const order of orders) {
+    // Only refresh paid orders with an existing DataMart reference.
+    if (
+      order.payment_status !== "paid" ||
+      !order.supplier_reference ||
+      !DATAMART_API_KEY
+    ) {
+      refreshedOrders.push(order);
+      continue;
+    }
+
+    try {
+      const supplier = await refreshSupplierOrderStatus(
+        order.supplier_reference
+      );
+
+      if (supplier.status) {
+        const update = await pool.query(
+          `
+            UPDATE orders
+            SET
+              delivery_status = $1,
+              supplier_response = $2::jsonb,
+              delivered_at = CASE
+                WHEN $1 = 'delivered'
+                THEN COALESCE(delivered_at, NOW())
+                ELSE delivered_at
+              END,
+              updated_at = NOW()
+            WHERE reference = $3
+              AND supplier_reference = $4
+              AND status = 'paid'
+            RETURNING delivery_status, updated_at
+          `,
+          [
+            supplier.status,
+            JSON.stringify(supplier.raw),
+            order.reference,
+            order.supplier_reference
+          ]
+        );
+
+        if (update.rowCount) {
+          order.delivery_status =
+            update.rows[0].delivery_status;
+
+          order.updated_at =
+            update.rows[0].updated_at;
+        }
+      }
+    } catch (error) {
+      console.error(
+        "Customer tracking DataMart refresh failed:",
+        order.reference,
+        error.message
+      );
+    }
+
+    refreshedOrders.push(order);
+  }
+
+  return refreshedOrders;
+}
+
+
 // ============================================================
 // ============================================================
 // 18A. AGENT-SPECIFIC CUSTOMER ORDER TRACKING
