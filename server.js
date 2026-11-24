@@ -8316,6 +8316,213 @@ app.post(
 );
 
 // ============================================================
+// KIELMEN AI — CUSTOMER QUESTION MATCHING ENGINE
+// ============================================================
+
+function kielmenAiNormalize(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function kielmenAiTokens(value) {
+  const ignored = new Set([
+    "a", "an", "the", "is", "are", "was", "were",
+    "do", "does", "did", "you", "your", "i", "me",
+    "my", "we", "our", "to", "of", "for", "in",
+    "on", "at", "and", "or", "but", "please",
+    "can", "could", "would", "should", "what",
+    "how", "when", "where", "why", "who",
+    "hello", "hi", "hey", "kindly"
+  ]);
+
+  return kielmenAiNormalize(value)
+    .split(" ")
+    .filter(word => word.length > 1 && !ignored.has(word));
+}
+
+function kielmenAiSimilarity(question, candidate) {
+  const queryWords = new Set(kielmenAiTokens(question));
+  const candidateWords = new Set(kielmenAiTokens(candidate));
+
+  if (!queryWords.size || !candidateWords.size) {
+    return 0;
+  }
+
+  let common = 0;
+
+  for (const word of queryWords) {
+    if (candidateWords.has(word)) {
+      common++;
+    }
+  }
+
+  const coverage = common / queryWords.size;
+  const union = new Set([...queryWords, ...candidateWords]).size;
+  const jaccard = common / union;
+
+  return (coverage * 0.7) + (jaccard * 0.3);
+}
+
+app.post("/ai/answer", async (req, res) => {
+  try {
+    const question = String(req.body?.question || "").trim();
+
+    if (!question || question.length > 500) {
+      return res.status(400).json({
+        success: false,
+        message: "Please enter a question of up to 500 characters."
+      });
+    }
+
+    const normalizedQuestion = kielmenAiNormalize(question);
+
+    // FIRST: Check exact question and alternative questions.
+    const exactResult = await pool.query(
+      `
+        SELECT id, question, answer, category
+        FROM kielmen_ai_knowledge
+        WHERE is_active = TRUE
+          AND (
+            regexp_replace(
+              lower(question),
+              '[^a-z0-9]+',
+              ' ',
+              'g'
+            ) = regexp_replace(
+              lower($1),
+              '[^a-z0-9]+',
+              ' ',
+              'g'
+            )
+            OR EXISTS (
+              SELECT 1
+              FROM unnest(alternate_questions) AS alt
+              WHERE regexp_replace(
+                lower(alt),
+                '[^a-z0-9]+',
+                ' ',
+                'g'
+              ) = regexp_replace(
+                lower($1),
+                '[^a-z0-9]+',
+                ' ',
+                'g'
+              )
+            )
+          )
+        LIMIT 1
+      `,
+      [question]
+    );
+
+    if (exactResult.rowCount > 0) {
+      return res.json({
+        success: true,
+        matched: true,
+        matchType: "exact",
+        answer: exactResult.rows[0].answer,
+        category: exactResult.rows[0].category
+      });
+    }
+
+    // SECOND: Search for questions with related wording.
+    const searchResult = await pool.query(
+      `
+        SELECT
+          id,
+          question,
+          answer,
+          alternate_questions,
+          keywords,
+          category,
+          ts_rank(
+            to_tsvector(
+              'english',
+              question || ' ' ||
+              array_to_string(alternate_questions, ' ') || ' ' ||
+              array_to_string(keywords, ' ')
+            ),
+            plainto_tsquery('english', $1)
+          ) AS search_rank
+        FROM kielmen_ai_knowledge
+        WHERE is_active = TRUE
+          AND to_tsvector(
+            'english',
+            question || ' ' ||
+            array_to_string(alternate_questions, ' ') || ' ' ||
+            array_to_string(keywords, ' ')
+          ) @@ plainto_tsquery('english', $1)
+        ORDER BY search_rank DESC
+        LIMIT 50
+      `,
+      [question]
+    );
+
+    let bestMatch = null;
+    let bestScore = 0;
+
+    for (const item of searchResult.rows) {
+      const phrases = [
+        item.question,
+        ...(item.alternate_questions || []),
+        ...(item.keywords || [])
+      ];
+
+      let itemScore = 0;
+
+      for (const phrase of phrases) {
+        const score = kielmenAiSimilarity(question, phrase);
+
+        if (score > itemScore) {
+          itemScore = score;
+        }
+      }
+
+      if (itemScore > bestScore) {
+        bestScore = itemScore;
+        bestMatch = item;
+      }
+    }
+
+    // Only return an answer when the match is reliable enough.
+    if (bestMatch && bestScore >= 0.50) {
+      return res.json({
+        success: true,
+        matched: true,
+        matchType: "similar",
+        answer: bestMatch.answer,
+        category: bestMatch.category
+      });
+    }
+
+    // No reliable answer found.
+    return res.json({
+      success: true,
+      matched: false,
+      matchType: "not_found",
+      answer:
+        "I want to make sure you receive the correct information. " +
+        "I don't have a reliable answer to that question yet. " +
+        "Please contact Kielmen Support on WhatsApp so we can assist you."
+    });
+
+  } catch (error) {
+    console.error("Kielmen AI matching error:", error.message);
+
+    return res.status(500).json({
+      success: false,
+      message: "We couldn't process your question right now. Please try again."
+    });
+  }
+});
+
+
+// ============================================================
 // 22. START SERVER
 // ============================================================
 
@@ -8326,6 +8533,46 @@ async function startServer() {
   }
 
   try {
+    
+    // ============================================================
+    // KIELMEN AI KNOWLEDGE DATABASE
+    // ============================================================
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS kielmen_ai_knowledge (
+        id BIGSERIAL PRIMARY KEY,
+        question TEXT NOT NULL,
+        answer TEXT NOT NULL,
+        alternate_questions TEXT[] NOT NULL DEFAULT '{}',
+        keywords TEXT[] NOT NULL DEFAULT '{}',
+        category VARCHAR(100) NOT NULL DEFAULT 'general',
+        is_active BOOLEAN NOT NULL DEFAULT TRUE,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS kielmen_ai_knowledge_active_idx
+      ON kielmen_ai_knowledge(is_active)
+    `);
+    
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS kielmen_ai_knowledge_search_idx
+      ON kielmen_ai_knowledge
+      USING GIN (
+        to_tsvector(
+          'english',
+          question || ' ' ||
+          array_to_string(alternate_questions, ' ') || ' ' ||
+          array_to_string(keywords, ' ')
+        )
+      )
+    `);
+
+    console.log("Kielmen AI knowledge database is ready.");
+
     await createAgentTables();
 await createOrdersTable();
 await createPasswordResetTable();
