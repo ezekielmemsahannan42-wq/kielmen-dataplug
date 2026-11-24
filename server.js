@@ -8558,18 +8558,7 @@ async function startServer() {
     `);
     
 
-    await pool.query(`
-      CREATE INDEX IF NOT EXISTS kielmen_ai_knowledge_search_idx
-      ON kielmen_ai_knowledge
-      USING GIN (
-        to_tsvector(
-          'english',
-          question || ' ' ||
-          array_to_string(alternate_questions, ' ') || ' ' ||
-          array_to_string(keywords, ' ')
-        )
-      )
-    `);
+    
 
     console.log("Kielmen AI knowledge database is ready.");
 
