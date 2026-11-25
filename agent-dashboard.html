@@ -2884,9 +2884,11 @@ function addKielmenMessage(message, sender) {
   kielmenChatMessages.appendChild(bubble);
   kielmenChatMessages.scrollTop =
     kielmenChatMessages.scrollHeight;
+    return bubble;
 }
 
-// Send agent message.
+
+// Send agent message to Kielmen AI.
 document.getElementById("kielmenChatForm")
   .addEventListener("submit", async event => {
     event.preventDefault();
@@ -2898,11 +2900,53 @@ document.getElementById("kielmenChatForm")
     addKielmenMessage(message, "user");
     kielmenChatInput.value = "";
 
-    addKielmenMessage(
-      "Please wait while I connect you to Kielmen Support...",
+    const sendButton =
+      document.getElementById("kielmenChatSend");
+
+    sendButton.disabled = true;
+
+    const loadingMessage = addKielmenMessage(
+      "One moment, let me check that for you...",
       "bot"
     );
+
+    try {
+      const response = await fetch(
+        AGENT_API + "/ai/answer",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            question: message
+          })
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(
+          result.message || "Unable to process your question."
+        );
+      }
+
+      loadingMessage.textContent =
+        result.answer ||
+        "Sorry, I couldn't find an answer. Please contact Kielmen Support.";
+
+    } catch (error) {
+      console.error("Kielmen AI error:", error);
+
+      loadingMessage.textContent =
+        "I'm having trouble connecting right now. Please try again shortly.";
+    } finally {
+      sendButton.disabled = false;
+      kielmenChatInput.focus();
+    }
   });
+
 
 
 /* START */
