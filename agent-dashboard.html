@@ -2856,26 +2856,17 @@ const kielmenChatInput =
   document.getElementById("kielmenChatInput");
 
 function updateKielmenAssistant() {
-  // Ghana time (UTC+0): change name every 30 minutes.
-  const slot = Math.floor(Date.now() / 1800000);
-  const index = slot % kielmenSupportNames.length;
-  const name = kielmenSupportNames[index];
-
-  kielmenAssistantName.textContent = name;
+  kielmenAssistantName.textContent = "Kielmen Assistant";
 
   const firstMessage = kielmenChatMessages.firstElementChild;
 
   if (firstMessage && firstMessage.dataset.greeting === "true") {
     firstMessage.textContent =
-      "Hiii! 👋 I'm " + name +
-      ". Welcome to Kielmen! How can I help you today? 😊";
+      "Hello! 👋 Welcome to Kielmen 636 Dataplug. How can I help you today?";
   }
 }
 
 updateKielmenAssistant();
-
-// Check for a new name every minute.
-setInterval(updateKielmenAssistant, 60000);
 
 // Open chat.
 document.getElementById("kielmenAIButton")
