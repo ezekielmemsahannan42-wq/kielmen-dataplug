@@ -8380,6 +8380,20 @@ app.post("/ai/answer", async (req, res) => {
     }
 
     const normalizedQuestion = kielmenAiNormalize(question);
+    // Handle greetings before searching the knowledge database.
+if (/^(hi|hello|hey|good morning|good afternoon|good evening|how are you|how are you doing)$/.test(normalizedQuestion)) {
+  return res.json({
+    success: true,
+    matched: true,
+    matchType: "greeting",
+    category: "greeting",
+    answer:
+      "Hello! 👋 Welcome to Kielmen 636 Dataplug. " +
+      "I'm here to help you with MTN, Telecel and AirtelTigo data bundles, " +
+      "WASSCE and BECE checkers, orders, payments and agent services. " +
+      "What would you like to know today?"
+  });
+}
 
     // FIRST: Check exact question and alternative questions.
     const exactResult = await pool.query(
@@ -8559,7 +8573,133 @@ async function startServer() {
     
 
     
+// ============================================================
+// KIELMEN AI — STARTER WEBSITE KNOWLEDGE
+// ============================================================
 
+const kielmenStarterKnowledge = [
+  {
+    question: "What is Kielmen 636 Dataplug?",
+    answer: "Kielmen 636 Dataplug is an online data and digital services platform at kielmen.com. Customers can purchase MTN, Telecel and AirtelTigo data bundles, as well as WASSCE and BECE checkers.",
+    alternatives: [
+      "Tell me about Kielmen",
+      "What is kielmen.com",
+      "What services does Kielmen offer",
+      "What does your company do"
+    ],
+    keywords: ["Kielmen", "website", "company", "services", "dataplug"],
+    category: "about"
+  },
+  {
+    question: "Which networks can I buy data for?",
+    answer: "You can purchase data bundles for MTN, Telecel and AirtelTigo through Kielmen. Visit kielmen.com, select your preferred network and check the available bundles.",
+    alternatives: [
+      "Do you sell MTN data",
+      "Do you sell Telecel data",
+      "Do you sell AirtelTigo data",
+      "Which network bundles are available"
+    ],
+    keywords: ["MTN", "Telecel", "AirtelTigo", "network", "bundles"],
+    category: "data"
+  },
+  {
+    question: "How do I buy data on Kielmen?",
+    answer: "Visit kielmen.com, select your network, choose an available bundle, enter the recipient's phone number and follow the checkout instructions. Check the phone number and network before confirming payment.",
+    alternatives: [
+      "How can I buy data",
+      "How do I order a bundle",
+      "How can I purchase internet data",
+      "How do I make an order"
+    ],
+    keywords: ["buy", "purchase", "order", "data", "bundle", "checkout"],
+    category: "ordering"
+  },
+  {
+    question: "Can I buy data for another person?",
+    answer: "Yes. You can enter the recipient's phone number during the order process. Please double-check the number and network before completing your purchase.",
+    alternatives: [
+      "Can I send data to someone",
+      "Can I buy data for my friend",
+      "Can I buy for another number",
+      "Can I gift data"
+    ],
+    keywords: ["another person", "friend", "recipient", "phone number", "gift"],
+    category: "ordering"
+  },
+  {
+    question: "Does Kielmen sell WASSCE and BECE checkers?",
+    answer: "Yes. Kielmen offers WASSCE and BECE result checkers. Visit kielmen.com to see the available options and follow the purchase instructions.",
+    alternatives: [
+      "Do you sell result checkers",
+      "Can I buy a WASSCE checker",
+      "Can I buy a BECE checker",
+      "Do you have examination checkers"
+    ],
+    keywords: ["WASSCE", "BECE", "checker", "results", "examination"],
+    category: "checkers"
+  },
+  {
+    question: "How do I become a Kielmen agent?",
+    answer: "Kielmen has an agent service for people interested in selling data bundles. Visit kielmen.com and look for the agent registration or agent login option.",
+    alternatives: [
+      "How can I become an agent",
+      "I want to sell data",
+      "How do I register as an agent",
+      "How can I join Kielmen as an agent"
+    ],
+    keywords: ["agent", "register", "registration", "sell", "selling"],
+    category: "agents"
+  },
+  {
+    question: "How can I contact Kielmen Support?",
+    answer: "You can contact Kielmen Support on WhatsApp at +233533878548. You can also join our WhatsApp channel: https://whatsapp.com/channel/0029Vb9DCHl8aKvAqvYV743S.",
+    alternatives: [
+      "I need customer support",
+      "How do I contact you",
+      "What is your WhatsApp number",
+      "I want to speak to support",
+      "Where can I get help"
+    ],
+    keywords: ["support", "WhatsApp", "contact", "help", "customer service"],
+    category: "support"
+  },
+  {
+    question: "Where can I see Kielmen data prices?",
+    answer: "Visit kielmen.com to view the available bundles and current displayed prices. Prices may change, so always check the website before ordering.",
+    alternatives: [
+      "How much is your data",
+      "Where can I check your prices",
+      "What are your data prices",
+      "Show me your bundles and prices"
+    ],
+    keywords: ["price", "prices", "cost", "data bundles", "how much"],
+    category: "pricing"
+  }
+];
+
+for (const item of kielmenStarterKnowledge) {
+  await pool.query(
+    `
+      INSERT INTO kielmen_ai_knowledge
+        (question, answer, alternate_questions, keywords, category)
+      SELECT $1, $2, $3::text[], $4::text[], $5
+      WHERE NOT EXISTS (
+        SELECT 1
+        FROM kielmen_ai_knowledge
+        WHERE LOWER(question) = LOWER($1)
+      )
+    `,
+    [
+      item.question,
+      item.answer,
+      item.alternatives,
+      item.keywords,
+      item.category
+    ]
+  );
+}
+
+console.log("Kielmen starter knowledge loaded.");
     console.log("Kielmen AI knowledge database is ready.");
 
     await createAgentTables();
