@@ -245,6 +245,57 @@
     openButton.style.display = "block";
   });
 
+  
+  // ============================================================
+  // KIELMEN AI — CUSTOMER CHAT AND ORDER TRACKING
+  // ============================================================
+
+  let pendingOrderStep = null;
+  let pendingOrderReference = "";
+
+  function formatDeliveryStatus(status) {
+    const labels = {
+      delivered: "Delivered",
+      processing: "Processing",
+      pending: "Pending",
+      on_hold: "On hold",
+      failed: "Failed"
+    };
+
+    return labels[String(status || "").toLowerCase()] ||
+      "Not yet confirmed";
+  }
+
+  function isDeliveryComplaint(message) {
+    return /\b(haven't received|have not received|not received|where is my data|data hasn't arrived|data has not arrived|data is not coming|my data is missing|my order is delayed|data delay)\b/i.test(message);
+  }
+
+  async function checkCustomerOrder(reference, phone) {
+    const response = await fetch(
+      API_BASE + "/ai/order-status",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          reference,
+          phone
+        })
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.message || "Unable to check this order."
+      );
+    }
+
+    return result;
+  }
+
   form.addEventListener("submit", async event => {
     event.preventDefault();
 
@@ -264,6 +315,130 @@
     );
 
     try {
+      // STEP 1: Customer reports missing data.
+      if (
+        !pendingOrderStep &&
+        isDeliveryComplaint(question)
+      ) {
+        pendingOrderStep = "reference";
+
+        waiting.textContent =
+          "I'm sorry your data hasn't arrived yet. " +
+          "I'll help you check your order. 😊\n\n" +
+          "Please enter your order reference number.";
+
+        return;
+      }
+
+      // STEP 2: Collect the order reference.
+      if (pendingOrderStep === "reference") {
+        if (question.length < 4 || question.length > 100) {
+          waiting.textContent =
+            "That reference doesn't look valid. " +
+            "Please check your order receipt and enter the correct reference.";
+
+          return;
+        }
+
+        pendingOrderReference = question;
+        pendingOrderStep = "phone";
+
+        waiting.textContent =
+          "Thank you. Now please enter the phone number " +
+          "you used when placing the order.";
+
+        return;
+      }
+
+      // STEP 3: Collect phone and verify the order.
+      if (pendingOrderStep === "phone") {
+        const phone = question.replace(/\D/g, "");
+
+        if (!/^(0\d{9}|233\d{9})$/.test(phone)) {
+          waiting.textContent =
+            "Please enter a valid Ghana phone number, " +
+            "for example 0241234567 or 233241234567.";
+
+          return;
+        }
+
+        const reference = pendingOrderReference;
+
+        waiting.textContent =
+          "Thank you. I'm checking your order status now...";
+
+        const result = await checkCustomerOrder(
+          reference,
+          phone
+        );
+
+        const order = result.order;
+
+        const status = formatDeliveryStatus(
+          order.delivery_status
+        );
+
+        const payment = formatDeliveryStatus(
+          order.payment_status
+        );
+
+        let explanation = "";
+
+        if (order.delivery_status === "delivered") {
+          explanation =
+            "Good news! The recorded delivery status is Delivered. " +
+            "Please check the recipient's phone. If the data is still missing, contact our support team.";
+        } else if (
+          ["pending", "processing", "on_hold"].includes(
+            order.delivery_status
+          )
+        ) {
+          explanation =
+            "Your order has not yet been marked as delivered. " +
+            "It is still being processed or awaiting completion. " +
+            "We apologise for the delay. Please allow the processing to continue. " +
+            "If it takes too long, contact Kielmen Support.";
+        } else if (order.delivery_status === "failed") {
+          explanation =
+            "The recorded delivery status is Failed. " +
+            "Please contact Kielmen Support so the order can be investigated.";
+        } else {
+          explanation =
+            "I found your order, but its delivery status is not confirmed. " +
+            "Please contact Kielmen Support for further assistance.";
+        }
+
+        waiting.textContent =
+          "Here are your order details:\n\n" +
+          "Order reference: " + order.reference + "\n" +
+          "Phone number: " + order.phone + "\n" +
+          "Network: " + order.network + "\n" +
+          "Bundle: " + order.bundle + "\n" +
+          "Amount: GH₵" + Number(order.amount).toFixed(2) + "\n" +
+          "Payment status: " + payment + "\n" +
+          "Delivery status: " + status + "\n\n" +
+          explanation +
+          (result.supplier_status_message
+            ? "\n\nNote: " + result.supplier_status_message
+            : "") +
+          "\n\nKielmen Support: +233533878548";
+
+        pendingOrderStep = null;
+        pendingOrderReference = "";
+
+        return;
+      }
+
+      // STEP 4: Ordinary questions go to the knowledge base.
+      if (isDeliveryComplaint(question)) {
+        pendingOrderStep = "reference";
+
+        waiting.textContent =
+          "I'm sorry about the delay. Please enter your order reference so I can check it.";
+        
+        return;
+      }
+
       const response = await fetch(
         API_BASE + "/ai/answer",
         {
@@ -277,32 +452,30 @@
 
       const data = await response.json();
 
-      waiting.remove();
-
       if (!response.ok || !data.success) {
         throw new Error("Request failed");
       }
 
-      addMessage(
+      waiting.textContent =
         data.answer ||
-        "Sorry, I couldn't find an answer. Please contact our support team.",
-        "bot"
-      );
+        "I couldn't find a reliable answer. Please contact Kielmen Support.";
 
     } catch (error) {
-      waiting.remove();
-
-      addMessage(
-        "Sorry, I'm having trouble connecting right now. Please try again shortly or contact Kielmen Support on WhatsApp.",
-        "bot"
-      );
-
       console.error("Kielmen AI chat:", error);
 
+      if (pendingOrderStep) {
+        pendingOrderStep = null;
+        pendingOrderReference = "";
+      }
+
+      waiting.textContent =
+        error.message ||
+        "Sorry, I couldn't complete that request. Please contact Kielmen Support on WhatsApp: +233533878548.";
     } finally {
       sendButton.disabled = false;
       sendButton.textContent = "Send";
       input.focus();
     }
   });
+
 })();
