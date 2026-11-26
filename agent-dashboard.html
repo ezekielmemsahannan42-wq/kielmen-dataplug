@@ -326,14 +326,34 @@ footer{padding:20px 0 30px;text-align:center;color:#94a3b8;font-size:11px}
   display: flex;
 }
 
+  
 #kielmenChatHeader {
-  background: #5714d6;
+  background: #08752f;
   color: white;
-  padding: 15px;
+  padding: 18px 15px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
+
+.kielmen-online-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  margin-top: 6px;
+  color: #e4ffe9;
+}
+
+.kielmen-online-dot {
+  width: 9px;
+  height: 9px;
+  display: inline-block;
+  background: #39e879;
+  border-radius: 50%;
+  box-shadow: 0 0 7px rgba(57,232,121,.8);
+}
+
 
 #kielmenChatMessages {
   flex: 1;
@@ -360,7 +380,7 @@ footer{padding:20px 0 30px;text-align:center;color:#94a3b8;font-size:11px}
 }
 
 .kielmen-chat-message.user {
-  background: #5714d6;
+  background: #08752f;
   color: white;
   align-self: flex-end;
 }
@@ -449,13 +469,16 @@ footer{padding:20px 0 30px;text-align:center;color:#94a3b8;font-size:11px}
 <!-- KIELMEN CUSTOMER SUPPORT CHAT -->
 <div id="kielmenChatPanel">
 
-  <div id="kielmenChatHeader">
-    <div>
-      <strong id="kielmenAssistantName">Cristina</strong>
-      <div style="font-size:12px;margin-top:4px;">
-        Kielmen Customer Support · Online
-      </div>
+  
+<div id="kielmenChatHeader">
+  <div>
+    <strong id="kielmenAssistantName">Kielmen Assistant</strong>
+    <div class="kielmen-online-status">
+      <span class="kielmen-online-dot"></span>
+      Online
     </div>
+  </div>
+
 
     <button id="kielmenChatClose" type="button"
       aria-label="Close chat">×</button>
