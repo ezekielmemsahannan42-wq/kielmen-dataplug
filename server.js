@@ -7682,6 +7682,7 @@ app.post("/ai/order-status", async (req, res) => {
         delivery_status: order.delivery_status,
         created_at: order.created_at,
         updated_at: order.updated_at
+        supplier_reference: order.supplier_reference
       },
       supplier_status_message: supplierStatusMessage
     });
