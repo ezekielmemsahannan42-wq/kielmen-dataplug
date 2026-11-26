@@ -265,6 +265,18 @@
     return labels[String(status || "").toLowerCase()] ||
       "Not yet confirmed";
   }
+   function formatPaymentStatus(status) {
+  const labels = {
+    paid: "Paid",
+    pending: "Pending",
+    successful: "Successful",
+    failed: "Failed",
+    initialization_failed: "Payment initialization failed"
+  };
+
+  return labels[String(status || "").toLowerCase()] ||
+    "Not confirmed";
+   }
 
   function isDeliveryComplaint(message) {
     return /\b(haven't received|have not received|not received|where is my data|data hasn't arrived|data has not arrived|data is not coming|my data is missing|my order is delayed|data delay)\b/i.test(message);
@@ -378,9 +390,9 @@
           order.delivery_status
         );
 
-        const payment = formatDeliveryStatus(
-          order.payment_status
-        );
+        const payment = formatPaymentStatus(
+  order.payment_status
+);
 
         let explanation = "";
 
@@ -409,19 +421,21 @@
         }
 
         waiting.textContent =
-          "Here are your order details:\n\n" +
-          "Order reference: " + order.reference + "\n" +
-          "Phone number: " + order.phone + "\n" +
-          "Network: " + order.network + "\n" +
-          "Bundle: " + order.bundle + "\n" +
-          "Amount: GH₵" + Number(order.amount).toFixed(2) + "\n" +
-          "Payment status: " + payment + "\n" +
-          "Delivery status: " + status + "\n\n" +
-          explanation +
-          (result.supplier_status_message
-            ? "\n\nNote: " + result.supplier_status_message
-            : "") +
-          "\n\nKielmen Support: +233533878548";
+  "Here are your order details:\n\n" +
+  "Kielmen order reference: " + order.reference + "\n" +
+  "DataMart supplier reference: " +
+    (order.supplier_reference || "Not available") + "\n" +
+  "Phone number: " + order.phone + "\n" +
+  "Network: " + order.network + "\n" +
+  "Bundle: " + order.bundle + "\n" +
+  "Amount: GH₵" + Number(order.amount).toFixed(2) + "\n" +
+  "Payment status: " + payment + "\n" +
+  "Delivery status: " + status + "\n\n" +
+  explanation +
+  (result.supplier_status_message
+    ? "\n\nNote: " + result.supplier_status_message
+    : "") +
+  "\n\nKielmen Support: +233533878548";
 
         pendingOrderStep = null;
         pendingOrderReference = "";
