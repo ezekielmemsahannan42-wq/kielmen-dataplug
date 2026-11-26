@@ -7562,6 +7562,144 @@ return res.status(500).json({
 }
 });
 
+// ============================================================
+// KIELMEN AI — SECURE CUSTOMER ORDER STATUS
+// ============================================================
+
+app.post("/ai/order-status", async (req, res) => {
+  try {
+    const reference = String(
+      req.body?.reference || ""
+    ).trim();
+
+    const phone = normalizePhone(
+      req.body?.phone || ""
+    );
+
+    if (
+      !reference ||
+      reference.length > 100 ||
+      !validGhanaPhone(phone)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid order reference and Ghana phone number."
+      });
+    }
+
+    const order = await getOrderByReference(reference);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "I couldn't find an order with that reference. Please check it and try again."
+      });
+    }
+
+    // Verify that the supplied phone belongs to this order.
+    const orderPhone = normalizePhone(order.phone);
+
+    if (
+      !validGhanaPhone(orderPhone) ||
+      orderPhone.slice(-9) !== phone.slice(-9)
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "The phone number does not match this order. Please check the number used during purchase."
+      });
+    }
+
+    let supplierStatusMessage = null;
+
+    // Refresh the existing DataMart order only.
+    if (
+      order.status === "paid" &&
+      order.supplier_reference &&
+      DATAMART_API_KEY
+    ) {
+      try {
+        const supplier = await refreshSupplierOrderStatus(
+          order.supplier_reference
+        );
+
+        if (supplier.status) {
+          const update = await pool.query(
+            `
+              UPDATE orders
+              SET
+                delivery_status = $1,
+                supplier_response = $2::jsonb,
+                delivered_at = CASE
+                  WHEN $1 = 'delivered'
+                  THEN COALESCE(delivered_at, NOW())
+                  ELSE delivered_at
+                END,
+                updated_at = NOW()
+              WHERE reference = $3
+                AND supplier_reference = $4
+                AND status = 'paid'
+              RETURNING delivery_status, updated_at
+            `,
+            [
+              supplier.status,
+              JSON.stringify(supplier.raw),
+              reference,
+              order.supplier_reference
+            ]
+          );
+
+          if (update.rowCount) {
+            order.delivery_status =
+              update.rows[0].delivery_status;
+
+            order.updated_at =
+              update.rows[0].updated_at;
+          }
+        } else {
+          supplierStatusMessage =
+            "The supplier did not return a recognised status. The last saved status is being shown.";
+        }
+      } catch (error) {
+        console.error(
+          "Kielmen AI DataMart status check:",
+          error.message
+        );
+
+        supplierStatusMessage =
+          "I couldn't refresh the supplier status right now. The last saved status is being shown.";
+      }
+    }
+
+    return res.json({
+      success: true,
+      order: {
+        reference: order.reference,
+        phone: order.phone,
+        network: order.network,
+        bundle: order.bundle,
+        amount: Number(order.amount),
+        payment_status: order.status,
+        delivery_status: order.delivery_status,
+        created_at: order.created_at,
+        updated_at: order.updated_at
+      },
+      supplier_status_message: supplierStatusMessage
+    });
+
+  } catch (error) {
+    console.error(
+      "Kielmen AI order lookup error:",
+      error.message
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "I couldn't check your order right now. Please try again shortly."
+    });
+  }
+});
+
+
 async function refreshTrackedOrders(orders) {
   const refreshedOrders = [];
 
